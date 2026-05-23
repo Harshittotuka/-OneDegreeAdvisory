@@ -20,15 +20,17 @@
       <a href="{{ route('home') }}#top">Home</a>
       <a href="{{ route('home') }}#destinations">Destinations</a>
       <a href="{{ route('about') }}">About</a>
+      <a href="{{ route('careers') }}">Careers</a>
       <a href="{{ route('contact') }}">Contact</a>
     </div>
 
     <div>
       <h2>Advisory Tracks</h2>
-      <a href="{{ route('contact') }}">Undergraduate</a>
-      <a href="{{ route('contact') }}">Masters and MBA</a>
-      <a href="{{ route('contact') }}">Scholarships</a>
-      <a href="{{ route('contact') }}">Visa readiness</a>
+      <a href="{{ route('contact') }}">MBBS Students</a>
+      <a href="{{ route('contact') }}">School Students</a>
+      <a href="{{ route('contact') }}">College Students</a>
+      <a href="{{ route('contact') }}">Graduates</a>
+      <a href="{{ route('contact') }}">Working Professionals</a>
     </div>
 
     <div>
@@ -40,11 +42,7 @@
         <i data-lucide="send"></i>
         <span>Contact</span>
       </a>
-      <div class="socials" aria-label="Social links">
-        <a href="#" aria-label="LinkedIn"><i data-lucide="briefcase-business"></i></a>
-        <a href="#" aria-label="Instagram"><i data-lucide="camera"></i></a>
-        <a href="#" aria-label="YouTube"><i data-lucide="play"></i></a>
-      </div>
+      
     </div>
   </div>
   <div class="container footer-bottom">
