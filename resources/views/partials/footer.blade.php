@@ -19,6 +19,7 @@
       <h2>Quick Links</h2>
       <a href="{{ route('home') }}#top">Home</a>
       <a href="{{ route('home') }}#destinations">Destinations</a>
+      <a href="{{ route('about') }}">About</a>
       <a href="{{ route('insights') }}">Insights</a>
       <a href="{{ route('contact') }}">Contact</a>
     </div>

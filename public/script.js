@@ -217,6 +217,21 @@ ready(() => {
     });
   }
 
+  const codepenMaps = Array.from(document.querySelectorAll("[data-codepen-map] svg"));
+  codepenMaps.forEach((svg) => {
+    const setRandomClass = () => {
+      const items = Array.from(svg.querySelectorAll("circle"));
+      const number = items.length;
+      if (!number) return;
+      const random = Math.floor(Math.random() * number);
+      items.forEach((item) => item.classList.remove("banaan"));
+      items[random].classList.add("banaan");
+    };
+
+    setRandomClass();
+    window.setInterval(setRandomClass, 2000);
+  });
+
   const revealItems = Array.from(document.querySelectorAll(".reveal"));
   const revealVisibleItems = () => {
     revealItems.forEach((item) => {

@@ -8,7 +8,7 @@ class SitePagesTest extends TestCase
 {
     public function test_primary_pages_render(): void
     {
-        foreach (['/', '/index.html', '/insights', '/insights.html', '/contact', '/contact.html'] as $path) {
+        foreach (['/', '/index.html', '/insights', '/insights.html', '/contact', '/contact.html', '/mbbs/student'] as $path) {
             $this->get($path)->assertOk();
         }
     }

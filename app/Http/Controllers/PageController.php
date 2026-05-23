@@ -17,9 +17,19 @@ class PageController extends Controller
         return view('pages.insights');
     }
 
+    public function about(): View
+    {
+        return view('pages.about');
+    }
+
     public function contact(): View
     {
         return view('pages.contact');
+    }
+
+    public function mbbsStudent(): View
+    {
+        return view('pages.mbbs-student');
     }
 
     public function country(string $country): View

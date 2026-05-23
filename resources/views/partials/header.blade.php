@@ -22,6 +22,7 @@
 
     <div class="nav-menu" data-nav-menu>
       <a @class(['is-active' => $activeNav === 'home']) href="{{ route('home') }}#top">Home</a>
+      <a @class(['is-active' => $activeNav === 'about']) href="{{ route('about') }}">About</a>
 
       <div class="nav-item has-dropdown" data-dropdown>
         <button class="nav-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger>
@@ -67,7 +68,7 @@
         </div>
       </div>
 
-      <a href="{{ route('home') }}#about">About</a>
+      <a @class(['is-active' => $activeNav === 'mbbs']) href="{{ route('mbbs.student') }}">MBBS</a>
       <a @class(['is-active' => $activeNav === 'insights']) href="{{ route('insights') }}">Insights</a>
       <a @class(['is-active' => $activeNav === 'contact']) href="{{ route('contact') }}">Contact</a>
     </div>
