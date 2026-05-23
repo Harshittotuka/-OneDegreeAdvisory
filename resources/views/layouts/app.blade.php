@@ -43,18 +43,6 @@
       </a>
     @endunless
 
-    <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
-      <button class="theme-swatch theme-swatch-current" type="button" data-theme-option="current" aria-label="Use current color theme" aria-pressed="true">
-        <span class="visually-hidden">Current</span>
-      </button>
-      <button class="theme-swatch theme-swatch-fedex" type="button" data-theme-option="fedex" aria-label="Use FedEx color theme" aria-pressed="false">
-        <span class="visually-hidden">FedEx</span>
-      </button>
-      <button class="theme-swatch theme-swatch-custom" type="button" data-theme-option="custom" aria-label="Use custom color theme" aria-pressed="false">
-        <span class="visually-hidden">Custom</span>
-      </button>
-    </div>
-
     <script type="application/ld+json">
       {!! json_encode([
           '@context' => 'https://schema.org',
