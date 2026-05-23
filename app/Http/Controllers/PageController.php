@@ -12,11 +12,6 @@ class PageController extends Controller
         return view('pages.home');
     }
 
-    public function insights(): View
-    {
-        return view('pages.insights');
-    }
-
     public function about(): View
     {
         return view('pages.about');

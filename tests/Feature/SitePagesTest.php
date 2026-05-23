@@ -8,8 +8,15 @@ class SitePagesTest extends TestCase
 {
     public function test_primary_pages_render(): void
     {
-        foreach (['/', '/index.html', '/insights', '/insights.html', '/contact', '/contact.html', '/mbbs/student'] as $path) {
+        foreach (['/', '/index.html', '/about', '/about.html', '/contact', '/contact.html', '/mbbs/student'] as $path) {
             $this->get($path)->assertOk();
+        }
+    }
+
+    public function test_insights_page_is_removed(): void
+    {
+        foreach (['/insights', '/insights.html'] as $path) {
+            $this->get($path)->assertNotFound();
         }
     }
 

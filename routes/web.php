@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/index.html', [PageController::class, 'home'])->name('home.legacy');
 
-Route::get('/insights', [PageController::class, 'insights'])->name('insights');
-Route::get('/insights.html', [PageController::class, 'insights'])->name('insights.legacy');
-
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/about.html', [PageController::class, 'about'])->name('about.legacy');
 

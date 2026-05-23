@@ -69,7 +69,6 @@
       </div>
 
       <a @class(['is-active' => $activeNav === 'mbbs']) href="{{ route('mbbs.student') }}">MBBS</a>
-      <a @class(['is-active' => $activeNav === 'insights']) href="{{ route('insights') }}">Insights</a>
       <a @class(['is-active' => $activeNav === 'contact']) href="{{ route('contact') }}">Contact</a>
     </div>
 

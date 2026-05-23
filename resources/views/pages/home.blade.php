@@ -577,8 +577,8 @@
                 Practical reads for applications, tests, visas, scholarships, and the decisions families ask us about every week.
               </p>
             </div>
-            <a class="insights-button" href="{{ route('insights') }}">
-              <span>All articles</span>
+            <a class="insights-button" href="#contact">
+              <span>Ask an advisor</span>
               <i data-lucide="arrow-up-right"></i>
             </a>
           </header>
@@ -592,7 +592,7 @@
                 <span class="insight-card-meta">Strategy &middot; 9 min read</span>
                 <h3>The 2026 Ivy League admissions playbook (what changed since SAT-optional).</h3>
                 <p>Our heads of strategy unpack the testing reversal, the AI-essay disclosure rules and the four profile pillars that now matter most.</p>
-                <a href="{{ route('insights') }}#ivy-league">Read article <i data-lucide="arrow-right"></i></a>
+                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
               </div>
             </article>
 
@@ -601,7 +601,7 @@
               <div class="insight-card-body">
                 <span class="insight-card-meta">Tests &middot; 5 min</span>
                 <h3>Smart paper attempt tips to score high on JEE Advanced 2026.</h3>
-                <a href="{{ route('insights') }}#tests">Read article <i data-lucide="arrow-right"></i></a>
+                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
               </div>
             </article>
 
@@ -610,7 +610,7 @@
               <div class="insight-card-body">
                 <span class="insight-card-meta">Visa &middot; 7 min</span>
                 <h3>F-1 visa interviews in 2026 &mdash; what consular officers are actually asking now.</h3>
-                <a href="{{ route('insights') }}#visa">Read article <i data-lucide="arrow-right"></i></a>
+                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
               </div>
             </article>
 
@@ -619,7 +619,7 @@
               <div class="insight-card-body">
                 <span class="insight-card-meta">Finance &middot; 6 min</span>
                 <h3>The complete 2026 guide to merit scholarships at US private universities.</h3>
-                <a href="{{ route('insights') }}#finance">Read article <i data-lucide="arrow-right"></i></a>
+                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
               </div>
             </article>
           </div>
