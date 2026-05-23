@@ -7023,6 +7023,8 @@ textarea:focus {
 }
 
 .contact-fab {
+  --contact-fab-size: 56px;
+  --contact-fab-expanded: 56px;
   position: fixed;
   right: 24px;
   bottom: 24px;
@@ -7030,7 +7032,8 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  height: 56px;
+  height: var(--contact-fab-size);
+  width: var(--contact-fab-size);
   padding: 0;
   border-radius: 999px;
   background: var(--teal);
@@ -7042,11 +7045,11 @@ textarea:focus {
   letter-spacing: 0.01em;
   box-shadow: 0 16px 36px rgba(7, 25, 34, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   overflow: hidden;
-  max-width: 56px;
-  transition: max-width 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 200ms ease,
-    box-shadow 200ms ease,
-    transform 200ms ease;
+  will-change: width, transform;
+  transition: width 520ms cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
 }
 
 .contact-fab:hover,
@@ -7062,9 +7065,9 @@ textarea:focus {
 }
 
 .contact-fab__icon {
-  flex: 0 0 56px;
-  width: 56px;
-  height: 56px;
+  flex: 0 0 var(--contact-fab-size);
+  width: var(--contact-fab-size);
+  height: var(--contact-fab-size);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -7078,39 +7081,33 @@ textarea:focus {
 }
 
 .contact-fab__label {
+  flex: 0 0 auto;
   white-space: nowrap;
   padding-right: 22px;
   padding-left: 4px;
   opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity 240ms ease 60ms, transform 320ms cubic-bezier(0.22, 1, 0.36, 1) 60ms;
+  transition: opacity 200ms ease;
 }
 
 .contact-fab.is-expanded,
 .contact-fab:hover,
 .contact-fab:focus-visible {
-  max-width: 320px;
+  width: var(--contact-fab-expanded);
 }
 
 .contact-fab.is-expanded .contact-fab__label,
 .contact-fab:hover .contact-fab__label,
 .contact-fab:focus-visible .contact-fab__label {
   opacity: 1;
-  transform: translateX(0);
+  transition: opacity 260ms ease 220ms;
 }
 
 @media (max-width: 600px) {
   .contact-fab {
+    --contact-fab-size: 52px;
     right: 16px;
     bottom: 16px;
-    height: 52px;
     font-size: 0.9rem;
-    max-width: 52px;
-  }
-  .contact-fab__icon {
-    flex-basis: 52px;
-    width: 52px;
-    height: 52px;
   }
   .contact-fab__icon i,
   .contact-fab__icon svg {

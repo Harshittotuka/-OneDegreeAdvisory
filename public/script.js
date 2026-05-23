@@ -1266,6 +1266,29 @@ ready(() => {
     if (!fab) return;
 
     const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function measure() {
+      // Temporarily disable transitions and force the expanded layout so we can
+      // read the natural full-content width, then restore.
+      const prevTransition = fab.style.transition;
+      fab.style.transition = "none";
+      fab.style.width = "auto";
+      const w = Math.ceil(fab.getBoundingClientRect().width);
+      fab.style.width = "";
+      // Force a reflow before re-enabling transitions so the next change animates.
+      void fab.offsetWidth;
+      fab.style.transition = prevTransition;
+      fab.style.setProperty("--contact-fab-expanded", w + "px");
+    }
+
+    // Measure once fonts are ready so the width matches the actual rendered label.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(measure);
+    } else {
+      measure();
+    }
+    window.addEventListener("resize", measure);
+
     if (reduced) return;
 
     const rand = (min, max) => Math.floor(min + Math.random() * (max - min));

@@ -158,7 +158,7 @@
           </div>
 
           <div class="contact-map reveal" aria-label="OneDegreeAdvisory office location">
-            <iframe src="https://maps.google.com/maps?q=A-16A%2C%20Van%20Vihar%20Colony%2C%20Opp.%20Kamal%20%26%20Co%2C%20Tonk%20Road%2C%20Jaipur%2C%20Rajasthan%20302018&amp;z=17&amp;output=embed" title="OneDegreeAdvisory office location" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe src="https://maps.google.com/maps?q=26.8692893,75.7895342&amp;z=17&amp;output=embed" title="OneDegreeAdvisory office location" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
           </div>
         </div>
       </section>
