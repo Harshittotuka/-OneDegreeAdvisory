@@ -10,7 +10,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>document.documentElement.classList.add("js");</script>
+    <script>
+      (function () {
+        document.documentElement.classList.add("js");
+        try {
+          var theme = sessionStorage.getItem("oda:color-theme");
+          if (theme === "fedex" || theme === "custom") {
+            document.documentElement.dataset.colorTheme = theme;
+          }
+        } catch (error) {}
+      })();
+    </script>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="{{ asset('script.js') }}" defer></script>
@@ -32,6 +42,18 @@
         <span class="contact-fab__label" data-contact-fab-label>Talk to an advisor</span>
       </a>
     @endunless
+
+    <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
+      <button class="theme-swatch theme-swatch-current" type="button" data-theme-option="current" aria-label="Use current color theme" aria-pressed="true">
+        <span class="visually-hidden">Current</span>
+      </button>
+      <button class="theme-swatch theme-swatch-fedex" type="button" data-theme-option="fedex" aria-label="Use FedEx color theme" aria-pressed="false">
+        <span class="visually-hidden">FedEx</span>
+      </button>
+      <button class="theme-swatch theme-swatch-custom" type="button" data-theme-option="custom" aria-label="Use custom color theme" aria-pressed="false">
+        <span class="visually-hidden">Custom</span>
+      </button>
+    </div>
 
     <script type="application/ld+json">
       {!! json_encode([

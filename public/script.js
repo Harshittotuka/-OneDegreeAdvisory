@@ -1118,6 +1118,81 @@ ready(() => {
 });
 
 /* ============================================================
+   Color theme switcher
+   ============================================================ */
+(function () {
+  const STORAGE_KEY = "oda:color-theme";
+  const THEMES = new Set(["current", "fedex", "custom"]);
+  const THEME_COLORS = {
+    current: "#0f3b45",
+    fedex: "#4d148c",
+    custom: "#1e3f32",
+  };
+
+  function getStoredTheme() {
+    try {
+      const value = sessionStorage.getItem(STORAGE_KEY);
+      return THEMES.has(value) ? value : "current";
+    } catch (error) {
+      return "current";
+    }
+  }
+
+  function setStoredTheme(theme) {
+    try {
+      if (theme === "current") {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } else {
+        sessionStorage.setItem(STORAGE_KEY, theme);
+      }
+    } catch (error) {}
+  }
+
+  function applyTheme(theme) {
+    const activeTheme = THEMES.has(theme) ? theme : "current";
+
+    if (activeTheme === "current") {
+      delete document.documentElement.dataset.colorTheme;
+    } else {
+      document.documentElement.dataset.colorTheme = activeTheme;
+    }
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", THEME_COLORS[activeTheme]);
+    }
+
+    document.querySelectorAll("[data-theme-option]").forEach((button) => {
+      const isActive = button.dataset.themeOption === activeTheme;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
+  function initThemeSwitcher() {
+    const switchers = document.querySelectorAll("[data-theme-switcher]");
+    const storedTheme = getStoredTheme();
+    applyTheme(storedTheme);
+
+    switchers.forEach((switcher) => {
+      switcher.querySelectorAll("[data-theme-option]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const nextTheme = THEMES.has(button.dataset.themeOption) ? button.dataset.themeOption : "current";
+          applyTheme(nextTheme);
+          setStoredTheme(nextTheme);
+        });
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initThemeSwitcher, { once: true });
+  } else {
+    initThemeSwitcher();
+  }
+})();
+
+/* ============================================================
    Currency switcher + live conversion
    ============================================================ */
 (function () {
@@ -1352,5 +1427,65 @@ ready(() => {
     document.addEventListener("DOMContentLoaded", initContactFab, { once: true });
   } else {
     initContactFab();
+  }
+
+  function initHiringProcess() {
+    const root = document.querySelector("[data-hiring-process]");
+    if (!root) return;
+
+    const steps = Array.from(root.querySelectorAll(".cr-rail-step"));
+    const titleEl = root.querySelector("[data-step-title]");
+    const bodyEl = root.querySelector("[data-step-body]");
+    const metaEl = root.querySelector("[data-rail-meta]");
+    const stageEl = root.querySelector("[data-rail-stage]");
+    const fillEl = root.querySelector("[data-rail-fill]");
+    const prevBtn = root.querySelector("[data-rail-prev]");
+    const nextBtn = root.querySelector("[data-rail-next]");
+    if (!steps.length || !titleEl || !bodyEl) return;
+
+    const total = steps.length;
+    let currentIdx = 0;
+
+    const pad = (n) => String(n).padStart(2, "0");
+
+    const activate = (idx) => {
+      idx = Math.max(0, Math.min(total - 1, idx));
+      currentIdx = idx;
+      steps.forEach((s, i) => {
+        const on = i === idx;
+        const passed = i < idx;
+        s.classList.toggle("is-active", on);
+        s.classList.toggle("is-passed", passed);
+        s.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      const step = steps[idx];
+      titleEl.textContent = step.dataset.title || "";
+      bodyEl.innerHTML = step.dataset.body || "";
+      if (metaEl) metaEl.innerHTML = step.dataset.meta || "";
+      if (stageEl) stageEl.textContent = "Step " + pad(idx + 1) + " of " + pad(total);
+      if (fillEl) {
+        const pct = total > 1 ? (idx / (total - 1)) * 100 : 0;
+        fillEl.style.width = pct + "%";
+      }
+      if (prevBtn) prevBtn.disabled = idx === 0;
+      if (nextBtn) nextBtn.disabled = idx === total - 1;
+    };
+
+    steps.forEach((step, i) => {
+      step.addEventListener("click", () => activate(i));
+      step.addEventListener("focus", () => activate(i));
+    });
+
+    if (prevBtn) prevBtn.addEventListener("click", () => activate(currentIdx - 1));
+    if (nextBtn) nextBtn.addEventListener("click", () => activate(currentIdx + 1));
+
+    const initial = steps.findIndex((s) => s.classList.contains("is-active"));
+    activate(initial >= 0 ? initial : 0);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initHiringProcess, { once: true });
+  } else {
+    initHiringProcess();
   }
 })();

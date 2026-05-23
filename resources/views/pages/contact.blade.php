@@ -70,13 +70,7 @@
                 </div>
               </div>
 
-              <strong class="contact-mini-title">Connect with us</strong>
-              <div class="contact-socials" aria-label="Social links">
-                <a href="#" aria-label="LinkedIn"><i data-lucide="briefcase-business"></i></a>
-                <a href="#" aria-label="Instagram"><i data-lucide="camera"></i></a>
-                <a href="#" aria-label="YouTube"><i data-lucide="play"></i></a>
-                <a href="#" aria-label="WhatsApp"><i data-lucide="message-circle"></i></a>
-              </div>
+              
 
               <div class="contact-response-card">
                 <strong>Average response time</strong>

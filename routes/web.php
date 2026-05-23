@@ -9,6 +9,8 @@ Route::get('/index.html', [PageController::class, 'home'])->name('home.legacy');
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/about.html', [PageController::class, 'about'])->name('about.legacy');
 
+Route::get('/careers', [PageController::class, 'careers'])->name('careers');
+
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::get('/contact.html', [PageController::class, 'contact'])->name('contact.legacy');
 
