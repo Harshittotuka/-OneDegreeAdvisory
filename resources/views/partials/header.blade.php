@@ -21,7 +21,7 @@
     </button>
 
     <div class="nav-menu" data-nav-menu>
-      <a @class(['is-active' => $activeNav === 'home']) href="{{ route('home') }}#top">Home</a>
+      <a @class(['is-active' => $activeNav === 'home']) href="{{ route('home') }}">Home</a>
       <a @class(['is-active' => $activeNav === 'about']) href="{{ route('about') }}">About</a>
 
       <div class="nav-item has-dropdown" data-dropdown>
@@ -68,10 +68,36 @@
         </div>
       </div>
 
-      <a @class(['is-active' => $activeNav === 'mbbs']) href="{{ route('mbbs.student') }}">MBBS</a>
-      <a @class(['is-active' => $activeNav === 'contact']) href="{{ route('contact') }}">Contact</a>
+      <div @class(['nav-item', 'has-dropdown', 'has-active' => $activeNav === 'mbbs']) data-dropdown>
+        <button class="nav-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger>
+          <span>Temp Nav</span>
+          <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
+        </button>
+
+        <div class="nav-dropdown nav-dropdown--compact" data-dropdown-panel role="menu" aria-label="Advisory tracks">
+          <div class="nav-dropdown-shell">
+            <div class="nav-dropdown-main">
+              <div class="nav-dropdown-topline">
+                <span class="nav-dropdown-eyebrow">Advisory tracks</span>
+                <span class="nav-dropdown-badge">Specialist desks</span>
+              </div>
+
+              <div class="nav-dropdown-grid nav-dropdown-grid--tracks">
+                <a @class(['dest-card', 'track-card', 'is-active' => $activeNav === 'mbbs']) href="{{ route('mbbs.student') }}" role="menuitem">
+                  <span class="track-icon" aria-hidden="true"><i data-lucide="stethoscope"></i></span>
+                  <span class="dest-meta">
+                    <strong>MBBS</strong>
+                    <small>Medical study-abroad track</small>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
+    @if (! in_array($activeNav ?? null, ['home', 'contact', 'about']))
     <div class="currency-switch" data-currency-switch>
       <button class="currency-trigger" type="button" data-currency-trigger aria-haspopup="true" aria-expanded="false" aria-label="Change currency">
         <i data-lucide="circle-dollar-sign"></i>
@@ -89,6 +115,7 @@
         <button type="button" role="menuitem" data-currency-option="NZD"><span class="cur-sym">NZ$</span><span class="cur-name">New Zealand Dollar</span><span class="cur-code">NZD</span></button>
       </div>
     </div>
+    @endif
 
     <a class="nav-cta" href="{{ route('contact') }}">
       <i data-lucide="message-circle"></i>

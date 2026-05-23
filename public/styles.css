@@ -297,8 +297,77 @@ button {
 }
 
 .nav-item.is-open .nav-trigger::after,
+.nav-item.has-active .nav-trigger::after,
 .nav-trigger:hover::after {
   transform: scaleX(1);
+}
+
+.nav-item.has-active .nav-trigger {
+  color: var(--teal-dark);
+}
+
+/* Advisory tracks dropdown — single/few items, larger card layout */
+.nav-dropdown-grid--tracks {
+  grid-template-columns: 1fr !important;
+  gap: 8px;
+}
+
+.dest-card.track-card {
+  min-height: 64px;
+  padding: 12px 28px 12px 14px;
+  gap: 14px;
+}
+
+.dest-card.track-card .track-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(13, 122, 120, 0.14) 0%, rgba(199, 146, 74, 0.12) 100%);
+  color: var(--teal-dark);
+  flex: 0 0 auto;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.dest-card.track-card .track-icon svg {
+  width: 22px !important;
+  height: 22px !important;
+  stroke-width: 1.9;
+}
+
+.dest-card.track-card .dest-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dest-card.track-card .dest-meta strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.dest-card.track-card .dest-meta small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.dest-card.track-card:hover .track-icon,
+.dest-card.track-card.is-active .track-icon {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--navy) 100%);
+  color: #fff;
+}
+
+.dest-card.track-card.is-active {
+  background: rgba(13, 122, 120, 0.06);
+  border-color: rgba(13, 122, 120, 0.25);
+}
+
+.dest-card.track-card.is-active .dest-meta strong {
+  color: var(--teal-dark);
 }
 
 .nav-dropdown {
@@ -361,6 +430,19 @@ button {
   padding: 0;
   overflow: hidden;
   border-radius: 8px;
+}
+
+/* Compact variant: no feature aside — single column, narrower panel */
+.nav-dropdown--compact {
+  width: min(360px, calc(100vw - 32px));
+}
+
+.nav-dropdown--compact .nav-dropdown-shell {
+  grid-template-columns: 1fr;
+}
+
+.nav-dropdown--compact .nav-dropdown-main {
+  border-right: 0;
 }
 
 .nav-dropdown-main {
@@ -9855,3 +9937,1944 @@ textarea:focus {
     justify-content: flex-start;
   }
 }
+
+/* ==============================================================
+   About page — vidysea-inspired redesign (prefix: .va-)
+   Modular sections: hero collage, vision/mission, who/why/what
+   pillars, global impact stats, founders + advisors + management,
+   final CTA. Uses existing brand tokens (navy/teal/gold).
+   ============================================================== */
+
+.va-about-page {
+  --va-ink: #0f2230;
+  --va-muted: #5d6e76;
+  --va-line: rgba(15, 34, 48, 0.10);
+  --va-line-strong: rgba(15, 34, 48, 0.16);
+  --va-paper: #ffffff;
+  --va-cream: #fbf6ec;
+  --va-mist: #f1f8f7;
+  --va-aqua: #e6f4f2;
+  --va-radius: 14px;
+  --va-radius-lg: 22px;
+  background: linear-gradient(180deg, #fdfaf2 0%, #f4f9f8 38%, #fffaf2 70%, #eaf3f3 100%);
+  color: var(--va-ink);
+}
+
+.va-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid rgba(13, 122, 120, 0.32);
+  border-radius: 999px;
+  background: rgba(13, 122, 120, 0.08);
+  color: var(--teal-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.va-eyebrow--light {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ───────────────────────── HERO ───────────────────────── */
+.va-hero {
+  position: relative;
+  padding: 96px 0 100px;
+  overflow: hidden;
+}
+
+.va-hero::before {
+  content: "";
+  position: absolute;
+  top: -160px;
+  right: -180px;
+  width: 540px;
+  height: 540px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(13, 122, 120, 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+.va-hero::after {
+  content: "";
+  position: absolute;
+  bottom: -180px;
+  left: -120px;
+  width: 460px;
+  height: 460px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(199, 146, 74, 0.13), transparent 70%);
+  pointer-events: none;
+}
+
+.va-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 64px;
+  align-items: center;
+  z-index: 1;
+}
+
+.va-hero-copy h1 {
+  margin: 22px 0 22px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 3.55rem;
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.va-hero-copy h1 em {
+  font-style: italic;
+  color: var(--teal-dark);
+}
+
+.va-hero-num {
+  display: inline-block;
+  padding: 0 4px;
+  background: linear-gradient(180deg, transparent 62%, rgba(199, 146, 74, 0.32) 62%, rgba(199, 146, 74, 0.32) 92%, transparent 92%);
+  color: var(--gold);
+  font-style: italic;
+}
+
+.va-hero-lede {
+  margin: 0 0 32px;
+  max-width: 560px;
+  color: var(--muted);
+  font-size: 1.06rem;
+  line-height: 1.78;
+}
+
+.va-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.va-hero-trust {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 20px 22px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--va-line);
+  border-radius: var(--va-radius);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 12px 32px rgba(7, 25, 34, 0.06);
+  max-width: 560px;
+}
+
+.va-hero-trust > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.va-hero-trust strong {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1;
+}
+
+.va-hero-trust span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.va-hero-collage {
+  position: relative;
+  aspect-ratio: 5 / 6;
+  min-height: 520px;
+}
+
+.va-hero-photo {
+  position: absolute;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--va-radius-lg);
+  box-shadow: 0 24px 60px rgba(7, 25, 34, 0.18);
+  border: 6px solid #fff;
+}
+
+.va-hero-photo--lg {
+  top: 0;
+  right: 0;
+  width: 78%;
+  height: 80%;
+}
+
+.va-hero-photo--sm {
+  bottom: 0;
+  left: 0;
+  width: 56%;
+  height: 48%;
+  border-color: var(--gold);
+  border-width: 5px;
+}
+
+.va-hero-badge {
+  position: absolute;
+  bottom: 26%;
+  right: -14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(7, 25, 34, 0.14);
+  border: 1px solid var(--va-line);
+  z-index: 2;
+}
+
+.va-hero-badge i,
+.va-hero-badge svg {
+  width: 22px;
+  height: 22px;
+  color: var(--gold);
+  stroke-width: 2.2;
+}
+
+.va-hero-badge div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.va-hero-badge strong {
+  color: var(--navy);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.va-hero-badge span {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+/* ─────────────────── VISION & MISSION ─────────────────── */
+.va-vm {
+  position: relative;
+  padding: 96px 0;
+  background: #ffffff;
+  border-top: 1px solid var(--va-line);
+  border-bottom: 1px solid var(--va-line);
+}
+
+.va-vm-head {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.va-vm-head h2 {
+  margin: 18px 0 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.55rem;
+  line-height: 1.18;
+  letter-spacing: -0.008em;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.va-vm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.va-vm-card {
+  position: relative;
+  padding: 44px 38px 40px;
+  border-radius: var(--va-radius-lg);
+  border: 1px solid var(--va-line);
+  background: var(--va-paper);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.va-vm-card::before {
+  content: "";
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.va-vm-card--vision::before {
+  background: radial-gradient(circle, rgba(13, 122, 120, 0.20), transparent 70%);
+}
+
+.va-vm-card--mission::before {
+  background: radial-gradient(circle, rgba(199, 146, 74, 0.22), transparent 70%);
+}
+
+.va-vm-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 50px rgba(7, 25, 34, 0.12);
+  border-color: rgba(13, 122, 120, 0.3);
+}
+
+.va-vm-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--navy) 100%);
+  color: #fff;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 10px 24px rgba(13, 122, 120, 0.32);
+}
+
+.va-vm-card--mission .va-vm-icon {
+  background: linear-gradient(135deg, var(--gold) 0%, #b07832 100%);
+}
+
+.va-vm-icon svg {
+  width: 26px !important;
+  height: 26px !important;
+  stroke-width: 1.8;
+  color: #fff;
+}
+
+.va-vm-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+  margin-bottom: 12px;
+}
+
+.va-vm-card--mission .va-vm-tag {
+  color: var(--gold);
+}
+
+.va-vm-card h3 {
+  margin: 0 0 16px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.28;
+  color: var(--navy);
+  position: relative;
+  z-index: 1;
+}
+
+.va-vm-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.72;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─────────────────── PILLARS (WHO/WHY/WHAT) ─────────────────── */
+.va-pillars {
+  padding: 110px 0 30px;
+}
+
+.va-pillar {
+  margin-bottom: 96px;
+}
+
+.va-pillar:last-child {
+  margin-bottom: 0;
+}
+
+.va-pillar--row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 72px;
+  align-items: center;
+}
+
+.va-pillar--reverse .va-pillar-copy {
+  order: 2;
+}
+
+.va-pillar--reverse .va-pillar-media {
+  order: 1;
+}
+
+.va-pillar-copy h2 {
+  margin: 18px 0 18px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.4rem;
+  line-height: 1.18;
+  letter-spacing: -0.008em;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.va-pillar-copy p {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.78;
+}
+
+.va-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.va-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(199, 146, 74, 0.36);
+  background: rgba(199, 146, 74, 0.08);
+  color: #8b6326;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.va-chips svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--gold);
+  stroke-width: 2.2;
+  flex: 0 0 auto;
+}
+
+.va-pillar-media {
+  position: relative;
+  margin: 0;
+  border-radius: var(--va-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 28px 56px rgba(7, 25, 34, 0.16);
+}
+
+.va-pillar-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 5 / 4;
+  object-fit: cover;
+}
+
+.va-pillar-tag {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(7, 25, 34, 0.78);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.va-pillar-tag svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--gold);
+  stroke-width: 2.2;
+  flex: 0 0 auto;
+}
+
+.va-hero-badge svg,
+.va-hero-actions svg,
+.va-cta-actions svg,
+.va-cta-tags svg,
+.va-team-social svg,
+.va-team-expand svg {
+  flex: 0 0 auto;
+}
+
+/* ─────────────────── GLOBAL IMPACT ─────────────────── */
+.va-impact {
+  position: relative;
+  padding: 110px 0 120px;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(13, 122, 120, 0.25), transparent 50%),
+    radial-gradient(circle at 88% 80%, rgba(199, 146, 74, 0.18), transparent 50%),
+    linear-gradient(135deg, #0b2b43 0%, #07585a 100%);
+  color: #fff;
+  margin-top: 70px;
+}
+
+.va-impact-head {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 56px;
+}
+
+.va-impact-head h2 {
+  margin: 18px 0 14px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.008em;
+  color: #fff;
+}
+
+.va-impact-head p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.05rem;
+  line-height: 1.72;
+}
+
+.va-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.va-impact-card {
+  position: relative;
+  padding: 38px 28px 32px;
+  border-radius: var(--va-radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  text-align: left;
+  overflow: hidden;
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+
+.va-impact-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 28px;
+  right: 28px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  border-radius: 2px;
+}
+
+.va-impact-card:hover {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(199, 146, 74, 0.45);
+}
+
+/* Icon: thin gold-outline circle sitting top-right as an accent */
+.va-impact-icon {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(199, 146, 74, 0.55);
+  background: rgba(199, 146, 74, 0.12);
+  color: var(--gold);
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.va-impact-card:hover .va-impact-icon {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+  transform: rotate(-6deg) scale(1.05);
+}
+
+.va-impact-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2;
+  display: block;
+}
+
+.va-impact-card strong {
+  display: block;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 3.4rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+
+.va-impact-card strong small {
+  color: var(--gold);
+  font-size: 1.4rem;
+  margin-left: 2px;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.va-impact-card span {
+  display: block;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  max-width: 92%;
+}
+
+/* ─────────────────── TEAM (FOUNDERS / ADVISORS / MGMT) ─────────────────── */
+.va-team {
+  padding: 110px 0;
+  background: #fff;
+}
+
+.va-team--alt {
+  background: #f8fbfb;
+}
+
+.va-team-head {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 56px;
+}
+
+.va-team-head h2 {
+  margin: 18px 0 12px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.45rem;
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.008em;
+  color: var(--navy);
+}
+
+.va-team-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.72;
+}
+
+.va-team-grid {
+  display: grid;
+  gap: 28px;
+}
+
+.va-team-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.va-team-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.va-team-grid--compact {
+  gap: 22px;
+}
+
+.va-team-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--va-radius-lg);
+  border: 1px solid var(--va-line);
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(7, 25, 34, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.va-team-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 56px rgba(7, 25, 34, 0.14);
+  border-color: rgba(13, 122, 120, 0.3);
+}
+
+.va-team-photo {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background-position: center top;
+  background-size: cover;
+  background-color: var(--va-mist);
+}
+
+.va-team-card--compact .va-team-photo {
+  aspect-ratio: 1 / 1;
+}
+
+.va-team-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px 26px 26px;
+}
+
+.va-team-card--compact .va-team-body {
+  padding: 18px 20px 20px;
+}
+
+.va-team-body h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--navy);
+}
+
+.va-team-card--compact .va-team-body h3 {
+  font-size: 1.25rem;
+}
+
+.va-team-role {
+  color: var(--teal-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.va-team-body p {
+  margin: 10px 0 16px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.68;
+}
+
+.va-team-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.va-team-desk {
+  display: inline-flex;
+  padding: 6px 12px;
+  border: 1px solid rgba(199, 146, 74, 0.4);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.va-team-social {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--va-mist);
+  color: var(--teal-dark);
+  border: 1px solid var(--va-line);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.va-team-social:hover {
+  background: var(--teal-dark);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.va-team-social i,
+.va-team-social svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+}
+
+.va-team-expand {
+  position: absolute;
+  top: -22px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--gold);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(199, 146, 74, 0.35);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.va-team-expand:hover {
+  background: var(--navy);
+  transform: scale(1.08);
+}
+
+.va-team-expand i,
+.va-team-expand svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.4;
+}
+
+/* ─────────────────── FINAL CTA ─────────────────── */
+.va-cta {
+  position: relative;
+  padding: 110px 0 180px;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(13, 122, 120, 0.28), transparent 55%),
+    radial-gradient(circle at 86% 86%, rgba(199, 146, 74, 0.18), transparent 55%),
+    linear-gradient(180deg, #07585a 0%, #0a3f4f 42%, #082836 76%, #071c26 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+.va-cta::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 140px;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(7, 25, 34, 0) 0%, rgba(7, 25, 34, 0.55) 40%, #071922 100%);
+  z-index: 1;
+}
+
+.va-cta .container {
+  position: relative;
+  z-index: 2;
+}
+
+.va-about-page + .site-footer {
+  margin-top: -60px;
+}
+
+.va-about-page + .site-footer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(180deg, rgba(7, 25, 34, 0) 0%, #071922 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.va-cta-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 64px;
+  align-items: center;
+}
+
+.va-cta-copy h2 {
+  margin: 18px 0 22px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.8rem;
+  line-height: 1.14;
+  letter-spacing: -0.008em;
+  font-weight: 700;
+  color: #fff;
+}
+
+.va-cta-copy p {
+  margin: 0 0 30px;
+  max-width: 540px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.05rem;
+  line-height: 1.78;
+}
+
+.va-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.va-cta-ghost {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #fff !important;
+}
+
+.va-cta-ghost:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--gold) !important;
+}
+
+.va-cta-tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.va-cta-tags li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.va-cta-tags i,
+.va-cta-tags svg {
+  width: 16px;
+  height: 16px;
+  color: var(--gold);
+  stroke-width: 2.2;
+}
+
+.va-cta-media {
+  position: relative;
+  margin: 0;
+  border-radius: var(--va-radius-lg);
+  overflow: visible;
+}
+
+.va-cta-media img {
+  width: 100%;
+  border-radius: var(--va-radius-lg);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  display: block;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.va-cta-card {
+  position: absolute;
+  left: -28px;
+  bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--navy);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28);
+  min-width: 220px;
+  border-top: 4px solid var(--gold);
+}
+
+.va-cta-card-num {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--navy);
+}
+
+.va-cta-card-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+  line-height: 1.4;
+}
+
+/* ───────────────────────── RESPONSIVE ───────────────────────── */
+@media (max-width: 1100px) {
+  .va-team-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .va-team-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .va-impact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .va-hero {
+    padding: 64px 0 80px;
+  }
+  .va-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .va-hero-copy h1 {
+    font-size: 2.6rem;
+  }
+  .va-hero-collage {
+    min-height: 460px;
+  }
+  .va-vm {
+    padding: 72px 0;
+  }
+  .va-vm-grid {
+    grid-template-columns: 1fr;
+  }
+  .va-pillars {
+    padding: 80px 0 16px;
+  }
+  .va-pillar {
+    margin-bottom: 72px;
+  }
+  .va-pillar--row {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .va-pillar--reverse .va-pillar-copy {
+    order: 1;
+  }
+  .va-pillar--reverse .va-pillar-media {
+    order: 2;
+  }
+  .va-pillar-copy h2 {
+    font-size: 1.95rem;
+  }
+  .va-impact {
+    padding: 80px 0 90px;
+  }
+  .va-impact-head h2,
+  .va-team-head h2,
+  .va-vm-head h2 {
+    font-size: 2rem;
+  }
+  .va-team {
+    padding: 80px 0;
+  }
+  .va-cta {
+    padding: 80px 0 100px;
+  }
+  .va-cta-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .va-cta-copy h2 {
+    font-size: 2.1rem;
+  }
+  .va-cta-card {
+    left: 16px;
+    bottom: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .va-hero-copy h1 {
+    font-size: 2.1rem;
+  }
+  .va-hero-trust {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .va-hero-collage {
+    min-height: 380px;
+  }
+  .va-hero-badge {
+    right: 8px;
+    bottom: 22%;
+    padding: 10px 14px;
+  }
+  .va-vm-card {
+    padding: 32px 26px 28px;
+  }
+  .va-team-grid--3,
+  .va-team-grid--4 {
+    grid-template-columns: 1fr;
+  }
+  .va-impact-grid {
+    grid-template-columns: 1fr;
+  }
+  .va-impact-card strong,
+  .va-cta-card-num {
+    font-size: 2.4rem;
+  }
+  .va-impact-icon {
+    top: 18px;
+    right: 18px;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* ==============================================================
+   Careers page — Sattva-inspired hiring process + form
+   Prefix: .cr-  (Hero stays on existing .insights-page-hero)
+   ============================================================== */
+
+.careers-page {
+  background:
+    linear-gradient(180deg, #fffaf2 0%, #f4f9f8 32%, #fff9f0 64%, #eaf3f3 100%);
+  color: var(--ink);
+}
+
+/* ───────── Life at OneDegree ───────── */
+.cr-life {
+  padding: 110px 0 80px;
+}
+
+.cr-life-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 72px;
+  align-items: center;
+}
+
+.cr-life-copy h2 {
+  margin: 18px 0 22px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.55rem;
+  line-height: 1.16;
+  letter-spacing: -0.008em;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.cr-life-copy p {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.78;
+}
+
+.cr-life-points {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0 0;
+  display: grid;
+  gap: 16px;
+}
+
+.cr-life-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--va-line, rgba(15, 34, 48, 0.10));
+  box-shadow: 0 8px 22px rgba(7, 25, 34, 0.06);
+}
+
+.cr-life-points svg {
+  flex: 0 0 auto;
+  width: 22px !important;
+  height: 22px !important;
+  color: var(--teal-dark);
+  stroke-width: 2;
+  margin-top: 2px;
+}
+
+.cr-life-points strong {
+  display: block;
+  color: var(--navy);
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.cr-life-points span {
+  color: var(--muted);
+  font-size: 0.97rem;
+  line-height: 1.6;
+}
+
+.cr-life-media {
+  position: relative;
+  margin: 0;
+  border-radius: 22px;
+  overflow: visible;
+}
+
+.cr-life-media img {
+  width: 100%;
+  border-radius: 22px;
+  box-shadow: 0 28px 60px rgba(7, 25, 34, 0.18);
+  aspect-ratio: 5 / 6;
+  object-fit: cover;
+  display: block;
+}
+
+.cr-life-badge {
+  position: absolute;
+  left: -22px;
+  bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--va-line, rgba(15, 34, 48, 0.10));
+  box-shadow: 0 18px 40px rgba(7, 25, 34, 0.14);
+  border-left: 4px solid var(--gold);
+}
+
+.cr-life-badge svg {
+  width: 22px !important;
+  height: 22px !important;
+  color: var(--gold);
+  stroke-width: 2.2;
+  flex: 0 0 auto;
+}
+
+.cr-life-badge strong {
+  display: block;
+  color: var(--navy);
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.cr-life-badge span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+/* ───────── Hiring Process (compact horizontal rail) ───────── */
+.cr-rail {
+  position: relative;
+  padding: 96px 0 100px;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(199, 146, 74, 0.10), transparent 55%),
+    radial-gradient(circle at 6% 92%, rgba(13, 122, 120, 0.08), transparent 55%),
+    #ffffff;
+  border-top: 1px solid var(--va-line, rgba(15, 34, 48, 0.08));
+  border-bottom: 1px solid var(--va-line, rgba(15, 34, 48, 0.08));
+}
+
+.cr-rail-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr);
+  gap: 32px;
+  align-items: end;
+  margin-bottom: 56px;
+}
+
+.cr-rail-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid rgba(13, 122, 120, 0.32);
+  border-radius: 999px;
+  background: rgba(13, 122, 120, 0.08);
+  color: var(--teal-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.cr-rail-eyebrow svg {
+  width: 14px !important;
+  height: 14px !important;
+  stroke-width: 2.4;
+  flex: 0 0 auto;
+}
+
+.cr-rail-head h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.4rem;
+  line-height: 1.14;
+  letter-spacing: -0.008em;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.cr-rail-head h2 em {
+  font-style: italic;
+  color: var(--teal-dark);
+}
+
+.cr-rail-head > p {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.cr-rail-head strong {
+  color: var(--teal-dark);
+  font-weight: 800;
+}
+
+/* Track: 6 columns; rail line passes through the NUMBER row at the top,
+   then icon nodes and labels stack cleanly below. */
+.cr-rail-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: 8px;
+  padding: 20px 0 8px;
+  --rail-num-size: 38px;
+  --rail-line-top: 19px;
+}
+
+/* The continuous track sits behind the number badges. We use two layered
+   lines: a static dashed track + a solid progress fill that animates. */
+.cr-rail-line {
+  position: absolute;
+  top: var(--rail-line-top);
+  left: calc((100% / 6) / 2);
+  right: calc((100% / 6) / 2);
+  height: 2px;
+  z-index: 0;
+  background-image: linear-gradient(
+    to right,
+    rgba(15, 34, 48, 0.22) 0,
+    rgba(15, 34, 48, 0.22) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  background-size: 12px 2px;
+  background-repeat: repeat-x;
+}
+
+.cr-rail-line-fill {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--teal-dark) 0%, var(--gold) 100%);
+  border-radius: 2px;
+  transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(199, 146, 74, 0.35);
+}
+
+.cr-rail-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  color: var(--ink);
+  transition: transform 0.25s ease;
+}
+
+.cr-rail-step:hover {
+  transform: translateY(-2px);
+}
+
+/* Number badge sits ON the line — looks like a bead on a string */
+.cr-rail-step-num {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rail-num-size);
+  height: var(--rail-num-size);
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid rgba(15, 34, 48, 0.18);
+  color: rgba(15, 34, 48, 0.55);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  box-shadow: 0 0 0 6px #ffffff,
+              0 4px 10px rgba(7, 25, 34, 0.06);
+  transition: background 0.3s ease, border-color 0.3s ease,
+              color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Vertical drop-line from the bead to the icon below */
+.cr-rail-step-num::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0;
+  height: 14px;
+  border-left: 1.5px dashed rgba(15, 34, 48, 0.22);
+  transform: translateX(-50%);
+  transition: border-color 0.3s ease;
+}
+
+/* Icon node — floats below the bead, no line crosses it */
+.cr-rail-node {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid rgba(15, 34, 48, 0.12);
+  color: rgba(15, 34, 48, 0.55);
+  box-shadow: 0 8px 22px rgba(7, 25, 34, 0.08);
+  transition: background 0.3s ease, border-color 0.3s ease,
+              color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cr-rail-node svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 1.9;
+}
+
+.cr-rail-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: rgba(15, 34, 48, 0.58);
+  max-width: 130px;
+  transition: color 0.25s ease;
+}
+
+/* ── States ─────────────────────────────────────────── */
+.cr-rail-step.is-passed .cr-rail-step-num {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: #fff;
+}
+
+.cr-rail-step.is-passed .cr-rail-step-num::after {
+  border-left-color: rgba(13, 122, 120, 0.55);
+}
+
+.cr-rail-step.is-passed .cr-rail-node {
+  border-color: rgba(13, 122, 120, 0.4);
+  background: rgba(13, 122, 120, 0.06);
+  color: var(--teal-dark);
+}
+
+.cr-rail-step.is-active .cr-rail-step-num {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+  box-shadow: 0 0 0 6px #ffffff,
+              0 8px 18px rgba(199, 146, 74, 0.4);
+}
+
+.cr-rail-step.is-active .cr-rail-step-num::after {
+  border-left-color: rgba(199, 146, 74, 0.6);
+}
+
+.cr-rail-step.is-active .cr-rail-node {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--navy) 100%);
+  border-color: var(--gold);
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 14px 30px rgba(13, 122, 120, 0.32),
+              0 0 0 4px rgba(199, 146, 74, 0.18);
+}
+
+.cr-rail-step.is-active .cr-rail-label {
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.cr-rail-step:focus-visible {
+  outline: none;
+}
+
+.cr-rail-step:focus-visible .cr-rail-step-num {
+  box-shadow: 0 0 0 4px rgba(199, 146, 74, 0.4);
+}
+
+/* Panel: split into side meta + main body */
+.cr-rail-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr);
+  gap: 0;
+  margin-top: 48px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--va-line, rgba(15, 34, 48, 0.10));
+  box-shadow: 0 22px 50px rgba(7, 25, 34, 0.10);
+}
+
+.cr-rail-panel-side {
+  position: relative;
+  padding: 32px 32px 30px;
+  background: linear-gradient(155deg, var(--navy) 0%, var(--teal-dark) 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+.cr-rail-panel-side::after {
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(199, 146, 74, 0.25), transparent 70%);
+  pointer-events: none;
+}
+
+.cr-rail-panel-stage {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+.cr-rail-panel-title {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 16px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.05rem;
+  font-weight: 700;
+  line-height: 1.16;
+  color: #fff;
+}
+
+.cr-rail-panel-meta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(199, 146, 74, 0.2);
+  border: 1px solid rgba(199, 146, 74, 0.42);
+  color: #ffe2b8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.cr-rail-panel-meta svg {
+  width: 15px !important;
+  height: 15px !important;
+  stroke-width: 2.2;
+  flex: 0 0 auto;
+}
+
+.cr-rail-panel-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 36px 24px;
+  background: #ffffff;
+}
+
+.cr-rail-panel-body {
+  margin: 0 0 20px;
+  color: var(--ink);
+  font-size: 1.02rem;
+  line-height: 1.74;
+}
+
+.cr-rail-panel-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cr-rail-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--va-line, rgba(15, 34, 48, 0.14));
+  color: var(--teal-dark);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.cr-rail-nav:hover:not(:disabled) {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.cr-rail-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cr-rail-nav svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2.2;
+}
+
+
+/* ───────── Application form ───────── */
+.cr-apply {
+  position: relative;
+  padding: 110px 0 130px;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(13, 122, 120, 0.18), transparent 55%),
+    radial-gradient(circle at 88% 84%, rgba(199, 146, 74, 0.16), transparent 55%),
+    linear-gradient(180deg, #07585a 0%, #0a3f4f 42%, #082836 76%, #071c26 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+.cr-apply::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 140px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(7, 25, 34, 0) 0%, rgba(7, 25, 34, 0.55) 40%, #071922 100%);
+  z-index: 1;
+}
+
+.cr-apply .container {
+  position: relative;
+  z-index: 2;
+}
+
+.careers-page + .site-footer {
+  margin-top: -60px;
+}
+
+.careers-page + .site-footer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(180deg, rgba(7, 25, 34, 0) 0%, #071922 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cr-apply-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.cr-apply-aside h2 {
+  margin: 16px 0 18px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.4rem;
+  line-height: 1.18;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.008em;
+}
+
+.cr-apply-aside p {
+  margin: 0 0 28px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.cr-apply-points {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  display: grid;
+  gap: 12px;
+}
+
+.cr-apply-points li {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.92rem;
+  font-weight: 700;
+  width: max-content;
+}
+
+.cr-apply-points svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--gold);
+  stroke-width: 2.2;
+  flex: 0 0 auto;
+}
+
+.cr-apply-quote {
+  position: relative;
+  padding: 26px 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid var(--gold);
+  border-radius: 10px;
+}
+
+.cr-apply-quote-mark {
+  position: absolute;
+  top: -14px;
+  left: 18px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.cr-apply-quote p {
+  margin: 0 0 8px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.cr-apply-quote-sig {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cr-apply-form-card {
+  padding: 38px 36px 34px;
+  background: #ffffff;
+  color: var(--ink);
+  border-radius: 18px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.32);
+  border-top: 4px solid var(--gold);
+}
+
+.cr-apply-form {
+  display: grid;
+  gap: 18px;
+}
+
+.cr-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.cr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cr-field > span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+}
+
+.cr-field input,
+.cr-field select,
+.cr-field textarea {
+  padding: 12px 14px;
+  background: #fbfbfa;
+  border: 1px solid rgba(15, 34, 48, 0.16);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 0.96rem;
+  line-height: 1.4;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.cr-field input:focus,
+.cr-field select:focus,
+.cr-field textarea:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px rgba(13, 122, 120, 0.16);
+}
+
+.cr-field textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.cr-field select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--teal-dark) 50%),
+    linear-gradient(135deg, var(--teal-dark) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 40px;
+}
+
+.cr-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.cr-checkbox input {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--teal-dark);
+}
+
+.cr-apply-submit {
+  width: max-content;
+  margin-top: 4px;
+}
+
+/* ───────── Careers responsive ───────── */
+@media (max-width: 960px) {
+  .cr-life {
+    padding: 72px 0 60px;
+  }
+  .cr-life-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .cr-life-copy h2,
+  .cr-rail-head h2,
+  .cr-apply-aside h2 {
+    font-size: 1.95rem;
+  }
+  .cr-rail {
+    padding: 72px 0 80px;
+  }
+  .cr-rail-head {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 40px;
+    align-items: start;
+  }
+  .cr-rail-track {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 32px;
+    column-gap: 14px;
+    padding-top: 12px;
+  }
+  .cr-rail-line {
+    display: none;
+  }
+  .cr-rail-step-num::after {
+    height: 10px;
+  }
+  .cr-rail-node {
+    width: 58px;
+    height: 58px;
+  }
+  .cr-rail-node svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .cr-rail-label {
+    font-size: 0.82rem;
+  }
+  .cr-rail-panel {
+    grid-template-columns: 1fr;
+  }
+  .cr-rail-panel-side {
+    padding: 26px 26px 24px;
+  }
+  .cr-rail-panel-main {
+    padding: 26px 26px 22px;
+  }
+  .cr-rail-panel-title {
+    font-size: 1.65rem;
+  }
+  .cr-apply {
+    padding: 80px 0 110px;
+  }
+  .cr-apply-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .cr-apply-form-card {
+    padding: 30px 26px 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .cr-life-badge {
+    left: 16px;
+    bottom: 16px;
+  }
+  .cr-rail-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 28px;
+    column-gap: 10px;
+  }
+  .cr-rail-node {
+    width: 54px;
+    height: 54px;
+  }
+  .cr-rail-node svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .cr-rail-step-num {
+    width: 32px;
+    height: 32px;
+    font-size: 0.78rem;
+  }
+  .cr-form-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
