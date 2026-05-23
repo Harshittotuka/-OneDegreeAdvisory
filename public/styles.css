@@ -11878,3 +11878,1504 @@ textarea:focus {
   }
 }
 
+
+/* ============================================================
+   Color theme switcher
+   ============================================================ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.theme-switcher {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 95;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(19, 37, 47, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 16px 38px rgba(7, 25, 34, 0.16);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.theme-swatch {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  color: transparent;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 4px 10px rgba(7, 25, 34, 0.18);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.theme-swatch::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.theme-swatch:hover {
+  transform: translateY(-2px);
+}
+
+.theme-swatch:focus-visible {
+  outline: none;
+}
+
+.theme-swatch.is-active::after,
+.theme-swatch:focus-visible::after {
+  border-color: var(--coral);
+  transform: scale(1.03);
+}
+
+.theme-swatch-current {
+  background: conic-gradient(from 35deg, #0d7a78 0 34%, #0b2b43 0 67%, #e26d5a 0 84%, #fbf8f0 0);
+}
+
+.theme-swatch-fedex {
+  background: conic-gradient(from 35deg, #4d148c 0 58%, #ff6600 0 82%, #f4f4f4 0);
+}
+
+.theme-swatch-custom {
+  background: conic-gradient(from 35deg, #b54a1a 0 38%, #f4a03b 0 62%, #2c1a14 0 84%, #fff1de 0);
+}
+
+.theme-swatch-dark {
+  background: conic-gradient(from 35deg, #0b0d11 0 56%, #6ee7b7 0 78%, #f5f5f5 0);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+html[data-color-theme="fedex"] {
+  color-scheme: light;
+  --ink: #2b174f;
+  --muted: #655b72;
+  --navy: #4d148c;
+  --deep: #2f0a58;
+  --teal: #4d148c;
+  --teal-dark: #35106a;
+  --aqua: #f1e9fb;
+  --blue-soft: #ece3f7;
+  --gold: #ff6600;
+  --coral: #ff6600;
+  --sage: #7d6c8f;
+  --paper: #ffffff;
+  --ivory: #f8f5fb;
+  --mist: #f4f2f7;
+  --line: rgba(77, 20, 140, 0.16);
+  --shadow: 0 24px 70px rgba(47, 10, 88, 0.18);
+  --shadow-soft: 0 14px 34px rgba(47, 10, 88, 0.11);
+  --theme-body-bg: linear-gradient(180deg, #fbf9ff 0%, #f4f2f7 30%, #ffffff 54%, #fff4ea 76%, #2f0a58 100%);
+  --theme-band-bg: linear-gradient(180deg, #f7f4fb 0%, #ffffff 46%, #fff3e8 100%);
+  --theme-band-alt: linear-gradient(180deg, #ffffff 0%, #f2edf8 58%, #fff6ee 100%);
+  --theme-band-deep: linear-gradient(180deg, #4d148c 0%, #35106a 58%, #2f0a58 100%);
+  --theme-nav-bg: rgba(255, 255, 255, 0.92);
+  --theme-notice-bg: #4d148c;
+  --theme-surface: rgba(255, 255, 255, 0.94);
+  --theme-surface-solid: #ffffff;
+  --theme-field-bg: #fbf9ff;
+  --theme-field-border: rgba(77, 20, 140, 0.18);
+  --theme-border: rgba(77, 20, 140, 0.14);
+  --theme-border-soft: rgba(77, 20, 140, 0.1);
+  --theme-card-shadow: 0 16px 38px rgba(47, 10, 88, 0.1);
+  --theme-focus-ring: rgba(255, 102, 0, 0.18);
+  --theme-accent-hover: #e65c00;
+  --theme-brand-gradient: linear-gradient(135deg, #4d148c 0%, #35106a 54%, #ff6600 100%);
+  --theme-highlight-gradient: linear-gradient(120deg, #ff6600 0%, #ffb077 34%, #ffffff 48%, #ff6600 64%, #4d148c 100%);
+  --theme-hero-overlay:
+    linear-gradient(90deg, rgba(47, 10, 88, 0.92) 0%, rgba(77, 20, 140, 0.7) 52%, rgba(255, 102, 0, 0.16) 100%),
+    linear-gradient(180deg, rgba(47, 10, 88, 0.36) 0%, rgba(47, 10, 88, 0.05) 52%, rgba(47, 10, 88, 0.82) 100%);
+  --theme-glass-bg: linear-gradient(155deg, rgba(77, 20, 140, 0.32), rgba(47, 10, 88, 0.2) 64%, rgba(255, 102, 0, 0.12));
+  --theme-glass-border: rgba(255, 255, 255, 0.28);
+  --theme-form-bg: linear-gradient(155deg, rgba(77, 20, 140, 0.34), rgba(47, 10, 88, 0.28) 62%, rgba(255, 102, 0, 0.14));
+  --theme-form-focus: #ffb077;
+  --theme-dark-text: rgba(255, 255, 255, 0.82);
+  --theme-dark-muted: rgba(255, 255, 255, 0.7);
+  --theme-home-ground: #f7f4fb;
+  --theme-home-ground-alt: #fff3e8;
+  --theme-home-dark: #35106a;
+}
+
+html[data-color-theme="custom"] {
+  color-scheme: light;
+  --ink: #2c1a14;
+  --muted: #6b574a;
+  --navy: #6f2410;
+  --deep: #2c1a14;
+  --teal: #b54a1a;
+  --teal-dark: #8c3210;
+  --aqua: #fde6cf;
+  --blue-soft: #fbf0df;
+  --gold: #f4a03b;
+  --coral: #d96a2c;
+  --sage: #a37247;
+  --paper: #fff8ec;
+  --ivory: #fbeed8;
+  --mist: #f7e3c8;
+  --line: rgba(44, 26, 20, 0.14);
+  --shadow: 0 24px 70px rgba(44, 26, 20, 0.2);
+  --shadow-soft: 0 14px 34px rgba(44, 26, 20, 0.14);
+  --theme-body-bg: linear-gradient(180deg, #fff5e2 0%, #fbe4c5 48%, #f6d3a0 100%);
+  --theme-band-bg: linear-gradient(180deg, #fff5e2 0%, #fbe4c5 100%);
+  --theme-band-alt: linear-gradient(180deg, #fbe4c5 0%, #fff5e2 100%);
+  --theme-band-deep: linear-gradient(180deg, #6f2410 0%, #4a190b 60%, #2c1a14 100%);
+  --theme-nav-bg: rgba(255, 245, 226, 0.94);
+  --theme-notice-bg: #6f2410;
+  --theme-surface: rgba(255, 245, 226, 0.96);
+  --theme-surface-solid: #fff5e2;
+  --theme-field-bg: #fff1d8;
+  --theme-field-border: rgba(181, 74, 26, 0.22);
+  --theme-border: rgba(44, 26, 20, 0.16);
+  --theme-border-soft: rgba(44, 26, 20, 0.1);
+  --theme-card-shadow: 0 16px 38px rgba(44, 26, 20, 0.14);
+  --theme-focus-ring: rgba(244, 160, 59, 0.32);
+  --theme-accent-hover: #9a3f12;
+  --theme-brand-gradient: linear-gradient(135deg, #b54a1a 0%, #6f2410 52%, #f4a03b 100%);
+  --theme-highlight-gradient: linear-gradient(120deg, #b54a1a 0%, #f4a03b 36%, #fff5e2 50%, #f4a03b 66%, #6f2410 100%);
+  --theme-hero-overlay:
+    linear-gradient(90deg, rgba(44, 26, 20, 0.88) 0%, rgba(111, 36, 16, 0.66) 50%, rgba(244, 160, 59, 0.16) 100%),
+    linear-gradient(180deg, rgba(44, 26, 20, 0.32) 0%, rgba(44, 26, 20, 0.05) 52%, rgba(44, 26, 20, 0.82) 100%);
+  --theme-glass-bg: linear-gradient(155deg, rgba(181, 74, 26, 0.3), rgba(44, 26, 20, 0.22) 64%, rgba(244, 160, 59, 0.14));
+  --theme-glass-border: rgba(255, 245, 226, 0.34);
+  --theme-form-bg: linear-gradient(155deg, rgba(181, 74, 26, 0.32), rgba(44, 26, 20, 0.26) 62%, rgba(244, 160, 59, 0.16));
+  --theme-form-focus: #f4a03b;
+  --theme-dark-text: rgba(255, 245, 226, 0.86);
+  --theme-dark-muted: rgba(255, 245, 226, 0.72);
+  --theme-home-ground: #fff5e2;
+  --theme-home-ground-alt: #fbe4c5;
+  --theme-home-dark: #2c1a14;
+}
+
+html[data-color-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e6e9ef;
+  --muted: #9aa3b2;
+  --navy: #e6e9ef;
+  --deep: #06070a;
+  --teal: #5eead4;
+  --teal-dark: #2dd4bf;
+  --aqua: rgba(94, 234, 212, 0.18);
+  --blue-soft: rgba(94, 234, 212, 0.12);
+  --gold: #fbbf24;
+  --coral: #f87171;
+  --sage: #94a3b8;
+  --paper: #11141a;
+  --ivory: #161a22;
+  --mist: #161a22;
+  --line: rgba(255, 255, 255, 0.08);
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+  --shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.5);
+  --theme-body-bg: linear-gradient(180deg, #0b0d11 0%, #0e1116 100%);
+  --theme-band-bg: linear-gradient(180deg, #11141a 0%, #0e1116 100%);
+  --theme-band-alt: linear-gradient(180deg, #0e1116 0%, #11141a 100%);
+  --theme-band-deep: linear-gradient(180deg, #06070a 0%, #03040680 60%, #06070a 100%);
+  --theme-nav-bg: rgba(11, 13, 17, 0.86);
+  --theme-notice-bg: #0e1116;
+  --theme-surface: rgba(22, 26, 34, 0.94);
+  --theme-surface-solid: #161a22;
+  --theme-field-bg: rgba(255, 255, 255, 0.04);
+  --theme-field-border: rgba(255, 255, 255, 0.1);
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-border-soft: rgba(255, 255, 255, 0.05);
+  --theme-card-shadow: 0 16px 38px rgba(0, 0, 0, 0.55);
+  --theme-focus-ring: rgba(94, 234, 212, 0.32);
+  --theme-accent-hover: #2dd4bf;
+  --theme-brand-gradient: linear-gradient(135deg, #5eead4 0%, #0e7490 52%, #fbbf24 100%);
+  --theme-highlight-gradient: linear-gradient(120deg, #5eead4 0%, #fbbf24 36%, #f5f5f5 50%, #fbbf24 66%, #5eead4 100%);
+  --theme-hero-overlay:
+    linear-gradient(90deg, rgba(6, 7, 10, 0.92) 0%, rgba(11, 13, 17, 0.74) 50%, rgba(94, 234, 212, 0.12) 100%),
+    linear-gradient(180deg, rgba(6, 7, 10, 0.4) 0%, rgba(6, 7, 10, 0.1) 52%, rgba(6, 7, 10, 0.84) 100%);
+  --theme-glass-bg: linear-gradient(155deg, rgba(94, 234, 212, 0.16), rgba(6, 7, 10, 0.5) 64%, rgba(251, 191, 36, 0.1));
+  --theme-glass-border: rgba(255, 255, 255, 0.16);
+  --theme-form-bg: linear-gradient(155deg, rgba(94, 234, 212, 0.14), rgba(6, 7, 10, 0.6) 62%, rgba(251, 191, 36, 0.1));
+  --theme-form-focus: #5eead4;
+  --theme-dark-text: rgba(230, 233, 239, 0.88);
+  --theme-dark-muted: rgba(230, 233, 239, 0.66);
+  --theme-home-ground: #0e1116;
+  --theme-home-ground-alt: #11141a;
+  --theme-home-dark: #06070a;
+}
+
+html[data-color-theme] body {
+  color: var(--ink);
+  background: var(--theme-body-bg);
+}
+
+html[data-color-theme] :focus-visible {
+  outline-color: var(--theme-focus-ring);
+}
+
+html[data-color-theme] .theme-switcher {
+  border-color: var(--theme-border);
+  background: color-mix(in srgb, var(--theme-surface-solid) 84%, transparent);
+  box-shadow: var(--theme-card-shadow);
+}
+
+html[data-color-theme] .notice {
+  background: var(--theme-notice-bg);
+}
+
+html[data-color-theme] .nav-shell,
+html[data-color-theme] .site-header.is-scrolled .nav-shell {
+  background: var(--theme-nav-bg);
+  border-bottom-color: var(--theme-border-soft);
+  box-shadow: 0 18px 50px rgba(47, 10, 88, 0.1);
+}
+
+html[data-color-theme="custom"] .nav-shell,
+html[data-color-theme="custom"] .site-header.is-scrolled .nav-shell {
+  box-shadow: 0 18px 50px rgba(18, 35, 26, 0.1);
+}
+
+html[data-color-theme] .brand-mark {
+  background: var(--theme-brand-gradient);
+}
+
+html[data-color-theme] .brand small,
+html[data-color-theme] .currency-menu .cur-code {
+  color: var(--muted);
+}
+
+html[data-color-theme] .nav-menu a,
+html[data-color-theme] .nav-trigger,
+html[data-color-theme] .currency-trigger,
+html[data-color-theme] .currency-menu button,
+html[data-color-theme] .currency-menu .cur-name {
+  color: var(--navy);
+}
+
+html[data-color-theme] .nav-dropdown,
+html[data-color-theme] .currency-menu {
+  border-color: var(--theme-border);
+  background: var(--theme-surface-solid);
+  box-shadow: var(--shadow);
+}
+
+html[data-color-theme] .nav-dropdown::before {
+  border-color: var(--theme-border);
+}
+
+html[data-color-theme] .nav-dropdown-badge,
+html[data-color-theme] .dest-card:hover,
+html[data-color-theme] .currency-menu button:hover,
+html[data-color-theme] .currency-menu button:focus-visible,
+html[data-color-theme] .currency-menu button[aria-current="true"] {
+  background: var(--aqua);
+}
+
+html[data-color-theme] .nav-dropdown-feature,
+html[data-color-theme] .world-map-panel,
+html[data-color-theme] .contact-card,
+html[data-color-theme] .contact-info-panel,
+html[data-color-theme] .insights-decision-band,
+html[data-color-theme] .country-section.dark,
+html[data-color-theme] .mbbs-neet-panel article {
+  background: var(--theme-band-deep);
+  color: #ffffff;
+}
+
+html[data-color-theme] .feature-icon,
+html[data-color-theme] .feature-cta,
+html[data-color-theme] .currency-trigger i,
+html[data-color-theme] .currency-trigger svg,
+html[data-color-theme] .currency-menu .cur-sym,
+html[data-color-theme] .text-link,
+html[data-color-theme] .insights-feature-copy a,
+html[data-color-theme] .insights-article-body a,
+html[data-color-theme] .contact-head-phone svg,
+html[data-color-theme] .contact-list svg,
+html[data-color-theme] .form-status {
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .hero .eyebrow,
+html[data-color-theme] .gold-text,
+html[data-color-theme] .country-hero h1 .gold-text {
+  background-image: var(--theme-highlight-gradient);
+}
+
+html[data-color-theme] .hero .eyebrow::before {
+  background: var(--theme-highlight-gradient);
+}
+
+html[data-color-theme] .hero-quote,
+html[data-color-theme] .btn-ghost,
+html[data-color-theme] .country-hero .btn-ghost {
+  border-color: var(--theme-glass-border);
+  background: rgba(255, 255, 255, 0.13);
+}
+
+html[data-color-theme] .btn-primary,
+html[data-color-theme] .hc-submit,
+html[data-color-theme] .site-footer .footer-contact-button,
+html[data-color-theme] .mbbs-hero .btn.mbbs-hero-cta {
+  background: var(--coral);
+  color: #ffffff;
+  box-shadow: 0 18px 36px var(--theme-focus-ring);
+}
+
+html[data-color-theme] .btn-primary:hover,
+html[data-color-theme] .hc-submit:hover,
+html[data-color-theme] .site-footer .footer-contact-button:hover {
+  background: var(--theme-accent-hover);
+}
+
+html[data-color-theme] .btn-secondary,
+html[data-color-theme] .contact-fab,
+html[data-color-theme] .destination-controls button.is-active {
+  background: var(--teal);
+  color: #ffffff;
+}
+
+html[data-color-theme] .contact-fab:hover,
+html[data-color-theme] .contact-fab:focus-visible {
+  background: var(--teal-dark);
+}
+
+html[data-color-theme] .hero-consult {
+  --hc-border: var(--theme-glass-border);
+  --hc-border-focus: var(--theme-form-focus);
+  --hc-input-bg: rgba(255, 255, 255, 0.09);
+  --hc-input-bg-focus: rgba(255, 255, 255, 0.16);
+  background: var(--theme-form-bg);
+  border-color: var(--theme-glass-border);
+}
+
+html[data-color-theme] .hc-field input:focus,
+html[data-color-theme] .hc-field select:focus,
+html[data-color-theme] .cbx.is-open .cbx-field,
+html[data-color-theme] .cbx-field:focus-visible,
+html[data-color-theme] .cbx-field:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-form-focus) 28%, transparent);
+}
+
+html[data-color-theme] .hc-field input:focus + .hc-label,
+html[data-color-theme] .hc-field input:not(:placeholder-shown) + .hc-label,
+html[data-color-theme] .hc-select select:focus ~ .hc-label,
+html[data-color-theme] .hc-select select:valid ~ .hc-label,
+html[data-color-theme] .hc-select.is-enhanced.is-filled > .hc-label,
+html[data-color-theme] .hc-select.is-enhanced.is-focused > .hc-label,
+html[data-color-theme] .hc-select.is-enhanced:focus-within > .hc-label,
+html[data-color-theme] .hc-select.is-enhanced:has(.cbx.is-open) > .hc-label,
+html[data-color-theme] .cbx.is-open .cbx-chevron {
+  color: var(--theme-form-focus);
+}
+
+html[data-color-theme] .hc-field input:focus + .hc-label,
+html[data-color-theme] .hc-field input:not(:placeholder-shown) + .hc-label,
+html[data-color-theme] .hc-select select:focus ~ .hc-label,
+html[data-color-theme] .hc-select select:valid ~ .hc-label,
+html[data-color-theme] .hc-select.is-enhanced.is-filled > .hc-label,
+html[data-color-theme] .hc-select.is-enhanced.is-focused > .hc-label,
+html[data-color-theme] .hc-select.is-enhanced:focus-within > .hc-label,
+html[data-color-theme] .hc-select.is-enhanced:has(.cbx.is-open) > .hc-label {
+  background: color-mix(in srgb, var(--deep) 92%, transparent);
+}
+
+html[data-color-theme] .pathfinder {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(7, 25, 34, 0.9) 0%,
+      rgba(7, 25, 34, 0.48) 34%,
+      var(--theme-home-ground) 100%
+    );
+}
+
+html[data-color-theme] .audience-section,
+html[data-color-theme] .method-section,
+html[data-color-theme] .solutions-section,
+html[data-color-theme] .destinations-section,
+html[data-color-theme] .outcomes-section,
+html[data-color-theme] .insights-section,
+html[data-color-theme] .about-section,
+html[data-color-theme] .contact-section,
+html[data-color-theme] .insights-page-hero,
+html[data-color-theme] .insights-feature-section,
+html[data-color-theme] .insights-page-section,
+html[data-color-theme] .insights-planning-section,
+html[data-color-theme] .contact-page-main,
+html[data-color-theme] .country-section.alt,
+html[data-color-theme] .country-section.paper,
+html[data-color-theme] .mbbs-hero,
+html[data-color-theme] .mbbs-paths,
+html[data-color-theme] .mbbs-practice,
+html[data-color-theme] .mbbs-neet,
+html[data-color-theme] .mbbs-finance,
+html[data-color-theme] .mbbs-faq {
+  background: var(--theme-band-bg);
+}
+
+html[data-color-theme] .signal-strip,
+html[data-color-theme] .insights-directory,
+html[data-color-theme] .about-stats-band,
+html[data-color-theme] .mbbs-corridor,
+html[data-color-theme] .mbbs-career,
+html[data-color-theme] .mbbs-parents,
+html[data-color-theme] .mbbs-universities,
+html[data-color-theme] .mbbs-compare,
+html[data-color-theme] .mbbs-timeline {
+  background: var(--theme-band-alt);
+}
+
+html[data-color-theme] .insights-page-main,
+html[data-color-theme] .country-main,
+html[data-color-theme] .mbbs-page {
+  background: var(--theme-body-bg);
+}
+
+html[data-color-theme] .contact-section,
+html[data-color-theme] .insights-cta-section {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--theme-surface-solid) 88%, var(--aqua)) 0%, var(--aqua) 54%, var(--deep) 100%);
+}
+
+html[data-color-theme] .insights-page-hero::after,
+html[data-color-theme] .solutions-section::before,
+html[data-color-theme] .destinations-section::before,
+html[data-color-theme] .outcomes-section::before,
+html[data-color-theme] .about-section::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), var(--theme-surface-solid));
+}
+
+html[data-color-theme] .solutions-section::before,
+html[data-color-theme] .destinations-section::before,
+html[data-color-theme] .outcomes-section::before,
+html[data-color-theme] .about-section::before {
+  display: none;
+}
+
+html[data-color-theme] .signal-strip {
+  background: linear-gradient(180deg, var(--theme-home-ground) 0%, var(--theme-home-ground-alt) 100%);
+}
+
+html[data-color-theme] .audience-section,
+html[data-color-theme] .method-section {
+  background: linear-gradient(180deg, var(--theme-home-ground-alt) 0%, var(--theme-home-ground) 100%);
+}
+
+html[data-color-theme] .solutions-section {
+  background: linear-gradient(180deg, var(--theme-home-ground) 0%, color-mix(in srgb, var(--theme-home-ground) 70%, var(--theme-home-ground-alt)) 100%);
+}
+
+html[data-color-theme] .destinations-section {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--theme-home-ground) 78%, var(--theme-home-ground-alt)) 0%, var(--theme-home-ground-alt) 100%);
+}
+
+html[data-color-theme] .outcomes-section,
+html[data-color-theme] .about-section,
+html[data-color-theme] .insights-section {
+  background: linear-gradient(180deg, var(--theme-home-ground-alt) 0%, var(--theme-home-ground) 100%);
+}
+
+html[data-color-theme] .contact-section {
+  background:
+    linear-gradient(
+      180deg,
+      var(--theme-home-ground) 0%,
+      var(--theme-home-ground-alt) 44%,
+      color-mix(in srgb, var(--theme-home-dark) 82%, var(--theme-home-ground-alt)) 74%,
+      var(--theme-home-dark) 100%
+    );
+}
+
+html[data-color-theme] :is(
+  .pathfinder-shell,
+  .signal,
+  .audience-card,
+  .journey-step,
+  .service-card,
+  .destination-card,
+  .testimonial,
+  .insight-card,
+  .insights-hero-panel,
+  .insights-feature-card,
+  .insights-article-card,
+  .insights-planning-grid article,
+  .insights-cta-panel,
+  .about-stat,
+  .about-team-card,
+  .origin-pillar,
+  .origin-shell,
+  .consult-form,
+  .contact-page-grid,
+  .contact-form-panel,
+  .contact-response-card,
+  .contact-head-phone,
+  .uni-img-card,
+  .course-card,
+  .edu-level-card,
+  .reason-card,
+  .info-card,
+  .cost-card,
+  .life-card,
+  .work-pr-card,
+  .timeline-item,
+  .country-cta-card,
+  .mbbs-path-card,
+  .mbbs-country-card,
+  .mbbs-university-board article,
+  .mbbs-check-card,
+  .mbbs-finance-card,
+  .mbbs-faq-grid article,
+  .mbbs-career-rail li,
+  .mbbs-parent-list li,
+  .mbbs-compare-table,
+  .mbbs-timeline-grid article
+) {
+  border-color: var(--theme-border);
+  background: var(--theme-surface);
+  box-shadow: var(--theme-card-shadow);
+}
+
+html[data-color-theme] :is(.pathfinder-shell, .signal, .audience-card, .journey-step, .service-card, .destination-card, .testimonial, .insights-article-card, .about-stat, .about-team-card, .origin-pillar):hover {
+  border-color: color-mix(in srgb, var(--teal) 34%, transparent);
+}
+
+html[data-color-theme] label span,
+html[data-color-theme] .contact-phone-label,
+html[data-color-theme] .section-lead p,
+html[data-color-theme] .signal p,
+html[data-color-theme] .audience-card p,
+html[data-color-theme] .journey-step p,
+html[data-color-theme] .service-card p,
+html[data-color-theme] .destination-card p,
+html[data-color-theme] .insights-feature-copy p,
+html[data-color-theme] .insights-section-head p,
+html[data-color-theme] .insights-article-body p,
+html[data-color-theme] .insights-planning-grid p,
+html[data-color-theme] .contact-page-head-aside p,
+html[data-color-theme] .course-card p,
+html[data-color-theme] .uni-img-card .uni-loc,
+html[data-color-theme] .mbbs-section-head p,
+html[data-color-theme] .mbbs-country-note,
+html[data-color-theme] .mbbs-country-grid-meta dt,
+html[data-color-theme] .mbbs-check-card p,
+html[data-color-theme] .mbbs-finance-card p,
+html[data-color-theme] .mbbs-faq-grid p,
+html[data-color-theme] .mbbs-career-rail p,
+html[data-color-theme] .mbbs-parent-list li {
+  color: var(--muted);
+}
+
+html[data-color-theme] .insights-page-copy h1,
+html[data-color-theme] .insights-feature-copy h2,
+html[data-color-theme] .insights-section-head h2,
+html[data-color-theme] .insights-article-body h3,
+html[data-color-theme] .contact-page-title,
+html[data-color-theme] .contact-page-kicker,
+html[data-color-theme] .country-section .section-head h2,
+html[data-color-theme] .uni-img-card .uni-body h3,
+html[data-color-theme] .course-card h3,
+html[data-color-theme] .mbbs-section-head h2,
+html[data-color-theme] .mbbs-universities h2,
+html[data-color-theme] .mbbs-neet h2,
+html[data-color-theme] .mbbs-parents h2,
+html[data-color-theme] .mbbs-country-head h3,
+html[data-color-theme] .mbbs-country-grid-meta dd {
+  color: var(--navy);
+}
+
+html[data-color-theme] input,
+html[data-color-theme] select,
+html[data-color-theme] textarea,
+html[data-color-theme] .contact-phone .cbx-field {
+  border-color: var(--theme-field-border);
+  background: var(--theme-field-bg);
+  color: var(--ink);
+}
+
+html[data-color-theme] input:focus,
+html[data-color-theme] select:focus,
+html[data-color-theme] textarea:focus {
+  border-color: color-mix(in srgb, var(--teal) 68%, transparent);
+  box-shadow: 0 0 0 4px var(--theme-focus-ring);
+}
+
+html[data-color-theme] .finder-note,
+html[data-color-theme] .consent span,
+html[data-color-theme] .contact-privacy,
+html[data-color-theme] .footer-address {
+  color: var(--muted);
+}
+
+html[data-color-theme] .signal span,
+html[data-color-theme] .destination-controls button,
+html[data-color-theme] .insights-feature-points span,
+html[data-color-theme] .uni-img-card .uni-meta span,
+html[data-color-theme] .mbbs-career-rail span {
+  background: var(--aqua);
+  border-color: var(--theme-border);
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .journey-step::after,
+html[data-color-theme] .mbbs-routes-grid span::before {
+  background: var(--coral);
+  box-shadow: 0 0 0 7px var(--theme-focus-ring);
+}
+
+html[data-color-theme] .country-hero {
+  background-color: var(--deep);
+}
+
+html[data-color-theme] .country-back,
+html[data-color-theme] .country-hero .eyebrow,
+html[data-color-theme] .country-snapshot h2,
+html[data-color-theme] .country-section.dark .section-head .eyebrow,
+html[data-color-theme] .country-band .eyebrow {
+  color: var(--theme-form-focus);
+}
+
+html[data-color-theme] .country-hero .btn-primary,
+html[data-color-theme] .country-cta .btn-primary {
+  background: var(--coral);
+  color: #ffffff;
+}
+
+html[data-color-theme] .country-snapshot {
+  background: var(--theme-glass-bg);
+  border-color: var(--theme-glass-border);
+}
+
+html[data-color-theme] .origin-section {
+  background:
+    linear-gradient(
+      180deg,
+      var(--theme-home-ground-alt) 0%,
+      color-mix(in srgb, var(--theme-home-ground) 72%, var(--theme-home-ground-alt)) 100%
+    );
+}
+
+html[data-color-theme] .origin-section::before {
+  background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--teal) 16%, transparent), transparent 70%);
+}
+
+html[data-color-theme] .origin-section::after {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--coral) 16%, transparent), transparent 70%);
+}
+
+html[data-color-theme] .origin-shell {
+  background: color-mix(in srgb, var(--theme-surface-solid) 82%, var(--theme-home-ground-alt));
+}
+
+html[data-color-theme] .origin-head {
+  border-bottom-color: var(--theme-border);
+}
+
+html[data-color-theme] .country-nav {
+  background: color-mix(in srgb, var(--theme-surface-solid) 92%, transparent);
+  border-bottom-color: var(--theme-border-soft);
+}
+
+html[data-color-theme] .country-nav-track a {
+  background: var(--theme-surface-solid);
+  border-color: var(--theme-border);
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .country-nav-track a:hover {
+  background: var(--theme-brand-gradient);
+  color: #ffffff;
+}
+
+html[data-color-theme] .country-cta {
+  background: var(--theme-band-deep);
+}
+
+html[data-color-theme] .country-section.dark .section-head h2,
+html[data-color-theme] .country-section.dark h3,
+html[data-color-theme] .country-section.dark h4,
+html[data-color-theme] .country-cta h2,
+html[data-color-theme] .country-cta-card h3,
+html[data-color-theme] .country-cta-card li {
+  color: #ffffff;
+}
+
+html[data-color-theme] .country-section.dark .section-head p,
+html[data-color-theme] .country-cta p,
+html[data-color-theme] .country-cta-card p {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .country-section.dark :is(.info-card, .reason-card, .cost-card, .life-card, .work-pr-card, .timeline-item, .edu-level-card, .course-card, .visa-step),
+html[data-color-theme] .country-cta-card {
+  background: color-mix(in srgb, #ffffff 10%, transparent);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  box-shadow: 0 20px 44px color-mix(in srgb, #000000 24%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html[data-color-theme] .country-section.dark :is(.info-card li, .info-card li strong, .reason-card p, .life-card p, .work-pr-card p, .cost-card .cost-label, .cost-card .cost-value, .cost-card .cost-note, .timeline-item p, .visa-step p) {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .country-section.dark :is(.info-card h3, .reason-card h3, .life-card h3, .work-pr-card h3, .timeline-item h4, .visa-step h4) {
+  color: #ffffff;
+}
+
+html[data-color-theme] .country-cta::after {
+  background: linear-gradient(180deg, rgba(7, 25, 34, 0) 0%, var(--deep) 76%, var(--deep) 100%);
+}
+
+html[data-color-theme] .site-footer,
+html[data-color-theme] .footer-marquee {
+  background: var(--theme-band-deep);
+}
+
+html[data-color-theme] .footer-marquee {
+  background:
+    linear-gradient(
+      180deg,
+      var(--theme-home-dark) 0%,
+      color-mix(in srgb, var(--theme-home-dark) 88%, #000 12%) 100%
+    );
+}
+
+html[data-color-theme] .footer-marquee::before {
+  background: linear-gradient(180deg, var(--theme-home-dark), rgba(7, 25, 34, 0));
+}
+
+html[data-color-theme] .footer-marquee::after {
+  background: linear-gradient(0deg, var(--theme-home-dark), rgba(7, 25, 34, 0));
+}
+
+html[data-color-theme] .site-footer::before {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--deep) 88%, transparent) 0%, color-mix(in srgb, var(--deep) 58%, transparent) 42%, color-mix(in srgb, var(--deep) 84%, transparent) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--deep) 94%, transparent) 0%, color-mix(in srgb, var(--deep) 52%, transparent) 46%, color-mix(in srgb, var(--deep) 72%, transparent) 100%);
+}
+
+html[data-color-theme] .footer-skyline::after {
+  background:
+    linear-gradient(180deg, var(--deep) 0%, rgba(7, 25, 34, 0) 26%),
+    linear-gradient(0deg, color-mix(in srgb, var(--deep) 80%, transparent) 0%, rgba(7, 25, 34, 0.08) 44%, rgba(7, 25, 34, 0) 100%);
+}
+
+html[data-color-theme="fedex"] .mbbs-page {
+  --mbbs-ink: #2b174f;
+  --mbbs-text: #3c2d56;
+  --mbbs-muted: #665b72;
+  --mbbs-forest: #35106a;
+  --mbbs-teal: #4d148c;
+  --mbbs-sea: #6b28a7;
+  --mbbs-gold: #ff6600;
+  --mbbs-coral: #ff7d24;
+  --mbbs-paper: #f8f5fb;
+  --mbbs-mist: #f0e8fb;
+  --mbbs-cream: #ffffff;
+  --mbbs-line: rgba(77, 20, 140, 0.14);
+  --mbbs-shadow: 0 24px 70px rgba(47, 10, 88, 0.16);
+}
+
+html[data-color-theme="custom"] .mbbs-page {
+  --mbbs-ink: #20251b;
+  --mbbs-text: #354031;
+  --mbbs-muted: #626d5c;
+  --mbbs-forest: #294231;
+  --mbbs-teal: #2f7f6b;
+  --mbbs-sea: #3b927d;
+  --mbbs-gold: #e7aa30;
+  --mbbs-coral: #d84a64;
+  --mbbs-paper: #f8f1e3;
+  --mbbs-mist: #edf6ef;
+  --mbbs-cream: #fffdf7;
+  --mbbs-line: rgba(32, 37, 27, 0.13);
+  --mbbs-shadow: 0 24px 70px rgba(32, 37, 27, 0.14);
+}
+
+@media (max-width: 600px) {
+  .theme-switcher {
+    left: 16px;
+    bottom: 16px;
+    gap: 7px;
+    padding: 7px;
+    transform: scale(0.84);
+    transform-origin: left bottom;
+  }
+
+  .theme-swatch {
+    width: 31px;
+    height: 31px;
+  }
+}
+
+/* ============================================================
+   PER-THEME PAGE OVERRIDES
+   Applies only when html[data-color-theme] is set (fedex/custom/dark).
+   The default/original theme is untouched.
+   ============================================================ */
+
+/* ---------- Section transition flattening ----------
+   The base site has many sections with their own backgrounds.
+   On themes, unify them through the theme tokens so the page
+   reads as one continuous palette instead of color-jumping. */
+html[data-color-theme] :is(
+  .home-hero,
+  .home-second,
+  .home-band,
+  .home-band--alt,
+  .home-ground,
+  .home-ground--alt,
+  .insights-page,
+  .insights-page-hero,
+  .insights-feature,
+  .insights-section,
+  .insights-planning,
+  .contact-page,
+  .contact-page-hero,
+  .contact-page-form,
+  .mbbs-page,
+  .mbbs-hero,
+  .mbbs-section,
+  .country-section,
+  .country-snapshot,
+  .country-band,
+  .country-band-alt,
+  .country-bg-soft,
+  .country-bg-warm
+) {
+  background: var(--theme-band-bg);
+}
+
+html[data-color-theme] :is(
+  .home-band--alt,
+  .home-ground--alt,
+  .insights-feature--alt,
+  .country-band-alt,
+  .mbbs-section--alt
+) {
+  background: var(--theme-band-alt);
+}
+
+/* Dark sections always use band-deep on themes */
+html[data-color-theme] :is(
+  .country-section.dark,
+  .home-dark,
+  .insights-dark
+) {
+  background: var(--theme-band-deep);
+  color: #ffffff;
+}
+
+/* ---------- COUNTRY CTA CARD — readability fix ---------- */
+html[data-color-theme] .country-cta-card {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+}
+
+html[data-color-theme] .country-cta-card h3 {
+  color: #ffffff;
+}
+
+html[data-color-theme] .country-cta-card p {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .country-cta-card li {
+  color: #ffffff;
+}
+
+html[data-color-theme] .country-cta-card li span {
+  color: #ffffff;
+}
+
+html[data-color-theme] .country-cta-card li i,
+html[data-color-theme] .country-cta-card li svg {
+  background: var(--gold);
+  color: var(--deep);
+}
+
+/* Dark theme variant — slightly more contrast */
+html[data-color-theme="dark"] .country-cta-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(94, 234, 212, 0.28);
+}
+
+/* ============================================================
+   ABOUT PAGE (.va-*) — theme overrides
+   ============================================================ */
+html[data-color-theme] .va-about-page {
+  --va-ink: var(--ink);
+  --va-muted: var(--muted);
+  --va-line: var(--theme-border);
+  --va-line-strong: var(--theme-border);
+  --va-paper: var(--theme-surface-solid);
+  --va-cream: var(--ivory);
+  --va-mist: var(--mist);
+  --va-aqua: var(--aqua);
+  background: var(--theme-body-bg);
+  color: var(--ink);
+}
+
+html[data-color-theme] .va-eyebrow {
+  border-color: color-mix(in srgb, var(--teal) 40%, transparent);
+  background: color-mix(in srgb, var(--teal) 14%, transparent);
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .va-hero::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--teal) 22%, transparent), transparent 70%);
+}
+
+html[data-color-theme] .va-hero::after {
+  background: radial-gradient(circle, color-mix(in srgb, var(--gold) 18%, transparent), transparent 70%);
+}
+
+html[data-color-theme] .va-hero-copy h1 {
+  color: var(--navy);
+}
+
+html[data-color-theme] .va-hero-copy h1 em,
+html[data-color-theme] .va-hero-num {
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .va-hero-lede {
+  color: var(--muted);
+}
+
+html[data-color-theme] .va-hero-trust > div,
+html[data-color-theme] .va-hero-badge {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  box-shadow: var(--theme-card-shadow);
+  color: var(--ink);
+}
+
+html[data-color-theme] .va-hero-trust strong {
+  color: var(--navy);
+}
+
+html[data-color-theme] .va-hero-trust span,
+html[data-color-theme] .va-hero-badge span {
+  color: var(--muted);
+}
+
+html[data-color-theme] .va-hero-badge strong {
+  color: var(--navy);
+}
+
+html[data-color-theme] .va-hero-badge i,
+html[data-color-theme] .va-hero-badge svg {
+  color: var(--teal);
+}
+
+html[data-color-theme] .va-pillar-copy h2 {
+  color: var(--navy);
+}
+
+html[data-color-theme] .va-pillar-copy p {
+  color: var(--muted);
+}
+
+html[data-color-theme] .va-pillar-tag {
+  background: color-mix(in srgb, var(--teal) 14%, transparent);
+  border-color: color-mix(in srgb, var(--teal) 28%, transparent);
+  color: var(--teal-dark);
+}
+
+/* IMPACT — keep dark, but use theme tones */
+html[data-color-theme] .va-impact {
+  background:
+    radial-gradient(circle at 18% 20%, color-mix(in srgb, var(--teal) 36%, transparent), transparent 50%),
+    radial-gradient(circle at 88% 80%, color-mix(in srgb, var(--gold) 28%, transparent), transparent 50%),
+    var(--theme-band-deep);
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-impact-head h2 {
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-impact-head p {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .va-impact-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-impact-icon {
+  background: color-mix(in srgb, var(--gold) 24%, transparent);
+  color: var(--gold);
+}
+
+html[data-color-theme] .va-impact-card strong {
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-impact-card strong small,
+html[data-color-theme] .va-impact-card span {
+  color: var(--theme-dark-text);
+}
+
+/* TEAM */
+html[data-color-theme] .va-team {
+  background: var(--theme-band-bg);
+}
+
+html[data-color-theme] .va-team--alt {
+  background: var(--theme-band-alt);
+}
+
+html[data-color-theme] .va-team-head h2 {
+  color: var(--navy);
+}
+
+html[data-color-theme] .va-team-head p {
+  color: var(--muted);
+}
+
+html[data-color-theme] .va-team-card {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  box-shadow: var(--theme-card-shadow);
+  color: var(--ink);
+}
+
+html[data-color-theme] .va-team-body h3 {
+  color: var(--navy);
+}
+
+html[data-color-theme] .va-team-role {
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .va-team-body p {
+  color: var(--muted);
+}
+
+html[data-color-theme] .va-team-desk {
+  color: var(--muted);
+}
+
+html[data-color-theme] .va-team-social {
+  border-color: var(--theme-border);
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .va-team-social:hover {
+  background: var(--teal);
+  color: #ffffff;
+  border-color: var(--teal);
+}
+
+html[data-color-theme] .va-team-expand {
+  border-color: var(--theme-border);
+  color: var(--ink);
+}
+
+html[data-color-theme] .va-team-expand:hover {
+  background: var(--teal);
+  color: #ffffff;
+  border-color: var(--teal);
+}
+
+/* CTA section — dark */
+html[data-color-theme] .va-cta {
+  background:
+    radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--teal) 36%, transparent), transparent 55%),
+    radial-gradient(circle at 86% 86%, color-mix(in srgb, var(--gold) 28%, transparent), transparent 55%),
+    var(--theme-band-deep);
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-cta-copy h2 {
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-cta-copy p {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .va-cta-tags li {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-cta-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-cta-card-num {
+  color: var(--gold);
+}
+
+html[data-color-theme] .va-cta-card-label {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .va-cta-ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+html[data-color-theme] .va-cta-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================================
+   CAREERS PAGE (.cr-*) — theme overrides
+   ============================================================ */
+
+/* LIFE AT ONEDEGREE */
+html[data-color-theme] .cr-life {
+  background: var(--theme-band-bg);
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-life-copy h2 {
+  color: var(--navy);
+}
+
+html[data-color-theme] .cr-life-copy p {
+  color: var(--muted);
+}
+
+html[data-color-theme] .cr-life-points li {
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-life-points strong {
+  color: var(--navy);
+}
+
+html[data-color-theme] .cr-life-points span {
+  color: var(--muted);
+}
+
+html[data-color-theme] .cr-life-points svg,
+html[data-color-theme] .cr-life-points i {
+  color: var(--teal);
+}
+
+html[data-color-theme] .cr-life-badge {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  box-shadow: var(--theme-card-shadow);
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-life-badge svg,
+html[data-color-theme] .cr-life-badge i {
+  color: var(--coral);
+}
+
+html[data-color-theme] .cr-life-badge strong {
+  color: var(--navy);
+}
+
+html[data-color-theme] .cr-life-badge span {
+  color: var(--muted);
+}
+
+/* HIRING RAIL */
+html[data-color-theme] .cr-rail {
+  background: var(--theme-band-alt);
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-rail-eyebrow {
+  border-color: color-mix(in srgb, var(--teal) 40%, transparent);
+  background: color-mix(in srgb, var(--teal) 14%, transparent);
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .cr-rail-head h2 {
+  color: var(--navy);
+}
+
+html[data-color-theme] .cr-rail-head h2 em {
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .cr-rail-head > p {
+  color: var(--muted);
+}
+
+html[data-color-theme] .cr-rail-head strong {
+  color: var(--navy);
+}
+
+html[data-color-theme] .cr-rail-line {
+  background: var(--theme-border);
+}
+
+html[data-color-theme] .cr-rail-line-fill {
+  background: var(--teal);
+}
+
+html[data-color-theme] .cr-rail-step-num {
+  background: var(--theme-surface-solid);
+  border-color: var(--theme-border);
+  color: var(--muted);
+}
+
+html[data-color-theme] .cr-rail-node {
+  background: var(--theme-surface-solid);
+  border-color: var(--theme-border);
+  color: var(--teal);
+}
+
+html[data-color-theme] .cr-rail-label {
+  color: var(--muted);
+}
+
+html[data-color-theme] .cr-rail-step.is-passed .cr-rail-step-num,
+html[data-color-theme] .cr-rail-step.is-active .cr-rail-step-num {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #ffffff;
+}
+
+html[data-color-theme] .cr-rail-step.is-passed .cr-rail-node,
+html[data-color-theme] .cr-rail-step.is-active .cr-rail-node {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #ffffff;
+}
+
+html[data-color-theme] .cr-rail-step.is-active .cr-rail-label {
+  color: var(--navy);
+}
+
+html[data-color-theme] .cr-rail-panel {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  box-shadow: var(--theme-card-shadow);
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-rail-panel-stage {
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .cr-rail-panel-title {
+  color: var(--navy);
+}
+
+html[data-color-theme] .cr-rail-panel-meta {
+  color: var(--muted);
+}
+
+html[data-color-theme] .cr-rail-panel-meta svg,
+html[data-color-theme] .cr-rail-panel-meta i {
+  color: var(--teal);
+}
+
+html[data-color-theme] .cr-rail-panel-body {
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-rail-nav {
+  background: var(--theme-surface-solid);
+  border-color: var(--theme-border);
+  color: var(--teal-dark);
+}
+
+html[data-color-theme] .cr-rail-nav:hover:not(:disabled) {
+  background: var(--teal);
+  color: #ffffff;
+  border-color: var(--teal);
+}
+
+/* APPLICATION FORM SECTION */
+html[data-color-theme] .cr-apply {
+  background: var(--theme-band-deep);
+  color: #ffffff;
+}
+
+html[data-color-theme] .cr-apply::after {
+  background: none;
+}
+
+html[data-color-theme] .cr-apply-aside h2 {
+  color: #ffffff;
+}
+
+html[data-color-theme] .cr-apply-aside p {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .cr-apply-points li {
+  color: #ffffff;
+}
+
+html[data-color-theme] .cr-apply-points svg,
+html[data-color-theme] .cr-apply-points i {
+  color: var(--gold);
+}
+
+html[data-color-theme] .cr-apply-quote {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+html[data-color-theme] .cr-apply-quote-mark {
+  color: var(--gold);
+}
+
+html[data-color-theme] .cr-apply-quote p {
+  color: #ffffff;
+}
+
+html[data-color-theme] .cr-apply-quote-sig {
+  color: var(--theme-dark-text);
+}
+
+html[data-color-theme] .cr-apply-form-card {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  box-shadow: var(--theme-card-shadow);
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-apply-form label,
+html[data-color-theme] .cr-apply-form .cr-field > span {
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-apply-form input,
+html[data-color-theme] .cr-apply-form textarea,
+html[data-color-theme] .cr-apply-form select {
+  background: var(--theme-field-bg);
+  border-color: var(--theme-field-border);
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-apply-form input:focus,
+html[data-color-theme] .cr-apply-form textarea:focus,
+html[data-color-theme] .cr-apply-form select:focus {
+  border-color: color-mix(in srgb, var(--teal) 68%, transparent);
+  box-shadow: 0 0 0 4px var(--theme-focus-ring);
+}
+
+html[data-color-theme] .cr-checkbox {
+  color: var(--ink);
+}
+
+html[data-color-theme] .cr-apply-submit {
+  background: var(--theme-brand-gradient);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+html[data-color-theme] .cr-apply-submit:hover {
+  background: var(--theme-accent-hover);
+}
+
+/* The .cr-field-full class is referenced but has no base style
+   — make sure full-width fields span the form row */
+.cr-field-full,
+html[data-color-theme] .cr-field-full {
+  grid-column: 1 / -1;
+}
+
+/* ============================================================
+   DARK THEME — specific contrast adjustments
+   ============================================================ */
+html[data-color-theme="dark"] body {
+  color: var(--ink);
+}
+
+html[data-color-theme="dark"] .va-about-page,
+html[data-color-theme="dark"] .cr-life,
+html[data-color-theme="dark"] .cr-rail {
+  background: var(--theme-band-bg);
+  color: var(--ink);
+}
+
+html[data-color-theme="dark"] :is(
+  .va-team-card,
+  .va-hero-trust > div,
+  .va-hero-badge,
+  .cr-life-badge,
+  .cr-rail-panel,
+  .cr-apply-form-card
+) {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  color: var(--ink);
+}
+
+html[data-color-theme="dark"] :is(
+  .va-hero-copy h1,
+  .va-pillar-copy h2,
+  .va-team-head h2,
+  .va-team-body h3,
+  .cr-life-copy h2,
+  .cr-rail-head h2,
+  .cr-rail-panel-title,
+  .va-hero-trust strong,
+  .va-hero-badge strong,
+  .cr-life-points strong,
+  .cr-life-badge strong
+) {
+  color: var(--ink);
+}
+
+html[data-color-theme="dark"] :is(
+  .va-hero-lede,
+  .va-pillar-copy p,
+  .va-team-head p,
+  .va-team-body p,
+  .va-team-desk,
+  .va-hero-trust span,
+  .va-hero-badge span,
+  .cr-life-copy p,
+  .cr-life-points span,
+  .cr-life-badge span,
+  .cr-rail-head > p,
+  .cr-rail-label,
+  .cr-rail-panel-meta
+) {
+  color: var(--muted);
+}
+
+html[data-color-theme="dark"] .cr-rail-step-num,
+html[data-color-theme="dark"] .cr-rail-node,
+html[data-color-theme="dark"] .cr-rail-nav {
+  background: var(--theme-surface-solid);
+  color: var(--teal);
+}
+
+html[data-color-theme="dark"] .va-impact-card,
+html[data-color-theme="dark"] .va-cta-card,
+html[data-color-theme="dark"] .country-cta-card,
+html[data-color-theme="dark"] .cr-apply-quote {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(94, 234, 212, 0.22);
+}

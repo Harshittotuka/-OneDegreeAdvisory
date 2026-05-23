@@ -1122,11 +1122,12 @@ ready(() => {
    ============================================================ */
 (function () {
   const STORAGE_KEY = "oda:color-theme";
-  const THEMES = new Set(["current", "fedex", "custom"]);
+  const THEMES = new Set(["current", "fedex", "custom", "dark"]);
   const THEME_COLORS = {
     current: "#0f3b45",
     fedex: "#4d148c",
-    custom: "#1e3f32",
+    custom: "#b54a1a",
+    dark: "#0b0d11",
   };
 
   function getStoredTheme() {

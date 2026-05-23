@@ -53,6 +53,9 @@
       <button class="theme-swatch theme-swatch-custom" type="button" data-theme-option="custom" aria-label="Use custom color theme" aria-pressed="false">
         <span class="visually-hidden">Custom</span>
       </button>
+      <button class="theme-swatch theme-swatch-dark" type="button" data-theme-option="dark" aria-label="Use dark color theme" aria-pressed="false">
+        <span class="visually-hidden">Dark</span>
+      </button>
     </div>
 
     <script type="application/ld+json">
