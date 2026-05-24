@@ -12227,6 +12227,7 @@ html[data-color-theme] .country-hero .btn-ghost {
 }
 
 html[data-color-theme] .btn-primary,
+html[data-color-theme] .nav-cta,
 html[data-color-theme] .hc-submit,
 html[data-color-theme] .site-footer .footer-contact-button,
 html[data-color-theme] .mbbs-hero .btn.mbbs-hero-cta {
@@ -12236,6 +12237,7 @@ html[data-color-theme] .mbbs-hero .btn.mbbs-hero-cta {
 }
 
 html[data-color-theme] .btn-primary:hover,
+html[data-color-theme] .nav-cta:hover,
 html[data-color-theme] .hc-submit:hover,
 html[data-color-theme] .site-footer .footer-contact-button:hover {
   background: var(--theme-accent-hover);
@@ -12431,7 +12433,6 @@ html[data-color-theme] :is(
   .life-card,
   .work-pr-card,
   .timeline-item,
-  .country-cta-card,
   .mbbs-path-card,
   .mbbs-country-card,
   .mbbs-university-board article,
@@ -12541,7 +12542,6 @@ html[data-color-theme] .country-hero {
 
 html[data-color-theme] .country-back,
 html[data-color-theme] .country-hero .eyebrow,
-html[data-color-theme] .country-snapshot h2,
 html[data-color-theme] .country-section.dark .section-head .eyebrow,
 html[data-color-theme] .country-band .eyebrow {
   color: var(--theme-form-focus);
@@ -12551,11 +12551,6 @@ html[data-color-theme] .country-hero .btn-primary,
 html[data-color-theme] .country-cta .btn-primary {
   background: var(--coral);
   color: #ffffff;
-}
-
-html[data-color-theme] .country-snapshot {
-  background: var(--theme-glass-bg);
-  border-color: var(--theme-glass-border);
 }
 
 html[data-color-theme] .origin-section {
@@ -12751,7 +12746,6 @@ html[data-color-theme] :is(
   .mbbs-hero,
   .mbbs-section,
   .country-section,
-  .country-snapshot,
   .country-band,
   .country-band-alt,
   .country-bg-soft,
