@@ -34,7 +34,6 @@
           <div class="nav-dropdown-shell">
             <div class="nav-dropdown-main">
               <div class="nav-dropdown-topline">
-                <span class="nav-dropdown-eyebrow">Study destinations</span>
                 <span class="nav-dropdown-badge">Country guides</span>
               </div>
 

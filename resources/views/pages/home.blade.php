@@ -15,7 +15,7 @@
 
         <div class="container hero-grid">
           <div class="hero-copy reveal">
-            <span class="eyebrow">Global Admissions &middot; Est. 2018</span>
+            <span class="eyebrow">Global Admissions</span>
             <h1 class="hero-headline">You are <span class="gold-text">one degree</span><br />away from the world.</h1>
             <blockquote class="hero-quote">
               <p>&ldquo;They don&rsquo;t just place students &mdash; they architect futures.&rdquo;</p>
@@ -33,6 +33,7 @@
             </div>
           </div>
 
+          {{--
           <form class="hero-consult reveal" data-hero-consult aria-label="Book your free consultation">
             <h2 class="hero-consult-title">Book your free Consultation</h2>
 
@@ -75,6 +76,7 @@
 
             <button type="submit" class="hc-submit">SUBMIT</button>
           </form>
+          --}}
         </div>
       </section>
 
@@ -165,6 +167,7 @@
           </div>
 
           <div class="audience-grid">
+            {{--
             <article class="audience-card audience-card-mbbs reveal" data-mbbs-card tabindex="0" aria-expanded="false" aria-controls="mbbs-country-panel">
               <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=640&q=82" alt="Medical students planning international study pathways">
               <div>
@@ -191,6 +194,7 @@
                 <i data-lucide="arrow-right"></i>
               </a>
             </article>
+            --}}
             <article class="audience-card reveal">
               <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=640&q=82" alt="School students discussing study options">
               <div>
@@ -202,7 +206,7 @@
               </a>
             </article>
             <article class="audience-card reveal">
-              <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=640&q=82" alt="College students working together">
+              <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=640&q=82" alt="College students working together">
               <div>
                 <h3>College Students</h3>
                 <p>Masters planning, internships, research direction, portfolio polish, and tests.</p>
@@ -211,6 +215,7 @@
                 <i data-lucide="arrow-right"></i>
               </a>
             </article>
+            {{--
             <article class="audience-card reveal">
               <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=640&q=82" alt="Graduate celebrating at university">
               <div>
@@ -221,6 +226,7 @@
                 <i data-lucide="arrow-right"></i>
               </a>
             </article>
+            --}}
             <article class="audience-card reveal">
               <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=640&q=82" alt="Working professionals in advisory conversation">
               <div>
@@ -346,6 +352,7 @@
         </div>
       </section>
 
+      {{--
       <section class="destinations-section" id="destinations" aria-labelledby="destinations-title">
         <div class="container edge-container">
           <div class="section-lead split reveal">
@@ -467,6 +474,7 @@
           </div>
         </div>
       </section>
+      --}}
 
       <section class="outcomes-section" id="outcomes" aria-labelledby="outcomes-title">
         <div class="container">

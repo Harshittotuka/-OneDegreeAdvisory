@@ -1122,12 +1122,27 @@ ready(() => {
    ============================================================ */
 (function () {
   const STORAGE_KEY = "oda:color-theme";
-  const THEMES = new Set(["current", "fedex", "custom", "dark"]);
+  const THEMES = new Set([
+    "current",
+    "fedex",
+    "custom",
+    "dark",
+    "emerald",
+    "sapphire",
+    "rose",
+    "midnight",
+    "sage",
+  ]);
   const THEME_COLORS = {
     current: "#0f3b45",
     fedex: "#4d148c",
     custom: "#b54a1a",
     dark: "#0b0d11",
+    emerald: "#064e3b",
+    sapphire: "#1e3a8a",
+    rose: "#881337",
+    midnight: "#020617",
+    sage: "#4a6741",
   };
 
   function getStoredTheme() {
