@@ -459,6 +459,12 @@ button {
   margin-bottom: 12px;
 }
 
+.nav-dropdown-topline--mbbs {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(19, 37, 47, 0.08);
+}
+
 .nav-dropdown-eyebrow {
   display: inline-flex;
   align-items: center;

@@ -1,5 +1,17 @@
 @php
     $destinations = config('site.destinations');
+    $destinations = is_array($destinations) ? $destinations : [];
+    usort($destinations, fn ($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
+
+    $mbbsCountries = [
+        ['name' => 'Russia', 'flag' => 'ru'],
+        ['name' => 'Georgia', 'flag' => 'ge'],
+        ['name' => 'Kazakhstan', 'flag' => 'kz'],
+        ['name' => 'Kyrgyzstan', 'flag' => 'kg'],
+        ['name' => 'Tajikistan', 'flag' => 'tj'],
+        ['name' => 'Uzbekistan', 'flag' => 'uz'],
+    ];
+    usort($mbbsCountries, fn ($a, $b) => strcasecmp($a['name'], $b['name']));
 @endphp
 
 <header class="site-header" data-header>
@@ -48,6 +60,21 @@
                       @endif
                     </span>
                     <span class="dest-meta"><strong>{{ $destination['name'] }}</strong></span>
+                  </a>
+                @endforeach
+              </div>
+
+              <div class="nav-dropdown-topline nav-dropdown-topline--mbbs">
+                <span class="nav-dropdown-badge">MBBS</span>
+              </div>
+
+              <div class="nav-dropdown-grid">
+                @foreach ($mbbsCountries as $country)
+                  <a class="dest-card" href="{{ route('mbbs.student') }}#corridor" role="menuitem">
+                    <span class="dest-flag" aria-hidden="true">
+                      <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt="">
+                    </span>
+                    <span class="dest-meta"><strong>{{ $country['name'] }}</strong></span>
                   </a>
                 @endforeach
               </div>
