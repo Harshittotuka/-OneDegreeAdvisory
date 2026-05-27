@@ -1,8 +1,4 @@
 @php
-    $destinations = config('site.destinations');
-    $destinations = is_array($destinations) ? $destinations : [];
-    usort($destinations, fn ($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
-
     $mbbsCountries = [
         ['name' => 'Russia', 'flag' => 'ru'],
         ['name' => 'Georgia', 'flag' => 'ge'],
@@ -12,6 +8,16 @@
         ['name' => 'Uzbekistan', 'flag' => 'uz'],
     ];
     usort($mbbsCountries, fn ($a, $b) => strcasecmp($a['name'], $b['name']));
+
+    $mbbsNames = array_map(fn ($c) => strtolower($c['name']), $mbbsCountries);
+
+    $destinations = config('site.destinations');
+    $destinations = is_array($destinations) ? $destinations : [];
+    $destinations = array_values(array_filter(
+        $destinations,
+        fn ($d) => ! in_array(strtolower($d['name'] ?? ''), $mbbsNames, true),
+    ));
+    usort($destinations, fn ($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
 @endphp
 
 <header class="site-header" data-header>
@@ -94,7 +100,7 @@
         </div>
       </div>
 
-      <div @class(['nav-item', 'has-dropdown', 'has-active' => $activeNav === 'mbbs']) data-dropdown>
+      <div @class(['nav-item', 'has-dropdown', 'has-active' => in_array($activeNav ?? null, ['mbbs', 'mbbs-v2'], true)]) data-dropdown>
         <button class="nav-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger>
           <span>Temp Nav</span>
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
@@ -114,6 +120,13 @@
                   <span class="dest-meta">
                     <strong>MBBS</strong>
                     <small>Medical study-abroad track</small>
+                  </span>
+                </a>
+                <a @class(['dest-card', 'track-card', 'is-active' => $activeNav === 'mbbs-v2']) href="{{ route('mbbs.student.v2') }}" role="menuitem">
+                  <span class="track-icon" aria-hidden="true"><i data-lucide="layout-dashboard"></i></span>
+                  <span class="dest-meta">
+                    <strong>MBBS v2</strong>
+                    <small>Comparison layout</small>
                   </span>
                 </a>
               </div>

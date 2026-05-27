@@ -32,6 +32,11 @@ class PageController extends Controller
         return view('pages.mbbs-student');
     }
 
+    public function mbbsStudentV2(): View
+    {
+        return view('pages.mbbs-student-v2');
+    }
+
     public function country(string $country): View
     {
         $destination = Arr::first(

@@ -15,6 +15,7 @@ Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::get('/contact.html', [PageController::class, 'contact'])->name('contact.legacy');
 
 Route::get('/mbbs/student', [PageController::class, 'mbbsStudent'])->name('mbbs.student');
+Route::get('/mbbs/student-v2', [PageController::class, 'mbbsStudentV2'])->name('mbbs.student.v2');
 
 Route::get('/countries/{country}.html', [PageController::class, 'country'])
     ->where('country', '[A-Za-z0-9-]+')

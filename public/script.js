@@ -1504,4 +1504,99 @@ ready(() => {
   } else {
     initHiringProcess();
   }
+
+  function initCountrySnapshotRail() {
+    const rails = Array.from(document.querySelectorAll(".country-snapshot"));
+    if (!rails.length) return;
+
+    rails.forEach((rail) => {
+      if (rail.parentElement !== document.body) {
+        document.body.appendChild(rail);
+      }
+
+      if (!rail.hasAttribute("tabindex")) rail.setAttribute("tabindex", "0");
+      rail.setAttribute("role", "button");
+      rail.setAttribute("aria-expanded", "false");
+
+      rail.addEventListener("click", (e) => {
+        const isOpen = rail.classList.toggle("is-open");
+        rail.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        e.stopPropagation();
+      });
+
+      rail.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          rail.click();
+        } else if (e.key === "Escape" && rail.classList.contains("is-open")) {
+          rail.classList.remove("is-open");
+          rail.setAttribute("aria-expanded", "false");
+        }
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      document.querySelectorAll(".country-snapshot.is-open").forEach((rail) => {
+        if (!rail.contains(e.target)) {
+          rail.classList.remove("is-open");
+          rail.setAttribute("aria-expanded", "false");
+        }
+      });
+    });
+
+    const parseRgb = (str) => {
+      if (!str) return null;
+      const m = str.match(/[\d.]+/g);
+      if (!m || m.length < 3) return null;
+      const [r, g, b, a] = m.map(Number);
+      return { r, g, b, a: a == null ? 1 : a };
+    };
+
+    const getOpaqueBg = (el) => {
+      let node = el;
+      while (node && node !== document.documentElement) {
+        const c = parseRgb(getComputedStyle(node).backgroundColor);
+        if (c && c.a > 0.5) return c;
+        node = node.parentElement;
+      }
+      return { r: 255, g: 255, b: 255, a: 1 };
+    };
+
+    const isLight = (c) => (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) > 165;
+
+    const updateRailContrast = () => {
+      rails.forEach((rail) => {
+        const rect = rail.getBoundingClientRect();
+        const probeX = Math.max(2, rect.left - 12);
+        const probeY = rect.top + rect.height / 2;
+        const prevPe = rail.style.pointerEvents;
+        rail.style.pointerEvents = "none";
+        const behind = document.elementFromPoint(probeX, probeY);
+        rail.style.pointerEvents = prevPe;
+        if (!behind) return;
+        const bg = getOpaqueBg(behind);
+        rail.classList.toggle("on-light", isLight(bg));
+      });
+    };
+
+    let ticking = false;
+    const schedule = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        updateRailContrast();
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    schedule();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCountrySnapshotRail, { once: true });
+  } else {
+    initCountrySnapshotRail();
+  }
 })();
