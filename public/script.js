@@ -1124,31 +1124,19 @@ ready(() => {
   const STORAGE_KEY = "oda:color-theme";
   const THEMES = new Set([
     "current",
-    "fedex",
-    "custom",
-    "dark",
-    "emerald",
     "sapphire",
-    "rose",
-    "midnight",
-    "sage",
   ]);
   const THEME_COLORS = {
     current: "#0f3b45",
-    fedex: "#4d148c",
-    custom: "#b54a1a",
-    dark: "#0b0d11",
-    emerald: "#064e3b",
     sapphire: "#1e3a8a",
-    rose: "#881337",
-    midnight: "#020617",
-    sage: "#4a6741",
   };
 
   function getStoredTheme() {
     try {
       const value = sessionStorage.getItem(STORAGE_KEY);
-      return THEMES.has(value) ? value : "current";
+      if (THEMES.has(value)) return value;
+      sessionStorage.removeItem(STORAGE_KEY);
+      return "current";
     } catch (error) {
       return "current";
     }
@@ -1363,6 +1351,169 @@ ready(() => {
     document.addEventListener("DOMContentLoaded", initSwitcher, { once: true });
   } else {
     initSwitcher();
+  }
+})();
+
+(function () {
+  function initCourseCarousels() {
+    const carousels = Array.from(document.querySelectorAll("[data-course-carousel]"));
+    if (!carousels.length) return;
+
+    const reducedMotion = window.matchMedia
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : { matches: false };
+
+    carousels.forEach((carousel) => {
+      const track = carousel.querySelector("[data-course-track]");
+      const firstSet = track ? track.querySelector(".dynamic-course-set") : null;
+      if (!track || !firstSet) return;
+
+      let setWidth = 0;
+      let offset = 0;
+      let targetOffset = 0;
+      let pointerStartX = 0;
+      let pointerStartOffset = 0;
+      let isDragging = false;
+      let isHovering = false;
+      let suppressClick = false;
+      let suppressClickTimer = null;
+      let resumeAt = 0;
+
+      const normalize = (value) => {
+        if (!setWidth) return value;
+        return ((value % setWidth) + setWidth) % setWidth;
+      };
+
+      const render = () => {
+        track.style.transform = "translate3d(" + (-offset).toFixed(2) + "px, 0, 0)";
+      };
+
+      const moveTo = (value) => {
+        targetOffset = normalize(value);
+        offset = targetOffset;
+        render();
+      };
+
+      const pauseAuto = (duration) => {
+        resumeAt = performance.now() + duration;
+      };
+
+      const measure = () => {
+        setWidth = firstSet.getBoundingClientRect().width;
+        moveTo(targetOffset);
+      };
+
+      const finishDrag = (event) => {
+        if (!isDragging) return;
+        isDragging = false;
+        carousel.classList.remove("is-dragging");
+        pauseAuto(1800);
+
+        if (event && carousel.releasePointerCapture) {
+          try {
+            carousel.releasePointerCapture(event.pointerId);
+          } catch (error) {}
+        }
+
+        if (suppressClick) {
+          window.clearTimeout(suppressClickTimer);
+          suppressClickTimer = window.setTimeout(() => {
+            suppressClick = false;
+          }, 220);
+        }
+      };
+
+      carousel.classList.add("is-scroll-ready");
+      measure();
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(measure);
+      }
+
+      window.addEventListener("resize", measure, { passive: true });
+
+      carousel.addEventListener("mouseenter", () => {
+        isHovering = true;
+      });
+
+      carousel.addEventListener("mouseleave", () => {
+        isHovering = false;
+      });
+
+      carousel.addEventListener("focusin", () => {
+        isHovering = true;
+      });
+
+      carousel.addEventListener("focusout", () => {
+        isHovering = false;
+      });
+
+      carousel.addEventListener("wheel", (event) => {
+        if (!setWidth) return;
+        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+          ? event.deltaX
+          : event.deltaY;
+        if (!delta) return;
+
+        event.preventDefault();
+        moveTo(targetOffset + delta * 0.85);
+        pauseAuto(1300);
+      }, { passive: false });
+
+      carousel.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+
+        isDragging = true;
+        suppressClick = false;
+        pointerStartX = event.clientX;
+        pointerStartOffset = targetOffset;
+        carousel.classList.add("is-dragging");
+        pauseAuto(2200);
+
+        if (carousel.setPointerCapture) {
+          carousel.setPointerCapture(event.pointerId);
+        }
+      });
+
+      carousel.addEventListener("pointermove", (event) => {
+        if (!isDragging) return;
+
+        const delta = pointerStartX - event.clientX;
+        if (Math.abs(delta) > 4) suppressClick = true;
+        moveTo(pointerStartOffset + delta);
+
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+      });
+
+      carousel.addEventListener("pointerup", finishDrag);
+      carousel.addEventListener("pointercancel", finishDrag);
+      carousel.addEventListener("lostpointercapture", finishDrag);
+
+      carousel.addEventListener("click", (event) => {
+        if (!suppressClick) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClick = false;
+      }, true);
+
+      const tick = (now) => {
+        if (!reducedMotion.matches && !isDragging && !isHovering && now > resumeAt) {
+          moveTo(targetOffset + 0.42);
+        }
+
+        window.requestAnimationFrame(tick);
+      };
+
+      window.requestAnimationFrame(tick);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCourseCarousels, { once: true });
+  } else {
+    initCourseCarousels();
   }
 })();
 

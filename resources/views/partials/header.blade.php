@@ -18,6 +18,8 @@
         fn ($d) => ! in_array(strtolower($d['name'] ?? ''), $mbbsNames, true),
     ));
     usort($destinations, fn ($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
+
+    $destinationsV2 = app(\App\Support\StudyLocationContent::class)->destinations();
 @endphp
 
 <header class="site-header" data-header>
@@ -61,7 +63,7 @@
                     <span @class(['dest-flag', 'dest-flag-eu' => $destination['eu'] ?? false]) aria-hidden="true">
                       @if ($destination['eu'] ?? false)
                         @include('partials.eu-flag')
-                      @else
+                      @elseif (! empty($destination['flag']))
                         <img src="https://flagcdn.com/w40/{{ $destination['flag'] }}.png" alt="">
                       @endif
                     </span>
@@ -75,8 +77,70 @@
               </div>
 
               <div class="nav-dropdown-grid">
+                @php($mbbsCountryRoutes = ['georgia','russia','kazakhstan','kyrgyzstan','uzbekistan'])
                 @foreach ($mbbsCountries as $country)
-                  <a class="dest-card" href="{{ route('mbbs.student') }}#corridor" role="menuitem">
+                  @php($mbbsSlug = strtolower($country['name']))
+                  <a class="dest-card" href="{{ in_array($mbbsSlug, $mbbsCountryRoutes, true) ? route('mbbs.country', $mbbsSlug) : route('mbbs.student').'#corridor' }}" role="menuitem">
+                    <span class="dest-flag" aria-hidden="true">
+                      <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt="">
+                    </span>
+                    <span class="dest-meta"><strong>{{ $country['name'] }}</strong></span>
+                  </a>
+                @endforeach
+              </div>
+            </div>
+
+            <aside class="nav-dropdown-feature">
+              <span class="feature-icon" aria-hidden="true"><i data-lucide="map"></i></span>
+              <span class="nav-dropdown-eyebrow">Start with a shortlist</span>
+              <h3>Find your best-fit country.</h3>
+              <p>Match budget, intake, program goals, and outcomes before you apply.</p>
+              <a class="feature-cta" href="{{ route('contact') }}">
+                <span>Book a country call</span>
+                <span class="feature-cta-icon" aria-hidden="true"><i data-lucide="arrow-up-right"></i></span>
+              </a>
+            </aside>
+          </div>
+        </div>
+      </div>
+
+      <div @class(['nav-item', 'has-dropdown', 'has-active' => ($activeNav ?? null) === 'destinations-v2']) data-dropdown>
+        <button class="nav-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger>
+          <span>Destinations V2</span>
+          <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
+        </button>
+
+        <div class="nav-dropdown" data-dropdown-panel role="menu" aria-label="Study destinations V2">
+          <div class="nav-dropdown-shell">
+            <div class="nav-dropdown-main">
+              <div class="nav-dropdown-topline">
+                <span class="nav-dropdown-badge">Country guides</span>
+              </div>
+
+              <div class="nav-dropdown-grid">
+                @foreach ($destinationsV2 as $destination)
+                  <a class="dest-card" href="{{ route('country.v2', $destination['slug']) }}" role="menuitem">
+                    <span @class(['dest-flag', 'dest-flag-eu' => $destination['eu'] ?? false]) aria-hidden="true">
+                      @if ($destination['eu'] ?? false)
+                        @include('partials.eu-flag')
+                      @elseif (! empty($destination['flag']))
+                        <img src="https://flagcdn.com/w40/{{ $destination['flag'] }}.png" alt="">
+                      @endif
+                    </span>
+                    <span class="dest-meta"><strong>{{ $destination['name'] }}</strong></span>
+                  </a>
+                @endforeach
+              </div>
+
+              <div class="nav-dropdown-topline nav-dropdown-topline--mbbs">
+                <span class="nav-dropdown-badge">MBBS</span>
+              </div>
+
+              <div class="nav-dropdown-grid">
+                @php($mbbsCountryRoutes = ['georgia','russia','kazakhstan','kyrgyzstan','uzbekistan'])
+                @foreach ($mbbsCountries as $country)
+                  @php($mbbsSlug = strtolower($country['name']))
+                  <a class="dest-card" href="{{ in_array($mbbsSlug, $mbbsCountryRoutes, true) ? route('mbbs.country', $mbbsSlug) : route('mbbs.student').'#corridor' }}" role="menuitem">
                     <span class="dest-flag" aria-hidden="true">
                       <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt="">
                     </span>

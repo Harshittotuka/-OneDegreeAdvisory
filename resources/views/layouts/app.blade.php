@@ -15,7 +15,7 @@
         document.documentElement.classList.add("js");
         try {
           var theme = sessionStorage.getItem("oda:color-theme");
-          var allowed = ["fedex", "custom", "dark", "emerald", "sapphire", "rose", "midnight", "sage"];
+          var allowed = ["sapphire"];
           if (allowed.indexOf(theme) !== -1) {
             document.documentElement.dataset.colorTheme = theme;
           }
@@ -26,7 +26,7 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="{{ asset('script.js') }}" defer></script>
   </head>
-  <body>
+  <body class="{{ $bodyClass ?? '' }}">
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
 
     @include('partials.header', ['activeNav' => $activeNav ?? null])
@@ -45,32 +45,13 @@
     @endunless
 
     <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
-      <button class="theme-swatch theme-swatch-current" type="button" data-theme-option="current" aria-label="Use current color theme" aria-pressed="true">
-        <span class="visually-hidden">Current</span>
-      </button>
-      <button class="theme-swatch theme-swatch-fedex" type="button" data-theme-option="fedex" aria-label="Use FedEx color theme" aria-pressed="false">
-        <span class="visually-hidden">FedEx</span>
-      </button>
-      <button class="theme-swatch theme-swatch-custom" type="button" data-theme-option="custom" aria-label="Use custom color theme" aria-pressed="false">
-        <span class="visually-hidden">Custom</span>
-      </button>
-      <button class="theme-swatch theme-swatch-dark" type="button" data-theme-option="dark" aria-label="Use dark color theme" aria-pressed="false">
-        <span class="visually-hidden">Dark</span>
-      </button>
-      <button class="theme-swatch theme-swatch-emerald" type="button" data-theme-option="emerald" aria-label="Use Emerald color theme" aria-pressed="false">
-        <span class="visually-hidden">Emerald</span>
+      <button class="theme-swatch theme-swatch-current" type="button" data-theme-option="current" aria-label="Use original color theme" aria-pressed="true">
+        <span aria-hidden="true">1</span>
+        <span class="visually-hidden">Original</span>
       </button>
       <button class="theme-swatch theme-swatch-sapphire" type="button" data-theme-option="sapphire" aria-label="Use Sapphire color theme" aria-pressed="false">
+        <span aria-hidden="true">2</span>
         <span class="visually-hidden">Sapphire</span>
-      </button>
-      <button class="theme-swatch theme-swatch-rose" type="button" data-theme-option="rose" aria-label="Use Rose color theme" aria-pressed="false">
-        <span class="visually-hidden">Rose</span>
-      </button>
-      <button class="theme-swatch theme-swatch-midnight" type="button" data-theme-option="midnight" aria-label="Use Midnight color theme" aria-pressed="false">
-        <span class="visually-hidden">Midnight</span>
-      </button>
-      <button class="theme-swatch theme-swatch-sage" type="button" data-theme-option="sage" aria-label="Use Sage color theme" aria-pressed="false">
-        <span class="visually-hidden">Sage</span>
       </button>
     </div>
 
