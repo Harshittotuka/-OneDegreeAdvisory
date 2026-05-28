@@ -2,3 +2,5 @@
 !private/
 !public/
 !.gitignore
+!leverageedu_study_locations_content.json
+!mbbs_bookmyuniversity_content.json
