@@ -14,6 +14,7 @@
 
 <header class="site-header" data-header>
   <div class="notice">
+    @include('partials.socials', ['variant' => 'notice'])
     <p>{{ config('site.notice') }}</p>
     <a href="{{ route('contact') }}">Book a profile review</a>
   </div>

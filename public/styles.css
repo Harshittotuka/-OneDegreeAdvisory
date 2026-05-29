@@ -135,6 +135,7 @@ button {
 }
 
 .notice {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5325,6 +5326,43 @@ textarea:focus {
   height: 26px;
 }
 
+/* Variant: top notice bar — compact icons sized to the slim band */
+.site-socials--notice {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  gap: 8px;
+}
+
+.site-socials--notice .site-social {
+  width: 26px;
+  height: 26px;
+  border-radius: 0;
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+.site-socials--notice .site-social svg {
+  width: 14px;
+  height: 14px;
+  filter: none;
+}
+
+.site-socials--notice .site-social-glow {
+  display: none;
+}
+
+.site-socials--notice .site-social:hover,
+.site-socials--notice .site-social:focus-visible {
+  border-color: transparent;
+  box-shadow: none;
+  color: #ffffff;
+}
+
 /* Variant: contact aside (dark blue panel), pinned to the right edge */
 .contact-aside-socials {
   display: flex;
@@ -5600,6 +5638,7 @@ html[data-color-theme] .site-socials .site-social {
 
   .notice {
     justify-content: space-between;
+    padding-left: 76px;
   }
 
   .nav-shell {
