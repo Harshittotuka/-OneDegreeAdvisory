@@ -151,7 +151,7 @@
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
 
-        <div class="nav-dropdown nav-dropdown--courses" data-dropdown-panel role="menu" aria-label="Services">
+        <div class="nav-dropdown nav-dropdown--courses nav-dropdown--services" data-dropdown-panel role="menu" aria-label="Services">
           <div class="nav-dropdown-shell">
             <div class="nav-dropdown-main course-menu">
               <div class="nav-dropdown-topline course-menu-topline">
@@ -165,7 +165,7 @@
                   <span class="course-menu-copy"><strong>Test Preparation</strong><small>ACT, SAT, IELTS &amp; more</small></span>
                   <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
                 </a>
-                <a class="course-menu-card" href="{{ route('contact') }}" role="menuitem">
+                <a class="course-menu-card" href="{{ route('services.student-services') }}" role="menuitem">
                   <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="hand-helping"></i></span>
                   <span class="course-menu-copy"><strong>Student Services</strong><small>End-to-end support</small></span>
                   <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>

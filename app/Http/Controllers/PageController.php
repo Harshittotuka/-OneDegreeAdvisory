@@ -91,6 +91,11 @@ class PageController extends Controller
         return view('pages.admissions-counselling');
     }
 
+    public function studentServices(): View
+    {
+        return view('pages.student-services');
+    }
+
     public function undergraduate(): View
     {
         return view('pages.undergraduate');

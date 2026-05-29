@@ -22,6 +22,7 @@ Route::get('/blog/{slug}', [PageController::class, 'blogPost'])
 
 Route::get('/services/test-preparation', [PageController::class, 'testPreparation'])->name('services.test-prep');
 Route::get('/services/admissions-counselling', [PageController::class, 'admissionsCounselling'])->name('services.admissions-counselling');
+Route::get('/services/student-services', [PageController::class, 'studentServices'])->name('services.student-services');
 
 Route::get('/courses/undergraduate', [PageController::class, 'undergraduate'])->name('courses.ug');
 Route::get('/courses/postgraduate', [PageController::class, 'postgraduate'])->name('courses.pg');

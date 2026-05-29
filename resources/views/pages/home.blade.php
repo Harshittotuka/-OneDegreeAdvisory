@@ -695,7 +695,7 @@
                 <i data-lucide="phone"></i>
                 {{ config('site.contact.phone') }}
               </a>
-              <a href="{{ route('contact') }}">
+              <a href="https://www.google.com/maps/search/?api=1&amp;query=26.8692893,75.7895342" target="_blank" rel="noopener" aria-label="Open One Degree Advisory office in Google Maps">
                 <i data-lucide="map-pin"></i>
                 A-16A, Van Vihar colony, Tonk Road, Jaipur, Rajasthan, 302018
               </a>
