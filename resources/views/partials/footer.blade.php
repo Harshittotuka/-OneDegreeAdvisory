@@ -27,10 +27,8 @@
 
     <div>
       <h2>Advisory Tracks</h2>
-      <a href="{{ route('contact') }}">MBBS Students</a>
       <a href="{{ route('contact') }}">School Students</a>
       <a href="{{ route('contact') }}">College Students</a>
-      <a href="{{ route('contact') }}">Graduates</a>
       <a href="{{ route('contact') }}">Working Professionals</a>
     </div>
 
