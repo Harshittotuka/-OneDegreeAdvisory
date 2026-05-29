@@ -5337,8 +5337,8 @@ textarea:focus {
 }
 
 .site-socials--notice .site-social {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 0;
   background: none;
   border-color: transparent;
@@ -5347,8 +5347,8 @@ textarea:focus {
 }
 
 .site-socials--notice .site-social svg {
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
   filter: none;
 }
 
@@ -5638,7 +5638,7 @@ html[data-color-theme] .site-socials .site-social {
 
   .notice {
     justify-content: space-between;
-    padding-left: 76px;
+    padding-left: 86px;
   }
 
   .nav-shell {

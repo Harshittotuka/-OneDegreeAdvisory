@@ -445,61 +445,6 @@
     </section>
   @endif
 
-  {{-- ========== CAREERS BEYOND MBBS ========== --}}
-  @php
-      $careersBeyondMbbs = [
-          ['title' => 'BDS – Dentistry',                       'body' => 'Build a respected clinical career in oral healthcare, surgery, aesthetics, and private practice.',                  'icon' => 'smile',       'tint' => 'teal'],
-          ['title' => 'PharmD / Pharmacy',                     'body' => 'Work in clinical research, pharmaceuticals, hospitals, healthcare innovation, and global pharma companies.',         'icon' => 'pill',        'tint' => 'green'],
-          ['title' => 'Psychology / Clinical Psychology',      'body' => 'Growing field focused on mental health, therapy, human behavior, and wellness.',                                     'icon' => 'brain',       'tint' => 'lavender'],
-          ['title' => 'Physiotherapy',                         'body' => 'High-demand profession in sports rehab, hospitals, pain management, and mobility care.',                            'icon' => 'activity',    'tint' => 'peach'],
-          ['title' => 'Biotechnology / Biomedical Sciences',   'body' => 'Ideal for students interested in research, genetics, diagnostics, and healthcare innovation.',                       'icon' => 'dna',         'tint' => 'aqua'],
-          ['title' => 'BSc Allied Health Sciences',            'body' => 'Premium specializations like Radiology, OT Technology, Cardiac Care, Medical Lab Sciences.',                         'icon' => 'microscope',  'tint' => 'rose'],
-          ['title' => 'Doctor of Occupational Therapy',        'body' => 'Emerging global field helping patients regain independence and functionality.',                                      'icon' => 'hand-heart',  'tint' => 'sky'],
-          ['title' => 'Public Health / Healthcare Management', 'body' => 'Perfect for students interested in healthcare leadership, hospitals, policy, and impact at scale.',                  'icon' => 'building-2',  'tint' => 'mint'],
-      ];
-  @endphp
-
-  <section id="careers-beyond-mbbs" class="mbbsx-section mbbsx-section--careers">
-    <div class="mbbsx-container">
-      <div class="mbbsx-careers__head">
-        <div class="mbbsx-careers__copy reveal">
-          <span class="eyebrow mbbsx-careers__eyebrow">
-            <i data-lucide="target"></i>
-            <span>Explore your options</span>
-          </span>
-          <h2>Exploring Careers<br><span class="gold-text mbbsx-careers__accent">Beyond MBBS?</span></h2>
-          <p>Medicine is one path &mdash; healthcare has many powerful careers with strong growth, impact, and global opportunities.</p>
-        </div>
-
-        <aside class="mbbsx-careers__callout reveal">
-          <span class="mbbsx-careers__callout-icon" aria-hidden="true">
-            <i data-lucide="trophy"></i>
-          </span>
-          <div class="mbbsx-careers__callout-copy">
-            <p>Success in healthcare is not limited to MBBS.</p>
-            <strong>It depends on choosing the right fit.</strong>
-          </div>
-        </aside>
-      </div>
-
-      <div class="mbbsx-careers__grid">
-        @foreach($careersBeyondMbbs as $i => $career)
-          <article class="mbbsx-career-card reveal" data-tint="{{ $career['tint'] }}" style="--i: {{ $i }};">
-            <div class="mbbsx-career-card__top">
-              <span class="mbbsx-career-card__icon" aria-hidden="true">
-                <i data-lucide="{{ $career['icon'] }}"></i>
-              </span>
-              <span class="mbbsx-career-card__no">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
-            </div>
-            <h3>{{ $career['title'] }}</h3>
-            <span class="mbbsx-career-card__rule" aria-hidden="true"></span>
-            <p>{{ $career['body'] }}</p>
-          </article>
-        @endforeach
-      </div>
-    </div>
-  </section>
-
   {{-- ========== CTA ========== --}}
   <section class="mbbsx-cta">
     <div class="mbbsx-cta__bg" aria-hidden="true"></div>
