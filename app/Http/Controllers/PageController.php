@@ -7,7 +7,6 @@ use App\Support\MbbsCountryContent;
 use App\Support\StudyLocationContent;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
 class PageController extends Controller
 {
@@ -36,10 +35,33 @@ class PageController extends Controller
         $perPage = 9;
         $page    = max(1, (int) $request->query('page', 1));
 
-        $allPosts   = $blog->all();
+        // Only show posts whose visibility is on (default true for legacy posts).
+        $allPosts = array_values(array_filter(
+            $blog->all(),
+            fn (array $p) => ($p['visible'] ?? true) === true
+        ));
+
+        // Pull out the pinned/featured post so it stays on top of every page
+        // and never gets pushed down by pagination.
+        $featured = null;
+        foreach ($allPosts as $i => $candidate) {
+            if (! empty($candidate['featured'])) {
+                $featured = $candidate;
+                unset($allPosts[$i]);
+                break;
+            }
+        }
+        $allPosts = array_values($allPosts);
+
         $totalPages = max(1, (int) ceil(count($allPosts) / $perPage));
         $page       = min($page, $totalPages);
         $posts      = array_slice($allPosts, ($page - 1) * $perPage, $perPage);
+
+        // The featured post renders as the big hero card at the top (template
+        // treats posts[0] as featured). Pinning it here keeps it first on page 1+.
+        if ($featured) {
+            array_unshift($posts, $featured);
+        }
 
         return view('pages.blog-index', [
             'posts'      => $posts,
@@ -59,45 +81,56 @@ class PageController extends Controller
         ]);
     }
 
+    public function testPreparation(): View
+    {
+        return view('pages.test-preparation');
+    }
+
+    public function admissionsCounselling(): View
+    {
+        return view('pages.admissions-counselling');
+    }
+
+    public function undergraduate(): View
+    {
+        return view('pages.undergraduate');
+    }
+
+    public function postgraduate(): View
+    {
+        return view('pages.postgraduate');
+    }
+
+    public function llb(): View
+    {
+        return view('pages.llb');
+    }
+
+    public function mba(): View
+    {
+        return view('pages.mba');
+    }
+
+    public function doctoral(): View
+    {
+        return view('pages.doctoral');
+    }
+
     public function mbbsStudent(): View
     {
         return view('pages.mbbs-student');
     }
 
-    public function mbbsStudentV2(): View
-    {
-        return view('pages.mbbs-student-v2');
-    }
-
-    public function country(string $country): View
-    {
-        $destination = Arr::first(
-            config('site.destinations'),
-            fn (array $destination) => $destination['slug'] === $country
-        );
-
-        abort_unless($destination, 404);
-
-        return view("countries.{$country}", [
-            'destination' => $destination,
-        ]);
-    }
-
-    public function countryV2(string $country, StudyLocationContent $content): View
+    public function country(string $country, StudyLocationContent $content): View
     {
         $studyContent = $content->forSlug($country);
 
         abort_unless($studyContent['page'] ?? null, 404);
 
-        return view('countries.study-location-dynamic', [
+        return view('countries.destination', [
             'destination' => $studyContent['destination'] ?? [],
             'studyContent' => $studyContent,
         ]);
-    }
-
-    public function studyInUkDynamic(StudyLocationContent $content): View
-    {
-        return $this->countryV2('study-in-uk', $content);
     }
 
     public function mbbsCountry(string $country, MbbsCountryContent $content): View

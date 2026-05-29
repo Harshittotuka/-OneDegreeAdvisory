@@ -19,6 +19,8 @@ ready(() => {
   const navToggle = document.querySelector("[data-nav-toggle]");
   const navMenu = document.querySelector("[data-nav-menu]");
   const navLinks = Array.from(document.querySelectorAll(".nav-menu a"));
+  const studentsHubTriggers = Array.from(document.querySelectorAll("[data-students-hub-trigger]"));
+  const studentsHubOverlay = document.querySelector("[data-students-hub-overlay]");
   const finderForm = document.querySelector("[data-finder-form]");
   const finderNote = document.querySelector("[data-finder-note]");
   const filterButtons = Array.from(document.querySelectorAll("[data-filter]"));
@@ -171,6 +173,88 @@ ready(() => {
 
   window.addEventListener("resize", () => closeAllDropdowns(), { passive: true });
 
+  if (studentsHubOverlay && studentsHubTriggers.length) {
+    const closeButtons = Array.from(studentsHubOverlay.querySelectorAll("[data-students-hub-close]"));
+    const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    let lastFocusedElement = null;
+    let closeStudentsHubTimer = null;
+
+    const getFocusableStudentsHubItems = () => Array
+      .from(studentsHubOverlay.querySelectorAll(focusableSelector))
+      .filter((element) => element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+
+    const closeStudentsHub = () => {
+      if (!studentsHubOverlay.classList.contains("is-open")) return;
+      window.clearTimeout(closeStudentsHubTimer);
+      studentsHubOverlay.classList.remove("is-open");
+      studentsHubOverlay.classList.add("is-closing");
+      studentsHubOverlay.setAttribute("aria-hidden", "true");
+
+      closeStudentsHubTimer = window.setTimeout(() => {
+        studentsHubOverlay.hidden = true;
+        studentsHubOverlay.classList.remove("is-closing");
+        document.body.classList.remove("student-hub-open");
+
+        if (lastFocusedElement && document.contains(lastFocusedElement)) {
+          lastFocusedElement.focus();
+        }
+      }, 260);
+    };
+
+    const openStudentsHub = (trigger) => {
+      window.clearTimeout(closeStudentsHubTimer);
+      lastFocusedElement = trigger || document.activeElement;
+      closeAllDropdowns();
+      closeNavigation();
+      studentsHubOverlay.hidden = false;
+      studentsHubOverlay.classList.remove("is-closing");
+      document.body.classList.add("student-hub-open");
+
+      window.requestAnimationFrame(() => {
+        studentsHubOverlay.classList.add("is-open");
+        studentsHubOverlay.setAttribute("aria-hidden", "false");
+        refreshIcons();
+
+        const firstFocusable = getFocusableStudentsHubItems()[0];
+        if (firstFocusable) firstFocusable.focus();
+      });
+    };
+
+    studentsHubTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => openStudentsHub(trigger));
+    });
+
+    closeButtons.forEach((button) => {
+      button.addEventListener("click", closeStudentsHub);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (!studentsHubOverlay.classList.contains("is-open")) return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeStudentsHub();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusableItems = getFocusableStudentsHubItems();
+      if (!focusableItems.length) return;
+
+      const firstItem = focusableItems[0];
+      const lastItem = focusableItems[focusableItems.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstItem) {
+        event.preventDefault();
+        lastItem.focus();
+      } else if (!event.shiftKey && document.activeElement === lastItem) {
+        event.preventDefault();
+        firstItem.focus();
+      }
+    });
+  }
+
   const mbbsCard = document.querySelector("[data-mbbs-card]");
   if (mbbsCard) {
     const mbbsPanel = mbbsCard.querySelector("#mbbs-country-panel");
@@ -269,6 +353,17 @@ ready(() => {
   } else {
     revealItems.forEach((item) => item.classList.add("is-visible"));
   }
+
+  // Test-preparation expandable cards (accordion)
+  const tpCards = Array.from(document.querySelectorAll("[data-tp-card]"));
+  tpCards.forEach((card) => {
+    const trigger = card.querySelector("[data-tp-toggle]");
+    if (!trigger) return;
+    trigger.addEventListener("click", () => {
+      const isOpen = card.classList.toggle("is-open");
+      trigger.setAttribute("aria-expanded", String(isOpen));
+    });
+  });
 
   const sections = navLinks
     .map((link) => {
@@ -1117,87 +1212,6 @@ ready(() => {
   }
 });
 
-/* ============================================================
-   Color theme switcher
-   ============================================================ */
-(function () {
-  const STORAGE_KEY = "oda:color-theme";
-  const THEMES = new Set([
-    "current",
-    "sapphire",
-    "signature",
-  ]);
-  const THEME_COLORS = {
-    current: "#0f3b45",
-    sapphire: "#1e3a8a",
-    signature: "#1a0088",
-  };
-
-  function getStoredTheme() {
-    try {
-      const value = sessionStorage.getItem(STORAGE_KEY);
-      if (THEMES.has(value)) return value;
-      sessionStorage.removeItem(STORAGE_KEY);
-      return "current";
-    } catch (error) {
-      return "current";
-    }
-  }
-
-  function setStoredTheme(theme) {
-    try {
-      if (theme === "current") {
-        sessionStorage.removeItem(STORAGE_KEY);
-      } else {
-        sessionStorage.setItem(STORAGE_KEY, theme);
-      }
-    } catch (error) {}
-  }
-
-  function applyTheme(theme) {
-    const activeTheme = THEMES.has(theme) ? theme : "current";
-
-    if (activeTheme === "current") {
-      delete document.documentElement.dataset.colorTheme;
-    } else {
-      document.documentElement.dataset.colorTheme = activeTheme;
-    }
-
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", THEME_COLORS[activeTheme]);
-    }
-
-    document.querySelectorAll("[data-theme-option]").forEach((button) => {
-      const isActive = button.dataset.themeOption === activeTheme;
-      button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-pressed", String(isActive));
-    });
-  }
-
-  function initThemeSwitcher() {
-    const switchers = document.querySelectorAll("[data-theme-switcher]");
-    const storedTheme = getStoredTheme();
-    applyTheme(storedTheme);
-
-    switchers.forEach((switcher) => {
-      switcher.querySelectorAll("[data-theme-option]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const nextTheme = THEMES.has(button.dataset.themeOption) ? button.dataset.themeOption : "current";
-          applyTheme(nextTheme);
-          setStoredTheme(nextTheme);
-        });
-      });
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initThemeSwitcher, { once: true });
-  } else {
-    initThemeSwitcher();
-  }
-})();
-
 
 (function () {
   function initCourseCarousels() {
@@ -1499,10 +1513,6 @@ ready(() => {
     if (!rails.length) return;
 
     rails.forEach((rail) => {
-      if (rail.parentElement !== document.body) {
-        document.body.appendChild(rail);
-      }
-
       if (!rail.hasAttribute("tabindex")) rail.setAttribute("tabindex", "0");
       rail.setAttribute("role", "button");
       rail.setAttribute("aria-expanded", "false");
@@ -1555,6 +1565,11 @@ ready(() => {
 
     const updateRailContrast = () => {
       rails.forEach((rail) => {
+        if (rail.closest(".country-hero")) {
+          rail.classList.remove("on-light");
+          return;
+        }
+
         const rect = rail.getBoundingClientRect();
         const probeX = Math.max(2, rect.left - 12);
         const probeY = rect.top + rect.height / 2;

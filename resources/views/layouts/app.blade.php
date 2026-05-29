@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-color-theme="signature">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,17 +7,26 @@
     <meta name="description" content="{{ $pageDescription ?? config('site.description') }}">
     <title>{{ $pageTitle ?? config('site.name') }}</title>
 
+    @php($canonicalUrl = $canonical ?? url()->current())
+    @php($ogImageUrl = isset($ogImage) ? (\Illuminate\Support\Str::startsWith($ogImage, ['http://', 'https://']) ? $ogImage : asset(ltrim($ogImage, '/'))) : asset('assets/Logo/og-image.png'))
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+
     <link rel="icon" type="image/svg+xml" href="{{ asset('assets/Logo/mark.svg') }}">
     <link rel="icon" type="image/png" href="{{ asset('assets/Logo/favicon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/Logo/favicon.png') }}">
 
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{{ $ogType ?? 'website' }}">
     <meta property="og:site_name" content="{{ config('site.name') }}">
     <meta property="og:title" content="{{ $pageTitle ?? config('site.name') }}">
     <meta property="og:description" content="{{ $pageDescription ?? config('site.description') }}">
-    <meta property="og:image" content="{{ asset('assets/Logo/og-image.png') }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:image" content="{{ $ogImageUrl }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="{{ asset('assets/Logo/og-image.png') }}">
+    <meta name="twitter:title" content="{{ $pageTitle ?? config('site.name') }}">
+    <meta name="twitter:description" content="{{ $pageDescription ?? config('site.description') }}">
+    <meta name="twitter:image" content="{{ $ogImageUrl }}">
+
+    @stack('head')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
@@ -25,13 +34,6 @@
     <script>
       (function () {
         document.documentElement.classList.add("js");
-        try {
-          var theme = sessionStorage.getItem("oda:color-theme");
-          var allowed = ["sapphire", "signature"];
-          if (allowed.indexOf(theme) !== -1) {
-            document.documentElement.dataset.colorTheme = theme;
-          }
-        } catch (error) {}
       })();
     </script>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
@@ -42,6 +44,34 @@
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
 
     @include('partials.header', ['activeNav' => $activeNav ?? null])
+
+    <div class="students-hub-overlay" id="students-hub-coming-soon" data-students-hub-overlay role="dialog" aria-modal="true" aria-labelledby="students-hub-title" aria-describedby="students-hub-desc" aria-hidden="true" hidden>
+      <div class="students-hub-backdrop" data-students-hub-close></div>
+      <div class="students-hub-dialog" role="document">
+        <button class="students-hub-close" type="button" data-students-hub-close aria-label="Close Students Hub preview">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+
+        <div class="students-hub-ai-mark" aria-hidden="true">
+          <span class="students-hub-chip"><i data-lucide="bot"></i></span>
+        </div>
+
+        <div class="students-hub-copy">
+          <span class="students-hub-kicker">
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+            AI-powered student tools
+          </span>
+          <h2 id="students-hub-title">Students Hub is coming soon</h2>
+          <p id="students-hub-desc">A smarter space for profile insights, best-fit university shortlists, application planning, and progress tracking.</p>
+
+          <div class="students-hub-features" aria-label="Students Hub preview features">
+            <span><i data-lucide="brain" aria-hidden="true"></i> Profile intelligence</span>
+            <span><i data-lucide="target" aria-hidden="true"></i> Best-fit shortlists</span>
+            <span><i data-lucide="list-checks" aria-hidden="true"></i> Application copilot</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     @yield('content')
 
@@ -55,21 +85,6 @@
         <span class="contact-fab__label" data-contact-fab-label>Talk to an advisor</span>
       </a>
     @endunless
-
-    <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
-      <button class="theme-swatch theme-swatch-current" type="button" data-theme-option="current" aria-label="Use original color theme" aria-pressed="true">
-        <span aria-hidden="true">1</span>
-        <span class="visually-hidden">Original</span>
-      </button>
-      <button class="theme-swatch theme-swatch-sapphire" type="button" data-theme-option="sapphire" aria-label="Use Sapphire color theme" aria-pressed="false">
-        <span aria-hidden="true">2</span>
-        <span class="visually-hidden">Sapphire</span>
-      </button>
-      <button class="theme-swatch theme-swatch-signature" type="button" data-theme-option="signature" aria-label="Use Signature color theme" aria-pressed="false">
-        <span aria-hidden="true">3</span>
-        <span class="visually-hidden">Signature</span>
-      </button>
-    </div>
 
     <script type="application/ld+json">
       {!! json_encode([

@@ -83,6 +83,15 @@
                 @endif
               </blockquote>
               @break
+
+            @case('image')
+              <figure class="blog-post-figure">
+                <img src="{{ $block['url'] }}" alt="{{ $block['alt'] ?? '' }}" loading="lazy">
+                @if(! empty($block['caption']))
+                  <figcaption>{{ $block['caption'] }}</figcaption>
+                @endif
+              </figure>
+              @break
           @endswitch
         @endforeach
 

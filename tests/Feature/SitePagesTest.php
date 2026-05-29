@@ -9,9 +9,23 @@ class SitePagesTest extends TestCase
 {
     public function test_primary_pages_render(): void
     {
-        foreach (['/', '/index.html', '/about', '/about.html', '/contact', '/contact.html', '/blog', '/blog/one-degree-test-requirements', '/mbbs/student'] as $path) {
+        foreach (['/', '/index.html', '/about', '/about.html', '/contact', '/contact.html', '/blog', '/blog/one-degree-test-requirements', '/services/admissions-counselling', '/mbbs/student'] as $path) {
             $this->get($path)->assertOk();
         }
+    }
+
+    public function test_admissions_counselling_page_is_linked_from_services_menu(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('/services/admissions-counselling', false)
+            ->assertSee('Admissions Counselling');
+
+        $this->get('/services/admissions-counselling')
+            ->assertOk()
+            ->assertSee('Admissions counselling for every study-abroad dream.')
+            ->assertSee('Australian Admissions')
+            ->assertSee('Medicine Admissions');
     }
 
     public function test_insights_page_is_removed(): void
@@ -21,20 +35,12 @@ class SitePagesTest extends TestCase
         }
     }
 
-    public function test_country_pages_render_with_clean_and_legacy_urls(): void
-    {
-        foreach (config('site.destinations') as $destination) {
-            $this->get("/countries/{$destination['slug']}")->assertOk();
-            $this->get("/countries/{$destination['slug']}.html")->assertOk();
-        }
-    }
-
     public function test_dynamic_uk_page_uses_content_data(): void
     {
-        /* Every visible string on the V2 country page is sourced from the
+        /* Every visible string on the country page is sourced from the
            scraped leverageedu JSON — no hardcoded country-specific copy.
            These assertions check strings that come from the JSON for UK. */
-        $this->get('/countries/study-in-uk-dynamic')
+        $this->get('/countries/study-in-uk')
             ->assertOk()
             ->assertSee('Why the United Kingdom?')   // JSON: Sections.section_heading (Why)
             ->assertSeeInOrder(['Indian Students in UK', 'Top Courses to Study in UK'])
@@ -60,7 +66,7 @@ class SitePagesTest extends TestCase
         $this->assertContains('study-in-kazakhstan', array_column($destinations, 'slug'));
 
         foreach ($destinations as $destination) {
-            $response = $this->get("/countries-v2/{$destination['slug']}")
+            $response = $this->get("/countries/{$destination['slug']}")
                 ->assertOk()
                 ->assertSee($destination['name']);
 

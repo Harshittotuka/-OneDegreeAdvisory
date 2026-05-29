@@ -1,0 +1,387 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Support\BlogStore;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+class BlogCmsController extends Controller
+{
+    /** Block kinds the editor and the public template both understand. */
+    private const KINDS = ['p', 'h2', 'list', 'table', 'quote', 'image'];
+
+    public function __construct(private BlogStore $store)
+    {
+    }
+
+    /* ───────────────────────── Auth ───────────────────────── */
+
+    public function showLogin(Request $request): View|RedirectResponse
+    {
+        if ($request->session()->get('cms_authenticated')) {
+            return redirect()->route('admin.blog.index');
+        }
+
+        return view('admin.login');
+    }
+
+    public function login(Request $request): RedirectResponse
+    {
+        $request->validate(['password' => ['required', 'string']]);
+
+        if (! hash_equals((string) config('site.cms_password'), (string) $request->input('password'))) {
+            return back()->withErrors(['password' => 'Incorrect password.']);
+        }
+
+        $request->session()->regenerate();
+        $request->session()->put('cms_authenticated', true);
+
+        return redirect()->route('admin.blog.index');
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        $request->session()->forget('cms_authenticated');
+
+        return redirect()->route('admin.login');
+    }
+
+    /* ───────────────────────── CRUD ───────────────────────── */
+
+    public function index(): View
+    {
+        return view('admin.blog.index', [
+            'posts' => $this->store->all(),
+        ]);
+    }
+
+    public function create(): View
+    {
+        return view('admin.blog.form', [
+            'post' => $this->blankPost(),
+            'mode' => 'create',
+            'categories' => $this->categories(),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $this->validatePost($request);
+        $post = $this->buildPost($data, null, $request->boolean('featured'), $request->boolean('visible'));
+        $this->store->save($post, null);
+        if ($post['featured']) {
+            $this->store->makeSoleFeatured($post['slug']);
+        }
+
+        return redirect()
+            ->route('admin.blog.edit', $post['slug'])
+            ->with('status', 'Post created.');
+    }
+
+    public function edit(string $slug): View|RedirectResponse
+    {
+        $post = $this->store->find($slug);
+        if (! $post) {
+            return redirect()->route('admin.blog.index')->with('status', 'Post not found.');
+        }
+
+        return view('admin.blog.form', [
+            'post' => $post,
+            'mode' => 'edit',
+            'categories' => $this->categories(),
+        ]);
+    }
+
+    public function update(Request $request, string $slug): RedirectResponse
+    {
+        if (! $this->store->find($slug)) {
+            return redirect()->route('admin.blog.index')->with('status', 'Post not found.');
+        }
+
+        $data = $this->validatePost($request);
+        $post = $this->buildPost($data, $slug, $request->boolean('featured'), $request->boolean('visible'));
+        $this->store->save($post, $slug);
+        if ($post['featured']) {
+            $this->store->makeSoleFeatured($post['slug']);
+        }
+
+        return redirect()
+            ->route('admin.blog.edit', $post['slug'])
+            ->with('status', 'Post saved.');
+    }
+
+    public function destroy(string $slug): RedirectResponse
+    {
+        $this->store->delete($slug);
+
+        return redirect()->route('admin.blog.index')->with('status', 'Post deleted.');
+    }
+
+    public function toggleVisibility(Request $request, string $slug): RedirectResponse|JsonResponse
+    {
+        $post = $this->store->find($slug);
+        if (! $post) {
+            return $this->toggleResponse($request, $slug, 'Post not found.');
+        }
+
+        $new = ! ($post['visible'] ?? true);
+        $this->store->setVisibility($slug, $new);
+
+        // A hidden post cannot be the featured one — drop the feature flag.
+        if (! $new && ! empty($post['featured'])) {
+            $this->store->makeSoleFeatured('__none__');
+        }
+
+        return $this->toggleResponse(
+            $request,
+            $slug,
+            $new ? "“{$post['title']}” is now visible." : "“{$post['title']}” is hidden from the blog."
+        );
+    }
+
+    public function toggleFeatured(Request $request, string $slug): RedirectResponse|JsonResponse
+    {
+        $post = $this->store->find($slug);
+        if (! $post) {
+            return $this->toggleResponse($request, $slug, 'Post not found.');
+        }
+
+        if (! empty($post['featured'])) {
+            $this->store->makeSoleFeatured('__none__'); // clears all
+            $message = "“{$post['title']}” is no longer featured.";
+        } else {
+            $this->store->makeSoleFeatured($slug);
+            $this->store->setVisibility($slug, true); // featured posts are always visible
+            $message = "“{$post['title']}” is now the featured post.";
+        }
+
+        return $this->toggleResponse($request, $slug, $message);
+    }
+
+    /** Uniform response for the quick toggles: JSON for AJAX, redirect-back otherwise. */
+    private function toggleResponse(Request $request, string $slug, string $message): RedirectResponse|JsonResponse
+    {
+        if ($request->expectsJson()) {
+            $current = $this->store->find($slug);
+            $featuredSlug = null;
+            foreach ($this->store->all() as $p) {
+                if (! empty($p['featured'])) {
+                    $featuredSlug = $p['slug'];
+                    break;
+                }
+            }
+
+            return response()->json([
+                'ok' => true,
+                'slug' => $slug,
+                'visible' => ($current['visible'] ?? true) === true,
+                'featuredSlug' => $featuredSlug,
+                'message' => $message,
+            ]);
+        }
+
+        return back()->with('status', $message);
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'slugs' => ['required', 'array'],
+            'slugs.*' => ['string'],
+        ]);
+
+        $this->store->reorder($data['slugs']);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /* ───────────────────────── Image upload ───────────────────────── */
+
+    public function upload(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'image', 'max:5120'], // 5 MB
+        ]);
+
+        $path = $request->file('file')->store('blog', 'public');
+
+        return response()->json([
+            'url' => asset('storage/'.$path),
+        ]);
+    }
+
+    /* ───────────────────────── Helpers ───────────────────────── */
+
+    private function validatePost(Request $request): array
+    {
+        return $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'slug' => ['nullable', 'string', 'max:200'],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['string', 'max:100'],
+            'author' => ['nullable', 'string', 'max:100'],
+            'date' => ['required', 'date'],
+            'read_time' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'excerpt' => ['nullable', 'string', 'max:400'],
+            'image' => ['nullable', 'string', 'max:500'],
+            'alt' => ['nullable', 'string', 'max:300'],
+            'body' => ['nullable', 'string'],
+        ]);
+    }
+
+    private function buildPost(array $data, ?string $originalSlug, bool $featured = false, bool $visible = true): array
+    {
+        $body = $this->sanitizeBody($data['body'] ?? '');
+        $desiredSlug = $data['slug'] ?: $data['title'];
+
+        $categories = array_values(array_unique(array_filter(array_map(
+            fn ($c) => trim((string) $c),
+            $data['categories'] ?? []
+        ), fn ($c) => $c !== '')));
+        if ($categories === []) {
+            $categories = ['One Degree'];
+        }
+
+        return [
+            'slug' => $this->store->uniqueSlug($desiredSlug, $originalSlug),
+            'title' => trim($data['title']),
+            'categories' => $categories,
+            'category' => $categories[0], // primary category, kept for the public templates
+            'date' => $data['date'],
+            'read_time' => (int) ($data['read_time'] ?? 0) ?: $this->estimateReadTime($body, $data['excerpt'] ?? ''),
+            'author' => trim($data['author'] ?? '') ?: 'One Degree',
+            'excerpt' => trim($data['excerpt'] ?? ''),
+            'image' => trim($data['image'] ?? '') ?: '/assets/heroes/uk.jpg',
+            'alt' => trim($data['alt'] ?? ''),
+            'featured' => $featured,
+            'visible' => $visible || $featured, // a featured post is always visible
+            'body' => $body,
+        ];
+    }
+
+    /** Decode and normalize the JSON body payload from the block editor. */
+    private function sanitizeBody(string $json): array
+    {
+        $decoded = json_decode($json, true);
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        $clean = [];
+        foreach ($decoded as $block) {
+            if (! is_array($block) || ! in_array($block['kind'] ?? '', self::KINDS, true)) {
+                continue;
+            }
+
+            switch ($block['kind']) {
+                case 'p':
+                case 'h2':
+                    $text = trim((string) ($block['text'] ?? ''));
+                    if ($text !== '') {
+                        $clean[] = ['kind' => $block['kind'], 'text' => $text];
+                    }
+                    break;
+
+                case 'list':
+                    $items = array_values(array_filter(array_map(
+                        fn ($i) => trim((string) $i),
+                        is_array($block['items'] ?? null) ? $block['items'] : []
+                    ), fn ($i) => $i !== ''));
+                    if ($items !== []) {
+                        $clean[] = ['kind' => 'list', 'items' => $items];
+                    }
+                    break;
+
+                case 'table':
+                    $rows = [];
+                    foreach (is_array($block['rows'] ?? null) ? $block['rows'] : [] as $row) {
+                        $cells = array_map(fn ($c) => trim((string) $c), is_array($row) ? $row : []);
+                        if (implode('', $cells) !== '') {
+                            $rows[] = array_values($cells);
+                        }
+                    }
+                    if ($rows !== []) {
+                        $clean[] = ['kind' => 'table', 'rows' => $rows];
+                    }
+                    break;
+
+                case 'quote':
+                    $text = trim((string) ($block['text'] ?? ''));
+                    if ($text !== '') {
+                        $clean[] = array_filter([
+                            'kind' => 'quote',
+                            'text' => $text,
+                            'attribution' => trim((string) ($block['attribution'] ?? '')),
+                        ], fn ($v) => $v !== '');
+                    }
+                    break;
+
+                case 'image':
+                    $url = trim((string) ($block['url'] ?? ''));
+                    if ($url !== '') {
+                        $clean[] = array_filter([
+                            'kind' => 'image',
+                            'url' => $url,
+                            'alt' => trim((string) ($block['alt'] ?? '')),
+                            'caption' => trim((string) ($block['caption'] ?? '')),
+                        ], fn ($v) => $v !== '');
+                    }
+                    break;
+            }
+        }
+
+        return $clean;
+    }
+
+    private function estimateReadTime(array $body, string $excerpt): int
+    {
+        $words = str_word_count($excerpt);
+        foreach ($body as $block) {
+            $words += str_word_count(implode(' ', array_map(
+                fn ($v) => is_array($v) ? implode(' ', array_map(fn ($x) => is_array($x) ? implode(' ', $x) : (string) $x, $v)) : (string) $v,
+                $block
+            )));
+        }
+
+        return max(1, (int) ceil($words / 200));
+    }
+
+    /** All distinct categories across posts, for autocomplete suggestions. */
+    private function categories(): array
+    {
+        $all = [];
+        foreach ($this->store->all() as $post) {
+            foreach ($post['categories'] ?? array_filter([$post['category'] ?? null]) as $c) {
+                $all[] = $c;
+            }
+        }
+
+        sort($all);
+
+        return array_values(array_unique(array_filter($all)));
+    }
+
+    private function blankPost(): array
+    {
+        return [
+            'slug' => '',
+            'title' => '',
+            'categories' => ['College Admissions'],
+            'category' => 'College Admissions',
+            'date' => now()->toDateString(),
+            'read_time' => '',
+            'author' => 'One Degree',
+            'excerpt' => '',
+            'image' => '',
+            'alt' => '',
+            'featured' => false,
+            'visible' => true,
+            'body' => [],
+        ];
+    }
+}

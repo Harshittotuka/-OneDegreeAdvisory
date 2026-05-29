@@ -20,7 +20,7 @@
 
     $pageTitle = $page['seo_title'] ?? $page['page_title'] ?? '';
     $pageDescription = $page['seo_description'] ?? '';
-    $activeNav = 'destinations-v2';
+    $activeNav = 'destinations';
     $mainId = 'country-main';
     $bodyClass = 'page-study-location-dynamic page-country-v2';
 
@@ -73,9 +73,39 @@
     $icons = ['award', 'clock', 'briefcase', 'badge-check', 'flask-conical', 'globe-2'];
     $carouselCities = array_values(array_merge($cities, $cities));
     $cityTilts = [-2.5, 1.5, -1, 2.25, -1.75, 1];
+
+    // Per-country SEO: social share image + canonical (URL is already unique per country).
+    $ogImage = (string) ($destination['hero_image'] ?? '') ?: $bannerImage;
+    $ogType = 'article';
 @endphp
 
 @extends('layouts.app')
+
+@push('head')
+  <script type="application/ld+json">
+  {!! json_encode([
+      '@context' => 'https://schema.org',
+      '@type' => 'BreadcrumbList',
+      'itemListElement' => [
+          ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
+          ['@type' => 'ListItem', 'position' => 2, 'name' => 'Destinations', 'item' => route('home').'#destinations'],
+          ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => url()->current()],
+      ],
+  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+  </script>
+  <script type="application/ld+json">
+  {!! json_encode(array_filter([
+      '@context' => 'https://schema.org',
+      '@type' => 'WebPage',
+      'name' => $pageTitle,
+      'description' => $pageDescription,
+      'url' => url()->current(),
+      'about' => $countryName !== '' ? ['@type' => 'Place', 'name' => $countryName] : null,
+      'inLanguage' => 'en',
+      'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => route('home')],
+  ]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+  </script>
+@endpush
 
 @section('content')
 <main id="country-main" class="country-main country-main--dynamic">
@@ -102,28 +132,28 @@
           @endif
         </div>
       </div>
-      <aside class="country-snapshot">
-        <h2>{{ $text('snapshot_heading') }}</h2>
-        <dl>
-          @php
-            $snapshotUni = $whyCards[0]['card_title'] ?? '';
-            $snapshotIntakes = collect($intakes)->pluck('card_title')->unique()->take(2)->join(', ');
-          @endphp
-          @if($snapshotUni !== '')
-            <div><dt>{{ $text('snapshot_universities_label') }}</dt><dd>{{ $snapshotUni }}</dd></div>
-          @endif
-          @if($snapshotIntakes !== '')
-            <div><dt>{{ $text('snapshot_intakes_label') }}</dt><dd>{{ $snapshotIntakes }}</dd></div>
-          @endif
-          @if($tuitionSnapshot !== '')
-            <div><dt>{{ $text('snapshot_tuition_label') }}</dt><dd>{{ $tuitionSnapshot }}</dd></div>
-          @endif
-          @if($livingSnapshot !== '')
-            <div><dt>{{ $text('snapshot_living_cost_label') }}</dt><dd>{{ $livingSnapshot }}</dd></div>
-          @endif
-        </dl>
-      </aside>
     </div>
+    <aside class="country-snapshot">
+      <h2>{{ $text('snapshot_heading') }}</h2>
+      <dl>
+        @php
+          $snapshotUni = $whyCards[0]['card_title'] ?? '';
+          $snapshotIntakes = collect($intakes)->pluck('card_title')->unique()->take(2)->join(', ');
+        @endphp
+        @if($snapshotUni !== '')
+          <div><dt>{{ $text('snapshot_universities_label') }}</dt><dd>{{ $snapshotUni }}</dd></div>
+        @endif
+        @if($snapshotIntakes !== '')
+          <div><dt>{{ $text('snapshot_intakes_label') }}</dt><dd>{{ $snapshotIntakes }}</dd></div>
+        @endif
+        @if($tuitionSnapshot !== '')
+          <div><dt>{{ $text('snapshot_tuition_label') }}</dt><dd>{{ $tuitionSnapshot }}</dd></div>
+        @endif
+        @if($livingSnapshot !== '')
+          <div><dt>{{ $text('snapshot_living_cost_label') }}</dt><dd>{{ $livingSnapshot }}</dd></div>
+        @endif
+      </dl>
+    </aside>
   </section>
 
   <section id="why" class="country-section dynamic-section dynamic-section--why">

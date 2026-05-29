@@ -131,22 +131,22 @@
       <section class="signal-strip" aria-label="What One Degree Advisory brings">
         <div class="container signal-grid">
           <div class="signal reveal">
-            <span>01</span>
+            <span class="signal-icon" aria-hidden="true"><i data-lucide="compass"></i></span>
             <strong>Strategy before forms</strong>
             <p>Every shortlist begins with profile fit, budget clarity, career intent, and risk review.</p>
           </div>
           <div class="signal reveal">
-            <span>360</span>
+            <span class="signal-icon" aria-hidden="true"><i data-lucide="route"></i></span>
             <strong>Application-to-arrival</strong>
             <p>University selection, essays, scholarships, loans, visa prep, and pre-departure support.</p>
           </div>
           <div class="signal reveal">
-            <span>1:1</span>
+            <span class="signal-icon" aria-hidden="true"><i data-lucide="heart-handshake"></i></span>
             <strong>Human advisory</strong>
             <p>Thoughtful counseling for students and parents, with each next step made visible.</p>
           </div>
           <div class="signal reveal">
-            <span>8</span>
+            <span class="signal-icon" aria-hidden="true"><i data-lucide="flag"></i></span>
             <strong>Decision checkpoints</strong>
             <p>A guided journey that turns uncertainty into a sequence of confident choices.</p>
           </div>
@@ -347,6 +347,49 @@
               <i data-lucide="plane-takeoff"></i>
               <h3>Pre-Departure Support</h3>
               <p>Plan accommodation, packing, banking, insurance, campus arrival, and the first 30 days abroad.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="whyus-section" aria-labelledby="whyus-title">
+        <div class="container edge-container">
+          <div class="section-lead centered reveal">
+            <span class="eyebrow">Why One Degree</span>
+            <h2 id="whyus-title">What Makes us The Best Study Abroad Consultants?</h2>
+            <p>Amid the sea of education consultants, what sets us apart? Here's the answer:</p>
+          </div>
+
+          <div class="whyus-grid">
+            <article class="whyus-card reveal">
+              <span class="whyus-icon"><i data-lucide="headphones"></i></span>
+              <h3>Comprehensive Support</h3>
+              <p>Get a dedicated consultant, founding and support team for fast and reliable process</p>
+            </article>
+            <article class="whyus-card reveal">
+              <span class="whyus-icon"><i data-lucide="notebook-pen"></i></span>
+              <h3>Unlimited Revisions</h3>
+              <p>Unlimited edits to perfect your documents, no matter how many reviews it takes</p>
+            </article>
+            <article class="whyus-card reveal">
+              <span class="whyus-icon"><i data-lucide="hand-helping"></i></span>
+              <h3>Expert Guidance</h3>
+              <p>Our Experts know exactly what top schools seek and help you present your best</p>
+            </article>
+            <article class="whyus-card reveal">
+              <span class="whyus-icon"><i data-lucide="piggy-bank"></i></span>
+              <h3>Affordable Pricing</h3>
+              <p>Designed for recent grads, our services are both effective and budget-friendly</p>
+            </article>
+            <article class="whyus-card reveal">
+              <span class="whyus-icon"><i data-lucide="thumbs-up"></i></span>
+              <h3>Personalized Services</h3>
+              <p>Get fully personalized essays &amp; materials through One-on-One Consultations</p>
+            </article>
+            <article class="whyus-card reveal">
+              <span class="whyus-icon"><i data-lucide="timer"></i></span>
+              <h3>Fast Turnaround</h3>
+              <p>Benefit from a quick 36 hrs response time on edits to keep your application on track</p>
             </article>
           </div>
         </div>

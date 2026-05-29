@@ -23,7 +23,7 @@ Default outputs:
 The Laravel V2 country pages read the JSON file at request time:
 
 ```text
-/countries-v2/study-in-uk
+/countries/study-in-uk
 ```
 
 ## Later Runs
