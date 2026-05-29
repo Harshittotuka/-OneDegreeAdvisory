@@ -29,7 +29,7 @@
   </div>
   <nav class="nav-shell" aria-label="Primary navigation">
     <a class="brand" href="{{ route('home') }}#top" aria-label="{{ config('site.name') }} home">
-      <span class="brand-mark" aria-hidden="true">1&deg;</span>
+      <img class="brand-mark" src="{{ asset('assets/Logo/mark.svg') }}" alt="" aria-hidden="true" width="104" height="36">
       <span>
         <strong>{{ config('site.name') }}</strong>
         <small>{{ config('site.tagline') }}</small>
@@ -43,6 +43,7 @@
     <div class="nav-menu" data-nav-menu>
       <a @class(['is-active' => $activeNav === 'home']) href="{{ route('home') }}">Home</a>
       <a @class(['is-active' => $activeNav === 'about']) href="{{ route('about') }}">About</a>
+      <a @class(['is-active' => $activeNav === 'blog']) href="{{ route('blog.index') }}">Blog</a>
 
       <div class="nav-item has-dropdown" data-dropdown>
         <button class="nav-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger>
@@ -199,26 +200,6 @@
         </div>
       </div>
     </div>
-
-    @if (! in_array($activeNav ?? null, ['home', 'contact', 'about']))
-    <div class="currency-switch" data-currency-switch>
-      <button class="currency-trigger" type="button" data-currency-trigger aria-haspopup="true" aria-expanded="false" aria-label="Change currency">
-        <i data-lucide="circle-dollar-sign"></i>
-        <span data-currency-label>USD</span>
-        <i class="currency-chevron" data-lucide="chevron-down"></i>
-      </button>
-      <div class="currency-menu" data-currency-menu role="menu">
-        <button type="button" role="menuitem" data-currency-option="USD"><span class="cur-sym">$</span><span class="cur-name">US Dollar</span><span class="cur-code">USD</span></button>
-        <button type="button" role="menuitem" data-currency-option="INR"><span class="cur-sym">&#8377;</span><span class="cur-name">Indian Rupee</span><span class="cur-code">INR</span></button>
-        <button type="button" role="menuitem" data-currency-option="GBP"><span class="cur-sym">&pound;</span><span class="cur-name">British Pound</span><span class="cur-code">GBP</span></button>
-        <button type="button" role="menuitem" data-currency-option="EUR"><span class="cur-sym">&euro;</span><span class="cur-name">Euro</span><span class="cur-code">EUR</span></button>
-        <button type="button" role="menuitem" data-currency-option="CAD"><span class="cur-sym">CA$</span><span class="cur-name">Canadian Dollar</span><span class="cur-code">CAD</span></button>
-        <button type="button" role="menuitem" data-currency-option="AUD"><span class="cur-sym">A$</span><span class="cur-name">Australian Dollar</span><span class="cur-code">AUD</span></button>
-        <button type="button" role="menuitem" data-currency-option="AED"><span class="cur-sym">AED</span><span class="cur-name">UAE Dirham</span><span class="cur-code">AED</span></button>
-        <button type="button" role="menuitem" data-currency-option="NZD"><span class="cur-sym">NZ$</span><span class="cur-name">New Zealand Dollar</span><span class="cur-code">NZD</span></button>
-      </div>
-    </div>
-    @endif
 
     <a class="nav-cta" href="{{ route('contact') }}">
       <i data-lucide="message-circle"></i>

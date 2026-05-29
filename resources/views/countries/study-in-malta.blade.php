@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Malta | OneDegreeAdvisory';
-    $pageDescription = 'Study in Malta with OneDegreeAdvisory. English-medium EU degrees, University of Malta, tuition, scholarships, visa, post-study, FAQs.';
+    $pageTitle = 'Study in Malta | One Degree Advisory';
+    $pageDescription = 'Study in Malta with One Degree Advisory. English-medium EU degrees, University of Malta, tuition, scholarships, visa, post-study, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>University of Malta + private institutions</dd></div>
               <div><dt>Main intakes</dt><dd>October, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="9000" data-currency="EUR">&euro;9,000</span> &ndash; <span data-money="18000" data-currency="EUR">&euro;18,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="800" data-currency="EUR">&euro;800</span> &ndash; <span data-money="1200" data-currency="EUR">&euro;1,200</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;9,000</span> &ndash; <span>&euro;18,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;800</span> &ndash; <span>&euro;1,200</span></dd></div>
               <div><dt>Student visa</dt><dd>Maltese study visa</dd></div>
               <div><dt>Post-study work</dt><dd>Job-seeking residence</dd></div>
             </dl>
@@ -56,7 +56,7 @@
               <span class="eyebrow">EU + English-medium</span>
               <h2>Mediterranean campus, EU-recognised degrees.</h2>
               <p>The University of Malta and private institutions offer English-taught programs across business, IT, and digital arts &mdash; with EU work rights after graduation.</p>
-              <div class="band-stats"><div class="band-stat"><strong>EU</strong><span>Member state</span></div><div class="band-stat"><strong>EN</strong><span>Medium</span></div><div class="band-stat"><strong><span data-money="9000" data-currency="EUR" data-money-hint="k">&euro;9k</span>+</strong><span>Tuition</span></div><div class="band-stat"><strong>PSW</strong><span>Pathway</span></div></div>
+              <div class="band-stats"><div class="band-stat"><strong>EU</strong><span>Member state</span></div><div class="band-stat"><strong>EN</strong><span>Medium</span></div><div class="band-stat"><strong><span>&euro;9k</span>+</strong><span>Tuition</span></div><div class="band-stat"><strong>PSW</strong><span>Pathway</span></div></div>
             </div>
           </div>
         </div>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span data-money="9000" data-currency="EUR">&euro;9,000</span> &ndash; <span data-money="14000" data-currency="EUR">&euro;14,000</span></span><span class="cost-note">Per year &middot; for non-EU students at UoM.</span></div>
-            <div class="cost-card"><span class="cost-label">Private university tuition</span><span class="cost-value"><span data-money="10000" data-currency="EUR">&euro;10,000</span> &ndash; <span data-money="18000" data-currency="EUR">&euro;18,000</span></span><span class="cost-note">Per year &middot; AUM, STC, and specialist colleges.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Valletta/Sliema</span><span class="cost-value"><span data-money="1000" data-currency="EUR">&euro;1,000</span> &ndash; <span data-money="1200" data-currency="EUR">&euro;1,200</span></span><span class="cost-note">Per month &middot; rent leads the budget.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other towns</span><span class="cost-value"><span data-money="800" data-currency="EUR">&euro;800</span> &ndash; <span data-money="1000" data-currency="EUR">&euro;1,000</span></span><span class="cost-note">Per month &middot; Mosta, Birkirkara, Gozo.</span></div>
+            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span>&euro;9,000</span> &ndash; <span>&euro;14,000</span></span><span class="cost-note">Per year &middot; for non-EU students at UoM.</span></div>
+            <div class="cost-card"><span class="cost-label">Private university tuition</span><span class="cost-value"><span>&euro;10,000</span> &ndash; <span>&euro;18,000</span></span><span class="cost-note">Per year &middot; AUM, STC, and specialist colleges.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Valletta/Sliema</span><span class="cost-value"><span>&euro;1,000</span> &ndash; <span>&euro;1,200</span></span><span class="cost-note">Per month &middot; rent leads the budget.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other towns</span><span class="cost-value"><span>&euro;800</span> &ndash; <span>&euro;1,000</span></span><span class="cost-note">Per month &middot; Mosta, Birkirkara, Gozo.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>National long-stay visa</strong> + residence permit via Identity Malta.</span></li>
                 <li><i data-lucide="check"></i><span>Requires admission letter and proof of paid tuition.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: <span data-money="14" data-currency="EUR">&euro;14</span>&ndash;<span data-money="19" data-currency="EUR">&euro;19</span>/day for the duration of stay.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: <span>&euro;14</span>&ndash;<span>&euro;19</span>/day for the duration of stay.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 4&ndash;6 weeks at consulate; permit on arrival.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: 20 hours/week after first 90 days of studies.</span></li>
               </ul>

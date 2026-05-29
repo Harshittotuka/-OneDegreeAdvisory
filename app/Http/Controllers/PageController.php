@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\BlogContent;
 use App\Support\MbbsCountryContent;
 use App\Support\StudyLocationContent;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
 class PageController extends Controller
@@ -27,6 +29,34 @@ class PageController extends Controller
     public function contact(): View
     {
         return view('pages.contact');
+    }
+
+    public function blogIndex(Request $request, BlogContent $blog): View
+    {
+        $perPage = 9;
+        $page    = max(1, (int) $request->query('page', 1));
+
+        $allPosts   = $blog->all();
+        $totalPages = max(1, (int) ceil(count($allPosts) / $perPage));
+        $page       = min($page, $totalPages);
+        $posts      = array_slice($allPosts, ($page - 1) * $perPage, $perPage);
+
+        return view('pages.blog-index', [
+            'posts'      => $posts,
+            'page'       => $page,
+            'totalPages' => $totalPages,
+        ]);
+    }
+
+    public function blogPost(string $slug, BlogContent $blog): View
+    {
+        $post = $blog->forSlug($slug);
+        abort_unless($post, 404);
+
+        return view('pages.blog-post', [
+            'post'    => $post,
+            'related' => $blog->related($slug, 4),
+        ]);
     }
 
     public function mbbsStudent(): View

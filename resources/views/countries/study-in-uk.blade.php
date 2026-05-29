@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in the UK | OneDegreeAdvisory';
-    $pageDescription = 'Study in the UK with OneDegreeAdvisory. Top universities, tuition, scholarships, Student Route visa, Graduate Route work pathway, intakes, costs, FAQs.';
+    $pageTitle = 'Study in the UK | One Degree Advisory';
+    $pageDescription = 'Study in the UK with One Degree Advisory. Top universities, tuition, scholarships, Student Route visa, Graduate Route work pathway, intakes, costs, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -30,8 +30,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>90+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>September, January</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="15000" data-currency="GBP">&pound;15,000</span> &ndash; <span data-money="45000" data-currency="GBP">&pound;45,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="900" data-currency="GBP">&pound;900</span> &ndash; <span data-money="1800" data-currency="GBP">&pound;1,800</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&pound;15,000</span> &ndash; <span>&pound;45,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&pound;900</span> &ndash; <span>&pound;1,800</span></dd></div>
               <div><dt>Student visa</dt><dd>Student Route</dd></div>
               <div><dt>Post-study work</dt><dd>Graduate Route &middot; 2 years</dd></div>
             </dl>
@@ -231,37 +231,37 @@
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MSc Computer Science</h3>
               <p>Conversion and specialist tracks across Oxford, Imperial, UCL, Edinburgh, and Manchester.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span data-money="28000" data-currency="GBP" data-money-hint="k">&pound;28k</span>&ndash;<span data-money="42000" data-currency="GBP" data-money-hint="k">&pound;42k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span>&pound;28k</span>&ndash;<span>&pound;42k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MSc Data Science &amp; Analytics</h3>
               <p>Quantitative tracks combining statistics, ML, and business analytics for global hiring.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span data-money="25000" data-currency="GBP" data-money-hint="k">&pound;25k</span>&ndash;<span data-money="38000" data-currency="GBP" data-money-hint="k">&pound;38k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span>&pound;25k</span>&ndash;<span>&pound;38k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">MBA</span>
               <h3>Master of Business Administration</h3>
               <p>1-year MBA programs at LBS, Said, Judge, Warwick, and Manchester for experienced professionals.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12&ndash;21 months</span><span><i data-lucide="banknote"></i><span data-money="35000" data-currency="GBP" data-money-hint="k">&pound;35k</span>&ndash;<span data-money="110000" data-currency="GBP" data-money-hint="k">&pound;110k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12&ndash;21 months</span><span><i data-lucide="banknote"></i><span>&pound;35k</span>&ndash;<span>&pound;110k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MSc Finance &amp; Investment</h3>
               <p>Quant finance, asset management, and FinTech tracks aligned with London&rsquo;s financial sector.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span data-money="28000" data-currency="GBP" data-money-hint="k">&pound;28k</span>&ndash;<span data-money="55000" data-currency="GBP" data-money-hint="k">&pound;55k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span>&pound;28k</span>&ndash;<span>&pound;55k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MA International Relations</h3>
               <p>Globally recognised programs at LSE, KCL, SOAS, and St Andrews for policy and diplomacy paths.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span data-money="22000" data-currency="GBP" data-money-hint="k">&pound;22k</span>&ndash;<span data-money="33000" data-currency="GBP" data-money-hint="k">&pound;33k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span>&pound;22k</span>&ndash;<span>&pound;33k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Bachelor&rsquo;s</span>
               <h3>BSc Engineering (multiple)</h3>
               <p>3&ndash;4 year integrated programs with placement years across UCL, Bristol, Edinburgh, and Manchester.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>3&ndash;4 years</span><span><i data-lucide="banknote"></i><span data-money="28000" data-currency="GBP" data-money-hint="k">&pound;28k</span>&ndash;<span data-money="38000" data-currency="GBP" data-money-hint="k">&pound;38k</span>/yr</span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>3&ndash;4 years</span><span><i data-lucide="banknote"></i><span>&pound;28k</span>&ndash;<span>&pound;38k</span>/yr</span></div>
             </article>
           </div>
         </div>
@@ -275,10 +275,10 @@
             <p>Indicative ranges &mdash; final figures depend on program, city, and lifestyle.</p>
           </div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span data-money="15000" data-currency="GBP">&pound;15,000</span>&ndash;<span data-money="35000" data-currency="GBP">&pound;35,000</span></span><span class="cost-note">Per year &middot; higher for medicine and select STEM courses.</span></div>
-            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span data-money="18000" data-currency="GBP">&pound;18,000</span>&ndash;<span data-money="45000" data-currency="GBP">&pound;45,000</span></span><span class="cost-note">Per year &middot; MBA and specialist masters at the upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; London</span><span class="cost-value"><span data-money="1300" data-currency="GBP">&pound;1,300</span>&ndash;<span data-money="1800" data-currency="GBP">&pound;1,800</span></span><span class="cost-note">Per month &middot; covers accommodation, food, transport.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="900" data-currency="GBP">&pound;900</span>&ndash;<span data-money="1300" data-currency="GBP">&pound;1,300</span></span><span class="cost-note">Per month &middot; Manchester, Birmingham, Glasgow, Edinburgh.</span></div>
+            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span>&pound;15,000</span>&ndash;<span>&pound;35,000</span></span><span class="cost-note">Per year &middot; higher for medicine and select STEM courses.</span></div>
+            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span>&pound;18,000</span>&ndash;<span>&pound;45,000</span></span><span class="cost-note">Per year &middot; MBA and specialist masters at the upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; London</span><span class="cost-value"><span>&pound;1,300</span>&ndash;<span>&pound;1,800</span></span><span class="cost-note">Per month &middot; covers accommodation, food, transport.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&pound;900</span>&ndash;<span>&pound;1,300</span></span><span class="cost-note">Per month &middot; Manchester, Birmingham, Glasgow, Edinburgh.</span></div>
           </div>
         </div>
       </section>
@@ -306,7 +306,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>Student Route</strong> (formerly Tier 4).</span></li>
                 <li><i data-lucide="check"></i><span>Requires a Confirmation of Acceptance for Studies (CAS) from your university.</span></li>
-                <li><i data-lucide="check"></i><span>Financial proof: roughly <span data-money="1334" data-currency="GBP">&pound;1,334</span>/month for London, <span data-money="1023" data-currency="GBP">&pound;1,023</span>/month outside London.</span></li>
+                <li><i data-lucide="check"></i><span>Financial proof: roughly <span>&pound;1,334</span>/month for London, <span>&pound;1,023</span>/month outside London.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: about 3 weeks from your home country.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: up to 20 hours/week in term, full-time during vacations.</span></li>
               </ul>
@@ -405,7 +405,7 @@
               <span class="visa-stat-note">For complete, well-prepared applications (Home Office data).</span>
             </div>
             <div class="visa-stat">
-              <span class="visa-stat-value"><span data-money="524" data-currency="GBP">&pound;524</span></span>
+              <span class="visa-stat-value"><span>&pound;524</span></span>
               <span class="visa-stat-label">Application fee</span>
               <span class="visa-stat-note">Applying from outside the UK; in-country fee is higher.</span>
             </div>
@@ -418,7 +418,7 @@
           <div class="visa-steps">
             <article class="visa-step"><h4>Receive your CAS</h4><p>Pay your tuition deposit and accept your offer to receive a Confirmation of Acceptance for Studies from your university.</p></article>
             <article class="visa-step"><h4>Prove funds &amp; English</h4><p>Show 28 consecutive days of bank statements covering tuition + living costs, plus UKVI IELTS / PTE / TOEFL.</p></article>
-            <article class="visa-step"><h4>Pay IHS &amp; visa fee</h4><p>Pay the Immigration Health Surcharge (~<span data-money="776" data-currency="GBP">&pound;776</span>/year) plus the visa application fee online.</p></article>
+            <article class="visa-step"><h4>Pay IHS &amp; visa fee</h4><p>Pay the Immigration Health Surcharge (~<span>&pound;776</span>/year) plus the visa application fee online.</p></article>
             <article class="visa-step"><h4>Submit Student Route application</h4><p>Apply on the gov.uk portal, upload documents, and book your biometrics appointment.</p></article>
             <article class="visa-step"><h4>Biometrics &amp; TB test</h4><p>Attend the VFS appointment for fingerprints; submit a TB test certificate where required.</p></article>
             <article class="visa-step"><h4>Collect your BRP</h4><p>Receive the visa decision in ~3 weeks; pick up your Biometric Residence Permit after arrival in the UK.</p></article>
@@ -473,7 +473,7 @@
             <article class="life-card"><span class="life-icon"><i data-lucide="train"></i></span><h3>Getting around</h3><p>Reliable rail and city transport. Discounted 16&ndash;25 / 26&ndash;30 Railcard saves ~33% on most train fares.</p></article>
             <article class="life-card"><span class="life-icon"><i data-lucide="utensils"></i></span><h3>Food &amp; culture</h3><p>Strong South Asian, halal, and vegetarian options in most cities. Active Indian and international societies on every campus.</p></article>
             <article class="life-card"><span class="life-icon"><i data-lucide="cloud-sun"></i></span><h3>Climate</h3><p>Mild temperate climate &mdash; cool, often wet winters and pleasant summers. Layered clothing year-round.</p></article>
-            <article class="life-card"><span class="life-icon"><i data-lucide="shield-check"></i></span><h3>Healthcare</h3><p>Immigration Health Surcharge (~<span data-money="776" data-currency="GBP">&pound;776</span>/year) covers NHS access &mdash; GP visits, A&amp;E, and most hospital care.</p></article>
+            <article class="life-card"><span class="life-icon"><i data-lucide="shield-check"></i></span><h3>Healthcare</h3><p>Immigration Health Surcharge (~<span>&pound;776</span>/year) covers NHS access &mdash; GP visits, A&amp;E, and most hospital care.</p></article>
           </div>
         </div>
       </section>
@@ -542,7 +542,7 @@
             </details>
             <details class="faq-item">
               <summary>How much does it cost to study in the UK?</summary>
-              <div class="faq-answer">Budget <span data-money="15000" data-currency="GBP">&pound;15,000</span>&ndash;<span data-money="45000" data-currency="GBP">&pound;45,000</span>/year in tuition plus <span data-money="11000" data-currency="GBP">&pound;11,000</span>&ndash;<span data-money="21000" data-currency="GBP">&pound;21,000</span>/year for living. London is significantly more expensive than most other UK cities.</div>
+              <div class="faq-answer">Budget <span>&pound;15,000</span>&ndash;<span>&pound;45,000</span>/year in tuition plus <span>&pound;11,000</span>&ndash;<span>&pound;21,000</span>/year for living. London is significantly more expensive than most other UK cities.</div>
             </details>
             <details class="faq-item">
               <summary>Do I need IELTS to study in the UK?</summary>
@@ -576,7 +576,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Ready to map your UK application?</h2>
-            <p>Talk to a OneDegree advisor about university fit, scholarships, and Student Route timing.</p>
+            <p>Talk to a One Degree advisor about university fit, scholarships, and Student Route timing.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a UK call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

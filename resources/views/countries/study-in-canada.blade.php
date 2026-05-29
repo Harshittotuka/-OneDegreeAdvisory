@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Canada | OneDegreeAdvisory';
-    $pageDescription = 'Study in Canada with OneDegreeAdvisory. Top universities, tuition, Study Permit, co-op pathways, and PGWP work options up to 3 years.';
+    $pageTitle = 'Study in Canada | One Degree Advisory';
+    $pageDescription = 'Study in Canada with One Degree Advisory. Top universities, tuition, Study Permit, co-op pathways, and PGWP work options up to 3 years.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>30+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>Fall, Winter, Summer</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="15000" data-currency="CAD">CAD 15,000</span> &ndash; <span data-money="50000" data-currency="CAD">50,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="1000" data-currency="CAD">CAD 1,000</span> &ndash; <span data-money="2000" data-currency="CAD">2,000</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>CAD 15,000</span> &ndash; <span>50,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>CAD 1,000</span> &ndash; <span>2,000</span></dd></div>
               <div><dt>Student visa</dt><dd>Study Permit</dd></div>
               <div><dt>Post-study work</dt><dd>PGWP &middot; up to 3 years</dd></div>
             </dl>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>CAD ranges &mdash; final costs vary by province, campus, and program.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span data-money="15000" data-currency="CAD">CAD 15,000</span>&ndash;<span data-money="40000" data-currency="CAD">40,000</span></span><span class="cost-note">Per year &middot; engineering and business at upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span data-money="18000" data-currency="CAD">CAD 18,000</span>&ndash;<span data-money="50000" data-currency="CAD">50,000</span></span><span class="cost-note">Per year &middot; MBA highest; many master&rsquo;s under <span data-money="30000" data-currency="CAD" data-money-hint="k">CAD 30k</span>.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Toronto/Vancouver</span><span class="cost-value"><span data-money="1400" data-currency="CAD">CAD 1,400</span>&ndash;<span data-money="2000" data-currency="CAD">2,000</span></span><span class="cost-note">Per month &middot; accommodation, food, transport.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="1000" data-currency="CAD">CAD 1,000</span>&ndash;<span data-money="1400" data-currency="CAD">1,400</span></span><span class="cost-note">Per month &middot; Montreal, Calgary, Ottawa, smaller cities.</span></div>
+            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span>CAD 15,000</span>&ndash;<span>40,000</span></span><span class="cost-note">Per year &middot; engineering and business at upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span>CAD 18,000</span>&ndash;<span>50,000</span></span><span class="cost-note">Per year &middot; MBA highest; many master&rsquo;s under <span>CAD 30k</span>.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Toronto/Vancouver</span><span class="cost-value"><span>CAD 1,400</span>&ndash;<span>2,000</span></span><span class="cost-note">Per month &middot; accommodation, food, transport.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>CAD 1,000</span>&ndash;<span>1,400</span></span><span class="cost-note">Per month &middot; Montreal, Calgary, Ottawa, smaller cities.</span></div>
           </div>
         </div>
       </section>
@@ -129,8 +129,8 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>Study Permit</strong> via IRCC.</span></li>
                 <li><i data-lucide="check"></i><span>Requires a Letter of Acceptance from a Designated Learning Institution (DLI).</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: typically <span data-money="20635" data-currency="CAD">CAD 20,635</span>/year + tuition (2024 update).</span></li>
-                <li><i data-lucide="check"></i><span>GIC (Guaranteed Investment Certificate) of <span data-money="20635" data-currency="CAD">CAD 20,635</span> for SDS pathway.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: typically <span>CAD 20,635</span>/year + tuition (2024 update).</span></li>
+                <li><i data-lucide="check"></i><span>GIC (Guaranteed Investment Certificate) of <span>CAD 20,635</span> for SDS pathway.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: up to 24 hours/week off-campus during term.</span></li>
               </ul>
             </div>
@@ -156,7 +156,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Canada application with us</h2>
-            <p>From DLI selection to PGWP planning, OneDegree maps a Canada-ready application.</p>
+            <p>From DLI selection to PGWP planning, One Degree maps a Canada-ready application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Canada call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

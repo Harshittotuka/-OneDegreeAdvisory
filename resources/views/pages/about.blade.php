@@ -1,6 +1,6 @@
 @php
-    $pageTitle = 'About | OneDegreeAdvisory';
-    $pageDescription = 'Meet OneDegreeAdvisory — a senior, partner-led education advisory architecting study-abroad futures with strategy, evidence, and care.';
+    $pageTitle = 'About | One Degree Advisory';
+    $pageDescription = 'Meet One Degree Advisory — a senior, partner-led education advisory architecting study-abroad futures with strategy, evidence, and care.';
     $activeNav = 'about';
     $mainId = 'main';
 @endphp
@@ -14,7 +14,7 @@
   <section class="va-hero" id="top" aria-labelledby="va-hero-title">
     <div class="container va-hero-grid">
       <div class="va-hero-copy">
-        <span class="va-eyebrow">About OneDegree</span>
+        <span class="va-eyebrow">About One Degree</span>
         <h1 id="va-hero-title">
           Join <span class="va-hero-num">12,000+ students</span>
           architecting their <em>global careers.</em>
@@ -88,7 +88,7 @@
         <div class="va-pillar-copy">
           <span class="va-eyebrow">Who We Are</span>
           <h2>A small bench of senior advisors — not a referral machine.</h2>
-          <p>At OneDegreeAdvisory, we are a dedicated team of education experts who believe your future deserves more than promises &mdash; it deserves the best read, the best draft, and the best plan. Our partners have sat inside admissions offices, consular desks, and test-prep rooms. They know how files actually get read.</p>
+          <p>At One Degree Advisory, we are a dedicated team of education experts who believe your future deserves more than promises &mdash; it deserves the best read, the best draft, and the best plan. Our partners have sat inside admissions offices, consular desks, and test-prep rooms. They know how files actually get read.</p>
           <ul class="va-chips">
             <li><i data-lucide="badge-check"></i> Dream Enablers</li>
             <li><i data-lucide="graduation-cap"></i> Education Experts</li>
@@ -96,7 +96,7 @@
           </ul>
         </div>
         <figure class="va-pillar-media">
-          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&h=720&q=82" alt="OneDegree advisors working with a student">
+          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&h=720&q=82" alt="One Degree advisors working with a student">
           <span class="va-pillar-tag"><i data-lucide="users-round"></i> The team</span>
         </figure>
       </article>
@@ -106,7 +106,7 @@
         <div class="va-pillar-copy">
           <span class="va-eyebrow">Why We Do It</span>
           <h2>Because academic journeys feel overwhelming &mdash; and most advice is built to sell, not to fit.</h2>
-          <p>Countless options. Unexpected costs. Counsellors paid by the school they steer you to. We started OneDegree because the conversation around studying abroad had grown loud, transactional, and quietly unfair to families. We wanted a desk where the advice is independent &mdash; and accountable.</p>
+          <p>Countless options. Unexpected costs. Counsellors paid by the school they steer you to. We started One Degree because the conversation around studying abroad had grown loud, transactional, and quietly unfair to families. We wanted a desk where the advice is independent &mdash; and accountable.</p>
           <ul class="va-chips">
             <li><i data-lucide="trophy"></i> Student Victory</li>
             <li><i data-lucide="target"></i> Goal &amp; Dream Alignment</li>
@@ -124,7 +124,7 @@
         <div class="va-pillar-copy">
           <span class="va-eyebrow">What We Do</span>
           <h2>One method. Profile to pre-departure.</h2>
-          <p>OneDegree is your end-to-end partner for further studies. We connect you to the right programs and stay with you through every milestone &mdash; profile build, shortlist, applications, scholarships, tests, visas, and the first month abroad. One file. One partner. One careful plan.</p>
+          <p>One Degree is your end-to-end partner for further studies. We connect you to the right programs and stay with you through every milestone &mdash; profile build, shortlist, applications, scholarships, tests, visas, and the first month abroad. One file. One partner. One careful plan.</p>
           <ul class="va-chips">
             <li><i data-lucide="sparkles"></i> Evidence-led Match</li>
             <li><i data-lucide="route"></i> End-to-end Support</li>
@@ -146,7 +146,7 @@
       <header class="va-impact-head">
         <span class="va-eyebrow va-eyebrow--light">Our Global Impact</span>
         <h2 id="va-impact-title">Quietly, the numbers add up.</h2>
-        <p>At OneDegree, we have helped thousands of students earn seats at the world&rsquo;s most selective programs. Our track record is built file by file &mdash; not by chasing volume.</p>
+        <p>At One Degree, we have helped thousands of students earn seats at the world&rsquo;s most selective programs. Our track record is built file by file &mdash; not by chasing volume.</p>
       </header>
 
       <div class="va-impact-grid">

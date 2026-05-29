@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Netherlands | OneDegreeAdvisory';
-    $pageDescription = 'Study in the Netherlands with OneDegreeAdvisory. English-taught programs, tuition, scholarships, MVV residence permit, orientation year, costs, FAQs.';
+    $pageTitle = 'Study in Netherlands | One Degree Advisory';
+    $pageDescription = 'Study in the Netherlands with One Degree Advisory. English-taught programs, tuition, scholarships, MVV residence permit, orientation year, costs, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>13 research universities</dd></div>
               <div><dt>Main intakes</dt><dd>September, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="8000" data-currency="EUR">&euro;8,000</span> &ndash; <span data-money="22000" data-currency="EUR">&euro;22,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="900" data-currency="EUR">&euro;900</span> &ndash; <span data-money="1400" data-currency="EUR">&euro;1,400</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;8,000</span> &ndash; <span>&euro;22,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;900</span> &ndash; <span>&euro;1,400</span></dd></div>
               <div><dt>Student visa</dt><dd>MVV + residence permit</dd></div>
               <div><dt>Post-study work</dt><dd>Orientation year &middot; 12 months</dd></div>
             </dl>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Bachelor&rsquo;s tuition</span><span class="cost-value"><span data-money="8000" data-currency="EUR">&euro;8,000</span> &ndash; <span data-money="15000" data-currency="EUR">&euro;15,000</span></span><span class="cost-note">Per year &middot; research universities.</span></div>
-            <div class="cost-card"><span class="cost-label">Master&rsquo;s tuition</span><span class="cost-value"><span data-money="13000" data-currency="EUR">&euro;13,000</span> &ndash; <span data-money="22000" data-currency="EUR">&euro;22,000</span></span><span class="cost-note">Per year &middot; MBA and specialist tracks higher.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Amsterdam</span><span class="cost-value"><span data-money="1200" data-currency="EUR">&euro;1,200</span> &ndash; <span data-money="1500" data-currency="EUR">&euro;1,500</span></span><span class="cost-note">Per month &middot; tight rental market.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="900" data-currency="EUR">&euro;900</span> &ndash; <span data-money="1200" data-currency="EUR">&euro;1,200</span></span><span class="cost-note">Per month &middot; Utrecht, Groningen, Eindhoven.</span></div>
+            <div class="cost-card"><span class="cost-label">Bachelor&rsquo;s tuition</span><span class="cost-value"><span>&euro;8,000</span> &ndash; <span>&euro;15,000</span></span><span class="cost-note">Per year &middot; research universities.</span></div>
+            <div class="cost-card"><span class="cost-label">Master&rsquo;s tuition</span><span class="cost-value"><span>&euro;13,000</span> &ndash; <span>&euro;22,000</span></span><span class="cost-note">Per year &middot; MBA and specialist tracks higher.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Amsterdam</span><span class="cost-value"><span>&euro;1,200</span> &ndash; <span>&euro;1,500</span></span><span class="cost-note">Per month &middot; tight rental market.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&euro;900</span> &ndash; <span>&euro;1,200</span></span><span class="cost-note">Per month &middot; Utrecht, Groningen, Eindhoven.</span></div>
           </div>
         </div>
       </section>
@@ -117,7 +117,7 @@
             <div class="info-card">
               <h3>Scholarships &amp; funding</h3>
               <ul>
-                <li><i data-lucide="check"></i><span>Holland Scholarship &mdash; <span data-money="5000" data-currency="EUR">&euro;5,000</span> for non-EU bachelor&rsquo;s and master&rsquo;s students.</span></li>
+                <li><i data-lucide="check"></i><span>Holland Scholarship &mdash; <span>&euro;5,000</span> for non-EU bachelor&rsquo;s and master&rsquo;s students.</span></li>
                 <li><i data-lucide="check"></i><span>Orange Tulip Scholarship for students from select countries (India included).</span></li>
                 <li><i data-lucide="check"></i><span>Erasmus Mundus Joint Master&rsquo;s for top candidates.</span></li>
                 <li><i data-lucide="check"></i><span>University-specific awards (e.g. Amsterdam Excellence, TU Delft Justus & Louise van Effen).</span></li>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>MVV (entry visa) + residence permit</strong> via the university (sponsor).</span></li>
                 <li><i data-lucide="check"></i><span>Requires a letter of admission and proof of paid tuition / deposit.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span data-money="14000" data-currency="EUR">&euro;14,000</span>/year for living costs.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span>&euro;14,000</span>/year for living costs.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 4&ndash;8 weeks &mdash; university handles most paperwork.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: 16 hours/week in term, full-time in summer.</span></li>
               </ul>

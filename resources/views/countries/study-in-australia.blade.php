@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Australia | OneDegreeAdvisory';
-    $pageDescription = 'Study in Australia with OneDegreeAdvisory. Group of Eight universities, tuition, scholarships, Subclass 500 visa, TGV 485, PR pathway, FAQs.';
+    $pageTitle = 'Study in Australia | One Degree Advisory';
+    $pageDescription = 'Study in Australia with One Degree Advisory. Group of Eight universities, tuition, scholarships, Subclass 500 visa, TGV 485, PR pathway, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>Group of 8 + 30+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>February, July</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="30000" data-currency="AUD">AUD 30,000</span> &ndash; <span data-money="55000" data-currency="AUD">AUD 55,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="1800" data-currency="AUD">AUD 1,800</span> &ndash; <span data-money="2600" data-currency="AUD">AUD 2,600</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>AUD 30,000</span> &ndash; <span>AUD 55,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>AUD 1,800</span> &ndash; <span>AUD 2,600</span></dd></div>
               <div><dt>Student visa</dt><dd>Subclass 500</dd></div>
               <div><dt>Post-study work</dt><dd>TGV 485 &middot; 2 to 6 years</dd></div>
             </dl>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span data-money="30000" data-currency="AUD">AUD 30,000</span> &ndash; <span data-money="50000" data-currency="AUD">AUD 50,000</span></span><span class="cost-note">Per year &middot; medicine higher.</span></div>
-            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span data-money="35000" data-currency="AUD">AUD 35,000</span> &ndash; <span data-money="55000" data-currency="AUD">AUD 55,000</span></span><span class="cost-note">Per year &middot; MBA at the upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Sydney/Melbourne</span><span class="cost-value"><span data-money="2000" data-currency="AUD">AUD 2,000</span> &ndash; <span data-money="2600" data-currency="AUD">AUD 2,600</span></span><span class="cost-note">Per month &middot; rents lead the budget.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="1500" data-currency="AUD">AUD 1,500</span> &ndash; <span data-money="2000" data-currency="AUD">AUD 2,000</span></span><span class="cost-note">Per month &middot; Adelaide, Brisbane, Perth.</span></div>
+            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span>AUD 30,000</span> &ndash; <span>AUD 50,000</span></span><span class="cost-note">Per year &middot; medicine higher.</span></div>
+            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span>AUD 35,000</span> &ndash; <span>AUD 55,000</span></span><span class="cost-note">Per year &middot; MBA at the upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Sydney/Melbourne</span><span class="cost-value"><span>AUD 2,000</span> &ndash; <span>AUD 2,600</span></span><span class="cost-note">Per month &middot; rents lead the budget.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>AUD 1,500</span> &ndash; <span>AUD 2,000</span></span><span class="cost-note">Per month &middot; Adelaide, Brisbane, Perth.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>Student visa (Subclass 500)</strong> via the Department of Home Affairs.</span></li>
                 <li><i data-lucide="check"></i><span>Requires CoE (Confirmation of Enrolment) from an approved provider.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span data-money="29710" data-currency="AUD">AUD 29,710</span>/year + tuition + travel.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span>AUD 29,710</span>/year + tuition + travel.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 4&ndash;8 weeks (varies by sector and country).</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: 48 hours/fortnight during term; unlimited during breaks.</span></li>
               </ul>

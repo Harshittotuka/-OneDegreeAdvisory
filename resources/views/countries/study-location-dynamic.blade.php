@@ -187,11 +187,8 @@
       <div class="dynamic-course-carousel" data-course-carousel aria-label="{{ $sectionCopy['courses']['section_heading'] ?? $text('courses_eyebrow') }}">
         <div class="dynamic-course-track" data-course-track>
           @for($copy = 0; $copy < 2; $copy++)
-            <div class="dynamic-course-set" @if($copy === 1) aria-hidden="true" @endif>
+            <div class="dynamic-course-set dynamic-course-set--count-{{ $courseCount }}" @if($copy === 1) aria-hidden="true" @endif>
               @foreach($topCourses as $index => $course)
-                @php
-                  $courseUrl = trim((string) ($course['cta_url'] ?? ''));
-                @endphp
                 <article class="course-card dynamic-course-card" style="--card-index: {{ $index }}">
                   <div class="dynamic-course-card__top">
                     <span class="dynamic-course-rank">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</span>
@@ -220,12 +217,6 @@
                     @endif
                   </div>
 
-                  @if(($course['cta_text'] ?? '') !== '')
-                    <a class="dynamic-course-link" href="{{ $courseUrl !== '' ? $courseUrl : $href('primary_cta_url') }}">
-                      <span>{{ $course['cta_text'] }}</span>
-                      <i data-lucide="arrow-up-right"></i>
-                    </a>
-                  @endif
                 </article>
               @endforeach
             </div>
@@ -308,7 +299,7 @@
     <div class="dynamic-carousel-frame dynamic-city-carousel" aria-label="{{ $text('city_carousel_aria') }}">
       <div class="dynamic-carousel-track dynamic-carousel-track--slow">
         @foreach($carouselCities as $index => $city)
-          <a class="dynamic-city-slide" href="{{ route('contact') }}" style="--tilt: {{ $cityTilts[$index % count($cityTilts)] }}deg;">
+          <div class="dynamic-city-slide" style="--tilt: {{ $cityTilts[$index % count($cityTilts)] }}deg;">
             @php($cityImage = $city['image_url'] ?: $cityFallbackImage)
             @if($cityImage !== '')
               <img src="{{ $cityImage }}" alt="{{ $city['card_title'] }}" loading="lazy">
@@ -318,7 +309,7 @@
               <h3>{{ $city['card_title'] }}</h3>
               <p>{{ $cardBody($city, 95) }}</p>
             </div>
-          </a>
+          </div>
         @endforeach
       </div>
     </div>

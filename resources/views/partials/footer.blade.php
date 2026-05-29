@@ -3,7 +3,7 @@
   <div class="container footer-grid">
     <div class="footer-brand">
       <a class="brand brand-footer" href="{{ route('home') }}#top" aria-label="{{ config('site.name') }} home">
-        <span class="brand-mark" aria-hidden="true">1&deg;</span>
+        <img class="brand-mark" src="{{ asset('assets/Logo/mark-light.svg') }}" alt="" aria-hidden="true" width="104" height="36">
         <span>
           <strong>{{ config('site.name') }}</strong>
           <small>{{ config('site.tagline') }}</small>
@@ -13,6 +13,7 @@
         A polished, practical advisory for students ready to study abroad with purpose,
         evidence, and confidence.
       </p>
+      @include('partials.socials', ['variant' => 'brand'])
     </div>
 
     <div>
@@ -36,13 +37,15 @@
     <div>
       <h2>Connect</h2>
       <a href="mailto:{{ config('site.contact.email') }}">{{ config('site.contact.email') }}</a>
-      <a href="tel:{{ config('site.contact.phone') }}">{{ config('site.contact.phone') }}</a>
-      <p class="footer-address">{{ config('site.contact.address') }}</p>
+      <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">{{ config('site.contact.phone') }}</a>
+      <a class="footer-address" href="https://www.google.com/maps/search/?api=1&amp;query=26.8692893,75.7895342" target="_blank" rel="noopener" aria-label="Open One Degree Advisory office in Google Maps">
+        <i data-lucide="map-pin" aria-hidden="true"></i>
+        <span>{{ config('site.contact.address') }}</span>
+      </a>
       <a class="footer-contact-button" href="{{ route('contact') }}">
         <i data-lucide="send"></i>
         <span>Contact</span>
       </a>
-      
     </div>
   </div>
   <div class="container footer-bottom">

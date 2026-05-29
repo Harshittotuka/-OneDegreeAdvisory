@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Spain | OneDegreeAdvisory';
-    $pageDescription = 'Study in Spain with OneDegreeAdvisory. Top universities, tuition, scholarships, Type D student visa, job-seeker permit, intakes, costs, FAQs.';
+    $pageTitle = 'Study in Spain | One Degree Advisory';
+    $pageDescription = 'Study in Spain with One Degree Advisory. Top universities, tuition, scholarships, Type D student visa, job-seeker permit, intakes, costs, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>75+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>September, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="1500" data-currency="EUR">&euro;1,500</span> &ndash; <span data-money="20000" data-currency="EUR">&euro;20,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="800" data-currency="EUR">&euro;800</span> &ndash; <span data-money="1200" data-currency="EUR">&euro;1,200</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;1,500</span> &ndash; <span>&euro;20,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;800</span> &ndash; <span>&euro;1,200</span></dd></div>
               <div><dt>Student visa</dt><dd>Type D student visa</dd></div>
               <div><dt>Post-study work</dt><dd>Job-seeker year &middot; 12 months</dd></div>
             </dl>
@@ -55,7 +55,7 @@
             <div class="band-inner">
               <span class="eyebrow">Mediterranean meets EU</span>
               <h2>Affordable tuition, EU mobility, world-class business schools.</h2>
-              <p>Three of the world&rsquo;s top 30 MBA programs are in Spain &mdash; IE, ESADE, IESE &mdash; alongside public universities charging as little as <span data-money="1500" data-currency="EUR">&euro;1,500</span>/year.</p>
+              <p>Three of the world&rsquo;s top 30 MBA programs are in Spain &mdash; IE, ESADE, IESE &mdash; alongside public universities charging as little as <span>&euro;1,500</span>/year.</p>
               <div class="band-stats"><div class="band-stat"><strong>75+</strong><span>Universities</span></div><div class="band-stat"><strong>3</strong><span>Top-30 MBAs</span></div><div class="band-stat"><strong>EU</strong><span>Member state</span></div><div class="band-stat"><strong>1 yr</strong><span>Job-seeker visa</span></div></div>
             </div>
           </div>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span data-money="1500" data-currency="EUR">&euro;1,500</span> &ndash; <span data-money="3500" data-currency="EUR">&euro;3,500</span></span><span class="cost-note">Per year &middot; among the lowest in Europe.</span></div>
-            <div class="cost-card"><span class="cost-label">Private university tuition</span><span class="cost-value"><span data-money="8000" data-currency="EUR">&euro;8,000</span> &ndash; <span data-money="25000" data-currency="EUR">&euro;25,000</span></span><span class="cost-note">Per year &middot; IE, ESADE, IESE at upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Madrid/Barcelona</span><span class="cost-value"><span data-money="1000" data-currency="EUR">&euro;1,000</span> &ndash; <span data-money="1400" data-currency="EUR">&euro;1,400</span></span><span class="cost-note">Per month &middot; major-city rents lead the budget.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="700" data-currency="EUR">&euro;700</span> &ndash; <span data-money="1000" data-currency="EUR">&euro;1,000</span></span><span class="cost-note">Per month &middot; Valencia, Granada, Seville.</span></div>
+            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span>&euro;1,500</span> &ndash; <span>&euro;3,500</span></span><span class="cost-note">Per year &middot; among the lowest in Europe.</span></div>
+            <div class="cost-card"><span class="cost-label">Private university tuition</span><span class="cost-value"><span>&euro;8,000</span> &ndash; <span>&euro;25,000</span></span><span class="cost-note">Per year &middot; IE, ESADE, IESE at upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Madrid/Barcelona</span><span class="cost-value"><span>&euro;1,000</span> &ndash; <span>&euro;1,400</span></span><span class="cost-note">Per month &middot; major-city rents lead the budget.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&euro;700</span> &ndash; <span>&euro;1,000</span></span><span class="cost-note">Per month &middot; Valencia, Granada, Seville.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>Type D Student visa</strong> via the Spanish consulate.</span></li>
                 <li><i data-lucide="check"></i><span>Requires a letter of admission from an accredited Spanish institution.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span data-money="600" data-currency="EUR">&euro;600</span>&ndash;<span data-money="700" data-currency="EUR">&euro;700</span>/month for the duration of study.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span>&euro;600</span>&ndash;<span>&euro;700</span>/month for the duration of study.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 4&ndash;8 weeks &mdash; apply early in the cycle.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: up to 30 hours/week alongside studies.</span></li>
               </ul>
@@ -156,7 +156,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Spain application with us</h2>
-            <p>From IELTS to NIE registration &mdash; OneDegree maps a clean Spain-ready application.</p>
+            <p>From IELTS to NIE registration &mdash; One Degree maps a clean Spain-ready application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Spain call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

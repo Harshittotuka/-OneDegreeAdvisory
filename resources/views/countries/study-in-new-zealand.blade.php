@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in New Zealand | OneDegreeAdvisory';
-    $pageDescription = 'Study in New Zealand with OneDegreeAdvisory. Eight globally-ranked universities, tuition, scholarships, fee-paying student visa, post-study work, PR.';
+    $pageTitle = 'Study in New Zealand | One Degree Advisory';
+    $pageDescription = 'Study in New Zealand with One Degree Advisory. Eight globally-ranked universities, tuition, scholarships, fee-paying student visa, post-study work, PR.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>8 globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>February, July</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="28000" data-currency="NZD">NZD 28,000</span> &ndash; <span data-money="50000" data-currency="NZD">NZD 50,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="1500" data-currency="NZD">NZD 1,500</span> &ndash; <span data-money="2200" data-currency="NZD">NZD 2,200</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>NZD 28,000</span> &ndash; <span>NZD 50,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>NZD 1,500</span> &ndash; <span>NZD 2,200</span></dd></div>
               <div><dt>Student visa</dt><dd>Fee-paying student visa</dd></div>
               <div><dt>Post-study work</dt><dd>Up to 3 years</dd></div>
             </dl>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span data-money="28000" data-currency="NZD">NZD 28,000</span> &ndash; <span data-money="45000" data-currency="NZD">NZD 45,000</span></span><span class="cost-note">Per year &middot; medicine higher.</span></div>
-            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span data-money="30000" data-currency="NZD">NZD 30,000</span> &ndash; <span data-money="50000" data-currency="NZD">NZD 50,000</span></span><span class="cost-note">Per year &middot; MBA at the upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Auckland/Wellington</span><span class="cost-value"><span data-money="1800" data-currency="NZD">NZD 1,800</span> &ndash; <span data-money="2200" data-currency="NZD">NZD 2,200</span></span><span class="cost-note">Per month &middot; major-city rents.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="1500" data-currency="NZD">NZD 1,500</span> &ndash; <span data-money="1800" data-currency="NZD">NZD 1,800</span></span><span class="cost-note">Per month &middot; Christchurch, Hamilton, Dunedin.</span></div>
+            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span>NZD 28,000</span> &ndash; <span>NZD 45,000</span></span><span class="cost-note">Per year &middot; medicine higher.</span></div>
+            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span>NZD 30,000</span> &ndash; <span>NZD 50,000</span></span><span class="cost-note">Per year &middot; MBA at the upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Auckland/Wellington</span><span class="cost-value"><span>NZD 1,800</span> &ndash; <span>NZD 2,200</span></span><span class="cost-note">Per month &middot; major-city rents.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>NZD 1,500</span> &ndash; <span>NZD 1,800</span></span><span class="cost-note">Per month &middot; Christchurch, Hamilton, Dunedin.</span></div>
           </div>
         </div>
       </section>
@@ -117,7 +117,7 @@
             <div class="info-card">
               <h3>Scholarships &amp; funding</h3>
               <ul>
-                <li><i data-lucide="check"></i><span>New Zealand Excellence Awards for Indian students (NZ<span data-money="5000" data-currency="USD">$5,000</span>&ndash;<span data-money="10000" data-currency="USD">$10,000</span>).</span></li>
+                <li><i data-lucide="check"></i><span>New Zealand Excellence Awards for Indian students (NZ<span>$5,000</span>&ndash;<span>$10,000</span>).</span></li>
                 <li><i data-lucide="check"></i><span>Manaaki New Zealand Scholarships (fully-funded; select countries).</span></li>
                 <li><i data-lucide="check"></i><span>University-specific entrance scholarships and PhD funding.</span></li>
                 <li><i data-lucide="check"></i><span>Education NZ pathway scholarships for specific programs.</span></li>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>Fee-paying student visa</strong> via Immigration New Zealand.</span></li>
                 <li><i data-lucide="check"></i><span>Requires an offer letter and proof of paid tuition.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: <span data-money="20000" data-currency="NZD">NZD 20,000</span>/year for living costs.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: <span>NZD 20,000</span>/year for living costs.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 4&ndash;8 weeks.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: up to 20 hours/week during term, full-time during scheduled breaks.</span></li>
               </ul>
@@ -156,7 +156,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your New Zealand application with us</h2>
-            <p>From Green List-aligned shortlists to a clean visa submission &mdash; OneDegree maps an NZ-ready application.</p>
+            <p>From Green List-aligned shortlists to a clean visa submission &mdash; One Degree maps an NZ-ready application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a New Zealand call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

@@ -406,7 +406,7 @@ ready(() => {
 
       const formData = new FormData(consultForm);
       const name = String(formData.get("name") || "there").trim().split(" ")[0];
-      formStatus.textContent = `Thank you, ${name}. Your enquiry is ready for the OneDegreeAdvisory team.`;
+      formStatus.textContent = `Thank you, ${name}. Your enquiry is ready for the One Degree Advisory team.`;
       consultForm.reset();
     });
   }
@@ -1125,10 +1125,12 @@ ready(() => {
   const THEMES = new Set([
     "current",
     "sapphire",
+    "signature",
   ]);
   const THEME_COLORS = {
     current: "#0f3b45",
     sapphire: "#1e3a8a",
+    signature: "#1a0088",
   };
 
   function getStoredTheme() {
@@ -1196,163 +1198,6 @@ ready(() => {
   }
 })();
 
-/* ============================================================
-   Currency switcher + live conversion
-   ============================================================ */
-(function () {
-  const FX = {
-    USD: { rate: 1.0, symbol: "$", name: "US Dollar" },
-    INR: { rate: 83.5, symbol: "₹", name: "Indian Rupee" },
-    GBP: { rate: 0.79, symbol: "£", name: "British Pound" },
-    EUR: { rate: 0.92, symbol: "€", name: "Euro" },
-    CAD: { rate: 1.35, symbol: "CA$", name: "Canadian Dollar" },
-    AUD: { rate: 1.52, symbol: "A$", name: "Australian Dollar" },
-    AED: { rate: 3.67, symbol: "AED ", name: "UAE Dirham" },
-    NZD: { rate: 1.65, symbol: "NZ$", name: "New Zealand Dollar" },
-  };
-
-  const STORAGE_KEY = "oda:currency";
-
-  function getStored() {
-    try {
-      const v = localStorage.getItem(STORAGE_KEY);
-      return v && FX[v] ? v : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function setStored(code) {
-    try {
-      localStorage.setItem(STORAGE_KEY, code);
-    } catch (e) {}
-  }
-
-  function convert(value, from, to) {
-    if (from === to) return value;
-    const usd = value / FX[from].rate;
-    return usd * FX[to].rate;
-  }
-
-  function niceRound(value) {
-    const abs = Math.abs(value);
-    if (abs >= 1_000_000) return Math.round(value / 10000) * 10000;
-    if (abs >= 100_000) return Math.round(value / 1000) * 1000;
-    if (abs >= 10_000) return Math.round(value / 100) * 100;
-    if (abs >= 1_000) return Math.round(value / 10) * 10;
-    if (abs >= 100) return Math.round(value / 5) * 5;
-    if (abs >= 10) return Math.round(value);
-    return Math.round(value * 10) / 10;
-  }
-
-  function abbreviate(value) {
-    const abs = Math.abs(value);
-    if (abs >= 10_000_000) return (value / 10_000_000).toFixed(1).replace(/\.0$/, "") + "Cr";
-    if (abs >= 100_000) return (value / 100_000).toFixed(1).replace(/\.0$/, "") + "L";
-    if (abs >= 1000) return Math.round(value / 1000).toLocaleString("en-US") + "k";
-    return Math.round(value).toLocaleString("en-US");
-  }
-
-  function format(value, code, hint) {
-    const fx = FX[code] || FX.USD;
-    const rounded = niceRound(value);
-    // INR converts to very large numbers — abbreviate when over ~1L
-    if (code === "INR" && Math.abs(rounded) >= 100_000) {
-      return fx.symbol + abbreviate(rounded);
-    }
-    // For other currencies keep abbreviated form if the source used "k"
-    if (hint === "k" && Math.abs(rounded) >= 1000) {
-      return fx.symbol + abbreviate(rounded);
-    }
-    return fx.symbol + Math.round(rounded).toLocaleString("en-US");
-  }
-
-  function refreshMoney(target) {
-    document.querySelectorAll("[data-money]").forEach((el) => {
-      const v = parseFloat(el.dataset.money);
-      const from = el.dataset.currency || "USD";
-      const hint = el.dataset.moneyHint || "";
-      if (!isFinite(v)) return;
-      // Cache the original markup once so "Local" can restore it
-      if (el.dataset.moneyOriginal === undefined) {
-        el.dataset.moneyOriginal = el.innerHTML;
-      }
-      if (!target || target === "local" || !FX[target]) {
-        el.innerHTML = el.dataset.moneyOriginal;
-      } else {
-        el.textContent = format(convert(v, from, target), target, hint);
-      }
-    });
-    document.documentElement.dataset.currency = target || "local";
-  }
-
-  function initSwitcher() {
-    const switches = document.querySelectorAll("[data-currency-switch]");
-    if (!switches.length) return;
-    const current = getStored();
-
-    function setCurrent(code) {
-      const label = code && FX[code] ? code : "Local";
-      switches.forEach((sw) => {
-        const lbl = sw.querySelector("[data-currency-label]");
-        if (lbl) lbl.textContent = label;
-        sw.querySelectorAll("[data-currency-option]").forEach((btn) => {
-          btn.setAttribute(
-            "aria-current",
-            btn.dataset.currencyOption === code ? "true" : "false"
-          );
-        });
-      });
-      if (code && FX[code]) setStored(code);
-      refreshMoney(code);
-    }
-
-    function closeAll() {
-      switches.forEach((sw) => {
-        sw.classList.remove("is-open");
-        const trigger = sw.querySelector("[data-currency-trigger]");
-        if (trigger) trigger.setAttribute("aria-expanded", "false");
-      });
-    }
-
-    switches.forEach((sw) => {
-      const trigger = sw.querySelector("[data-currency-trigger]");
-      if (trigger) {
-        trigger.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const open = sw.classList.contains("is-open");
-          closeAll();
-          if (!open) {
-            sw.classList.add("is-open");
-            trigger.setAttribute("aria-expanded", "true");
-          }
-        });
-      }
-      sw.querySelectorAll("[data-currency-option]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          setCurrent(btn.dataset.currencyOption);
-          closeAll();
-        });
-      });
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest("[data-currency-switch]")) closeAll();
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeAll();
-    });
-
-    setCurrent(current);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSwitcher, { once: true });
-  } else {
-    initSwitcher();
-  }
-})();
 
 (function () {
   function initCourseCarousels() {
@@ -1432,33 +1277,26 @@ ready(() => {
 
       window.addEventListener("resize", measure, { passive: true });
 
-      carousel.addEventListener("mouseenter", () => {
-        isHovering = true;
+      let hoverCount = 0;
+      const cards = Array.from(track.querySelectorAll(".dynamic-course-card"));
+      cards.forEach((card) => {
+        card.addEventListener("mouseenter", () => {
+          hoverCount++;
+          isHovering = true;
+        });
+        card.addEventListener("mouseleave", () => {
+          hoverCount = Math.max(0, hoverCount - 1);
+          isHovering = hoverCount > 0;
+        });
+        card.addEventListener("focusin", () => {
+          hoverCount++;
+          isHovering = true;
+        });
+        card.addEventListener("focusout", () => {
+          hoverCount = Math.max(0, hoverCount - 1);
+          isHovering = hoverCount > 0;
+        });
       });
-
-      carousel.addEventListener("mouseleave", () => {
-        isHovering = false;
-      });
-
-      carousel.addEventListener("focusin", () => {
-        isHovering = true;
-      });
-
-      carousel.addEventListener("focusout", () => {
-        isHovering = false;
-      });
-
-      carousel.addEventListener("wheel", (event) => {
-        if (!setWidth) return;
-        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
-          ? event.deltaX
-          : event.deltaY;
-        if (!delta) return;
-
-        event.preventDefault();
-        moveTo(targetOffset + delta * 0.85);
-        pauseAuto(1300);
-      }, { passive: false });
 
       carousel.addEventListener("pointerdown", (event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;

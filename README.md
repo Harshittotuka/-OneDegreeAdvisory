@@ -1,6 +1,6 @@
-# OneDegreeAdvisory Laravel Website
+# One Degree Advisory Laravel Website
 
-This is the Laravel conversion of the OneDegreeAdvisory static website. Shared layout, navigation, footer, destination data, assets, and routing now live in reusable Laravel structure.
+This is the Laravel conversion of the One Degree Advisory static website. Shared layout, navigation, footer, destination data, assets, and routing now live in reusable Laravel structure.
 
 ## Structure
 

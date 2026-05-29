@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Poland | OneDegreeAdvisory';
-    $pageDescription = 'Study in Poland with OneDegreeAdvisory. Affordable EU degrees, English-medium MD, top universities, scholarships, visa, costs, FAQs.';
+    $pageTitle = 'Study in Poland | One Degree Advisory';
+    $pageDescription = 'Study in Poland with One Degree Advisory. Affordable EU degrees, English-medium MD, top universities, scholarships, visa, costs, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>20+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>October, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="2500" data-currency="EUR">&euro;2,500</span> &ndash; <span data-money="15000" data-currency="EUR">&euro;15,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="500" data-currency="EUR">&euro;500</span> &ndash; <span data-money="800" data-currency="EUR">&euro;800</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;2,500</span> &ndash; <span>&euro;15,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;500</span> &ndash; <span>&euro;800</span></dd></div>
               <div><dt>Student visa</dt><dd>Type D long-stay visa</dd></div>
               <div><dt>Post-study work</dt><dd>Stay-back &middot; 9 months</dd></div>
             </dl>
@@ -40,7 +40,7 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Why Poland</span><h2>EU degrees at a fraction of the cost.</h2><p>Affordable tuition, low living costs, English-taught programs, and an EU work pathway.</p></div>
           <div class="reasons-grid">
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Lowest EU tuition</h3><p>Public universities from <span data-money="2000" data-currency="EUR">&euro;2,000</span>/year; private schools from <span data-money="3000" data-currency="EUR">&euro;3,000</span>.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Lowest EU tuition</h3><p>Public universities from <span>&euro;2,000</span>/year; private schools from <span>&euro;3,000</span>.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="languages"></i></span><h3>English-taught programs</h3><p>300+ programs taught in English across medicine, business, and engineering.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="stethoscope"></i></span><h3>MD English-medium</h3><p>6-year MD programs at Jagiellonian, MUW, and MU&Lacute;&oacute;d&zacute; for international students.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="globe"></i></span><h3>EU Schengen access</h3><p>Travel and work across the EU after graduation.</p></article>
@@ -55,7 +55,7 @@
             <div class="band-inner">
               <span class="eyebrow">Affordable. English-taught. EU.</span>
               <h2>Top-ranked EU degrees &mdash; without UK or German prices.</h2>
-              <p>Polish public universities charge <span data-money="2000" data-currency="EUR">&euro;2,000</span>&ndash;<span data-money="5000" data-currency="EUR">&euro;5,000</span>/year for international students &mdash; with living costs half of Berlin or Paris.</p>
+              <p>Polish public universities charge <span>&euro;2,000</span>&ndash;<span>&euro;5,000</span>/year for international students &mdash; with living costs half of Berlin or Paris.</p>
               <div class="band-stats"><div class="band-stat"><strong>20+</strong><span>Globally ranked</span></div><div class="band-stat"><strong>300+</strong><span>English programs</span></div><div class="band-stat"><strong>9 mo</strong><span>Stay-back</span></div><div class="band-stat"><strong>EU</strong><span>Member state</span></div></div>
             </div>
           </div>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span data-money="2000" data-currency="EUR">&euro;2,000</span> &ndash; <span data-money="5000" data-currency="EUR">&euro;5,000</span></span><span class="cost-note">Per year &middot; for international students.</span></div>
-            <div class="cost-card"><span class="cost-label">Private &amp; medical tuition</span><span class="cost-value"><span data-money="6000" data-currency="EUR">&euro;6,000</span> &ndash; <span data-money="15000" data-currency="EUR">&euro;15,000</span></span><span class="cost-note">Per year &middot; MD English-medium at the upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Warsaw/Krakow</span><span class="cost-value"><span data-money="700" data-currency="EUR">&euro;700</span> &ndash; <span data-money="900" data-currency="EUR">&euro;900</span></span><span class="cost-note">Per month &middot; major-city rents lead the budget.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="500" data-currency="EUR">&euro;500</span> &ndash; <span data-money="700" data-currency="EUR">&euro;700</span></span><span class="cost-note">Per month &middot; Wroc&lstrok;aw, Pozna&nacute;, Gda&nacute;sk.</span></div>
+            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span>&euro;2,000</span> &ndash; <span>&euro;5,000</span></span><span class="cost-note">Per year &middot; for international students.</span></div>
+            <div class="cost-card"><span class="cost-label">Private &amp; medical tuition</span><span class="cost-value"><span>&euro;6,000</span> &ndash; <span>&euro;15,000</span></span><span class="cost-note">Per year &middot; MD English-medium at the upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Warsaw/Krakow</span><span class="cost-value"><span>&euro;700</span> &ndash; <span>&euro;900</span></span><span class="cost-note">Per month &middot; major-city rents lead the budget.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&euro;500</span> &ndash; <span>&euro;700</span></span><span class="cost-note">Per month &middot; Wroc&lstrok;aw, Pozna&nacute;, Gda&nacute;sk.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>National (Type D) long-stay visa</strong> via the Polish consulate.</span></li>
                 <li><i data-lucide="check"></i><span>Requires admission letter and proof of paid tuition.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span data-money="200" data-currency="EUR">&euro;200</span>&ndash;<span data-money="300" data-currency="EUR">&euro;300</span>/month plus return airfare.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span>&euro;200</span>&ndash;<span>&euro;300</span>/month plus return airfare.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 15&ndash;30 working days; biometrics at VFS.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: full-time in term and holidays (with proper registration).</span></li>
               </ul>
@@ -156,7 +156,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Poland application with us</h2>
-            <p>From English-medium MD shortlists to Type D visa &mdash; OneDegree maps an Poland-ready application.</p>
+            <p>From English-medium MD shortlists to Type D visa &mdash; One Degree maps an Poland-ready application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Poland call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

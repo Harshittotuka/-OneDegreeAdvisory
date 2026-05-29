@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Georgia | OneDegreeAdvisory';
-    $pageDescription = 'Study in Georgia with OneDegreeAdvisory. NMC-recognised English-medium MD, affordable tuition, top medical universities, D3 visa, FAQs.';
+    $pageTitle = 'Study in Georgia | One Degree Advisory';
+    $pageDescription = 'Study in Georgia with One Degree Advisory. NMC-recognised English-medium MD, affordable tuition, top medical universities, D3 visa, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>20+ international medical schools</dd></div>
               <div><dt>Main intakes</dt><dd>September, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="4000" data-currency="USD">$4,000</span> &ndash; <span data-money="9000" data-currency="USD">$9,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="300" data-currency="USD">$300</span> &ndash; <span data-money="500" data-currency="USD">$500</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>$4,000</span> &ndash; <span>$9,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>$300</span> &ndash; <span>$500</span></dd></div>
               <div><dt>Student visa</dt><dd>D3 study visa</dd></div>
               <div><dt>Post-study work</dt><dd>Stay-back via work permit</dd></div>
             </dl>
@@ -41,7 +41,7 @@
           <div class="section-head"><span class="eyebrow">Why Georgia</span><h2>Affordable English-medium MD on the EU&rsquo;s doorstep.</h2><p>Recognised medical degrees, low tuition, and easy entry for Indian students.</p></div>
           <div class="reasons-grid">
             <article class="reason-card"><span class="reason-icon"><i data-lucide="stethoscope"></i></span><h3>MCI / NMC recognised</h3><p>Top Georgian medical universities are on the Indian recognition list.</p></article>
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Affordable tuition</h3><p>MD programs typically <span data-money="4000" data-currency="USD">$4,000</span>&ndash;<span data-money="8000" data-currency="USD">$8,000</span>/year.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Affordable tuition</h3><p>MD programs typically <span>$4,000</span>&ndash;<span>$8,000</span>/year.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="languages"></i></span><h3>English-medium MD</h3><p>Full 6-year MD programs taught in English for international students.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="plane"></i></span><h3>Easy entry</h3><p>Visa-on-arrival or simplified D3 visa for Indian students.</p></article>
           </div>
@@ -54,9 +54,9 @@
             <img src="https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=2000&q=80" alt="">
             <div class="band-inner">
               <span class="eyebrow">Medical-degree value pick</span>
-              <h2>MCI / NMC recognised. English-medium. <span data-money="5000" data-currency="USD" data-money-hint="k">$5k</span>/year tuition.</h2>
+              <h2>MCI / NMC recognised. English-medium. <span>$5k</span>/year tuition.</h2>
               <p>Georgia&rsquo;s English-medium MD programs are listed by the National Medical Commission of India &mdash; offering recognised degrees at one of the lowest price points in Europe.</p>
-              <div class="band-stats"><div class="band-stat"><strong><span data-money="5000" data-currency="USD" data-money-hint="k">$5k</span>/yr</strong><span>Median MD tuition</span></div><div class="band-stat"><strong>NMC</strong><span>Recognised</span></div><div class="band-stat"><strong>6 yrs</strong><span>MD duration</span></div><div class="band-stat"><strong>EN</strong><span>Medium</span></div></div>
+              <div class="band-stats"><div class="band-stat"><strong><span>$5k</span>/yr</strong><span>Median MD tuition</span></div><div class="band-stat"><strong>NMC</strong><span>Recognised</span></div><div class="band-stat"><strong>6 yrs</strong><span>MD duration</span></div><div class="band-stat"><strong>EN</strong><span>Medium</span></div></div>
             </div>
           </div>
         </div>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">MD English-medium</span><span class="cost-value"><span data-money="4500" data-currency="USD">$4,500</span> &ndash; <span data-money="9000" data-currency="USD">$9,000</span></span><span class="cost-note">Per year &middot; 6-year program.</span></div>
-            <div class="cost-card"><span class="cost-label">Dentistry</span><span class="cost-value"><span data-money="5000" data-currency="USD">$5,000</span> &ndash; <span data-money="9000" data-currency="USD">$9,000</span></span><span class="cost-note">Per year &middot; 5-year program.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Tbilisi</span><span class="cost-value"><span data-money="400" data-currency="USD">$400</span> &ndash; <span data-money="500" data-currency="USD">$500</span></span><span class="cost-note">Per month &middot; rent + food + transport.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="300" data-currency="USD">$300</span> &ndash; <span data-money="400" data-currency="USD">$400</span></span><span class="cost-note">Per month &middot; Batumi, Kutaisi, Gori.</span></div>
+            <div class="cost-card"><span class="cost-label">MD English-medium</span><span class="cost-value"><span>$4,500</span> &ndash; <span>$9,000</span></span><span class="cost-note">Per year &middot; 6-year program.</span></div>
+            <div class="cost-card"><span class="cost-label">Dentistry</span><span class="cost-value"><span>$5,000</span> &ndash; <span>$9,000</span></span><span class="cost-note">Per year &middot; 5-year program.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Tbilisi</span><span class="cost-value"><span>$400</span> &ndash; <span>$500</span></span><span class="cost-note">Per month &middot; rent + food + transport.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>$300</span> &ndash; <span>$400</span></span><span class="cost-note">Per month &middot; Batumi, Kutaisi, Gori.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>D3 study visa</strong> via the Georgian e-visa portal or consulate.</span></li>
                 <li><i data-lucide="check"></i><span>Requires admission letter and a Georgian institutional invitation.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: <span data-money="2500" data-currency="USD">$2,500</span>&ndash;<span data-money="4000" data-currency="USD">$4,000</span> for the first year.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: <span>$2,500</span>&ndash;<span>$4,000</span> for the first year.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 5&ndash;10 working days online; 30 days at consulate.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: part-time allowed alongside studies.</span></li>
               </ul>
@@ -156,7 +156,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Georgia application with us</h2>
-            <p>From NMC-list verification to D3 visa &mdash; OneDegree maps a Georgia-ready application.</p>
+            <p>From NMC-list verification to D3 visa &mdash; One Degree maps a Georgia-ready application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Georgia call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

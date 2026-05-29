@@ -16,8 +16,8 @@
         ? asset('assets/heroes/'.$countrySlug.'.jpg')
         : null;
 
-    $pageTitle       = ($page['page_title'] ?? 'MBBS in '.$countryName).' | OneDegreeAdvisory';
-    $pageDescription = $page['hero_text'] ?? 'Study MBBS in '.$countryName.' with OneDegreeAdvisory.';
+    $pageTitle       = ($page['page_title'] ?? 'MBBS in '.$countryName).' | One Degree Advisory';
+    $pageDescription = $page['hero_text'] ?? 'Study MBBS in '.$countryName.' with One Degree Advisory.';
     $activeNav       = 'mbbs';
     $mainId          = 'mbbs-main';
     $bodyClass       = 'page-mbbs-country';
@@ -507,7 +507,7 @@
       <div class="mbbsx-cta__copy">
         <span class="eyebrow">Ready when you are</span>
         <h2>Map your <span class="gold-text">MBBS in {{ $countryName }}</span> in one call.</h2>
-        <p>A OneDegree advisor will walk you through universities, NMC alignment, fee structures and admission timelines &mdash; tailored to your NEET score and budget.</p>
+        <p>A One Degree advisor will walk you through universities, NMC alignment, fee structures and admission timelines &mdash; tailored to your NEET score and budget.</p>
         <div class="mbbsx-actions">
           <a class="btn btn-primary" href="{{ route('contact') }}">
             <span>Book a free counselling call</span>

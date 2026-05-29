@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in the USA | OneDegreeAdvisory';
-    $pageDescription = 'Study in the USA with OneDegreeAdvisory. Top universities, tuition, scholarships, F-1 visa, and OPT/STEM extension work pathway.';
+    $pageTitle = 'Study in the USA | One Degree Advisory';
+    $pageDescription = 'Study in the USA with One Degree Advisory. Top universities, tuition, scholarships, F-1 visa, and OPT/STEM extension work pathway.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -32,8 +32,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>200+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>Fall, Spring, Summer</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="25000" data-currency="USD">$25,000</span> &ndash; <span data-money="70000" data-currency="USD">$70,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="1000" data-currency="USD">$1,000</span> &ndash; <span data-money="2500" data-currency="USD">$2,500</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>$25,000</span> &ndash; <span>$70,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>$1,000</span> &ndash; <span>$2,500</span></dd></div>
               <div><dt>Student visa</dt><dd>F-1</dd></div>
               <div><dt>Post-study work</dt><dd>OPT 12 mo + 24 mo STEM</dd></div>
             </dl>
@@ -49,7 +49,7 @@
             <p>Built for students who want depth, optionality, and global brand value.</p>
           </div>
           <div class="reasons-grid">
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="award"></i></span><h3>Elite research</h3><p>Ivy League, MIT, Stanford, and large state research universities lead globally in funding and output.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="award"></i></span><h3>Elite research</h3><p>One Degree, MIT, Stanford, and large state research universities lead globally in funding and output.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="layout-grid"></i></span><h3>Flexible curriculum</h3><p>Major-minor combinations, double majors, and broad first-year exposure let you shape your direction.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="briefcase"></i></span><h3>OPT + STEM extension</h3><p>Up to 36 months of post-completion work for STEM graduates &mdash; a clear bridge to careers.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="hand-coins"></i></span><h3>Funding depth</h3><p>Assistantships, fellowships, and large endowments often offset tuition meaningfully at graduate level.</p></article>
@@ -70,7 +70,7 @@
             <article class="university-card"><span class="uni-rank">03</span><div class="uni-info"><h3>Harvard University</h3><p>Renowned across business, law, medicine, public policy, and the humanities.</p></div></article>
             <article class="university-card"><span class="uni-rank">04</span><div class="uni-info"><h3>California Institute of Technology (Caltech)</h3><p>Small, intense STEM university with leading physics, chemistry, and engineering programs.</p></div></article>
             <article class="university-card"><span class="uni-rank">05</span><div class="uni-info"><h3>Princeton University</h3><p>Strong undergraduate experience and elite graduate research in mathematics and economics.</p></div></article>
-            <article class="university-card"><span class="uni-rank">06</span><div class="uni-info"><h3>Yale University</h3><p>Historic Ivy with leading law, drama, management, and liberal arts programs.</p></div></article>
+            <article class="university-card"><span class="uni-rank">06</span><div class="uni-info"><h3>Yale University</h3><p>Historic university with leading law, drama, management, and liberal arts programs.</p></div></article>
             <article class="university-card"><span class="uni-rank">07</span><div class="uni-info"><h3>Columbia University</h3><p>New York City research university across journalism, business, engineering, and policy.</p></div></article>
             <article class="university-card"><span class="uni-rank">08</span><div class="uni-info"><h3>University of Chicago</h3><p>Rigorous, ideas-first culture with leading economics, statistics, and policy programs.</p></div></article>
           </div>
@@ -82,7 +82,7 @@
             <img src="https://images.unsplash.com/photo-1496588152823-86ff7695e68f?auto=format&fit=crop&w=2000&q=80" alt="">
             <div class="band-inner">
               <span class="eyebrow">World&rsquo;s leading universities</span>
-              <h2>Ivy League, top engineering, and OPT-ready master&rsquo;s.</h2>
+              <h2>One Degree, top engineering, and OPT-ready master&rsquo;s.</h2>
               <p>Eight of the global top ten universities call the US home &mdash; with up to 36 months of post-study work for STEM graduates.</p>
               <div class="band-stats"><div class="band-stat"><strong>8 of 10</strong><span>QS Top 10</span></div><div class="band-stat"><strong>36 mo</strong><span>STEM OPT</span></div><div class="band-stat"><strong>4,000+</strong><span>Universities</span></div><div class="band-stat"><strong>F-1</strong><span>Student visa</span></div></div>
             </div>
@@ -111,10 +111,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative USD ranges &mdash; private universities sit at the higher end of tuition.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span data-money="25000" data-currency="USD">$25,000</span>&ndash;<span data-money="60000" data-currency="USD">$60,000</span></span><span class="cost-note">Per year &middot; public state universities cheaper for in-state, but international rate applies.</span></div>
-            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span data-money="30000" data-currency="USD">$30,000</span>&ndash;<span data-money="70000" data-currency="USD">$70,000</span></span><span class="cost-note">Per year &middot; STEM and MBA at top schools at upper range.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Tier 1 cities</span><span class="cost-value"><span data-money="1500" data-currency="USD">$1,500</span>&ndash;<span data-money="2500" data-currency="USD">$2,500</span></span><span class="cost-note">Per month &middot; NYC, SF Bay Area, Boston, LA.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="1000" data-currency="USD">$1,000</span>&ndash;<span data-money="1600" data-currency="USD">$1,600</span></span><span class="cost-note">Per month &middot; college towns and mid-size metros.</span></div>
+            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span>$25,000</span>&ndash;<span>$60,000</span></span><span class="cost-note">Per year &middot; public state universities cheaper for in-state, but international rate applies.</span></div>
+            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span>$30,000</span>&ndash;<span>$70,000</span></span><span class="cost-note">Per year &middot; STEM and MBA at top schools at upper range.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Tier 1 cities</span><span class="cost-value"><span>$1,500</span>&ndash;<span>$2,500</span></span><span class="cost-note">Per month &middot; NYC, SF Bay Area, Boston, LA.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>$1,000</span>&ndash;<span>$1,600</span></span><span class="cost-note">Per month &middot; college towns and mid-size metros.</span></div>
           </div>
         </div>
       </section>
@@ -169,7 +169,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your USA application with us</h2>
-            <p>From test choice to I-20, OneDegree helps you build a precise, fundable USA application.</p>
+            <p>From test choice to I-20, One Degree helps you build a precise, fundable USA application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a USA call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

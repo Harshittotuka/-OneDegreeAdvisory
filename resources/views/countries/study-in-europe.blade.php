@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Europe | OneDegreeAdvisory';
-    $pageDescription = 'Study in Europe with OneDegreeAdvisory. Compare destinations across the EU and EEA: Bologna-Process degrees, English-taught programs, Schengen mobility, and value tuition.';
+    $pageTitle = 'Study in Europe | One Degree Advisory';
+    $pageDescription = 'Study in Europe with One Degree Advisory. Compare destinations across the EU and EEA: Bologna-Process degrees, English-taught programs, Schengen mobility, and value tuition.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -23,8 +23,8 @@
             <dl>
               <div><dt>Countries covered</dt><dd>30+ (EU/EEA + UK + CH)</dd></div>
               <div><dt>Degree system</dt><dd>Bologna 3+2+3 cycle</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="0" data-currency="EUR">&euro;0</span> &ndash; <span data-money="25000" data-currency="EUR">&euro;25,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="600" data-currency="EUR">&euro;600</span> &ndash; <span data-money="1800" data-currency="EUR">&euro;1,800</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;0</span> &ndash; <span>&euro;25,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;600</span> &ndash; <span>&euro;1,800</span></dd></div>
               <div><dt>Mobility</dt><dd>Schengen + Erasmus+</dd></div>
               <div><dt>Post-study work</dt><dd>1&ndash;2 years (country specific)</dd></div>
             </dl>
@@ -39,7 +39,7 @@
             <article class="reason-card"><span class="reason-icon"><i data-lucide="globe"></i></span><h3>Bologna-Process degrees</h3><p>3-year bachelors, 2-year masters, 3-year doctorates &mdash; portable credentials recognised across Europe.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="languages"></i></span><h3>English-taught at scale</h3><p>Thousands of English-medium programs across Germany, Netherlands, Nordic countries, and France.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="map"></i></span><h3>Schengen mobility</h3><p>Travel and short stays across 27 Schengen states with a single residence permit.</p></article>
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="piggy-bank"></i></span><h3>Value-to-prestige spectrum</h3><p>From <span data-money="0" data-currency="EUR">&euro;0</span> public tuition in Germany to elite grandes &eacute;coles and Bocconi-tier private schools.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="piggy-bank"></i></span><h3>Value-to-prestige spectrum</h3><p>From <span>&euro;0</span> public tuition in Germany to elite grandes &eacute;coles and Bocconi-tier private schools.</p></article>
           </div>
         </div>
       </section>
@@ -94,10 +94,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living spectrum</h2><p>Europe spans a wide cost range &mdash; positioning matters.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Lowest tuition</span><span class="cost-value"><span data-money="0" data-currency="EUR">&euro;0</span>&ndash;<span data-money="1500" data-currency="EUR">&euro;1,500</span></span><span class="cost-note">Germany (public), Norway (English MA cap), Czechia (Czech-taught).</span></div>
-            <div class="cost-card"><span class="cost-label">Mid tuition</span><span class="cost-value"><span data-money="2000" data-currency="EUR">&euro;2,000</span>&ndash;<span data-money="10000" data-currency="EUR">&euro;10,000</span></span><span class="cost-note">France, Italy, Spain (public), Poland, Hungary, Portugal.</span></div>
-            <div class="cost-card"><span class="cost-label">Higher tuition</span><span class="cost-value"><span data-money="10000" data-currency="EUR">&euro;10,000</span>&ndash;<span data-money="25000" data-currency="EUR">&euro;25,000</span></span><span class="cost-note">Netherlands, Ireland, Belgium, top business schools, private universities.</span></div>
-            <div class="cost-card"><span class="cost-label">Living cost band</span><span class="cost-value"><span data-money="600" data-currency="EUR">&euro;600</span>&ndash;<span data-money="1800" data-currency="EUR">&euro;1,800</span></span><span class="cost-note">Per month &middot; Eastern Europe lowest, Switzerland and Nordic capitals highest.</span></div>
+            <div class="cost-card"><span class="cost-label">Lowest tuition</span><span class="cost-value"><span>&euro;0</span>&ndash;<span>&euro;1,500</span></span><span class="cost-note">Germany (public), Norway (English MA cap), Czechia (Czech-taught).</span></div>
+            <div class="cost-card"><span class="cost-label">Mid tuition</span><span class="cost-value"><span>&euro;2,000</span>&ndash;<span>&euro;10,000</span></span><span class="cost-note">France, Italy, Spain (public), Poland, Hungary, Portugal.</span></div>
+            <div class="cost-card"><span class="cost-label">Higher tuition</span><span class="cost-value"><span>&euro;10,000</span>&ndash;<span>&euro;25,000</span></span><span class="cost-note">Netherlands, Ireland, Belgium, top business schools, private universities.</span></div>
+            <div class="cost-card"><span class="cost-label">Living cost band</span><span class="cost-value"><span>&euro;600</span>&ndash;<span>&euro;1,800</span></span><span class="cost-note">Per month &middot; Eastern Europe lowest, Switzerland and Nordic capitals highest.</span></div>
           </div>
         </div>
       </section>
@@ -150,7 +150,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Build your Europe shortlist with us</h2>
-            <p>Three countries, three programs, fit notes &mdash; OneDegree helps you commit with confidence.</p>
+            <p>Three countries, three programs, fit notes &mdash; One Degree helps you commit with confidence.</p>
             <div class="country-actions"><a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Europe call</span><i data-lucide="arrow-up-right"></i></a><a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a></div>
           </div>
           <div class="country-cta-card"><h3>What you&rsquo;ll get</h3><p>A 30-minute counselor-led session, free of cost.</p><ul><li><i data-lucide="check"></i><span>3 country shortlist with fit notes</span></li><li><i data-lucide="check"></i><span>Erasmus Mundus signal</span></li><li><i data-lucide="check"></i><span>Blue Card &amp; PR clarity</span></li></ul></div>

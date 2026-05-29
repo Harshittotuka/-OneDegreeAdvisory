@@ -1,6 +1,6 @@
 @php
-    $pageTitle = 'Careers | OneDegreeAdvisory';
-    $pageDescription = 'Join the team at OneDegreeAdvisory. We are always looking for passionate people to join us on our mission.';
+    $pageTitle = 'Careers | One Degree Advisory';
+    $pageDescription = 'Join the team at One Degree Advisory. We are always looking for passionate people to join us on our mission.';
     $activeNav = 'careers';
     $mainId = 'main';
 @endphp
@@ -34,7 +34,7 @@
       <aside class="insights-hero-panel" aria-label="Why join us">
         <div class="insights-hero-image" style="background-image: url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1400&q=82');"></div>
         <div class="insights-hero-note">
-          <span>Why OneDegree?</span>
+          <span>Why One Degree?</span>
           <ul>
             <li><i data-lucide="check"></i> Culture of excellence</li>
             <li><i data-lucide="check"></i> Continuous learning</li>
@@ -59,11 +59,11 @@
       @php
         $steps = [
           ['n' => 1, 'icon' => 'user-check',  'title' => 'First Screening',       'meta' => '20-min call',         'body' => 'A brief call from our Talent Acquisition team for shortlisted applicants. We learn about your experience, your motivation, and the kind of student impact you want to build.'],
-          ['n' => 2, 'icon' => 'puzzle',      'title' => 'Assignment',            'meta' => '2&ndash;3 days',      'body' => 'A real OneDegree assignment to work on. You experience how we think, and we see your reasoning in action. Time-boxed and graded by a partner.'],
+          ['n' => 2, 'icon' => 'puzzle',      'title' => 'Assignment',            'meta' => '2&ndash;3 days',      'body' => 'A real One Degree assignment to work on. You experience how we think, and we see your reasoning in action. Time-boxed and graded by a partner.'],
           ['n' => 3, 'icon' => 'file-search', 'title' => 'Technical Interview',   'meta' => '60 minutes',          'body' => 'A deep read on the role-specific skills you bring &mdash; depth and breadth of knowledge, problem-solving, and how you reason under pressure. We value competence and agility.'],
           ['n' => 4, 'icon' => 'brain',       'title' => 'Behavioral Assessment', 'meta' => '45 minutes',          'body' => 'A focused conversation on cultural fit. We talk through your aspirations, long-term goals, and how you respond across the contexts an advisor sees &mdash; anxious parents to tight deadlines.'],
-          ['n' => 5, 'icon' => 'users-round', 'title' => 'Leadership Round',      'meta' => 'With the partners',   'body' => 'You meet the partners at OneDegree. We discuss team experiences, conflict resolution, and difficult decision-making. This is also your chance to interview us.'],
-          ['n' => 6, 'icon' => 'gem',         'title' => 'You are a OneDegreer!', 'meta' => 'Welcome aboard',      'body' => 'A rewarding career at OneDegree awaits you. We finalize the offer, plan your onboarding, and pair you with a senior partner-mentor for your first cycle.'],
+          ['n' => 5, 'icon' => 'users-round', 'title' => 'Leadership Round',      'meta' => 'With the partners',   'body' => 'You meet the partners at One Degree. We discuss team experiences, conflict resolution, and difficult decision-making. This is also your chance to interview us.'],
+          ['n' => 6, 'icon' => 'gem',         'title' => 'You are a One Degreer!', 'meta' => 'Welcome aboard',      'body' => 'A rewarding career at One Degree awaits you. We finalize the offer, plan your onboarding, and pair you with a senior partner-mentor for your first cycle.'],
         ];
       @endphp
 
@@ -120,7 +120,7 @@
   <section class="cr-life" aria-labelledby="cr-life-title">
     <div class="container cr-life-grid">
       <div class="cr-life-copy">
-        <span class="va-eyebrow">Life at OneDegree</span>
+        <span class="va-eyebrow">Life at One Degree</span>
         <h2 id="cr-life-title">Problem solvers. Careful readers. Builders of student futures.</h2>
         <p>We look for people who can think on their feet, get things done, and read a student&rsquo;s file with the patience of a craftsperson. Creative thinkers who go beyond the obvious &mdash; and stay accountable to the families we serve.</p>
         <p>If that sounds like you, we would love to hear from you. We hire slowly, mentor closely, and trust our people with senior work from day one.</p>
@@ -218,7 +218,7 @@
           </div>
 
           <label class="cr-field cr-field-full" for="applicant-message">
-            <span>Cover letter &mdash; why OneDegree? *</span>
+            <span>Cover letter &mdash; why One Degree? *</span>
             <textarea id="applicant-message" name="message" required placeholder="Tell us about your background and what you can bring to the team." rows="5"></textarea>
           </label>
 
@@ -229,7 +229,7 @@
 
           <label class="cr-checkbox">
             <input type="checkbox" name="consent" required>
-            <span>I agree to OneDegree storing my application details for review and follow-up.</span>
+            <span>I agree to One Degree storing my application details for review and follow-up.</span>
           </label>
 
           <button class="btn btn-primary cr-apply-submit" type="submit">

@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Dubai | OneDegreeAdvisory';
-    $pageDescription = 'Study in Dubai with OneDegreeAdvisory. International branch campuses, English-medium programs, UAE student visa, and tax-free career pathways.';
+    $pageTitle = 'Study in Dubai | One Degree Advisory';
+    $pageDescription = 'Study in Dubai with One Degree Advisory. International branch campuses, English-medium programs, UAE student visa, and tax-free career pathways.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -30,8 +30,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>30+ campuses &amp; institutions</dd></div>
               <div><dt>Main intakes</dt><dd>September, January</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="35000" data-currency="AED">AED 35,000</span> &ndash; <span data-money="95000" data-currency="AED">95,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="4000" data-currency="AED">AED 4,000</span> &ndash; <span data-money="8000" data-currency="AED">8,000</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>AED 35,000</span> &ndash; <span>95,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>AED 4,000</span> &ndash; <span>8,000</span></dd></div>
               <div><dt>Student visa</dt><dd>UAE Student Visa</dd></div>
               <div><dt>Post-study work</dt><dd>Job-seeker &amp; Green Visa</dd></div>
             </dl>
@@ -101,10 +101,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative AED ranges &mdash; varies by campus and accommodation choice.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span data-money="35000" data-currency="AED">AED 35,000</span>&ndash;<span data-money="75000" data-currency="AED">75,000</span></span><span class="cost-note">Per year &middot; branch campuses generally aligned with UK/AU fees.</span></div>
-            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span data-money="50000" data-currency="AED">AED 50,000</span>&ndash;<span data-money="95000" data-currency="AED">95,000</span></span><span class="cost-note">Per year &middot; MBA and specialist masters at upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Dubai/Abu Dhabi</span><span class="cost-value"><span data-money="4500" data-currency="AED">AED 4,500</span>&ndash;<span data-money="8000" data-currency="AED">8,000</span></span><span class="cost-note">Per month &middot; shared accommodation, food, transport.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other emirates</span><span class="cost-value"><span data-money="3500" data-currency="AED">AED 3,500</span>&ndash;<span data-money="5500" data-currency="AED">5,500</span></span><span class="cost-note">Per month &middot; Sharjah, Ajman more affordable.</span></div>
+            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span>AED 35,000</span>&ndash;<span>75,000</span></span><span class="cost-note">Per year &middot; branch campuses generally aligned with UK/AU fees.</span></div>
+            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span>AED 50,000</span>&ndash;<span>95,000</span></span><span class="cost-note">Per year &middot; MBA and specialist masters at upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Dubai/Abu Dhabi</span><span class="cost-value"><span>AED 4,500</span>&ndash;<span>8,000</span></span><span class="cost-note">Per month &middot; shared accommodation, food, transport.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other emirates</span><span class="cost-value"><span>AED 3,500</span>&ndash;<span>5,500</span></span><span class="cost-note">Per month &middot; Sharjah, Ajman more affordable.</span></div>
           </div>
         </div>
       </section>
@@ -159,7 +159,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Dubai application with us</h2>
-            <p>From branch campus selection to UAE residence visa, OneDegree guides you end to end.</p>
+            <p>From branch campus selection to UAE residence visa, One Degree guides you end to end.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Dubai call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

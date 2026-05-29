@@ -1,5 +1,5 @@
 @php
-    $pageTitle = 'MBBS Abroad Route Desk | OneDegreeAdvisory';
+    $pageTitle = 'MBBS Abroad Route Desk | One Degree Advisory';
     $pageDescription = 'A focused MBBS abroad comparison page with six destination desks, admission support services, and profile-led counselling for Indian students.';
     $activeNav = 'mbbs-v2';
     $mainId = 'mbbs-v2-main';
@@ -119,19 +119,15 @@
           </span>
         </div>
 
-        <h1 id="mbbs-v2-title">Compare six <span class="mbbs-gold">MBBS</span> corridors before you choose a seat.</h1>
+        <h1 id="mbbs-v2-title">Choose your path with <span class="mbbs-gold">One Degree</span> Advisory.</h1>
         <p class="mbbs-v2-lede">
-          A compact decision board for families who want country fit, budget, medium, intake, and India-return practicality in one clean view.
+          We help students compare destinations, budgets, and timelines &mdash; then build one clear, evidence-led plan that takes you from shortlist to seat with confidence.
         </p>
 
         <div class="mbbs-hero-actions">
           <a class="btn btn-primary mbbs-hero-cta" href="{{ route('contact') }}">
             <span>Book free counselling</span>
             <i data-lucide="arrow-up-right"></i>
-          </a>
-          <a class="mbbs-hero-quietlink" href="{{ route('mbbs.student') }}">
-            <span>Open original page</span>
-            <i data-lucide="arrow-right"></i>
           </a>
         </div>
       </div>
@@ -155,12 +151,12 @@
                 <div><dt>Capital</dt><dd>{{ $c['capital'] }}</dd></div>
                 <div><dt>Duration</dt><dd>{{ $c['duration'] }}</dd></div>
                 <div><dt>Medium</dt><dd>{{ $c['medium'] }}</dd></div>
-                <div><dt>Tuition</dt><dd><span data-money="{{ $c['feeLow'] }}" data-currency="USD">{{ $fmtFee($c['feeLow']) }}</span>&ndash;<span data-money="{{ $c['feeHigh'] }}" data-currency="USD">{{ $fmtFee($c['feeHigh']) }}</span> / yr</dd></div>
+                <div><dt>Tuition</dt><dd><span>{{ $fmtFee($c['feeLow']) }}</span>&ndash;<span>{{ $fmtFee($c['feeHigh']) }}</span> / yr</dd></div>
                 <div><dt>Intake</dt><dd>{{ $c['intake'] }}</dd></div>
                 <div><dt>Fit</dt><dd>Profile-led</dd></div>
               </dl>
               <a href="{{ route('contact') }}" class="mbbs-country-cta">
-                <span>Plan {{ $c['name'] }} file</span>
+                <span>Study in {{ $c['name'] }}</span>
                 <i data-lucide="arrow-up-right"></i>
               </a>
             </article>

@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Italy | OneDegreeAdvisory';
-    $pageDescription = 'Study in Italy with OneDegreeAdvisory. Heritage universities, English-taught programs, affordable public tuition, and a 12-month post-study residence.';
+    $pageTitle = 'Study in Italy | One Degree Advisory';
+    $pageDescription = 'Study in Italy with One Degree Advisory. Heritage universities, English-taught programs, affordable public tuition, and a 12-month post-study residence.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -23,8 +23,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>25+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>September, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="900" data-currency="EUR">&euro;900</span> &ndash; <span data-money="20000" data-currency="EUR">&euro;20,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="700" data-currency="EUR">&euro;700</span> &ndash; <span data-money="1200" data-currency="EUR">&euro;1,200</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;900</span> &ndash; <span>&euro;20,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;700</span> &ndash; <span>&euro;1,200</span></dd></div>
               <div><dt>Student visa</dt><dd>National D Visa</dd></div>
               <div><dt>Post-study work</dt><dd>12-month residence permit</dd></div>
             </dl>
@@ -38,7 +38,7 @@
           <div class="reasons-grid">
             <article class="reason-card"><span class="reason-icon"><i data-lucide="landmark"></i></span><h3>Historic universities</h3><p>The University of Bologna, founded in 1088, is the oldest continuously operating university in the world.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="palette"></i></span><h3>Design &amp; fashion</h3><p>Milan and Florence host some of the world&rsquo;s top fashion, design, and architecture schools.</p></article>
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="piggy-bank"></i></span><h3>Affordable public tuition</h3><p>Public universities charge income-linked fees starting around <span data-money="900" data-currency="EUR">&euro;900</span>/year &mdash; with strong DSU regional grants.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="piggy-bank"></i></span><h3>Affordable public tuition</h3><p>Public universities charge income-linked fees starting around <span>&euro;900</span>/year &mdash; with strong DSU regional grants.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="languages"></i></span><h3>English-taught programs</h3><p>Hundreds of English-medium bachelor&rsquo;s and master&rsquo;s programs &mdash; especially in business and STEM.</p></article>
           </div>
         </div>
@@ -67,7 +67,7 @@
               <span class="eyebrow">Design, fashion &amp; the arts</span>
               <h2>Centuries of academia, in cities you&rsquo;ll never forget.</h2>
               <p>From Bologna (Europe&rsquo;s oldest university) to Milan&rsquo;s design schools &mdash; with EU-recognised degrees and low tuition.</p>
-              <div class="band-stats"><div class="band-stat"><strong><span data-money="900" data-currency="EUR" data-money-hint="k">&euro;0.9k</span></strong><span>Min. tuition</span></div><div class="band-stat"><strong>12 mo</strong><span>Stay-back</span></div><div class="band-stat"><strong>90+</strong><span>Universities</span></div><div class="band-stat"><strong>EU</strong><span>Member state</span></div></div>
+              <div class="band-stats"><div class="band-stat"><strong><span>&euro;0.9k</span></strong><span>Min. tuition</span></div><div class="band-stat"><strong>12 mo</strong><span>Stay-back</span></div><div class="band-stat"><strong>90+</strong><span>Universities</span></div><div class="band-stat"><strong>EU</strong><span>Member state</span></div></div>
             </div>
           </div>
         </div>
@@ -94,10 +94,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Euro ranges &mdash; public universities use income-linked (ISEE) fee bands.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span data-money="900" data-currency="EUR">&euro;900</span>&ndash;<span data-money="4000" data-currency="EUR">&euro;4,000</span></span><span class="cost-note">Per year &middot; income-linked; can be lower with DSU regional aid.</span></div>
-            <div class="cost-card"><span class="cost-label">Private university tuition</span><span class="cost-value"><span data-money="6000" data-currency="EUR">&euro;6,000</span>&ndash;<span data-money="20000" data-currency="EUR">&euro;20,000</span></span><span class="cost-note">Per year &middot; Bocconi, LUISS, and specialist design schools at upper end.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Milan/Rome</span><span class="cost-value"><span data-money="900" data-currency="EUR">&euro;900</span>&ndash;<span data-money="1200" data-currency="EUR">&euro;1,200</span></span><span class="cost-note">Per month &middot; major cities tend to be costliest.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="700" data-currency="EUR">&euro;700</span>&ndash;<span data-money="900" data-currency="EUR">&euro;900</span></span><span class="cost-note">Per month &middot; Bologna, Padua, Turin, smaller university towns.</span></div>
+            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span>&euro;900</span>&ndash;<span>&euro;4,000</span></span><span class="cost-note">Per year &middot; income-linked; can be lower with DSU regional aid.</span></div>
+            <div class="cost-card"><span class="cost-label">Private university tuition</span><span class="cost-value"><span>&euro;6,000</span>&ndash;<span>&euro;20,000</span></span><span class="cost-note">Per year &middot; Bocconi, LUISS, and specialist design schools at upper end.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Milan/Rome</span><span class="cost-value"><span>&euro;900</span>&ndash;<span>&euro;1,200</span></span><span class="cost-note">Per month &middot; major cities tend to be costliest.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&euro;700</span>&ndash;<span>&euro;900</span></span><span class="cost-note">Per month &middot; Bologna, Padua, Turin, smaller university towns.</span></div>
           </div>
         </div>
       </section>
@@ -125,7 +125,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>National Visa (Type D)</strong> for studies.</span></li>
                 <li><i data-lucide="check"></i><span>Pre-enrolment via Universitaly portal mandatory before visa application.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: ~<span data-money="6000" data-currency="EUR">&euro;6,000</span>+ per year, plus health insurance.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: ~<span>&euro;6,000</span>+ per year, plus health insurance.</span></li>
                 <li><i data-lucide="check"></i><span>Permesso di Soggiorno (residence permit) within 8 days of arrival.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: up to 20 hours/week alongside studies.</span></li>
               </ul>
@@ -152,7 +152,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Italy application with us</h2>
-            <p>From Universitaly pre-enrolment to DSU grants, OneDegree maps your full Italy plan.</p>
+            <p>From Universitaly pre-enrolment to DSU grants, One Degree maps your full Italy plan.</p>
             <div class="country-actions"><a class="btn btn-primary" href="{{ route('contact') }}"><span>Book an Italy call</span><i data-lucide="arrow-up-right"></i></a><a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a></div>
           </div>
           <div class="country-cta-card"><h3>What you&rsquo;ll get</h3><p>A 30-minute counselor-led session, free of cost.</p><ul><li><i data-lucide="check"></i><span>Public vs. private fit</span></li><li><i data-lucide="check"></i><span>DSU &amp; MAECI signal</span></li><li><i data-lucide="check"></i><span>Universitaly &amp; visa map</span></li></ul></div>

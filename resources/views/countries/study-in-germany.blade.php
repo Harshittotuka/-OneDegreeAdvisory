@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Germany | OneDegreeAdvisory';
-    $pageDescription = 'Study in Germany with OneDegreeAdvisory. Tuition-free public universities, English-taught masters, National D visa, and 18-month job-search residence.';
+    $pageTitle = 'Study in Germany | One Degree Advisory';
+    $pageDescription = 'Study in Germany with One Degree Advisory. Tuition-free public universities, English-taught masters, National D visa, and 18-month job-search residence.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>40+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>Winter (Oct), Summer (Apr)</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="0" data-currency="EUR">&euro;0</span> &ndash; <span data-money="3000" data-currency="EUR">&euro;3,000</span> (public)</dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="850" data-currency="EUR">&euro;850</span> &ndash; <span data-money="1200" data-currency="EUR">&euro;1,200</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;0</span> &ndash; <span>&euro;3,000</span> (public)</dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;850</span> &ndash; <span>&euro;1,200</span></dd></div>
               <div><dt>Student visa</dt><dd>National D Visa</dd></div>
               <div><dt>Post-study work</dt><dd>18-month residence permit</dd></div>
             </dl>
@@ -40,7 +40,7 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Why Germany</span><h2>Value, engineering, employability</h2><p>Where public funding meets research strength and industrial scale.</p></div>
           <div class="reasons-grid">
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="piggy-bank"></i></span><h3>Low or no tuition</h3><p>Most public universities charge only a small semester fee &mdash; usually <span data-money="100" data-currency="EUR">&euro;100</span>&ndash;<span data-money="350" data-currency="EUR">&euro;350</span>.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="piggy-bank"></i></span><h3>Low or no tuition</h3><p>Most public universities charge only a small semester fee &mdash; usually <span>&euro;100</span>&ndash;<span>&euro;350</span>.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="cog"></i></span><h3>Engineering powerhouse</h3><p>Germany leads Europe in mechanical, automotive, electrical, and renewable energy engineering.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="languages"></i></span><h3>English-taught masters</h3><p>Hundreds of master&rsquo;s programs are delivered in English &mdash; especially STEM.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="briefcase"></i></span><h3>Strong job market</h3><p>18-month post-study job-search residence, with EU Blue Card pathway for skilled roles.</p></article>
@@ -71,7 +71,7 @@
               <span class="eyebrow">Engineering at its source</span>
               <h2>Low tuition. World-class engineering. Industry on tap.</h2>
               <p>Tuition-free public universities, 120+ English-taught master&rsquo;s, and 18-month post-study Job Seeker visa.</p>
-              <div class="band-stats"><div class="band-stat"><strong><span data-money="0" data-currency="EUR">&euro;0</span></strong><span>Public tuition</span></div><div class="band-stat"><strong>18 mo</strong><span>Job seeker visa</span></div><div class="band-stat"><strong>120+</strong><span>English MS</span></div><div class="band-stat"><strong>TU9</strong><span>Top engineering</span></div></div>
+              <div class="band-stats"><div class="band-stat"><strong><span>&euro;0</span></strong><span>Public tuition</span></div><div class="band-stat"><strong>18 mo</strong><span>Job seeker visa</span></div><div class="band-stat"><strong>120+</strong><span>English MS</span></div><div class="band-stat"><strong>TU9</strong><span>Top engineering</span></div></div>
             </div>
           </div>
         </div>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Euro ranges &mdash; public universities are the affordable default.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Public university fees</span><span class="cost-value"><span data-money="100" data-currency="EUR">&euro;100</span>&ndash;<span data-money="350" data-currency="EUR">&euro;350</span></span><span class="cost-note">Per semester &middot; covers administration and public transport.</span></div>
-            <div class="cost-card"><span class="cost-label">Baden-W&uuml;rttemberg tuition</span><span class="cost-value"><span data-money="1500" data-currency="EUR">&euro;1,500</span></span><span class="cost-note">Per semester &middot; non-EU students at public universities in BW.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Munich/Frankfurt</span><span class="cost-value"><span data-money="1100" data-currency="EUR">&euro;1,100</span>&ndash;<span data-money="1400" data-currency="EUR">&euro;1,400</span></span><span class="cost-note">Per month &middot; higher rent in major cities.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="850" data-currency="EUR">&euro;850</span>&ndash;<span data-money="1100" data-currency="EUR">&euro;1,100</span></span><span class="cost-note">Per month &middot; Berlin, Leipzig, Bonn, smaller university towns.</span></div>
+            <div class="cost-card"><span class="cost-label">Public university fees</span><span class="cost-value"><span>&euro;100</span>&ndash;<span>&euro;350</span></span><span class="cost-note">Per semester &middot; covers administration and public transport.</span></div>
+            <div class="cost-card"><span class="cost-label">Baden-W&uuml;rttemberg tuition</span><span class="cost-value"><span>&euro;1,500</span></span><span class="cost-note">Per semester &middot; non-EU students at public universities in BW.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Munich/Frankfurt</span><span class="cost-value"><span>&euro;1,100</span>&ndash;<span>&euro;1,400</span></span><span class="cost-note">Per month &middot; higher rent in major cities.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&euro;850</span>&ndash;<span>&euro;1,100</span></span><span class="cost-note">Per month &middot; Berlin, Leipzig, Bonn, smaller university towns.</span></div>
           </div>
         </div>
       </section>
@@ -128,7 +128,7 @@
               <h3>Student visa snapshot</h3>
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>National Visa (D)</strong> for studies.</span></li>
-                <li><i data-lucide="check"></i><span>Requires university admission and Blocked Account of ~<span data-money="11904" data-currency="EUR">&euro;11,904</span>/year (2024).</span></li>
+                <li><i data-lucide="check"></i><span>Requires university admission and Blocked Account of ~<span>&euro;11,904</span>/year (2024).</span></li>
                 <li><i data-lucide="check"></i><span>Health insurance is mandatory for the entire stay.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: 140 full days or 280 half days per year.</span></li>
                 <li><i data-lucide="check"></i><span>18-month residence permit after graduation to seek a job.</span></li>
@@ -145,7 +145,7 @@
             <div class="timeline-item"><h4>Profile review &amp; uni-assist</h4><p>12&ndash;15 months out: program shortlist, uni-assist preliminary check.</p></div>
             <div class="timeline-item"><h4>Tests &amp; documents</h4><p>8&ndash;12 months out: IELTS/TOEFL; GRE if program requests; APS certificate where required.</p></div>
             <div class="timeline-item"><h4>Applications</h4><p>April&ndash;July: most Winter intake deadlines; via uni-assist or directly to university.</p></div>
-            <div class="timeline-item"><h4>Offers &amp; blocked account</h4><p>June&ndash;August: confirm offer, open Sperrkonto with <span data-money="11904" data-currency="EUR">&euro;11,904</span>+.</p></div>
+            <div class="timeline-item"><h4>Offers &amp; blocked account</h4><p>June&ndash;August: confirm offer, open Sperrkonto with <span>&euro;11,904</span>+.</p></div>
             <div class="timeline-item"><h4>Visa appointment</h4><p>July&ndash;September: book embassy slot, submit application, attend interview.</p></div>
             <div class="timeline-item"><h4>Arrival &amp; registration</h4><p>September&ndash;October: Anmeldung, residence permit, health insurance, university enrolment.</p></div>
           </div>
@@ -156,7 +156,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Germany application with us</h2>
-            <p>From uni-assist to Sperrkonto, OneDegree covers every step of your Germany journey.</p>
+            <p>From uni-assist to Sperrkonto, One Degree covers every step of your Germany journey.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Germany call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

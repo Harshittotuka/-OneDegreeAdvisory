@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'OneDegreeAdvisory | Global Education Advisory';
-    $pageDescription = 'OneDegreeAdvisory is a premium global education advisory helping students choose universities, strengthen profiles, apply with confidence, and prepare for arrival.';
+    $pageTitle = 'One Degree Advisory | Global Education Advisory';
+    $pageDescription = 'One Degree Advisory is a premium global education advisory helping students choose universities, strengthen profiles, apply with confidence, and prepare for arrival.';
     $activeNav = 'home';
     $mainId = 'main';
 @endphp
@@ -9,7 +9,7 @@
 
 @section('content')
 <main id="main">
-      <section class="hero" id="top" aria-label="OneDegreeAdvisory">
+      <section class="hero" id="top" aria-label="One Degree Advisory">
         <div class="hero-media" aria-hidden="true"></div>
         <div class="hero-overlay" aria-hidden="true"></div>
 
@@ -17,18 +17,18 @@
           <div class="hero-copy reveal">
             <span class="eyebrow">Global Admissions</span>
             <h1 class="hero-headline">You are <span class="gold-text">one degree</span><br />away from the world.</h1>
-            <blockquote class="hero-quote">
-              <p>&ldquo;They don&rsquo;t just place students &mdash; they architect futures.&rdquo;</p>
-              <cite>&mdash; Aanya M., Class of 2025 &middot; Harvard University</cite>
-            </blockquote>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="#contact">
-                <span>Start Your Roadmap</span>
-                <i data-lucide="arrow-up-right"></i>
-              </a>
-              <a class="btn btn-ghost" href="#method">
+              <a class="btn btn-ghost" href="#contact">
                 <i data-lucide="compass"></i>
-                <span>Explore Method</span>
+                <span>Career Mentoring</span>
+              </a>
+              <a class="btn btn-orange" href="#contact">
+                <i data-lucide="graduation-cap"></i>
+                <span>Student Development Programme</span>
+              </a>
+              <a class="btn btn-ghost" href="#destinations">
+                <i data-lucide="globe"></i>
+                <span>Study Abroad</span>
               </a>
             </div>
           </div>
@@ -128,7 +128,7 @@
         </div>
       </section>
 
-      <section class="signal-strip" aria-label="What OneDegreeAdvisory brings">
+      <section class="signal-strip" aria-label="What One Degree Advisory brings">
         <div class="container signal-grid">
           <div class="signal reveal">
             <span>01</span>
@@ -162,7 +162,7 @@
             </div>
             <p>
               Whether you are choosing subjects, planning postgraduate study, or switching careers,
-              OneDegreeAdvisory turns a wide world of options into a personally sequenced plan.
+              One Degree Advisory turns a wide world of options into a personally sequenced plan.
             </p>
           </div>
 
@@ -244,7 +244,7 @@
       <section class="method-section" id="method" aria-labelledby="method-title">
         <div class="container method-layout">
           <div class="section-lead sticky-lead reveal">
-            <span class="eyebrow">The OneDegree method</span>
+            <span class="eyebrow">The One Degree method</span>
             <h2 id="method-title">A calm, exacting process for one of life's biggest decisions.</h2>
             <p>
               Inspired by elite admissions consulting, but built for modern global education:
@@ -291,7 +291,7 @@
               applications, scholarships, financial planning, visa readiness, and arrival support.
             </p>
             <a class="btn btn-secondary solution-cta" href="#contact">
-              <span>Plan with OneDegree</span>
+              <span>Plan with One Degree</span>
               <i data-lucide="arrow-up-right"></i>
             </a>
           </div>
@@ -509,7 +509,7 @@
             <div class="testimonial-track" data-testimonial-track>
               <article class="testimonial is-active">
                 <p>
-                  "OneDegree helped us stop chasing random rankings. The final shortlist finally made sense
+                  "One Degree helped us stop chasing random rankings. The final shortlist finally made sense
                   for my course, budget, and career goals."
                 </p>
                 <div>
@@ -559,7 +559,7 @@
             <h2 id="about-title">Because ambition deserves a better map.</h2>
             <p>
               Academic journeys can feel overwhelming: hundreds of countries, changing visa rules,
-              hidden costs, unclear rankings, and conflicting advice. OneDegreeAdvisory exists to make
+              hidden costs, unclear rankings, and conflicting advice. One Degree Advisory exists to make
               that complexity navigable.
             </p>
             <p>
@@ -598,7 +598,7 @@
               </div>
               <div class="insight-card-body">
                 <span class="insight-card-meta">Strategy &middot; 9 min read</span>
-                <h3>The 2026 Ivy League admissions playbook (what changed since SAT-optional).</h3>
+                <h3>The 2026 One Degree admissions playbook (what changed since SAT-optional).</h3>
                 <p>Our heads of strategy unpack the testing reversal, the AI-essay disclosure rules and the four profile pillars that now matter most.</p>
                 <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
               </div>
@@ -648,9 +648,9 @@
                 <i data-lucide="mail"></i>
                 admissions@onedegreeadvisory.com
               </a>
-              <a href="tel:8233365888">
+              <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
                 <i data-lucide="phone"></i>
-                8233365888
+                {{ config('site.contact.phone') }}
               </a>
               <a href="{{ route('contact') }}">
                 <i data-lucide="map-pin"></i>
@@ -661,53 +661,16 @@
                 Intake planning, application reviews, visa readiness
               </a>
             </div>
+
+            <div class="contact-aside-socials">
+              <span class="contact-aside-socials-label">Follow us</span>
+              @include('partials.socials', ['variant' => 'aside'])
+            </div>
           </aside>
 
-          <form class="consult-form reveal" data-consult-form>
-            <div class="form-row">
-              <label>
-                <span>Name</span>
-                <input name="name" type="text" autocomplete="name" required placeholder="Your full name">
-              </label>
-              <label>
-                <span>Email</span>
-                <input name="email" type="email" autocomplete="email" required placeholder="you@example.com">
-              </label>
-            </div>
-            <div class="form-row">
-              <div class="contact-phone" data-phone-group>
-                <span class="contact-phone-label">Phone</span>
-                <div class="contact-phone-fields">
-                  <div class="contact-phone-country" data-country-select></div>
-                  <input type="hidden" name="phoneCountry" data-phone-country-input value="+91">
-                  <input name="phone" type="tel" data-phone-input autocomplete="tel" inputmode="numeric" placeholder="Phone number" maxlength="10" aria-label="Phone number (10 digits)">
-                </div>
-              </div>
-              <label>
-                <span>Current stage</span>
-                <select name="stage" required>
-                  <option value="">Select one</option>
-                  <option>Exploring countries</option>
-                  <option>Shortlisting universities</option>
-                  <option>Preparing applications</option>
-                  <option>Visa or pre-departure</option>
-                </select>
-              </label>
-            </div>
-            <label>
-              <span>What are you planning?</span>
-              <textarea name="message" rows="5" required placeholder="Destination, program level, intake, and anything you are unsure about"></textarea>
-            </label>
-            <label class="consent">
-              <input type="checkbox" required>
-              <span>I agree to be contacted about OneDegreeAdvisory services by email, phone, or messaging.</span>
-            </label>
-            <button class="btn btn-primary" type="submit">
-              <span>Submit Enquiry</span>
-              <i data-lucide="send"></i>
-            </button>
-            <p class="form-status" role="status" aria-live="polite" data-form-status></p>
-          </form>
+          <div class="contact-form-panel reveal">
+            @include('partials.contact-form', ['formId' => 'home'])
+          </div>
         </div>
       </section>
 

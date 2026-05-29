@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Belgium | OneDegreeAdvisory';
-    $pageDescription = 'Study in Belgium with OneDegreeAdvisory. KU Leuven, Ghent, ULB, tuition, VLIR-UOS scholarships, Type D visa, job-seeker pathway, FAQs.';
+    $pageTitle = 'Study in Belgium | One Degree Advisory';
+    $pageDescription = 'Study in Belgium with One Degree Advisory. KU Leuven, Ghent, ULB, tuition, VLIR-UOS scholarships, Type D visa, job-seeker pathway, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>10+ research universities</dd></div>
               <div><dt>Main intakes</dt><dd>September, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="1000" data-currency="EUR">&euro;1,000</span> &ndash; <span data-money="6000" data-currency="EUR">&euro;6,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="900" data-currency="EUR">&euro;900</span> &ndash; <span data-money="1300" data-currency="EUR">&euro;1,300</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;1,000</span> &ndash; <span>&euro;6,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;900</span> &ndash; <span>&euro;1,300</span></dd></div>
               <div><dt>Student visa</dt><dd>Type D student visa</dd></div>
               <div><dt>Post-study work</dt><dd>Job-seeker residence &middot; 12 months</dd></div>
             </dl>
@@ -41,7 +41,7 @@
           <div class="section-head"><span class="eyebrow">Why Belgium</span><h2>World-class research. EU institutions. Low tuition.</h2><p>Affordable degrees in the EU capital, with strong English-taught programs and a clear job-seeker pathway.</p></div>
           <div class="reasons-grid">
             <article class="reason-card"><span class="reason-icon"><i data-lucide="award"></i></span><h3>Top research</h3><p>KU Leuven and Ghent consistently in the global top 100 for research.</p></article>
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Low tuition</h3><p>Most public master&rsquo;s programs sit at <span data-money="1000" data-currency="EUR">&euro;1,000</span>&ndash;<span data-money="4000" data-currency="EUR">&euro;4,000</span>/year.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Low tuition</h3><p>Most public master&rsquo;s programs sit at <span>&euro;1,000</span>&ndash;<span>&euro;4,000</span>/year.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="languages"></i></span><h3>English-taught</h3><p>200+ English master&rsquo;s programs across Flemish and French universities.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="briefcase"></i></span><h3>EU institutions</h3><p>Brussels hosts EU institutions, NATO, and global multinationals.</p></article>
           </div>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span data-money="1000" data-currency="EUR">&euro;1,000</span> &ndash; <span data-money="4200" data-currency="EUR">&euro;4,200</span></span><span class="cost-note">Per year &middot; non-EU; lower for EU students.</span></div>
-            <div class="cost-card"><span class="cost-label">Specialist / MBA tuition</span><span class="cost-value"><span data-money="6000" data-currency="EUR">&euro;6,000</span> &ndash; <span data-money="30000" data-currency="EUR">&euro;30,000</span></span><span class="cost-note">Per year &middot; private schools and MBAs higher.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Brussels</span><span class="cost-value"><span data-money="1000" data-currency="EUR">&euro;1,000</span> &ndash; <span data-money="1300" data-currency="EUR">&euro;1,300</span></span><span class="cost-note">Per month &middot; capital-city rents.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="800" data-currency="EUR">&euro;800</span> &ndash; <span data-money="1100" data-currency="EUR">&euro;1,100</span></span><span class="cost-note">Per month &middot; Leuven, Ghent, Antwerp.</span></div>
+            <div class="cost-card"><span class="cost-label">Public university tuition</span><span class="cost-value"><span>&euro;1,000</span> &ndash; <span>&euro;4,200</span></span><span class="cost-note">Per year &middot; non-EU; lower for EU students.</span></div>
+            <div class="cost-card"><span class="cost-label">Specialist / MBA tuition</span><span class="cost-value"><span>&euro;6,000</span> &ndash; <span>&euro;30,000</span></span><span class="cost-note">Per year &middot; private schools and MBAs higher.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Brussels</span><span class="cost-value"><span>&euro;1,000</span> &ndash; <span>&euro;1,300</span></span><span class="cost-note">Per month &middot; capital-city rents.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&euro;800</span> &ndash; <span>&euro;1,100</span></span><span class="cost-note">Per month &middot; Leuven, Ghent, Antwerp.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>Type D student visa</strong> via the Belgian consulate.</span></li>
                 <li><i data-lucide="check"></i><span>Requires admission letter and proof of paid tuition.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span data-money="730" data-currency="EUR">&euro;730</span>/month for the duration of study.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: roughly <span>&euro;730</span>/month for the duration of study.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 4&ndash;8 weeks; biometrics at VFS Global.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: 20 hours/week during term, full-time in summer.</span></li>
               </ul>

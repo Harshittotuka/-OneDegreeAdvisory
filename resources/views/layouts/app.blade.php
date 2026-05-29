@@ -3,9 +3,21 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0f3b45">
+    <meta name="theme-color" content="#1a0088">
     <meta name="description" content="{{ $pageDescription ?? config('site.description') }}">
     <title>{{ $pageTitle ?? config('site.name') }}</title>
+
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/Logo/mark.svg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/Logo/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/Logo/favicon.png') }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ config('site.name') }}">
+    <meta property="og:title" content="{{ $pageTitle ?? config('site.name') }}">
+    <meta property="og:description" content="{{ $pageDescription ?? config('site.description') }}">
+    <meta property="og:image" content="{{ asset('assets/Logo/og-image.png') }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ asset('assets/Logo/og-image.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
@@ -15,7 +27,7 @@
         document.documentElement.classList.add("js");
         try {
           var theme = sessionStorage.getItem("oda:color-theme");
-          var allowed = ["sapphire"];
+          var allowed = ["sapphire", "signature"];
           if (allowed.indexOf(theme) !== -1) {
             document.documentElement.dataset.colorTheme = theme;
           }
@@ -53,6 +65,10 @@
         <span aria-hidden="true">2</span>
         <span class="visually-hidden">Sapphire</span>
       </button>
+      <button class="theme-swatch theme-swatch-signature" type="button" data-theme-option="signature" aria-label="Use Signature color theme" aria-pressed="false">
+        <span aria-hidden="true">3</span>
+        <span class="visually-hidden">Signature</span>
+      </button>
     </div>
 
     <script type="application/ld+json">
@@ -61,6 +77,7 @@
           '@type' => 'EducationalOrganization',
           'name' => config('site.name'),
           'url' => url('/'),
+          'logo' => asset('assets/Logo/og-image.png'),
           'description' => config('site.description'),
           'email' => config('site.contact.email'),
           'telephone' => config('site.contact.phone'),

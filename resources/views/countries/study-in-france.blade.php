@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in France | OneDegreeAdvisory';
-    $pageDescription = 'Study in France with OneDegreeAdvisory. Grandes ecoles, public universities, affordable tuition, VLS-TS visa, and a 2-year post-study residence.';
+    $pageTitle = 'Study in France | One Degree Advisory';
+    $pageDescription = 'Study in France with One Degree Advisory. Grandes ecoles, public universities, affordable tuition, VLS-TS visa, and a 2-year post-study residence.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -23,8 +23,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>30+ globally ranked</dd></div>
               <div><dt>Main intakes</dt><dd>September, some January</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="170" data-currency="EUR">&euro;170</span> &ndash; <span data-money="25000" data-currency="EUR">&euro;25,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="800" data-currency="EUR">&euro;800</span> &ndash; <span data-money="1500" data-currency="EUR">&euro;1,500</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;170</span> &ndash; <span>&euro;25,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;800</span> &ndash; <span>&euro;1,500</span></dd></div>
               <div><dt>Student visa</dt><dd>VLS-TS Long-stay</dd></div>
               <div><dt>Post-study work</dt><dd>APS &middot; 2-year residence</dd></div>
             </dl>
@@ -67,7 +67,7 @@
               <span class="eyebrow">Grandes &Eacute;coles &amp; world heritage</span>
               <h2>Heritage of academia. Industries of the future.</h2>
               <p>Sorbonne, HEC, INSEAD, Polytechnique &mdash; backed by 1,500+ English-taught programs and an APS post-study work visa.</p>
-              <div class="band-stats"><div class="band-stat"><strong><span data-money="3000" data-currency="EUR" data-money-hint="k">&euro;3k</span></strong><span>Public tuition</span></div><div class="band-stat"><strong>APS</strong><span>Stay-back</span></div><div class="band-stat"><strong>1500+</strong><span>English programs</span></div><div class="band-stat"><strong>EU</strong><span>Member state</span></div></div>
+              <div class="band-stats"><div class="band-stat"><strong><span>&euro;3k</span></strong><span>Public tuition</span></div><div class="band-stat"><strong>APS</strong><span>Stay-back</span></div><div class="band-stat"><strong>1500+</strong><span>English programs</span></div><div class="band-stat"><strong>EU</strong><span>Member state</span></div></div>
             </div>
           </div>
         </div>
@@ -94,10 +94,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Public universities are very affordable; grandes &eacute;coles sit higher.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Public bachelor</span><span class="cost-value"><span data-money="170" data-currency="EUR">&euro;170</span>&ndash;<span data-money="2770" data-currency="EUR">&euro;2,770</span></span><span class="cost-note">Per year &middot; non-EU rate at public universities.</span></div>
-            <div class="cost-card"><span class="cost-label">Public master</span><span class="cost-value"><span data-money="243" data-currency="EUR">&euro;243</span>&ndash;<span data-money="3770" data-currency="EUR">&euro;3,770</span></span><span class="cost-note">Per year &middot; specialist programs may charge more.</span></div>
-            <div class="cost-card"><span class="cost-label">Grandes &eacute;coles tuition</span><span class="cost-value"><span data-money="5000" data-currency="EUR">&euro;5,000</span>&ndash;<span data-money="25000" data-currency="EUR">&euro;25,000</span></span><span class="cost-note">Per year &middot; MBA, MiM, and engineering schools.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Paris/other cities</span><span class="cost-value"><span data-money="800" data-currency="EUR">&euro;800</span>&ndash;<span data-money="1500" data-currency="EUR">&euro;1,500</span></span><span class="cost-note">Per month &middot; Paris highest, regional cities ~<span data-money="800" data-currency="EUR">&euro;800</span>.</span></div>
+            <div class="cost-card"><span class="cost-label">Public bachelor</span><span class="cost-value"><span>&euro;170</span>&ndash;<span>&euro;2,770</span></span><span class="cost-note">Per year &middot; non-EU rate at public universities.</span></div>
+            <div class="cost-card"><span class="cost-label">Public master</span><span class="cost-value"><span>&euro;243</span>&ndash;<span>&euro;3,770</span></span><span class="cost-note">Per year &middot; specialist programs may charge more.</span></div>
+            <div class="cost-card"><span class="cost-label">Grandes &eacute;coles tuition</span><span class="cost-value"><span>&euro;5,000</span>&ndash;<span>&euro;25,000</span></span><span class="cost-note">Per year &middot; MBA, MiM, and engineering schools.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Paris/other cities</span><span class="cost-value"><span>&euro;800</span>&ndash;<span>&euro;1,500</span></span><span class="cost-note">Per month &middot; Paris highest, regional cities ~<span>&euro;800</span>.</span></div>
           </div>
         </div>
       </section>
@@ -123,7 +123,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>VLS-TS &eacute;tudiant</strong> (long-stay study visa equivalent to a residence permit).</span></li>
                 <li><i data-lucide="check"></i><span>Apply through Campus France &mdash; mandatory for most countries.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: ~<span data-money="615" data-currency="EUR">&euro;615</span>/month for the duration of study.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: ~<span>&euro;615</span>/month for the duration of study.</span></li>
                 <li><i data-lucide="check"></i><span>Validate the visa online within 3 months of arrival.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: up to 964 hours/year (~20 hours/week).</span></li>
               </ul>
@@ -150,7 +150,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your France application with us</h2>
-            <p>From Campus France to grande &eacute;cole essays, OneDegree maps each step.</p>
+            <p>From Campus France to grande &eacute;cole essays, One Degree maps each step.</p>
             <div class="country-actions"><a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a France call</span><i data-lucide="arrow-up-right"></i></a><a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a></div>
           </div>
           <div class="country-cta-card"><h3>What you&rsquo;ll get</h3><p>A 30-minute counselor-led session, free of cost.</p><ul><li><i data-lucide="check"></i><span>Public vs. grande &eacute;cole fit</span></li><li><i data-lucide="check"></i><span>Eiffel &amp; Charpak signal</span></li><li><i data-lucide="check"></i><span>APS &amp; PR pathway</span></li></ul></div>

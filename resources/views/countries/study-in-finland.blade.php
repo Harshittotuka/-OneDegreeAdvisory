@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Finland | OneDegreeAdvisory';
-    $pageDescription = 'Study in Finland with OneDegreeAdvisory. English-taught programs, tuition waivers, residence permit, 2-year job-seeker, FAQs.';
+    $pageTitle = 'Study in Finland | One Degree Advisory';
+    $pageDescription = 'Study in Finland with One Degree Advisory. English-taught programs, tuition waivers, residence permit, 2-year job-seeker, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>13 universities + 22 UAS</dd></div>
               <div><dt>Main intakes</dt><dd>September, January</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="8000" data-currency="EUR">&euro;8,000</span> &ndash; <span data-money="18000" data-currency="EUR">&euro;18,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="700" data-currency="EUR">&euro;700</span> &ndash; <span data-money="1100" data-currency="EUR">&euro;1,100</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;8,000</span> &ndash; <span>&euro;18,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;700</span> &ndash; <span>&euro;1,100</span></dd></div>
               <div><dt>Student visa</dt><dd>Residence permit for studies</dd></div>
               <div><dt>Post-study work</dt><dd>Job-seeker permit &middot; 2 years</dd></div>
             </dl>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Bachelor&rsquo;s tuition</span><span class="cost-value"><span data-money="8000" data-currency="EUR">&euro;8,000</span> &ndash; <span data-money="14000" data-currency="EUR">&euro;14,000</span></span><span class="cost-note">Per year &middot; for non-EU/EEA students.</span></div>
-            <div class="cost-card"><span class="cost-label">Master&rsquo;s tuition</span><span class="cost-value"><span data-money="10000" data-currency="EUR">&euro;10,000</span> &ndash; <span data-money="18000" data-currency="EUR">&euro;18,000</span></span><span class="cost-note">Per year &middot; many universities offer scholarship-discounted rates.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Helsinki</span><span class="cost-value"><span data-money="900" data-currency="EUR">&euro;900</span> &ndash; <span data-money="1100" data-currency="EUR">&euro;1,100</span></span><span class="cost-note">Per month &middot; capital-city budget.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="700" data-currency="EUR">&euro;700</span> &ndash; <span data-money="900" data-currency="EUR">&euro;900</span></span><span class="cost-note">Per month &middot; Tampere, Turku, Jyv&auml;skyl&auml;.</span></div>
+            <div class="cost-card"><span class="cost-label">Bachelor&rsquo;s tuition</span><span class="cost-value"><span>&euro;8,000</span> &ndash; <span>&euro;14,000</span></span><span class="cost-note">Per year &middot; for non-EU/EEA students.</span></div>
+            <div class="cost-card"><span class="cost-label">Master&rsquo;s tuition</span><span class="cost-value"><span>&euro;10,000</span> &ndash; <span>&euro;18,000</span></span><span class="cost-note">Per year &middot; many universities offer scholarship-discounted rates.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Helsinki</span><span class="cost-value"><span>&euro;900</span> &ndash; <span>&euro;1,100</span></span><span class="cost-note">Per month &middot; capital-city budget.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>&euro;700</span> &ndash; <span>&euro;900</span></span><span class="cost-note">Per month &middot; Tampere, Turku, Jyv&auml;skyl&auml;.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>Residence permit for studies</strong> via Migri (Finnish Immigration Service).</span></li>
                 <li><i data-lucide="check"></i><span>Requires admission letter and proof of paid tuition.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: <span data-money="800" data-currency="EUR">&euro;800</span>/month for 12 months (<span data-money="9600" data-currency="EUR">&euro;9,600</span>).</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: <span>&euro;800</span>/month for 12 months (<span>&euro;9,600</span>).</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 1&ndash;3 months; apply via Enter Finland.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: 30 hours/week on average during studies.</span></li>
               </ul>

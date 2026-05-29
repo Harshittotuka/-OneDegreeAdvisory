@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Kazakhstan | OneDegreeAdvisory';
-    $pageDescription = 'Study in Kazakhstan with OneDegreeAdvisory. MCI-recognised English-medium MD, affordable tuition, top universities, M3 visa, FAQs.';
+    $pageTitle = 'Study in Kazakhstan | One Degree Advisory';
+    $pageDescription = 'Study in Kazakhstan with One Degree Advisory. MCI-recognised English-medium MD, affordable tuition, top universities, M3 visa, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -27,8 +27,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>10+ internationally accredited</dd></div>
               <div><dt>Main intakes</dt><dd>September, February</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="2500" data-currency="USD">$2,500</span> &ndash; <span data-money="8000" data-currency="USD">$8,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="300" data-currency="USD">$300</span> &ndash; <span data-money="600" data-currency="USD">$600</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>$2,500</span> &ndash; <span>$8,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>$300</span> &ndash; <span>$600</span></dd></div>
               <div><dt>Student visa</dt><dd>Educational visa &middot; M3</dd></div>
               <div><dt>Post-study work</dt><dd>Work permit pathway</dd></div>
             </dl>
@@ -40,7 +40,7 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Why Kazakhstan</span><h2>Affordable degrees. English medium. Strategic location.</h2><p>Quality MD and engineering programs at a fraction of Western prices, with strong industry ties.</p></div>
           <div class="reasons-grid">
-            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Affordable tuition</h3><p>Most international programs sit at <span data-money="3000" data-currency="USD">$3,000</span>&ndash;<span data-money="6000" data-currency="USD">$6,000</span>/year.</p></article>
+            <article class="reason-card"><span class="reason-icon"><i data-lucide="banknote"></i></span><h3>Affordable tuition</h3><p>Most international programs sit at <span>$3,000</span>&ndash;<span>$6,000</span>/year.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="stethoscope"></i></span><h3>Recognised MD programs</h3><p>MCI/NMC-recognised medical degrees in English.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="languages"></i></span><h3>English-medium tracks</h3><p>Major universities offer English programs in business, engineering, and IT.</p></article>
             <article class="reason-card"><span class="reason-icon"><i data-lucide="globe"></i></span><h3>Gateway hub</h3><p>Central Asia&rsquo;s economic hub &mdash; close to India, China, Europe.</p></article>
@@ -54,9 +54,9 @@
             <img src="https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=2000&q=80" alt="">
             <div class="band-inner">
               <span class="eyebrow">Central Asia&rsquo;s study hub</span>
-              <h2>Recognised MD. English-medium. <span data-money="5000" data-currency="USD" data-money-hint="k">$5k</span>/year tuition.</h2>
+              <h2>Recognised MD. English-medium. <span>$5k</span>/year tuition.</h2>
               <p>Kazakhstan&rsquo;s English-medium MD programs are NMC/MCI-recognised and cost a fraction of UK or US equivalents &mdash; making it a strong value pick for medicine.</p>
-              <div class="band-stats"><div class="band-stat"><strong><span data-money="5000" data-currency="USD" data-money-hint="k">$5k</span>/yr</strong><span>Median MD tuition</span></div><div class="band-stat"><strong>MCI</strong><span>Recognised</span></div><div class="band-stat"><strong>EN</strong><span>Medium</span></div><div class="band-stat"><strong>6 yrs</strong><span>MD duration</span></div></div>
+              <div class="band-stats"><div class="band-stat"><strong><span>$5k</span>/yr</strong><span>Median MD tuition</span></div><div class="band-stat"><strong>MCI</strong><span>Recognised</span></div><div class="band-stat"><strong>EN</strong><span>Medium</span></div><div class="band-stat"><strong>6 yrs</strong><span>MD duration</span></div></div>
             </div>
           </div>
         </div>
@@ -98,10 +98,10 @@
         <div class="container">
           <div class="section-head"><span class="eyebrow">Costs</span><h2>Tuition and cost of living</h2><p>Indicative ranges &mdash; final figures depend on program and city.</p></div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">MD English-medium</span><span class="cost-value"><span data-money="3500" data-currency="USD">$3,500</span> &ndash; <span data-money="7000" data-currency="USD">$7,000</span></span><span class="cost-note">Per year &middot; 6-year program.</span></div>
-            <div class="cost-card"><span class="cost-label">Engineering / Business</span><span class="cost-value"><span data-money="2500" data-currency="USD">$2,500</span> &ndash; <span data-money="6000" data-currency="USD">$6,000</span></span><span class="cost-note">Per year &middot; English tracks at top universities.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Astana/Almaty</span><span class="cost-value"><span data-money="400" data-currency="USD">$400</span> &ndash; <span data-money="600" data-currency="USD">$600</span></span><span class="cost-note">Per month &middot; including hostel &amp; food.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span data-money="300" data-currency="USD">$300</span> &ndash; <span data-money="450" data-currency="USD">$450</span></span><span class="cost-note">Per month &middot; Karaganda, Semey, Shymkent.</span></div>
+            <div class="cost-card"><span class="cost-label">MD English-medium</span><span class="cost-value"><span>$3,500</span> &ndash; <span>$7,000</span></span><span class="cost-note">Per year &middot; 6-year program.</span></div>
+            <div class="cost-card"><span class="cost-label">Engineering / Business</span><span class="cost-value"><span>$2,500</span> &ndash; <span>$6,000</span></span><span class="cost-note">Per year &middot; English tracks at top universities.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Astana/Almaty</span><span class="cost-value"><span>$400</span> &ndash; <span>$600</span></span><span class="cost-note">Per month &middot; including hostel &amp; food.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Other cities</span><span class="cost-value"><span>$300</span> &ndash; <span>$450</span></span><span class="cost-note">Per month &middot; Karaganda, Semey, Shymkent.</span></div>
           </div>
         </div>
       </section>
@@ -129,7 +129,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>M3 Educational visa</strong> via the Kazakh consulate.</span></li>
                 <li><i data-lucide="check"></i><span>Requires admission letter and university invitation letter.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: typically <span data-money="2500" data-currency="USD">$2,500</span>&ndash;<span data-money="4000" data-currency="USD">$4,000</span> for the first year.</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: typically <span>$2,500</span>&ndash;<span>$4,000</span> for the first year.</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 7&ndash;30 working days.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: limited &mdash; primarily on-campus and internships.</span></li>
               </ul>
@@ -156,7 +156,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Kazakhstan application with us</h2>
-            <p>From NEET-aligned MD shortlists to M3 visa &mdash; OneDegree maps a Kazakhstan-ready application.</p>
+            <p>From NEET-aligned MD shortlists to M3 visa &mdash; One Degree maps a Kazakhstan-ready application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book a Kazakhstan call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

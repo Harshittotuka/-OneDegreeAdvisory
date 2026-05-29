@@ -1,6 +1,6 @@
 ﻿@php
-    $pageTitle = 'Study in Ireland | OneDegreeAdvisory';
-    $pageDescription = 'Study in Ireland with OneDegreeAdvisory. Top universities, tuition, scholarships, Stamp 2 study permission, Third Level Graduate Scheme, intakes, costs, FAQs.';
+    $pageTitle = 'Study in Ireland | One Degree Advisory';
+    $pageDescription = 'Study in Ireland with One Degree Advisory. Top universities, tuition, scholarships, Stamp 2 study permission, Third Level Graduate Scheme, intakes, costs, FAQs.';
     $activeNav = 'destinations';
     $mainId = 'country-main';
 @endphp
@@ -30,8 +30,8 @@
             <dl>
               <div><dt>Top universities</dt><dd>8 universities &middot; 14 IoTs</dd></div>
               <div><dt>Main intakes</dt><dd>September, January</dd></div>
-              <div><dt>Tuition / year</dt><dd><span data-money="10000" data-currency="EUR">&euro;10,000</span> &ndash; <span data-money="35000" data-currency="EUR">&euro;35,000</span></dd></div>
-              <div><dt>Living cost / month</dt><dd><span data-money="900" data-currency="EUR">&euro;900</span> &ndash; <span data-money="1500" data-currency="EUR">&euro;1,500</span></dd></div>
+              <div><dt>Tuition / year</dt><dd><span>&euro;10,000</span> &ndash; <span>&euro;35,000</span></dd></div>
+              <div><dt>Living cost / month</dt><dd><span>&euro;900</span> &ndash; <span>&euro;1,500</span></dd></div>
               <div><dt>Student visa</dt><dd>Stamp 2 &middot; D study visa</dd></div>
               <div><dt>Post-study work</dt><dd>Third Level Graduate &middot; up to 2 years</dd></div>
             </dl>
@@ -231,37 +231,37 @@
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MSc Computer Science &amp; AI</h3>
               <p>TCD, UCD, DCU, and University of Galway offer specialist AI, software, and CS conversion tracks.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span data-money="18000" data-currency="EUR" data-money-hint="k">&euro;18k</span>&ndash;<span data-money="30000" data-currency="EUR" data-money-hint="k">&euro;30k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span>&euro;18k</span>&ndash;<span>&euro;30k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MSc Data &amp; Business Analytics</h3>
               <p>Quantitative tracks aligned with FAANG, fintech, and consulting hiring in Dublin.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span data-money="18000" data-currency="EUR" data-money-hint="k">&euro;18k</span>&ndash;<span data-money="26000" data-currency="EUR" data-money-hint="k">&euro;26k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span>&euro;18k</span>&ndash;<span>&euro;26k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">MBA</span>
               <h3>Master of Business Administration</h3>
               <p>UCD Smurfit, TCD, and DCU offer one-year MBA programs with strong corporate connections.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12&ndash;18 months</span><span><i data-lucide="banknote"></i><span data-money="25000" data-currency="EUR" data-money-hint="k">&euro;25k</span>&ndash;<span data-money="42000" data-currency="EUR" data-money-hint="k">&euro;42k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12&ndash;18 months</span><span><i data-lucide="banknote"></i><span>&euro;25k</span>&ndash;<span>&euro;42k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MSc Pharmaceutical Sciences</h3>
               <p>Strong specialist programs at UCC, TCD, and RCSI &mdash; aligned with Ireland&rsquo;s pharma cluster.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12&ndash;24 months</span><span><i data-lucide="banknote"></i><span data-money="16000" data-currency="EUR" data-money-hint="k">&euro;16k</span>&ndash;<span data-money="28000" data-currency="EUR" data-money-hint="k">&euro;28k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12&ndash;24 months</span><span><i data-lucide="banknote"></i><span>&euro;16k</span>&ndash;<span>&euro;28k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Master&rsquo;s</span>
               <h3>MSc International Business</h3>
               <p>Globally-mobile MSc IB programs at UCD Smurfit and TCD with study-abroad terms.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span data-money="20000" data-currency="EUR" data-money-hint="k">&euro;20k</span>&ndash;<span data-money="30000" data-currency="EUR" data-money-hint="k">&euro;30k</span></span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>12 months</span><span><i data-lucide="banknote"></i><span>&euro;20k</span>&ndash;<span>&euro;30k</span></span></div>
             </article>
             <article class="course-card">
               <span class="course-tag">Bachelor&rsquo;s</span>
               <h3>BSc Engineering (multiple)</h3>
               <p>4-year programs with co-op placements at University of Limerick, UCD, TCD, and UCC.</p>
-              <div class="course-foot"><span><i data-lucide="clock"></i>4 years</span><span><i data-lucide="banknote"></i><span data-money="15000" data-currency="EUR" data-money-hint="k">&euro;15k</span>&ndash;<span data-money="25000" data-currency="EUR" data-money-hint="k">&euro;25k</span>/yr</span></div>
+              <div class="course-foot"><span><i data-lucide="clock"></i>4 years</span><span><i data-lucide="banknote"></i><span>&euro;15k</span>&ndash;<span>&euro;25k</span>/yr</span></div>
             </article>
           </div>
         </div>
@@ -275,10 +275,10 @@
             <p>Ranges in Euros &mdash; final figures depend on program and city.</p>
           </div>
           <div class="cost-grid">
-            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span data-money="10000" data-currency="EUR">&euro;10,000</span>&ndash;<span data-money="25000" data-currency="EUR">&euro;25,000</span></span><span class="cost-note">Per year &middot; higher for medicine and dentistry.</span></div>
-            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span data-money="12000" data-currency="EUR">&euro;12,000</span>&ndash;<span data-money="35000" data-currency="EUR">&euro;35,000</span></span><span class="cost-note">Per year &middot; MBA at the upper end; many MSc programs <span data-money="15" data-currency="EUR">&euro;15</span>&ndash;<span data-money="22000" data-currency="EUR" data-money-hint="k">22k</span>.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Dublin</span><span class="cost-value"><span data-money="1200" data-currency="EUR">&euro;1,200</span>&ndash;<span data-money="1500" data-currency="EUR">&euro;1,500</span></span><span class="cost-note">Per month &middot; rent is the biggest line item.</span></div>
-            <div class="cost-card"><span class="cost-label">Living &mdash; Cork / Galway / Limerick</span><span class="cost-value"><span data-money="900" data-currency="EUR">&euro;900</span>&ndash;<span data-money="1200" data-currency="EUR">&euro;1,200</span></span><span class="cost-note">Per month &middot; meaningfully cheaper than Dublin.</span></div>
+            <div class="cost-card"><span class="cost-label">Undergraduate tuition</span><span class="cost-value"><span>&euro;10,000</span>&ndash;<span>&euro;25,000</span></span><span class="cost-note">Per year &middot; higher for medicine and dentistry.</span></div>
+            <div class="cost-card"><span class="cost-label">Postgraduate tuition</span><span class="cost-value"><span>&euro;12,000</span>&ndash;<span>&euro;35,000</span></span><span class="cost-note">Per year &middot; MBA at the upper end; many MSc programs <span>&euro;15</span>&ndash;<span>22k</span>.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Dublin</span><span class="cost-value"><span>&euro;1,200</span>&ndash;<span>&euro;1,500</span></span><span class="cost-note">Per month &middot; rent is the biggest line item.</span></div>
+            <div class="cost-card"><span class="cost-label">Living &mdash; Cork / Galway / Limerick</span><span class="cost-value"><span>&euro;900</span>&ndash;<span>&euro;1,200</span></span><span class="cost-note">Per month &middot; meaningfully cheaper than Dublin.</span></div>
           </div>
         </div>
       </section>
@@ -306,7 +306,7 @@
               <ul>
                 <li><i data-lucide="check"></i><span>Visa name: <strong>D study visa</strong> &middot; residence as Stamp 2.</span></li>
                 <li><i data-lucide="check"></i><span>Apply via AVATS online portal; biometrics at VFS Global.</span></li>
-                <li><i data-lucide="check"></i><span>Proof of funds: at least <span data-money="10000" data-currency="EUR">&euro;10,000</span> per year of study (plus tuition).</span></li>
+                <li><i data-lucide="check"></i><span>Proof of funds: at least <span>&euro;10,000</span> per year of study (plus tuition).</span></li>
                 <li><i data-lucide="check"></i><span>Standard processing: 6&ndash;8 weeks &mdash; apply early.</span></li>
                 <li><i data-lucide="check"></i><span>Work allowance: 20 hours/week in term; 40 hours during holidays.</span></li>
               </ul>
@@ -391,7 +391,7 @@
             <article class="life-card"><span class="life-icon"><i data-lucide="train"></i></span><h3>Getting around</h3><p>Leap Card discounts public transport in major cities. Intercity rail and Bus &Eacute;ireann cover the country well.</p></article>
             <article class="life-card"><span class="life-icon"><i data-lucide="utensils"></i></span><h3>Food &amp; culture</h3><p>Diverse food scene with strong Indian, halal, and vegetarian options in Dublin, Cork, and Galway.</p></article>
             <article class="life-card"><span class="life-icon"><i data-lucide="cloud-sun"></i></span><h3>Climate</h3><p>Mild, rainy climate &mdash; rarely too hot or too cold. A waterproof jacket is essential year-round.</p></article>
-            <article class="life-card"><span class="life-icon"><i data-lucide="shield-check"></i></span><h3>Healthcare</h3><p>Private medical insurance is required for the student visa &mdash; budget <span data-money="150" data-currency="EUR">&euro;150</span>&ndash;<span data-money="500" data-currency="EUR">&euro;500</span>/year.</p></article>
+            <article class="life-card"><span class="life-icon"><i data-lucide="shield-check"></i></span><h3>Healthcare</h3><p>Private medical insurance is required for the student visa &mdash; budget <span>&euro;150</span>&ndash;<span>&euro;500</span>/year.</p></article>
           </div>
         </div>
       </section>
@@ -460,7 +460,7 @@
             </details>
             <details class="faq-item">
               <summary>How much does it cost to study in Ireland?</summary>
-              <div class="faq-answer">Expect <span data-money="10000" data-currency="EUR">&euro;10,000</span>&ndash;<span data-money="35000" data-currency="EUR">&euro;35,000</span>/year in tuition plus <span data-money="11000" data-currency="EUR">&euro;11,000</span>&ndash;<span data-money="18000" data-currency="EUR">&euro;18,000</span>/year for living. Dublin is meaningfully more expensive than Cork, Galway, or Limerick.</div>
+              <div class="faq-answer">Expect <span>&euro;10,000</span>&ndash;<span>&euro;35,000</span>/year in tuition plus <span>&euro;11,000</span>&ndash;<span>&euro;18,000</span>/year for living. Dublin is meaningfully more expensive than Cork, Galway, or Limerick.</div>
             </details>
             <details class="faq-item">
               <summary>Do I need IELTS to study in Ireland?</summary>
@@ -494,7 +494,7 @@
         <div class="container country-cta-grid">
           <div>
             <h2>Plan your Ireland application with us</h2>
-            <p>From university shortlisting to AVATS visa prep &mdash; OneDegree builds an Ireland-ready application.</p>
+            <p>From university shortlisting to AVATS visa prep &mdash; One Degree builds an Ireland-ready application.</p>
             <div class="country-actions">
               <a class="btn btn-primary" href="{{ route('contact') }}"><span>Book an Ireland call</span><i data-lucide="arrow-up-right"></i></a>
               <a class="btn btn-ghost" href="{{ route('home') }}#destinations"><i data-lucide="compass"></i><span>Compare destinations</span></a>

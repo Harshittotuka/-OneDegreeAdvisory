@@ -1,6 +1,6 @@
 @php
-    $pageTitle = 'MBBS Abroad for Indian Students | OneDegreeAdvisory';
-    $pageDescription = 'Plan MBBS in India or abroad with OneDegreeAdvisory: NEET profile review, verified country shortlists, NMC-aligned eligibility checks, finance planning, and FMGE/NExT readiness.';
+    $pageTitle = 'MBBS Abroad for Indian Students | One Degree Advisory';
+    $pageDescription = 'Plan MBBS in India or abroad with One Degree Advisory: NEET profile review, verified country shortlists, NMC-aligned eligibility checks, finance planning, and FMGE/NExT readiness.';
     $activeNav = 'mbbs';
     $mainId = 'main';
 
@@ -235,7 +235,7 @@
         </h1>
 
         <p class="mbbs-hero-lede">
-          OneDegree reads your score, budget, country comfort, and India-practice plan before a family pays the first university deposit.
+          One Degree reads your score, budget, country comfort, and India-practice plan before a family pays the first university deposit.
         </p>
 
         <div class="mbbs-hero-actions">
@@ -272,7 +272,7 @@
       <div class="mbbs-section-head">
         <span class="insights-eyebrow">Student journey</span>
         <h2 id="paths-title">Two common routes after the NEET score lands.</h2>
-        <p>Inspired by the journey flow on Vidysea, rewritten here as a practical decision board for OneDegree families.</p>
+        <p>Inspired by the journey flow on Vidysea, rewritten here as a practical decision board for One Degree families.</p>
       </div>
 
       <div class="mbbs-path-grid">
@@ -319,7 +319,7 @@
               <div><dt>Capital</dt><dd>{{ $c['capital'] }}</dd></div>
               <div><dt>Duration</dt><dd>{{ $c['duration'] }}</dd></div>
               <div><dt>Medium</dt><dd>{{ $c['medium'] }}</dd></div>
-              <div><dt>Tuition</dt><dd><span data-money="{{ $c['feeLow'] }}" data-currency="USD">{{ $fmtFee($c['feeLow']) }}</span>&ndash;<span data-money="{{ $c['feeHigh'] }}" data-currency="USD">{{ $fmtFee($c['feeHigh']) }}</span> / yr</dd></div>
+              <div><dt>Tuition</dt><dd><span>{{ $fmtFee($c['feeLow']) }}</span>&ndash;<span>{{ $fmtFee($c['feeHigh']) }}</span> / yr</dd></div>
               <div><dt>Intake</dt><dd>{{ $c['intake'] }}</dd></div>
               <div><dt>Fit</dt><dd>Profile-led</dd></div>
             </dl>
