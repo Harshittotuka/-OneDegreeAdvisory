@@ -11,9 +11,32 @@ use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-    public function home(): View
+    public function home(BlogContent $blog): View
     {
-        return view('pages.home');
+        // The home "Insights" section surfaces the latest blog posts. Mirror the
+        // blog index: only visible posts, with the pinned/featured one leading.
+        $posts = array_values(array_filter(
+            $blog->all(),
+            fn (array $p) => ($p['visible'] ?? true) === true
+        ));
+
+        $featured = null;
+        foreach ($posts as $i => $candidate) {
+            if (! empty($candidate['featured'])) {
+                $featured = $candidate;
+                unset($posts[$i]);
+                break;
+            }
+        }
+
+        $posts = array_values($posts);
+        if ($featured) {
+            array_unshift($posts, $featured);
+        }
+
+        return view('pages.home', [
+            'insights' => array_slice($posts, 0, 4),
+        ]);
     }
 
     public function about(AboutContent $about): View

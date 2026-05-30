@@ -17,7 +17,6 @@ class StudyLocationContent
         $uiText = $this->uiText($sheets['UiText'] ?? [], $slug);
         $whyCards = $this->cleanCards($this->cardsLike($cards, 'Why'));
         $costCards = $this->cleanCards($this->cardsLike($cards, 'Cost of Studying'));
-        $cityCards = $this->attachImages($this->cleanCards($this->cardsLike($cards, 'Popular cities')), $images);
         $indianStudents = $this->indianStudents($sheets['IndianStudents'] ?? [], $slug);
 
         return [
@@ -30,14 +29,12 @@ class StudyLocationContent
                 'courses' => $this->sectionLike($sections, 'Top Courses'),
                 'intakes' => $this->sectionLike($sections, 'Intakes'),
                 'costs' => $this->sectionLike($sections, 'Cost of Studying'),
-                'cities' => $this->sectionLike($sections, 'Popular cities'),
             ],
             'whyCards' => $whyCards,
             'topCourses' => $courses,
             'costCards' => $costCards,
             'costTables' => $this->costTables($costCards),
             'intakeCards' => $this->cleanCards($this->cardsLike($cards, 'Intakes')),
-            'cityCards' => $cityCards,
             'featureImages' => $this->featureImages($images),
             'indianStudents' => $indianStudents,
             'generatedAt' => $this->loadGeneratedAt(),
@@ -276,25 +273,6 @@ class StudyLocationContent
                 'intro' => $intro,
                 'rows' => $rows,
             ];
-        }, $cards);
-    }
-
-    private function attachImages(array $cards, array $images): array
-    {
-        return array_map(function (array $card) use ($images): array {
-            $title = strtolower((string) ($card['card_title'] ?? ''));
-            $sectionOrder = (string) ($card['section_order'] ?? '');
-
-            foreach ($images as $image) {
-                $sameSection = (string) ($image['section_order'] ?? '') === $sectionOrder;
-                $sameTitle = strtolower((string) ($image['image_alt'] ?? '')) === $title;
-
-                if ($sameSection && $sameTitle) {
-                    return array_merge($card, ['image_url' => $image['image_url'] ?? '']);
-                }
-            }
-
-            return array_merge($card, ['image_url' => '']);
         }, $cards);
     }
 

@@ -49,7 +49,7 @@ class SitePagesTest extends TestCase
             ->assertSee('Top Courses to Study in UK') // JSON: Sections.section_heading (Courses)
             ->assertSee('MSc Artificial Intelligence')// JSON: Courses.course_name
             ->assertSee('University of Essex')        // JSON: Courses.university_name
-            ->assertSee('Popular cities in UK')      // JSON: Sections.section_heading (Cities)
+            ->assertDontSee('Popular cities in UK')  // Popular cities section removed from study-in pages
             ->assertSee('Cost of Studying in the UK')// JSON: Sections.section_heading (Costs)
             ->assertSee('Foundation Program')        // JSON: Cards.card_title
             ->assertSee('UK_London.jpg', false)      // JSON: Images.image_url

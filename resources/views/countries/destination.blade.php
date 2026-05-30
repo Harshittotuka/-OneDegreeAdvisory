@@ -6,7 +6,6 @@
     $courseCount = count($topCourses);
     $costTables = array_slice($studyContent['costTables'] ?? [], 0, 2);
     $intakes = array_slice($studyContent['intakeCards'] ?? [], 0, 4);
-    $cities = array_slice($studyContent['cityCards'] ?? [], 0, 6);
     $featureImages = $studyContent['featureImages'] ?? [];
     $indianStudents = $studyContent['indianStudents'] ?? [];
     $indianCards = array_slice($indianStudents['cards'] ?? [], 0, 4);
@@ -69,10 +68,7 @@
     $bannerImageAlt = (string) ($featureImages[0]['image_alt'] ?? $countryLabel);
     $intakeImage = (string) ($featureImages[1]['image_url'] ?? ($featureImages[0]['image_url'] ?? ''));
     $intakeImageAlt = (string) ($featureImages[1]['image_alt'] ?? ($featureImages[0]['image_alt'] ?? $countryLabel));
-    $cityFallbackImage = $intakeImage !== '' ? $intakeImage : $bannerImage;
     $icons = ['award', 'clock', 'briefcase', 'badge-check', 'flask-conical', 'globe-2'];
-    $carouselCities = array_values(array_merge($cities, $cities));
-    $cityTilts = [-2.5, 1.5, -1, 2.25, -1.75, 1];
 
     // Per-country SEO: social share image + canonical (URL is already unique per country).
     $ogImage = (string) ($destination['hero_image'] ?? '') ?: $bannerImage;
@@ -313,34 +309,6 @@
             </article>
           @endforeach
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="cities" class="country-section dynamic-section dynamic-section--cities dynamic-section--city-carousel">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow">{{ $text('cities_eyebrow') }}</span>
-        <h2>{{ $sectionCopy['cities']['section_heading'] ?? '' }}</h2>
-        <p>{{ $plainBody($sectionCopy['cities']['section_body'] ?? '', 190) }}</p>
-      </div>
-    </div>
-
-    <div class="dynamic-carousel-frame dynamic-city-carousel" aria-label="{{ $text('city_carousel_aria') }}">
-      <div class="dynamic-carousel-track dynamic-carousel-track--slow">
-        @foreach($carouselCities as $index => $city)
-          <div class="dynamic-city-slide" style="--tilt: {{ $cityTilts[$index % count($cityTilts)] }}deg;">
-            @php($cityImage = $city['image_url'] ?: $cityFallbackImage)
-            @if($cityImage !== '')
-              <img src="{{ $cityImage }}" alt="{{ $city['card_title'] }}" loading="lazy">
-            @endif
-            <div class="dynamic-city-slide-info">
-              <span>{{ str_pad((string) (($index % max(count($cities), 1)) + 1), 2, '0', STR_PAD_LEFT) }}</span>
-              <h3>{{ $city['card_title'] }}</h3>
-              <p>{{ $cardBody($city, 95) }}</p>
-            </div>
-          </div>
-        @endforeach
       </div>
     </div>
   </section>

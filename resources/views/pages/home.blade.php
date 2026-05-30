@@ -628,51 +628,40 @@
                 Practical reads for applications, tests, visas, scholarships, and the decisions families ask us about every week.
               </p>
             </div>
-            <a class="insights-button" href="#contact">
-              <span>Ask an advisor</span>
+            <a class="insights-button" href="{{ route('blog.index') }}">
+              <span>Read the journal</span>
               <i data-lucide="arrow-up-right"></i>
             </a>
           </header>
 
+          @php $featureInsight = $insights[0] ?? null; @endphp
           <div class="insights-grid">
-            <article class="insight-card insight-card-feature reveal">
-              <div class="insight-card-media" style="background-image: url('https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?auto=format&fit=crop&w=1400&q=80');">
-                <span class="insight-card-tag">Featured</span>
-              </div>
-              <div class="insight-card-body">
-                <span class="insight-card-meta">Strategy &middot; 9 min read</span>
-                <h3>The 2026 One Degree admissions playbook (what changed since SAT-optional).</h3>
-                <p>Our heads of strategy unpack the testing reversal, the AI-essay disclosure rules and the four profile pillars that now matter most.</p>
-                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
-              </div>
-            </article>
+            @if($featureInsight)
+              <article class="insight-card insight-card-feature reveal">
+                <div class="insight-card-media" style="background-image: url('{{ $featureInsight['image'] }}');">
+                  <span class="insight-card-tag">Featured</span>
+                </div>
+                <div class="insight-card-body">
+                  <span class="insight-card-meta">{{ $featureInsight['category'] }} &middot; {{ $featureInsight['read_time'] }} min read</span>
+                  <h3>{{ $featureInsight['title'] }}</h3>
+                  @if(! empty($featureInsight['excerpt']))
+                    <p>{{ $featureInsight['excerpt'] }}</p>
+                  @endif
+                  <a href="{{ route('blog.post', $featureInsight['slug']) }}">Read the article <i data-lucide="arrow-right"></i></a>
+                </div>
+              </article>
+            @endif
 
-            <article class="insight-card reveal">
-              <div class="insight-card-media" style="background-image: url('https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=900&q=80');"></div>
-              <div class="insight-card-body">
-                <span class="insight-card-meta">Tests &middot; 5 min</span>
-                <h3>Smart paper attempt tips to score high on JEE Advanced 2026.</h3>
-                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
-              </div>
-            </article>
-
-            <article class="insight-card reveal">
-              <div class="insight-card-media" style="background-image: url('https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=900&q=80');"></div>
-              <div class="insight-card-body">
-                <span class="insight-card-meta">Visa &middot; 7 min</span>
-                <h3>F-1 visa interviews in 2026 &mdash; what consular officers are actually asking now.</h3>
-                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
-              </div>
-            </article>
-
-            <article class="insight-card reveal">
-              <div class="insight-card-media" style="background-image: url('https://images.unsplash.com/photo-1532619675605-1ede6c2ed2b0?auto=format&fit=crop&w=900&q=80');"></div>
-              <div class="insight-card-body">
-                <span class="insight-card-meta">Finance &middot; 6 min</span>
-                <h3>The complete 2026 guide to merit scholarships at US private universities.</h3>
-                <a href="#contact">Discuss this topic <i data-lucide="arrow-right"></i></a>
-              </div>
-            </article>
+            @foreach(array_slice($insights, 1, 3) as $insight)
+              <article class="insight-card reveal">
+                <div class="insight-card-media" style="background-image: url('{{ $insight['image'] }}');"></div>
+                <div class="insight-card-body">
+                  <span class="insight-card-meta">{{ $insight['category'] }} &middot; {{ $insight['read_time'] }} min</span>
+                  <h3>{{ $insight['title'] }}</h3>
+                  <a href="{{ route('blog.post', $insight['slug']) }}">Read the article <i data-lucide="arrow-right"></i></a>
+                </div>
+              </article>
+            @endforeach
           </div>
         </div>
       </section>
