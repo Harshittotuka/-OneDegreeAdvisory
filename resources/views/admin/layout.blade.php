@@ -121,9 +121,9 @@
     $navGroups = [
       ['label' => 'Content', 'items' => [
         ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
+        ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.index', 'match' => 'admin.about'],
       ]],
       ['label' => 'Coming soon', 'items' => [
-        ['label' => 'Pages', 'icon' => 'layout-template', 'soon' => true],
         ['label' => 'Media Library', 'icon' => 'image', 'soon' => true],
         ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],
       ]],

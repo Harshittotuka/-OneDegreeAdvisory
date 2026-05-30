@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AboutContent;
 use App\Support\BlogContent;
 use App\Support\MbbsCountryContent;
 use App\Support\StudyLocationContent;
@@ -15,9 +16,11 @@ class PageController extends Controller
         return view('pages.home');
     }
 
-    public function about(): View
+    public function about(AboutContent $about): View
     {
-        return view('pages.about');
+        return view('pages.about', [
+            'sections' => $about->visible(),
+        ]);
     }
 
     public function careers(): View

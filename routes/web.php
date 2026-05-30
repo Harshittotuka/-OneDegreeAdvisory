@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AboutCmsController;
 use App\Http\Controllers\Admin\BlogCmsController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
@@ -63,5 +64,25 @@ Route::prefix('admin')->group(function () {
             ->where('slug', '[a-z0-9-]+')->name('admin.blog.update');
         Route::delete('blog/{slug}', [BlogCmsController::class, 'destroy'])
             ->where('slug', '[a-z0-9-]+')->name('admin.blog.destroy');
+
+        /* ── About-page CMS ── */
+        Route::get('about', [AboutCmsController::class, 'index'])->name('admin.about.index');
+        Route::get('about/create', [AboutCmsController::class, 'create'])->name('admin.about.create');
+        Route::post('about', [AboutCmsController::class, 'store'])->name('admin.about.store');
+        Route::post('about/upload', [AboutCmsController::class, 'upload'])->name('admin.about.upload');
+        Route::post('about/reorder', [AboutCmsController::class, 'reorder'])->name('admin.about.reorder');
+
+        /* ── About-page CMS · Live editor (Mode 2) ── */
+        Route::get('about/live', [AboutCmsController::class, 'live'])->name('admin.about.live');
+        Route::post('about/live', [AboutCmsController::class, 'liveSave'])->name('admin.about.live.save');
+        Route::get('about/live/section', [AboutCmsController::class, 'liveSection'])->name('admin.about.live.section');
+        Route::post('about/{id}/visibility', [AboutCmsController::class, 'toggleVisibility'])
+            ->where('id', '[a-z0-9-]+')->name('admin.about.visibility');
+        Route::get('about/{id}/edit', [AboutCmsController::class, 'edit'])
+            ->where('id', '[a-z0-9-]+')->name('admin.about.edit');
+        Route::put('about/{id}', [AboutCmsController::class, 'update'])
+            ->where('id', '[a-z0-9-]+')->name('admin.about.update');
+        Route::delete('about/{id}', [AboutCmsController::class, 'destroy'])
+            ->where('id', '[a-z0-9-]+')->name('admin.about.destroy');
     });
 });

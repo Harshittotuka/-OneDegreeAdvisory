@@ -4,3 +4,5 @@
 !.gitignore
 !leverageedu_study_locations_content.json
 !mbbs_bookmyuniversity_content.json
+!about-page.json
+!blog-posts.json
