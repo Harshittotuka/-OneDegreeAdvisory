@@ -21502,67 +21502,6 @@ html[data-color-theme="cream"] .contact-section {
   background: var(--theme-body-bg, #faf9ff);
 }
 
-.home-page .hero {
-  min-height: clamp(620px, 72svh, 790px);
-}
-
-.home-page .hero-grid {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: end;
-  padding: 104px 0 112px;
-}
-
-.home-page .hero-copy {
-  max-width: 960px;
-}
-
-.home-page .hero-headline {
-  max-width: 930px;
-  margin-bottom: 30px;
-}
-
-.home-page .hero-actions {
-  max-width: 980px;
-}
-
-.home-page .hero-actions .btn {
-  min-height: 52px;
-  padding: 0 22px;
-}
-
-.home-page .pathfinder {
-  padding: 0 0 62px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(7, 25, 34, 0.92) 0%,
-      rgba(7, 25, 34, 0.42) 40%,
-      var(--theme-home-ground, #faf9ff) 100%
-    );
-}
-
-.home-page .pathfinder-shell {
-  grid-template-columns: minmax(260px, 0.44fr) minmax(0, 1fr);
-  gap: 28px;
-  margin-top: -92px;
-  padding: 26px 28px;
-  border-color: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 24px 70px rgba(16, 4, 70, 0.18);
-}
-
-.home-page .pathfinder-shell > div:first-child {
-  min-width: 0;
-}
-
-.home-page .finder-form {
-  grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
-}
-
-.home-page .finder-note {
-  grid-column: 2 / -1;
-  margin-top: -2px;
-}
-
 .home-page .audience-section {
   padding: 78px 0 66px;
   background:
@@ -21700,58 +21639,36 @@ html[data-color-theme="cream"] .contact-section {
 }
 
 .home-page .contact-section {
+  position: relative;
   padding-top: 96px;
 }
 
+.home-page .contact-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(calc(100% - 40px), var(--container));
+  height: 1px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--navy) 18%, transparent) 18%,
+      color-mix(in srgb, var(--coral) 34%, var(--navy)) 50%,
+      color-mix(in srgb, var(--navy) 18%, transparent) 82%,
+      transparent 100%
+    );
+}
+
 @media (max-width: 1120px) {
-  .home-page .hero {
-    min-height: clamp(600px, 72svh, 740px);
-  }
-
-  .home-page .hero-grid {
-    padding: 88px 0 104px;
-  }
-
-  .home-page .pathfinder-shell {
-    grid-template-columns: 1fr;
-    margin-top: -72px;
-  }
-
-  .home-page .finder-note {
-    grid-column: 1 / -1;
-  }
-
   .home-page .audience-grid {
     gap: 18px;
   }
 }
 
 @media (max-width: 920px) {
-  .home-page .hero {
-    min-height: 690px;
-  }
-
-  .home-page .hero-grid {
-    padding: 86px 0 108px;
-  }
-
-  .home-page .pathfinder {
-    padding-top: 22px;
-    padding-bottom: 52px;
-  }
-
-  .home-page .pathfinder-shell {
-    margin-top: 0;
-  }
-
-  .home-page .finder-form {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .home-page .finder-form .btn {
-    grid-column: 1 / -1;
-  }
-
   .home-page .audience-grid,
   .home-page .whyus-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -21768,44 +21685,6 @@ html[data-color-theme="cream"] .contact-section {
 }
 
 @media (max-width: 720px) {
-  .home-page .hero {
-    min-height: 680px;
-  }
-
-  .home-page .hero-grid {
-    padding: 62px 0 112px;
-  }
-
-  .home-page .hero-headline {
-    max-width: 11ch;
-    font-size: 2.5rem;
-    line-height: 1.12;
-  }
-
-  .home-page .hero-actions {
-    gap: 10px;
-  }
-
-  .home-page .hero-actions .btn {
-    width: 100%;
-    min-height: 52px;
-    padding: 0 16px;
-    white-space: normal;
-    text-align: center;
-  }
-
-  .home-page .pathfinder-shell {
-    margin-top: 0;
-  }
-
-  .home-page .finder-form {
-    grid-template-columns: 1fr;
-  }
-
-  .home-page .finder-form .btn {
-    grid-column: auto;
-  }
-
   .home-page .audience-section,
   .home-page .whyus-section,
   .home-page .outcomes-section,
@@ -21859,15 +21738,6 @@ html[data-color-theme="cream"] .contact-section {
 }
 
 @media (max-width: 460px) {
-  .home-page .hero-headline {
-    max-width: 10.5ch;
-    font-size: 2.26rem;
-  }
-
-  .home-page .pathfinder-shell {
-    padding: 20px 16px;
-  }
-
   .home-page .audience-card img {
     height: 190px;
   }
