@@ -34,11 +34,6 @@
     <div class="nav-menu" data-nav-menu>
       <a @class(['is-active' => $activeNav === 'home']) href="{{ route('home') }}">Home</a>
       <a @class(['is-active' => $activeNav === 'about']) href="{{ route('about') }}">About</a>
-      <a @class(['is-active' => $activeNav === 'blog']) href="{{ route('blog.index') }}">Blog</a>
-      <button class="students-hub-trigger" type="button" data-students-hub-trigger aria-haspopup="dialog" aria-controls="students-hub-coming-soon">
-        <i data-lucide="sparkles" aria-hidden="true"></i>
-        <span>Students Hub</span>
-      </button>
 
       <div @class(['nav-item', 'has-dropdown', 'has-active' => ($activeNav ?? null) === 'destinations']) data-dropdown>
         <button class="nav-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger>
@@ -157,25 +152,47 @@
             <div class="nav-dropdown-main course-menu">
               <div class="nav-dropdown-topline course-menu-topline">
                 <span class="nav-dropdown-badge">Our services</span>
-                <span class="course-menu-count">3 services</span>
               </div>
 
               <div class="course-menu-grid">
-                <a class="course-menu-card" href="{{ route('services.test-prep') }}" role="menuitem">
-                  <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
-                  <span class="course-menu-copy"><strong>Test Preparation</strong><small>ACT, SAT, IELTS &amp; more</small></span>
-                  <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
-                </a>
-                <a class="course-menu-card" href="{{ route('services.student-services') }}" role="menuitem">
-                  <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="hand-helping"></i></span>
-                  <span class="course-menu-copy"><strong>Student Services</strong><small>End-to-end support</small></span>
-                  <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
-                </a>
-                <a class="course-menu-card" href="{{ route('services.admissions-counselling') }}" role="menuitem">
-                  <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="compass"></i></span>
-                  <span class="course-menu-copy"><strong>Admissions Counselling</strong><small>Plan your application</small></span>
-                  <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
-                </a>
+                <button class="course-menu-card" type="button" data-students-hub-trigger data-feature="students-hub" aria-haspopup="dialog" aria-controls="students-hub-coming-soon">
+                  <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="sparkles"></i></span>
+                  <span class="course-menu-copy"><strong>Students Hub</strong><small>AI-powered student tools</small></span>
+                </button>
+                <button class="course-menu-card" type="button" data-students-hub-trigger data-feature="career-mentoring" aria-haspopup="dialog" aria-controls="students-hub-coming-soon">
+                  <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="users"></i></span>
+                  <span class="course-menu-copy"><strong>Career Mentoring</strong><small>1:1 expert guidance</small></span>
+                </button>
+                <button class="course-menu-card" type="button" data-students-hub-trigger data-feature="student-development" aria-haspopup="dialog" aria-controls="students-hub-coming-soon">
+                  <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="trending-up"></i></span>
+                  <span class="course-menu-copy"><strong>Student Development Programme</strong><small>Build your profile</small></span>
+                </button>
+
+                <div class="submenu-wrap" data-submenu>
+                  <button class="course-menu-card has-submenu" type="button" data-submenu-trigger aria-haspopup="true" aria-expanded="false">
+                    <span class="course-icon course-icon--llb" aria-hidden="true"><i data-lucide="globe"></i></span>
+                    <span class="course-menu-copy"><strong>Study Abroad</strong><small>Test prep, services &amp; more</small></span>
+                    <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
+                  </button>
+
+                  <div class="course-submenu" data-submenu-panel role="menu" aria-label="Study Abroad">
+                    <a class="course-menu-card" href="{{ route('services.test-prep') }}" role="menuitem">
+                      <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
+                      <span class="course-menu-copy"><strong>Test Preparation</strong><small>ACT, SAT, IELTS &amp; more</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('services.student-services') }}" role="menuitem">
+                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="hand-helping"></i></span>
+                      <span class="course-menu-copy"><strong>Student Services</strong><small>End-to-end support</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('services.admissions-counselling') }}" role="menuitem">
+                      <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="compass"></i></span>
+                      <span class="course-menu-copy"><strong>Admission Counselling</strong><small>Plan your application</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

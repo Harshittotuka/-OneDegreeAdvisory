@@ -51,6 +51,11 @@ class PageController extends Controller
         return view('pages.careers');
     }
 
+    public function studyAbroad(): View
+    {
+        return view('pages.study-abroad');
+    }
+
     public function contact(): View
     {
         return view('pages.contact');

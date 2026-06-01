@@ -25,6 +25,8 @@ Route::get('/services/test-preparation', [PageController::class, 'testPreparatio
 Route::get('/services/admissions-counselling', [PageController::class, 'admissionsCounselling'])->name('services.admissions-counselling');
 Route::get('/services/student-services', [PageController::class, 'studentServices'])->name('services.student-services');
 
+Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study-abroad');
+
 Route::get('/courses/undergraduate', [PageController::class, 'undergraduate'])->name('courses.ug');
 Route::get('/courses/postgraduate', [PageController::class, 'postgraduate'])->name('courses.pg');
 Route::get('/courses/llb', [PageController::class, 'llb'])->name('courses.llb');

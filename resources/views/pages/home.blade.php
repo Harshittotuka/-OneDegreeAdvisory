@@ -8,7 +8,7 @@
 @extends('layouts.app')
 
 @section('content')
-<main id="main">
+<main id="main" class="home-page">
       <section class="hero" id="top" aria-label="One Degree Advisory">
         <div class="hero-media" aria-hidden="true"></div>
         <div class="hero-overlay" aria-hidden="true"></div>
@@ -18,15 +18,15 @@
             <span class="eyebrow">Global Admissions</span>
             <h1 class="hero-headline">You are <span class="gold-text">one degree</span><br />away from the world.</h1>
             <div class="hero-actions">
-              <a class="btn btn-ghost" href="#contact">
+              <span class="btn btn-disabled" aria-disabled="true">
                 <i data-lucide="compass"></i>
                 <span>Career Mentoring</span>
-              </a>
-              <a class="btn btn-orange" href="#contact">
+              </span>
+              <span class="btn btn-disabled" aria-disabled="true">
                 <i data-lucide="graduation-cap"></i>
                 <span>Student Development Programme</span>
-              </a>
-              <a class="btn btn-ghost" href="#destinations">
+              </span>
+              <a class="btn btn-orange" href="{{ route('study-abroad') }}">
                 <i data-lucide="globe"></i>
                 <span>Study Abroad</span>
               </a>
@@ -128,31 +128,6 @@
         </div>
       </section>
 
-      <section class="signal-strip" aria-label="What One Degree Advisory brings">
-        <div class="container signal-grid">
-          <div class="signal reveal">
-            <span class="signal-icon" aria-hidden="true"><i data-lucide="compass"></i></span>
-            <strong>Strategy before forms</strong>
-            <p>Every shortlist begins with profile fit, budget clarity, career intent, and risk review.</p>
-          </div>
-          <div class="signal reveal">
-            <span class="signal-icon" aria-hidden="true"><i data-lucide="route"></i></span>
-            <strong>Application-to-arrival</strong>
-            <p>University selection, essays, scholarships, loans, visa prep, and pre-departure support.</p>
-          </div>
-          <div class="signal reveal">
-            <span class="signal-icon" aria-hidden="true"><i data-lucide="heart-handshake"></i></span>
-            <strong>Human advisory</strong>
-            <p>Thoughtful counseling for students and parents, with each next step made visible.</p>
-          </div>
-          <div class="signal reveal">
-            <span class="signal-icon" aria-hidden="true"><i data-lucide="flag"></i></span>
-            <strong>Decision checkpoints</strong>
-            <p>A guided journey that turns uncertainty into a sequence of confident choices.</p>
-          </div>
-        </div>
-      </section>
-
       <section class="audience-section" aria-labelledby="audience-title">
         <div class="container wide-container">
           <div class="section-lead split reveal">
@@ -236,117 +211,6 @@
               <a href="#contact" aria-label="Explore support for working professionals">
                 <i data-lucide="arrow-right"></i>
               </a>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="method-section" id="method" aria-labelledby="method-title">
-        <div class="container method-layout">
-          <div class="section-lead sticky-lead reveal">
-            <span class="eyebrow">The One Degree method</span>
-            <h2 id="method-title">A calm, exacting process for one of life's biggest decisions.</h2>
-            <p>
-              Inspired by elite admissions consulting, but built for modern global education:
-              transparent, data-aware, deeply personal, and practical enough for real deadlines.
-            </p>
-            <a class="text-link" href="#contact">
-              <span>Request your diagnostic session</span>
-              <i data-lucide="arrow-up-right"></i>
-            </a>
-          </div>
-
-          <div class="journey-steps">
-            <article class="journey-step reveal">
-              <span>01</span>
-              <h3>Profile diagnostic</h3>
-              <p>We review academics, interests, constraints, ambitions, budget, and family priorities before recommending a path.</p>
-            </article>
-            <article class="journey-step reveal">
-              <span>02</span>
-              <h3>Country and program fit</h3>
-              <p>Destinations are compared by curriculum, outcomes, work pathways, scholarships, lifestyle, and visa reality.</p>
-            </article>
-            <article class="journey-step reveal">
-              <span>03</span>
-              <h3>Application architecture</h3>
-              <p>Your story, documents, essays, test plan, and university list are aligned into one credible application system.</p>
-            </article>
-            <article class="journey-step reveal">
-              <span>04</span>
-              <h3>Decision and departure</h3>
-              <p>Offers are compared, finances are organized, visa readiness is checked, and arrival planning becomes simple.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="solutions-section" id="services" aria-labelledby="services-title">
-        <div class="container edge-container">
-          <div class="section-lead centered reveal">
-            <span class="eyebrow">360 solutions</span>
-            <h2 id="services-title">Find every solution, from applications to accommodations.</h2>
-            <p>
-              One connected advisory layer for the whole student journey: program discovery,
-              applications, scholarships, financial planning, visa readiness, and arrival support.
-            </p>
-            <a class="btn btn-secondary solution-cta" href="#contact">
-              <span>Plan with One Degree</span>
-              <i data-lucide="arrow-up-right"></i>
-            </a>
-          </div>
-
-          <!--
-          <div class="solution-ecosystem reveal">
-            <div class="orbit orbit-one" aria-hidden="true"></div>
-            <div class="orbit orbit-two" aria-hidden="true"></div>
-            <div class="orbit orbit-three" aria-hidden="true"></div>
-            <div class="solution-person">
-              <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=84" alt="Students planning their global education pathway">
-            </div>
-            <div class="solution-chip chip-a"><i data-lucide="search-check"></i><span>Program Search</span></div>
-            <div class="solution-chip chip-b"><i data-lucide="file-check-2"></i><span>Instant Applications</span></div>
-            <div class="solution-chip chip-c"><i data-lucide="book-open-check"></i><span>Language Tests</span></div>
-            <div class="solution-chip chip-d"><i data-lucide="hand-coins"></i><span>Student Loans</span></div>
-            <div class="solution-chip chip-e"><i data-lucide="landmark"></i><span>Banking</span></div>
-            <div class="solution-chip chip-f"><i data-lucide="repeat-2"></i><span>Foreign Exchange</span></div>
-            <div class="solution-chip chip-g"><i data-lucide="passport"></i><span>Visa Services</span></div>
-            <div class="solution-chip chip-h"><i data-lucide="home"></i><span>Accommodations</span></div>
-            <div class="solution-chip chip-i"><i data-lucide="badge-check"></i><span>Quality Checks</span></div>
-            <div class="solution-chip chip-j"><i data-lucide="graduation-cap"></i><span>GIC Program</span></div>
-          </div>
-          -->
-
-          <div class="service-grid">
-            <article class="service-card reveal">
-              <i data-lucide="compass"></i>
-              <h3>Course and Career Mapping</h3>
-              <p>Turn interests, marks, experience, and career goals into country and program options worth pursuing.</p>
-            </article>
-            <article class="service-card reveal">
-              <i data-lucide="building-2"></i>
-              <h3>University Shortlisting</h3>
-              <p>Build ambitious, realistic, and secure lists with admissions fit, costs, city life, and outcomes in view.</p>
-            </article>
-            <article class="service-card reveal">
-              <i data-lucide="file-text"></i>
-              <h3>Applications and Essays</h3>
-              <p>Shape documents, SOPs, personal statements, activity records, and recommendations into a coherent story.</p>
-            </article>
-            <article class="service-card reveal">
-              <i data-lucide="wallet-cards"></i>
-              <h3>Scholarship and Finance</h3>
-              <p>Compare scholarships, assistantships, payment timelines, and loan readiness before final decisions.</p>
-            </article>
-            <article class="service-card reveal">
-              <i data-lucide="stamp"></i>
-              <h3>Visa Counseling</h3>
-              <p>Prepare documents, interview answers, intent clarity, and compliance basics with a structured checklist.</p>
-            </article>
-            <article class="service-card reveal">
-              <i data-lucide="plane-takeoff"></i>
-              <h3>Pre-Departure Support</h3>
-              <p>Plan accommodation, packing, banking, insurance, campus arrival, and the first 30 days abroad.</p>
             </article>
           </div>
         </div>
@@ -662,6 +526,13 @@
                 </div>
               </article>
             @endforeach
+
+            <a class="insight-card insight-card-more reveal" href="{{ route('blog.index') }}" aria-label="Read more articles on the journal">
+              <span class="insight-card-more-icon" aria-hidden="true"><i data-lucide="newspaper"></i></span>
+              <span class="insight-card-more-meta">The journal</span>
+              <span class="insight-card-more-title">Read more articles</span>
+              <span class="insight-card-more-link">Read More <i data-lucide="arrow-right"></i></span>
+            </a>
           </div>
         </div>
       </section>
@@ -688,7 +559,7 @@
                 <i data-lucide="map-pin"></i>
                 A-16A, Van Vihar colony, Tonk Road, Jaipur, Rajasthan, 302018
               </a>
-              <a href="#method">
+              <a href="{{ route('study-abroad') }}">
                 <i data-lucide="clock"></i>
                 Intake planning, application reviews, visa readiness
               </a>

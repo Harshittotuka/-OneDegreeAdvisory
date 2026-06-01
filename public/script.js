@@ -110,7 +110,24 @@ ready(() => {
       const trigger = item.querySelector("[data-dropdown-trigger]");
       if (trigger) trigger.setAttribute("aria-expanded", "false");
     });
+    document.querySelectorAll(".submenu-wrap.is-open").forEach((wrap) => {
+      wrap.classList.remove("is-open");
+      const subTrigger = wrap.querySelector("[data-submenu-trigger]");
+      if (subTrigger) subTrigger.setAttribute("aria-expanded", "false");
+    });
   };
+
+  document.querySelectorAll("[data-submenu-trigger]").forEach((subTrigger) => {
+    const wrap = subTrigger.closest("[data-submenu]");
+    if (!wrap) return;
+    subTrigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const willOpen = !wrap.classList.contains("is-open");
+      wrap.classList.toggle("is-open", willOpen);
+      subTrigger.setAttribute("aria-expanded", String(willOpen));
+    });
+  });
 
   const setDropdown = (item, open) => {
     item.classList.toggle("is-open", open);
@@ -201,9 +218,61 @@ ready(() => {
       }, 260);
     };
 
+    const comingSoonContent = {
+      "students-hub": {
+        kicker: "AI-powered student tools",
+        title: "Students Hub",
+        desc: "A smarter space for profile insights, best-fit university shortlists, application planning, and progress tracking.",
+        features: [
+          { icon: "brain", label: "Profile intelligence" },
+          { icon: "target", label: "Best-fit shortlists" },
+          { icon: "list-checks", label: "Application copilot" },
+        ],
+      },
+      "career-mentoring": {
+        kicker: "1:1 expert guidance",
+        title: "Career Mentoring",
+        desc: "Personalised mentoring that maps your goals to the right programmes, careers, and milestones.",
+        features: [
+          { icon: "compass", label: "Goal mapping" },
+          { icon: "users", label: "1:1 mentor match" },
+          { icon: "route", label: "Career roadmap" },
+        ],
+      },
+      "student-development": {
+        kicker: "Build your profile",
+        title: "Student Development Programme",
+        desc: "A structured programme to strengthen your profile with skills, projects, and achievements that stand out.",
+        features: [
+          { icon: "trending-up", label: "Profile building" },
+          { icon: "award", label: "Skill milestones" },
+          { icon: "sparkles", label: "Standout projects" },
+        ],
+      },
+    };
+
+    const populateComingSoon = (trigger) => {
+      const key = (trigger && trigger.dataset.feature) || "students-hub";
+      const content = comingSoonContent[key] || comingSoonContent["students-hub"];
+      const kickerEl = studentsHubOverlay.querySelector(".students-hub-kicker");
+      const titleEl = studentsHubOverlay.querySelector("#students-hub-title");
+      const descEl = studentsHubOverlay.querySelector("#students-hub-desc");
+      const featuresEl = studentsHubOverlay.querySelector(".students-hub-features");
+      if (kickerEl) kickerEl.innerHTML = '<i data-lucide="sparkles" aria-hidden="true"></i>' + content.kicker;
+      if (titleEl) titleEl.textContent = content.title + " is coming soon";
+      if (descEl) descEl.textContent = content.desc;
+      if (featuresEl) {
+        featuresEl.setAttribute("aria-label", content.title + " preview features");
+        featuresEl.innerHTML = content.features
+          .map((f) => '<span><i data-lucide="' + f.icon + '" aria-hidden="true"></i> ' + f.label + "</span>")
+          .join("");
+      }
+    };
+
     const openStudentsHub = (trigger) => {
       window.clearTimeout(closeStudentsHubTimer);
       lastFocusedElement = trigger || document.activeElement;
+      populateComingSoon(trigger);
       closeAllDropdowns();
       closeNavigation();
       studentsHubOverlay.hidden = false;
