@@ -30,10 +30,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       (function () {
         document.documentElement.classList.add("js");
+        try {
+          var t = sessionStorage.getItem("oda:color-theme");
+          if (t === "signature" || t === "signature-white" || t === "fedex" || t === "cream") {
+            document.documentElement.dataset.colorTheme = t;
+          }
+        } catch (e) {}
       })();
     </script>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
@@ -85,6 +91,21 @@
         <span class="contact-fab__label" data-contact-fab-label>Talk to an advisor</span>
       </a>
     @endunless
+
+    <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
+      <button class="theme-swatch theme-swatch-signature" type="button" data-theme-option="signature" aria-label="Use Original color theme" aria-pressed="true">
+        <span class="visually-hidden">Original</span>
+      </button>
+      <button class="theme-swatch theme-swatch-signature-white" type="button" data-theme-option="signature-white" aria-label="Use Original theme with white background" aria-pressed="false">
+        <span class="visually-hidden">Original + white background</span>
+      </button>
+      <button class="theme-swatch theme-swatch-fedex" type="button" data-theme-option="fedex" aria-label="Use FedEx color theme" aria-pressed="false">
+        <span class="visually-hidden">FedEx</span>
+      </button>
+      <button class="theme-swatch theme-swatch-cream" type="button" data-theme-option="cream" aria-label="Use Logo Colours theme" aria-pressed="false">
+        <span class="visually-hidden">Logo Colours</span>
+      </button>
+    </div>
 
     <script type="application/ld+json">
       {!! json_encode([

@@ -4,9 +4,9 @@
     <div class="footer-brand">
       <a class="brand brand-footer" href="{{ route('home') }}#top" aria-label="{{ config('site.name') }} home">
         <img class="brand-mark" src="{{ asset('assets/Logo/mark-light.svg') }}" alt="" aria-hidden="true" width="104" height="36">
-        <span>
-          <strong>{{ config('site.name') }}</strong>
-          <small>{{ config('site.tagline') }}</small>
+        <span class="brand-wordmark">
+          <strong>One Degree</strong>
+          <small>Advisory</small>
         </span>
       </a>
       <p>
