@@ -117,10 +117,10 @@
                 <option>Flexible</option>
               </select>
             </label>
-            <button class="btn btn-secondary" type="submit">
+            <a class="btn btn-secondary" href="https://gatewayhub.onedegreeadvisory.com/student-profiler/?channel_id=NDg4OQ==" target="_blank" rel="noopener">
               <span>Build Plan</span>
               <i data-lucide="sparkles"></i>
-            </button>
+            </a>
           </form>
           <p class="finder-note" data-finder-note>
             Your first roadmap starts with country fit, course direction, and intake timing.

@@ -40,16 +40,24 @@
             document.documentElement.dataset.colorTheme = t;
           }
         } catch (e) {}
+        try {
+          if (localStorage.getItem("oda:nav-style") === "stripe") {
+            document.documentElement.classList.add("nav-stripe");
+          }
+        } catch (e) {}
       })();
     </script>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('stripe-nav.css') }}">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="{{ asset('script.js') }}" defer></script>
+    <script src="{{ asset('stripe-nav.js') }}" defer></script>
   </head>
   <body class="{{ $bodyClass ?? '' }}">
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
 
     @include('partials.header', ['activeNav' => $activeNav ?? null])
+    @include('partials.header-stripe', ['activeNav' => $activeNav ?? null])
 
     <div class="students-hub-overlay" id="students-hub-coming-soon" data-students-hub-overlay role="dialog" aria-modal="true" aria-labelledby="students-hub-title" aria-describedby="students-hub-desc" aria-hidden="true" hidden>
       <div class="students-hub-backdrop" data-students-hub-close></div>
@@ -91,6 +99,15 @@
         <span class="contact-fab__label" data-contact-fab-label>Talk to an advisor</span>
       </a>
     @endunless
+
+    <button class="nav-style-toggle" type="button" data-nav-style-toggle aria-pressed="false" aria-label="Switch navigation style">
+      <span class="nav-style-toggle__icon" aria-hidden="true"><i data-lucide="layout-dashboard"></i></span>
+      <span class="nav-style-toggle__text">
+        <small>Nav style</small>
+        <strong data-nav-style-label>Classic</strong>
+      </span>
+      <span class="nav-style-toggle__switch" aria-hidden="true"></span>
+    </button>
 
     <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
       <button class="theme-swatch theme-swatch-signature" type="button" data-theme-option="signature" aria-label="Use Original color theme" aria-pressed="true">

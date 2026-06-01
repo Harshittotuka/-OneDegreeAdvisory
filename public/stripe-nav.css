@@ -1,0 +1,708 @@
+/* ============================================================================
+   Stripe-style navigation (opt-in alternative)
+   ----------------------------------------------------------------------------
+   Loaded on every page but inert until the user flips the floating "Nav style"
+   toggle, which adds `.nav-stripe` to <html>. This file only adds NEW selectors
+   (.stripe-*) and a handful of `.stripe-flyout`-scoped re-declarations of the
+   classic card rules (which are scoped to `.nav-menu` in styles.css and would
+   otherwise not reach the shared overlay). It never modifies classic selectors.
+   The dropdown design is therefore identical to the classic nav — the only new
+   thing is the single overlay that MORPHS (size + position + cross-fade) between
+   triggers, the way Stripe's global nav does.
+   ========================================================================== */
+
+/* ---- Which header is visible -------------------------------------------- */
+.stripe-site-header {
+  display: none;
+}
+
+html.nav-stripe .site-header {
+  display: none;
+}
+
+html.nav-stripe .stripe-site-header {
+  display: block;
+}
+
+/* ============================================================================
+   Header shell — mirrors .site-header / .nav-shell
+   ========================================================================== */
+.stripe-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: box-shadow 220ms ease, background 220ms ease;
+}
+
+.stripe-nav {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 76px;
+  padding: 0 max(22px, calc((100vw - var(--container)) / 2));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  backdrop-filter: blur(14px);
+}
+
+.stripe-site-header.is-scrolled .stripe-nav {
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 50px rgba(7, 25, 34, 0.12);
+  backdrop-filter: blur(20px);
+}
+
+/* On desktop the panel is transparent to layout — its children (menu, cta,
+   flyout) flow straight into the nav grid. On mobile it becomes the drawer. */
+.stripe-nav-panel {
+  display: contents;
+}
+
+.stripe-nav-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Plain links + dropdown triggers share one pill style (= .nav-menu a) */
+.stripe-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: #243945;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 999px;
+}
+
+.stripe-nav-trigger {
+  padding: 0 8px 0 14px;
+}
+
+.stripe-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 7px;
+  height: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  background: var(--coral);
+  transition: transform 180ms ease;
+}
+
+.stripe-nav-trigger::after {
+  right: 22px;
+}
+
+.stripe-nav-link:hover::after,
+.stripe-nav-link.is-active::after,
+.stripe-nav-trigger[aria-expanded="true"]::after,
+.stripe-nav-trigger.has-active::after {
+  transform: scaleX(1);
+}
+
+.stripe-nav-trigger.has-active {
+  color: var(--teal-dark);
+}
+
+.stripe-nav-trigger .nav-trigger-chevron {
+  width: 14px;
+  height: 14px;
+  transition: transform 200ms ease;
+}
+
+.stripe-nav-trigger[aria-expanded="true"] .nav-trigger-chevron {
+  transform: rotate(180deg);
+}
+
+/* ============================================================================
+   The shared morphing overlay
+   ========================================================================== */
+.stripe-flyout {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 0;
+  z-index: 80;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 240ms;
+  visibility: hidden;
+}
+
+.stripe-flyout.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity 200ms ease, transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0s;
+}
+
+/* Caret that points up at the active trigger */
+.stripe-flyout-arrow {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  background: var(--theme-surface-solid, #ffffff);
+  border-top: 1px solid var(--theme-border, rgba(19, 37, 47, 0.1));
+  border-left: 1px solid var(--theme-border, rgba(19, 37, 47, 0.1));
+  border-top-left-radius: 2px;
+  transform: translateX(0) rotate(45deg);
+  transition: transform 360ms cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 1;
+}
+
+/* The card that grows / shrinks / slides. This is what makes the morph read. */
+.stripe-flyout-bg {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  width: 360px;
+  height: 200px;
+  background: var(--theme-surface-solid, #ffffff);
+  border: 1px solid var(--theme-border, rgba(19, 37, 47, 0.1));
+  border-radius: 8px;
+  box-shadow:
+    0 28px 70px rgba(7, 25, 34, 0.16),
+    0 10px 24px rgba(7, 25, 34, 0.08);
+  overflow: hidden;
+  transform: translateX(0);
+  transition:
+    transform 360ms cubic-bezier(0.25, 1, 0.5, 1),
+    width 360ms cubic-bezier(0.25, 1, 0.5, 1),
+    height 360ms cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform, width, height;
+}
+
+/* While the overlay is first appearing (or there is no morph yet) we snap the
+   geometry instead of animating it from a stale position. */
+.stripe-flyout.is-snapping .stripe-flyout-bg,
+.stripe-flyout.is-snapping .stripe-flyout-arrow {
+  transition: none !important;
+}
+
+.stripe-flyout-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.stripe-flyout-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(0);
+  transition: opacity 220ms ease, transform 360ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.stripe-flyout-section.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Designed widths — identical to the classic .nav-dropdown* widths */
+.stripe-flyout-section[data-stripe-section="destinations"] {
+  width: min(940px, calc(100vw - 32px));
+}
+
+.stripe-flyout-section[data-stripe-section="courses"] {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.stripe-flyout-section[data-stripe-section="services"] {
+  width: min(340px, calc(100vw - 32px));
+}
+
+/* ============================================================================
+   Re-declare the .nav-menu-scoped card rules for the overlay
+   (styles.css scopes these under `.nav-menu`, which the overlay is not inside)
+   ========================================================================== */
+.stripe-flyout .course-menu-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 20px;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 11px 10px;
+  border: 1px solid rgba(19, 37, 47, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  text-align: left;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.stripe-flyout button.course-menu-card {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stripe-flyout .course-menu-card::after {
+  display: none;
+}
+
+.stripe-flyout .course-menu-card:hover {
+  border-color: rgba(13, 122, 120, 0.24);
+  background: #f5fbfa;
+  color: var(--teal-dark);
+  box-shadow: 0 12px 24px rgba(7, 25, 34, 0.08);
+  transform: translateY(-1px);
+}
+
+.stripe-flyout .course-menu-card--disabled {
+  cursor: default;
+}
+
+.stripe-flyout .course-menu-card--disabled:hover {
+  border-color: rgba(15, 41, 56, 0.08);
+  background: #fff;
+  color: inherit;
+  box-shadow: none;
+  transform: none;
+}
+
+.stripe-flyout .course-menu-card--mbbs {
+  overflow: hidden;
+  border-color: rgba(199, 146, 74, 0.52);
+  background:
+    radial-gradient(circle at 90% 12%, rgba(255, 255, 255, 0.72), transparent 34%),
+    linear-gradient(135deg, #fff7d8 0%, #f5d98c 48%, #efbd58 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 10px 22px rgba(124, 83, 25, 0.14);
+}
+
+.stripe-flyout .course-menu-card--mbbs::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.42) 0%, transparent 32%, rgba(171, 105, 20, 0.12) 100%);
+}
+
+.stripe-flyout .course-menu-card--mbbs > * {
+  position: relative;
+  z-index: 1;
+}
+
+.stripe-flyout .course-menu-card--mbbs .course-icon--mbbs {
+  --ci-bg: rgba(255, 255, 255, 0.66);
+  --ci-fg: #8b560f;
+  border-color: rgba(139, 86, 15, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.stripe-flyout .course-menu-card--mbbs .course-menu-copy strong {
+  color: #6e4210;
+}
+
+.stripe-flyout .course-menu-card--mbbs .course-menu-copy small {
+  color: #8b631f;
+}
+
+.stripe-flyout .course-menu-card--mbbs .course-menu-arrow {
+  color: #8b560f;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.stripe-flyout .course-menu-card--mbbs:hover {
+  border-color: rgba(199, 146, 74, 0.52);
+  background:
+    radial-gradient(circle at 90% 12%, rgba(255, 255, 255, 0.78), transparent 34%),
+    linear-gradient(135deg, #fff0b8 0%, #f0c969 48%, #dda03a 100%);
+  color: #7c5319;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 14px 28px rgba(124, 83, 25, 0.18);
+}
+
+.stripe-flyout .course-menu-card--mbbs:hover .course-menu-copy strong {
+  color: #5f380b;
+}
+
+.stripe-flyout .course-menu-card--mbbs:hover .course-menu-copy small {
+  color: #744f17;
+}
+
+.stripe-flyout .course-menu-card--mbbs:hover .course-menu-arrow {
+  background: #8b560f;
+  color: #ffffff;
+}
+
+/* ---- "Study Abroad" nested menu — reveals as a SECOND COLUMN in the card ----
+   Instead of a detached floating box, hovering Study Abroad expands the single
+   overlay card to the right and slots the sub-items in as a clean, top-aligned
+   second column sharing the same surface (a thin divider separates them). The
+   card width/height/top are set by JS so it fits exactly — no dead space.
+   At ≤920px it falls back to the classic inline accordion (styles.css); the
+   921–960px override below keeps the column style (global flips at ≤960px). */
+@media (min-width: 921px) {
+  /* Anchor the column to the services card, not the (bottom) trigger row */
+  .stripe-flyout-section[data-stripe-section="services"] .submenu-wrap {
+    position: static;
+  }
+
+  .stripe-flyout .course-submenu {
+    position: absolute;
+    top: 52px;          /* JS aligns this with the first service item */
+    left: 100%;         /* starts just past the left column */
+    z-index: 2;
+    display: grid;
+    gap: 8px;
+    width: 248px;
+    margin: 0;
+    padding: 0 0 0 18px;
+    border: 0;
+    border-left: 1px solid var(--theme-border, rgba(19, 37, 47, 0.12));
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    max-height: none;
+    overflow: visible;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(8px);
+    pointer-events: none;
+    transition: opacity 200ms ease, transform 260ms cubic-bezier(0.25, 1, 0.5, 1), visibility 0s linear 220ms;
+  }
+
+  .stripe-flyout .course-submenu::after {
+    display: none; /* no detached panel → no hover bridge needed */
+  }
+
+  .stripe-flyout .submenu-wrap.is-col-open .course-submenu,
+  .stripe-flyout .submenu-wrap:focus-within .course-submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    pointer-events: auto;
+    transition: opacity 200ms ease, transform 260ms cubic-bezier(0.25, 1, 0.5, 1), visibility 0s;
+  }
+
+  /* Highlight Study Abroad while its column is open, like a selected tab */
+  .stripe-flyout .submenu-wrap.is-col-open .course-menu-card.has-submenu,
+  .stripe-flyout .submenu-wrap:focus-within .course-menu-card.has-submenu {
+    border-color: rgba(13, 122, 120, 0.24);
+    background: #f5fbfa;
+  }
+
+  /* Flip the chevron while the column is expanded */
+  .stripe-flyout .submenu-wrap.is-col-open .course-menu-card.has-submenu .course-menu-arrow,
+  .stripe-flyout .submenu-wrap:focus-within .course-menu-card.has-submenu .course-menu-arrow {
+    transform: rotate(180deg);
+  }
+}
+
+/* Mobile accordion: flip the chevron when Study Abroad is expanded */
+.stripe-flyout .submenu-wrap.is-open .course-menu-card.has-submenu .course-menu-arrow {
+  transform: rotate(180deg);
+}
+
+/* ============================================================================
+   Theme-awareness — mirrors the html[data-color-theme] nav overrides
+   ========================================================================== */
+html[data-color-theme] .stripe-nav,
+html[data-color-theme] .stripe-site-header.is-scrolled .stripe-nav {
+  background: var(--theme-nav-bg);
+  border-bottom-color: var(--theme-border-soft);
+  box-shadow: 0 18px 50px rgba(47, 10, 88, 0.1);
+}
+
+html[data-color-theme] .stripe-nav-link,
+html[data-color-theme] .stripe-nav-trigger {
+  color: var(--navy);
+}
+
+html[data-color-theme] .stripe-flyout-bg,
+html[data-color-theme] .stripe-flyout-arrow {
+  border-color: var(--theme-border);
+  background: var(--theme-surface-solid);
+}
+
+html[data-color-theme] .stripe-flyout-bg {
+  box-shadow: var(--shadow);
+}
+
+html[data-color-theme] .stripe-flyout .course-menu-card {
+  border-color: var(--theme-border);
+  background: color-mix(in srgb, var(--theme-surface-solid) 86%, transparent);
+}
+
+html[data-color-theme] .stripe-flyout .course-menu-card:hover {
+  border-color: color-mix(in srgb, var(--teal) 32%, transparent);
+  background: var(--aqua);
+}
+
+html[data-color-theme] .stripe-flyout .course-menu-card--mbbs {
+  border-color: rgba(199, 146, 74, 0.58);
+  background:
+    radial-gradient(circle at 90% 12%, rgba(255, 255, 255, 0.72), transparent 34%),
+    linear-gradient(135deg, #fff7d8 0%, #f5d98c 48%, #efbd58 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 10px 22px rgba(124, 83, 25, 0.14);
+}
+
+html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
+  border-color: rgba(199, 146, 74, 0.68);
+  background:
+    radial-gradient(circle at 90% 12%, rgba(255, 255, 255, 0.78), transparent 34%),
+    linear-gradient(135deg, #fff0b8 0%, #f0c969 48%, #dda03a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 14px 28px rgba(124, 83, 25, 0.18);
+}
+
+/* ============================================================================
+   Floating "Nav style" toggle button
+   ========================================================================== */
+.nav-style-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  z-index: 97;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 8px 10px;
+  border: 1px solid rgba(26, 0, 136, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink, #13252f);
+  box-shadow: 0 16px 38px rgba(16, 4, 70, 0.16);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.nav-style-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 44px rgba(16, 4, 70, 0.22);
+}
+
+.nav-style-toggle__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy, #0b2b43), var(--teal, #0d7a78));
+  color: #fff;
+  flex: 0 0 auto;
+}
+
+.nav-style-toggle__icon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+}
+
+.nav-style-toggle__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+  text-align: left;
+}
+
+.nav-style-toggle__text small {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.nav-style-toggle__text strong {
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.nav-style-toggle__switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(19, 37, 47, 0.2);
+  transition: background 200ms ease;
+}
+
+.nav-style-toggle__switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(7, 25, 34, 0.3);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.nav-stripe .nav-style-toggle__switch {
+  background: var(--teal, #0d7a78);
+}
+
+html.nav-stripe .nav-style-toggle__switch::after {
+  transform: translateX(16px);
+}
+
+html[data-color-theme] .nav-style-toggle {
+  border-color: var(--theme-border);
+  background: color-mix(in srgb, var(--theme-surface-solid) 84%, transparent);
+  box-shadow: var(--theme-card-shadow);
+}
+
+/* ============================================================================
+   Mobile (≤920px) — fall back to a slide-down drawer / inline accordion
+   ========================================================================== */
+@media (max-width: 920px) {
+  body.stripe-nav-open {
+    overflow: hidden;
+  }
+
+  .stripe-nav {
+    grid-template-columns: 1fr auto;
+    min-height: 68px;
+    padding: 0 20px;
+    gap: 10px;
+  }
+
+  /* The panel becomes the drawer; its children stack inside it */
+  .stripe-nav-panel {
+    position: fixed;
+    top: 106px;
+    right: 14px;
+    left: 14px;
+    display: grid;
+    gap: 8px;
+    max-height: calc(100svh - 124px);
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px;
+    background: var(--theme-surface-solid, rgba(255, 255, 255, 0.98));
+    box-shadow: var(--shadow);
+    transform: translateY(-14px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease, transform 180ms ease;
+    z-index: 120;
+  }
+
+  .stripe-nav-open .stripe-nav-panel {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .stripe-nav-menu {
+    display: grid;
+    gap: 4px;
+  }
+
+  .stripe-nav-link {
+    justify-content: space-between;
+    width: 100%;
+    min-height: 48px;
+    border-radius: var(--radius);
+    padding: 0 12px;
+  }
+
+  .stripe-nav-link::after {
+    display: none;
+  }
+
+  .stripe-nav-cta {
+    display: inline-flex;
+    width: 100%;
+  }
+
+  /* Overlay collapses to an in-flow, full-width accordion panel */
+  .stripe-flyout {
+    position: static;
+    height: auto;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+    transition: none;
+  }
+
+  .stripe-flyout-arrow {
+    display: none;
+  }
+
+  .stripe-flyout-bg {
+    position: static;
+    width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+    border: 0;
+    border-radius: var(--radius);
+    box-shadow: none;
+    background: transparent;
+    overflow: visible;
+    transition: none;
+  }
+
+  html[data-color-theme] .stripe-flyout-bg {
+    box-shadow: none;
+  }
+
+  .stripe-flyout-viewport {
+    height: auto;
+  }
+
+  .stripe-flyout-section {
+    position: static;
+    width: 100% !important;
+    opacity: 1;
+    transform: none;
+    transition: none;
+    display: none;
+  }
+
+  .stripe-flyout-section.is-active {
+    display: block;
+  }
+
+  .stripe-flyout .nav-dropdown-shell {
+    grid-template-columns: 1fr;
+    border: 1px solid var(--line);
+  }
+
+  .stripe-flyout .nav-dropdown-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
