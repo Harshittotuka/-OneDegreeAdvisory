@@ -129,8 +129,15 @@ button {
 }
 
 .site-header.is-scrolled .nav-shell {
+  min-height: 60px;
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 18px 50px rgba(7, 25, 34, 0.12);
+  /* Layered shadow: inset top bevel + stacked ambient shadows so the bar reads
+     as a card lifted off the page (3D float) once scrolled. */
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65) inset,
+    0 4px 10px rgba(7, 25, 34, 0.08),
+    0 12px 24px rgba(7, 25, 34, 0.12),
+    0 24px 48px rgba(7, 25, 34, 0.14);
   backdrop-filter: blur(20px);
 }
 
@@ -138,25 +145,147 @@ button {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  min-height: 38px;
-  padding: 6px 16px;
+  gap: 16px;
+  height: 40px; /* explicit height (no vertical padding) so the collapse animates exactly */
+  padding: 0 16px 0 136px; /* left pad reserves the absolute social-icon zone (3 icons) */
   background: var(--teal-dark);
   color: #f7fffb;
   font-size: 0.82rem;
   font-weight: 700;
+  overflow: hidden;
+  transition: height 340ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.notice p {
-  margin: 0;
+/* On scroll the headers gain .is-scrolled — collapse the blue notice bar
+   smoothly and leave only the white nav pinned at the top. The bar stays solid
+   blue while it slides up (no opacity fade), so the hero never flashes through
+   a transparent-but-still-tall gap during the transition. */
+.site-header.is-scrolled .notice,
+.stripe-site-header.is-scrolled .notice {
+  height: 0;
+  pointer-events: none;
 }
 
-.notice a {
+/* ── Scrolling announcement marquee ──────────────────────────────────── */
+.notice-marquee {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 28px; /* breathing room from the social icons (left) and WhatsApp (right) */
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+}
+
+.notice-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: notice-marquee 14s linear infinite;
+}
+
+/* Pause on hover / keyboard focus so readers can click a banner. */
+.notice-marquee:hover .notice-marquee-track,
+.notice-marquee-track:focus-within {
+  animation-play-state: paused;
+}
+
+/* Each group is one full set of items; several identical groups sit in the
+   track and the keyframe shifts by exactly one group (--marquee-shift, set
+   inline as -100%/copies) for a seamless loop. The trailing padding equals the
+   inter-item gap so the join is invisible. */
+.notice-marquee-group {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding-right: 40px;
+  flex: 0 0 auto;
+}
+
+.notice-marquee-item {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  color: #f7fffb;
+  text-decoration: none;
+  border-bottom: 0;
+  white-space: nowrap;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.notice-marquee-item:hover,
+.notice-marquee-item:focus-visible {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.notice-marquee-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+@keyframes notice-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--marquee-shift, -50%)); }
+}
+
+/* ── WhatsApp number, pinned right ───────────────────────────────────── */
+.notice-whatsapp {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 24px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border-bottom: 0;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f7fffb;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.notice-whatsapp-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.notice-whatsapp:hover,
+.notice-whatsapp:focus-visible {
+  background: #25d366; /* WhatsApp green */
+  color: #052e16;
+  transform: translateY(-1px);
+}
+
+/* Respect reduced-motion: stop the scroll, show one set, allow manual scroll. */
+@media (prefers-reduced-motion: reduce) {
+  .notice-marquee-track {
+    animation: none;
+    transform: none;
+  }
+
+  .notice-marquee-group:not(:first-child) {
+    display: none;
+  }
+
+  .notice-marquee {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .notice-marquee::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .nav-shell {
@@ -170,6 +299,7 @@ button {
   background: rgba(255, 255, 255, 0.82);
   color: var(--ink);
   backdrop-filter: blur(14px);
+  transition: min-height 300ms cubic-bezier(0.4, 0, 0.2, 1), background 220ms ease, box-shadow 220ms ease;
 }
 
 .brand {
@@ -5780,8 +5910,8 @@ html[data-color-theme] .site-socials .site-social {
   }
 
   .notice {
-    justify-content: space-between;
-    padding-left: 86px;
+    gap: 12px;
+    padding-left: 136px;
   }
 
   .nav-shell {
@@ -6252,7 +6382,7 @@ html[data-color-theme] .site-socials .site-social {
   }
 
   .notice {
-    min-height: 42px;
+    height: 38px;
     font-size: 0.74rem;
   }
 
@@ -6523,8 +6653,20 @@ html[data-color-theme] .site-socials .site-social {
 }
 
 @media (max-width: 460px) {
-  .notice a {
+  /* Reclaim the social-icon zone on the smallest screens; keep the
+     scrolling marquee and the WhatsApp number, which are the priority. */
+  .notice .site-socials--notice {
     display: none;
+  }
+
+  .notice {
+    gap: 10px;
+    padding-left: 14px;
+    padding-right: 12px;
+  }
+
+  .notice-marquee {
+    margin: 0 12px;
   }
 
   h1 {
@@ -13979,6 +14121,15 @@ html[data-color-theme] .site-header.is-scrolled .nav-shell {
   background: var(--theme-nav-bg);
   border-bottom-color: var(--theme-border-soft);
   box-shadow: 0 18px 50px rgba(47, 10, 88, 0.1);
+}
+
+/* Themed: stronger layered 3D float once scrolled. */
+html[data-color-theme] .site-header.is-scrolled .nav-shell {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 4px 10px rgba(26, 0, 136, 0.08),
+    0 12px 24px rgba(26, 0, 136, 0.12),
+    0 24px 48px rgba(47, 10, 88, 0.16);
 }
 
 html[data-color-theme] .brand strong {

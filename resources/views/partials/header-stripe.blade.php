@@ -27,11 +27,7 @@
 @endphp
 
 <header class="stripe-site-header" data-stripe-header>
-  <div class="notice">
-    @include('partials.socials', ['variant' => 'notice'])
-    <p>{{ config('site.notice') }}</p>
-    <a href="{{ route('contact') }}">Book a profile review</a>
-  </div>
+  @include('partials.notice-bar')
 
   <nav class="stripe-nav" aria-label="Primary navigation" data-stripe-nav>
     <a class="brand" href="{{ route('home') }}#top" aria-label="{{ config('site.name') }} home">

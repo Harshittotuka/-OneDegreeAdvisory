@@ -37,9 +37,21 @@ ready(() => {
   const consultForm = document.querySelector("[data-consult-form]");
   const formStatus = document.querySelector("[data-form-status]");
 
+  // Hysteresis: collapsing the notice bar on scroll shortens the document by
+  // ~40px, which nudges scrollY. A single threshold would let that nudge
+  // re-cross the line and the header would flicker/shake. Separate on/off
+  // thresholds with a dead-zone wider than the collapse height stop the loop.
+  const SCROLL_ON = 90;
+  const SCROLL_OFF = 30;
   const setHeaderState = () => {
     if (!header) return;
-    header.classList.toggle("is-scrolled", window.scrollY > 12);
+    const scrolled = header.classList.contains("is-scrolled");
+    const y = window.scrollY;
+    if (!scrolled && y > SCROLL_ON) {
+      header.classList.add("is-scrolled");
+    } else if (scrolled && y < SCROLL_OFF) {
+      header.classList.remove("is-scrolled");
+    }
   };
 
   setHeaderState();

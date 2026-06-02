@@ -115,8 +115,19 @@
     let servicesBaseHeight = 0;
     let servicesBaseX = 0;
 
-    /* ---- scroll shadow (independent of the classic header) ---------------- */
-    const setHeaderState = () => header.classList.toggle("is-scrolled", window.scrollY > 12);
+    /* ---- scroll shadow (independent of the classic header) ----------------
+       Hysteresis (separate on/off thresholds): collapsing the notice bar
+       shortens the page ~40px and nudges scrollY; a single threshold would let
+       that re-cross the line and the header would flicker. A dead-zone wider
+       than the collapse height keeps the toggle stable. */
+    const SCROLL_ON = 90;
+    const SCROLL_OFF = 30;
+    const setHeaderState = () => {
+      const scrolled = header.classList.contains("is-scrolled");
+      const y = window.scrollY;
+      if (!scrolled && y > SCROLL_ON) header.classList.add("is-scrolled");
+      else if (scrolled && y < SCROLL_OFF) header.classList.remove("is-scrolled");
+    };
     setHeaderState();
     window.addEventListener("scroll", setHeaderState, { passive: true });
 

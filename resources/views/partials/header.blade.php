@@ -13,11 +13,7 @@
 @endphp
 
 <header class="site-header" data-header>
-  <div class="notice">
-    @include('partials.socials', ['variant' => 'notice'])
-    <p>{{ config('site.notice') }}</p>
-    <a href="{{ route('contact') }}">Book a profile review</a>
-  </div>
+  @include('partials.notice-bar')
   <nav class="nav-shell" aria-label="Primary navigation">
     <a class="brand" href="{{ route('home') }}#top" aria-label="{{ config('site.name') }} home">
       <img class="brand-mark" src="{{ asset('assets/Logo/mark.svg') }}" alt="" aria-hidden="true" width="104" height="36">
