@@ -11,7 +11,11 @@
    triggers, the way Stripe's global nav does.
    ========================================================================== */
 
-/* ---- Which header is visible -------------------------------------------- */
+/* ---- Which header is visible --------------------------------------------
+   NB: the "Pro" 3rd nav (header-pro.blade.php) also carries .stripe-site-header
+   to inherit this styling, so the show/hide selectors below are keyed on the
+   data-stripe-header attribute to target ONLY the Stripe header. The Pro
+   header's own visibility lives in pro-nav.css (html.nav-pro). */
 .stripe-site-header {
   display: none;
 }
@@ -20,7 +24,7 @@ html.nav-stripe .site-header {
   display: none;
 }
 
-html.nav-stripe .stripe-site-header {
+html.nav-stripe [data-stripe-header] {
   display: block;
 }
 
@@ -495,108 +499,6 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.88),
     0 14px 28px rgba(124, 83, 25, 0.18);
-}
-
-/* ============================================================================
-   Floating "Nav style" toggle button
-   ========================================================================== */
-.nav-style-toggle {
-  position: fixed;
-  right: 24px;
-  bottom: 96px;
-  z-index: 97;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px 8px 10px;
-  border: 1px solid rgba(26, 0, 136, 0.14);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.86);
-  color: var(--ink, #13252f);
-  box-shadow: 0 16px 38px rgba(16, 4, 70, 0.16);
-  backdrop-filter: blur(18px) saturate(145%);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
-  transition: transform 180ms ease, box-shadow 180ms ease;
-}
-
-.nav-style-toggle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 44px rgba(16, 4, 70, 0.22);
-}
-
-.nav-style-toggle__icon {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--navy, #0b2b43), var(--teal, #0d7a78));
-  color: #fff;
-  flex: 0 0 auto;
-}
-
-.nav-style-toggle__icon svg {
-  width: 16px;
-  height: 16px;
-  stroke-width: 2.2;
-}
-
-.nav-style-toggle__text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.05;
-  text-align: left;
-}
-
-.nav-style-toggle__text small {
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.6;
-}
-
-.nav-style-toggle__text strong {
-  font-size: 0.86rem;
-  font-weight: 800;
-}
-
-.nav-style-toggle__switch {
-  position: relative;
-  width: 36px;
-  height: 20px;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  background: rgba(19, 37, 47, 0.2);
-  transition: background 200ms ease;
-}
-
-.nav-style-toggle__switch::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 5px rgba(7, 25, 34, 0.3);
-  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-html.nav-stripe .nav-style-toggle__switch {
-  background: var(--teal, #0d7a78);
-}
-
-html.nav-stripe .nav-style-toggle__switch::after {
-  transform: translateX(16px);
-}
-
-html[data-color-theme] .nav-style-toggle {
-  border-color: var(--theme-border);
-  background: color-mix(in srgb, var(--theme-surface-solid) 84%, transparent);
-  box-shadow: var(--theme-card-shadow);
 }
 
 /* ============================================================================

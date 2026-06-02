@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;450;500;600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       (function () {
         document.documentElement.classList.add("js");
@@ -41,23 +41,26 @@
           }
         } catch (e) {}
         try {
-          if (localStorage.getItem("oda:nav-style") === "stripe") {
-            document.documentElement.classList.add("nav-stripe");
-          }
+          var ns = localStorage.getItem("oda:nav-style");
+          if (ns === "stripe") document.documentElement.classList.add("nav-stripe");
+          else if (ns === "pro") document.documentElement.classList.add("nav-pro");
         } catch (e) {}
       })();
     </script>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
     <link rel="stylesheet" href="{{ asset('stripe-nav.css') }}">
+    <link rel="stylesheet" href="{{ asset('pro-nav.css') }}">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="{{ asset('script.js') }}" defer></script>
     <script src="{{ asset('stripe-nav.js') }}" defer></script>
+    <script src="{{ asset('pro-nav.js') }}" defer></script>
   </head>
   <body class="{{ $bodyClass ?? '' }}">
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
 
     @include('partials.header', ['activeNav' => $activeNav ?? null])
     @include('partials.header-stripe', ['activeNav' => $activeNav ?? null])
+    @include('partials.header-pro', ['activeNav' => $activeNav ?? null])
 
     <div class="students-hub-overlay" id="students-hub-coming-soon" data-students-hub-overlay role="dialog" aria-modal="true" aria-labelledby="students-hub-title" aria-describedby="students-hub-desc" aria-hidden="true" hidden>
       <div class="students-hub-backdrop" data-students-hub-close></div>
@@ -100,14 +103,14 @@
       </a>
     @endunless
 
-    <button class="nav-style-toggle" type="button" data-nav-style-toggle aria-pressed="false" aria-label="Switch navigation style">
-      <span class="nav-style-toggle__icon" aria-hidden="true"><i data-lucide="layout-dashboard"></i></span>
-      <span class="nav-style-toggle__text">
-        <small>Nav style</small>
-        <strong data-nav-style-label>Classic</strong>
-      </span>
-      <span class="nav-style-toggle__switch" aria-hidden="true"></span>
-    </button>
+    <div class="nav-style-switch" role="group" aria-label="Navigation style">
+      <span class="nav-style-switch__label">Nav style</span>
+      <div class="nav-style-switch__options">
+        <button class="nav-style-switch__btn" type="button" data-nav-style-option="classic" aria-pressed="true">Classic</button>
+        <button class="nav-style-switch__btn" type="button" data-nav-style-option="stripe" aria-pressed="false">Stripe</button>
+        <button class="nav-style-switch__btn" type="button" data-nav-style-option="pro" aria-pressed="false">Pro</button>
+      </div>
+    </div>
 
     <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
       <button class="theme-swatch theme-swatch-signature" type="button" data-theme-option="signature" aria-label="Use Original color theme" aria-pressed="true">

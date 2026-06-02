@@ -1,15 +1,12 @@
 /* ============================================================================
-   Stripe-style navigation behaviour (opt-in alternative nav)
+   "Pro" navigation behaviour (3rd nav style, opt-in)
    ----------------------------------------------------------------------------
-   Self-contained. Drives:
-     1. The floating "Nav style" toggle (classic  <->  stripe), persisted.
-     2. The single shared overlay that MORPHS (size + position + cross-fade)
-        between the Destinations / Courses / Services panels — the way Stripe's
-        global nav transitions within one overlay.
-     3. A slide-down drawer + inline accordion on mobile.
-
-   It only ever reads/writes its own `.stripe-*` / `data-stripe-*` hooks, so
-   public/script.js (the classic nav) is completely unaffected.
+   A self-contained clone of the Stripe nav's morphing-overlay behaviour, wired
+   to its own data-pro-* hooks so it never collides with stripe-nav.js. The
+   nav-style SWITCH itself lives in stripe-nav.js (3-way: classic/stripe/pro);
+   this file just listens for the "oda:nav-style-change" event to tidy up when
+   the user switches away. Styling/animation is inherited from the shared
+   .stripe-* CSS; pro-nav.css adds the professional re-skin.
    ========================================================================== */
 (function () {
   const ready = (cb) => {
@@ -25,67 +22,16 @@
       if (window.lucide) window.lucide.createIcons();
     };
 
-    /* ----------------------------------------------------------------------
-       1. Floating "Nav style" switch — 3-way: classic / stripe / pro
-       (persisted). This owns the switch for ALL nav styles; the Pro header
-       (pro-nav.js) just listens for the "oda:nav-style-change" event below.
-       ---------------------------------------------------------------------- */
-    const STORAGE_KEY = "oda:nav-style";
-    const root = document.documentElement;
-    const styleButtons = Array.from(
-      document.querySelectorAll("[data-nav-style-option]")
-    );
+    const header = document.querySelector("[data-pro-header]");
+    const nav = document.querySelector("[data-pro-nav]");
+    const panel = document.querySelector("[data-pro-panel]");
+    const mobileToggle = document.querySelector("[data-pro-mobile-toggle]");
+    const flyout = document.querySelector("[data-pro-flyout]");
+    const bg = document.querySelector("[data-pro-bg]");
+    const arrow = document.querySelector("[data-pro-arrow]");
+    const triggers = Array.from(document.querySelectorAll("[data-pro-trigger]"));
+    const sections = Array.from(document.querySelectorAll("[data-pro-section]"));
 
-    const currentStyle = () =>
-      root.classList.contains("nav-pro")
-        ? "pro"
-        : root.classList.contains("nav-stripe")
-        ? "stripe"
-        : "classic";
-
-    const syncStyleUi = () => {
-      const cur = currentStyle();
-      styleButtons.forEach((b) =>
-        b.setAttribute("aria-pressed", String(b.dataset.navStyleOption === cur))
-      );
-    };
-
-    const setNavStyle = (style) => {
-      root.classList.toggle("nav-stripe", style === "stripe");
-      root.classList.toggle("nav-pro", style === "pro");
-      try {
-        localStorage.setItem(STORAGE_KEY, style);
-      } catch (e) {}
-      // Tidy up whichever nav is being hidden.
-      document.body.classList.remove("nav-open"); // classic mobile menu
-      closeMobileDrawer(); // this (stripe) header
-      closeFlyout();
-      // Let the Pro header tidy its own drawer/overlay.
-      window.dispatchEvent(new CustomEvent("oda:nav-style-change"));
-      syncStyleUi();
-      refreshIcons();
-    };
-
-    styleButtons.forEach((b) =>
-      b.addEventListener("click", () => setNavStyle(b.dataset.navStyleOption))
-    );
-    syncStyleUi();
-
-    /* ----------------------------------------------------------------------
-       2 + 3. The Stripe header itself
-       ---------------------------------------------------------------------- */
-    const header = document.querySelector("[data-stripe-header]");
-    const nav = document.querySelector("[data-stripe-nav]");
-    const panel = document.querySelector("[data-stripe-panel]");
-    const mobileToggle = document.querySelector("[data-stripe-mobile-toggle]");
-    const flyout = document.querySelector("[data-stripe-flyout]");
-    const bg = document.querySelector("[data-stripe-bg]");
-    const arrow = document.querySelector("[data-stripe-arrow]");
-    const triggers = Array.from(document.querySelectorAll("[data-stripe-trigger]"));
-    const sections = Array.from(document.querySelectorAll("[data-stripe-section]"));
-
-    // Declared early so setNavStyle (above) can call them even if the header
-    // is somehow absent.
     function closeMobileDrawer() {
       if (!header || !header.classList.contains("stripe-nav-open")) return;
       header.classList.remove("stripe-nav-open");
@@ -113,13 +59,19 @@
         });
     }
 
+    // Tidy up whenever the nav style changes (the switch lives in stripe-nav.js).
+    window.addEventListener("oda:nav-style-change", () => {
+      closeFlyout();
+      closeMobileDrawer();
+    });
+
     if (!header || !nav || !flyout || !bg || !arrow || !triggers.length) {
-      return; // toggle still works; nothing else to wire up
+      return; // nothing else to wire up
     }
 
     const ORDER = ["destinations", "courses", "services"];
-    const sectionFor = (key) => sections.find((s) => s.dataset.stripeSection === key);
-    const triggerFor = (key) => triggers.find((t) => t.dataset.stripeTrigger === key);
+    const sectionFor = (key) => sections.find((s) => s.dataset.proSection === key);
+    const triggerFor = (key) => triggers.find((t) => t.dataset.proTrigger === key);
     const isDesktop = () => window.matchMedia("(min-width: 921px)").matches;
 
     let isOpen = false;
@@ -128,11 +80,7 @@
     let servicesBaseHeight = 0;
     let servicesBaseX = 0;
 
-    /* ---- scroll shadow (independent of the classic header) ----------------
-       Hysteresis (separate on/off thresholds): collapsing the notice bar
-       shortens the page ~40px and nudges scrollY; a single threshold would let
-       that re-cross the line and the header would flicker. A dead-zone wider
-       than the collapse height keeps the toggle stable. */
+    /* ---- scroll shadow (independent of the other headers) ----------------- */
     const SCROLL_ON = 90;
     const SCROLL_OFF = 30;
     const setHeaderState = () => {
@@ -193,21 +141,17 @@
         });
     };
 
-    // The nested "Study Abroad" menu reveals as a top-aligned SECOND COLUMN
-    // inside the same card. Because the card clips its contents for the morph,
-    // we grow it to exactly fit the two columns, then shrink back on close.
     const growBgForSubmenu = (wrap, sub) => {
       const section = sectionFor("services");
-      const leftCol = section.offsetWidth; // left column = the services panel
+      const leftCol = section.offsetWidth;
       const baseH = servicesBaseHeight || section.offsetHeight;
 
-      // Align the column with the first service item.
       const grid = section.querySelector(".course-menu-grid");
       const firstCard = grid && grid.firstElementChild;
       const top = firstCard ? firstCard.offsetTop : 52;
       sub.style.top = top + "px";
 
-      const w = leftCol + sub.offsetWidth + 16; // left + right column + breathing room
+      const w = leftCol + sub.offsetWidth + 16;
       const h = Math.max(baseH, top + sub.scrollHeight + 16);
       applyGeometry(w, h, clampX(servicesBaseX, w), triggerCenter("services"), true);
     };
@@ -243,7 +187,7 @@
       next.style.transition = "none";
       next.style.transform = "translateX(" + dir * 16 + "px)";
       next.style.opacity = "0";
-      void next.offsetWidth; // reflow so the entrance animates from the offset
+      void next.offsetWidth;
       next.style.transition = "";
       next.classList.add("is-active");
       next.style.transform = "translateX(0)";
@@ -251,7 +195,7 @@
 
       activeKey = key;
       triggers.forEach((t) =>
-        t.setAttribute("aria-expanded", String(t.dataset.stripeTrigger === key))
+        t.setAttribute("aria-expanded", String(t.dataset.proTrigger === key))
       );
     };
 
@@ -261,7 +205,7 @@
       isOpen = true;
       flyout.classList.add("is-open");
       flyout.setAttribute("aria-hidden", "false");
-      showSection(key, wasOpen); // morph only when already open; otherwise snap
+      showSection(key, wasOpen);
       refreshIcons();
     };
 
@@ -304,7 +248,7 @@
 
     /* ---- trigger wiring ---------------------------------------------------- */
     triggers.forEach((trigger) => {
-      const key = trigger.dataset.stripeTrigger;
+      const key = trigger.dataset.proTrigger;
 
       trigger.addEventListener("mouseenter", () => {
         if (isDesktop()) openFlyout(key);
@@ -347,8 +291,6 @@
       }
     });
 
-    // The "coming soon" buttons reuse the classic [data-students-hub-trigger]
-    // (handled in script.js); just make sure our overlay/drawer steps aside.
     flyout.querySelectorAll("[data-students-hub-trigger]").forEach((btn) => {
       btn.addEventListener("click", () => {
         closeFlyout();
@@ -356,11 +298,6 @@
       });
     });
 
-    // "Study Abroad" reveals its column on HOVER (or keyboard focus) only — it
-    // never locks open on click. Hovering it opens the column; the column then
-    // stays open while the pointer is anywhere in the card (see bg.mouseleave
-    // below), so you can travel diagonally to its options without it closing.
-    // At ≤920px it falls back to the classic inline tap-accordion.
     flyout.querySelectorAll(".submenu-wrap").forEach((wrap) => {
       const sub = wrap.querySelector(".course-submenu");
       if (!sub) return;
@@ -373,7 +310,6 @@
       wrap.addEventListener("focusout", () => requestAnimationFrame(sync));
     });
 
-    // Close the column only when the pointer leaves the whole card.
     bg.addEventListener("mouseleave", () => {
       const open = flyout.querySelectorAll(".submenu-wrap.is-col-open");
       if (!open.length) return;
@@ -383,9 +319,6 @@
       }
     });
 
-    // Hover-only on desktop: swallow the click before it reaches classic
-    // script.js (which would otherwise toggle .is-open and "lock" the column).
-    // Capture phase + stopPropagation keeps the click from reaching the trigger.
     flyout.addEventListener(
       "click",
       (event) => {
@@ -399,7 +332,7 @@
 
     /* ---- global dismissers ------------------------------------------------- */
     document.addEventListener("click", (event) => {
-      if (!event.target.closest("[data-stripe-nav]")) {
+      if (!event.target.closest("[data-pro-nav]")) {
         if (isOpen) closeFlyout();
         closeMobileDrawer();
       }
