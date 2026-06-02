@@ -80,51 +80,39 @@
         </div>
       </section>
 
-      <section class="pathfinder" aria-labelledby="pathfinder-title">
-        <div class="container pathfinder-shell reveal">
-          <div>
-            <span class="eyebrow">Dream search</span>
-            <h2 id="pathfinder-title">Find the right first move.</h2>
+      <section class="signal-strip" aria-labelledby="signal-title">
+        <div class="container">
+          <div class="section-lead centered reveal">
+            <span class="eyebrow">The One Degree difference</span>
+            <h2 id="signal-title">More than an application service.</h2>
+            <p>
+              Strategy, end-to-end execution, and human guidance — so every decision along the way
+              is made with clarity and confidence.
+            </p>
           </div>
-          <form class="finder-form" data-finder-form>
-            <label>
-              <span>Destination</span>
-              <select name="destination" aria-label="Preferred destination" data-finder-field>
-                <option>United Kingdom</option>
-                <option>Canada</option>
-                <option>United States</option>
-                <option>Australia</option>
-                <option>Germany</option>
-                <option>Ireland</option>
-              </select>
-            </label>
-            <label>
-              <span>Program level</span>
-              <select name="program" aria-label="Program level" data-finder-field>
-                <option>Undergraduate</option>
-                <option>Masters</option>
-                <option>MBA</option>
-                <option>Foundation</option>
-                <option>Diploma</option>
-              </select>
-            </label>
-            <label>
-              <span>Intake</span>
-              <select name="intake" aria-label="Target intake" data-finder-field>
-                <option>Fall 2027</option>
-                <option>Spring 2027</option>
-                <option>Fall 2028</option>
-                <option>Flexible</option>
-              </select>
-            </label>
-            <a class="btn btn-secondary" href="https://gatewayhub.onedegreeadvisory.com/student-profiler/?channel_id=NDg4OQ==" target="_blank" rel="noopener">
-              <span>Build Plan</span>
-              <i data-lucide="sparkles"></i>
-            </a>
-          </form>
-          <p class="finder-note" data-finder-note>
-            Your first roadmap starts with country fit, course direction, and intake timing.
-          </p>
+
+          <div class="signal-grid">
+            <div class="signal reveal">
+              <span class="signal-icon" aria-hidden="true"><i data-lucide="compass"></i></span>
+              <strong>Strategy before forms</strong>
+              <p>Every shortlist begins with profile fit, budget clarity, career intent, and risk review.</p>
+            </div>
+            <div class="signal reveal">
+              <span class="signal-icon" aria-hidden="true"><i data-lucide="route"></i></span>
+              <strong>Application-to-arrival</strong>
+              <p>University selection, essays, scholarships, loans, visa prep, and pre-departure support.</p>
+            </div>
+            <div class="signal reveal">
+              <span class="signal-icon" aria-hidden="true"><i data-lucide="heart-handshake"></i></span>
+              <strong>Human advisory</strong>
+              <p>Thoughtful counseling for students and parents, with each next step made visible.</p>
+            </div>
+            <div class="signal reveal">
+              <span class="signal-icon" aria-hidden="true"><i data-lucide="flag"></i></span>
+              <strong>Decision checkpoints</strong>
+              <p>A guided journey that turns uncertainty into a sequence of confident choices.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -211,6 +199,96 @@
               <a href="#contact" aria-label="Explore support for working professionals">
                 <i data-lucide="arrow-right"></i>
               </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="method-section" id="method" aria-labelledby="method-title">
+        <div class="container method-layout">
+          <div class="section-lead sticky-lead reveal">
+            <span class="eyebrow">The One Degree method</span>
+            <h2 id="method-title">A calm, exacting process for one of life's biggest decisions.</h2>
+            <p>
+              Inspired by elite admissions consulting, but built for modern global education:
+              transparent, data-aware, deeply personal, and practical enough for real deadlines.
+            </p>
+            <a class="text-link" href="{{ route('contact') }}">
+              <span>Request your diagnostic session</span>
+              <i data-lucide="arrow-up-right"></i>
+            </a>
+          </div>
+
+          <div class="journey-steps">
+            <article class="journey-step reveal">
+              <span>01</span>
+              <h3>Profile diagnostic</h3>
+              <p>We review academics, interests, constraints, ambitions, budget, and family priorities before recommending a path.</p>
+            </article>
+            <article class="journey-step reveal">
+              <span>02</span>
+              <h3>Country and program fit</h3>
+              <p>Destinations are compared by curriculum, outcomes, work pathways, scholarships, lifestyle, and visa reality.</p>
+            </article>
+            <article class="journey-step reveal">
+              <span>03</span>
+              <h3>Application architecture</h3>
+              <p>Your story, documents, essays, test plan, and university list are aligned into one credible application system.</p>
+            </article>
+            <article class="journey-step reveal">
+              <span>04</span>
+              <h3>Decision and departure</h3>
+              <p>Offers are compared, finances are organized, visa readiness is checked, and arrival planning becomes simple.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="solutions-section" id="services" aria-labelledby="services-title">
+        <div class="container edge-container">
+          <div class="section-lead centered reveal">
+            <span class="eyebrow">360 solutions</span>
+            <h2 id="services-title">Find every solution, from applications to accommodations.</h2>
+            <p>
+              One connected advisory layer for the whole student journey: program discovery,
+              applications, scholarships, financial planning, visa readiness, and arrival support.
+            </p>
+            <a class="btn btn-secondary solution-cta" href="{{ route('contact') }}">
+              <span>Plan with One Degree</span>
+              <i data-lucide="arrow-up-right"></i>
+            </a>
+          </div>
+
+          <div class="service-grid">
+            <article class="service-card reveal">
+              <i data-lucide="compass"></i>
+              <h3>Course and Career Mapping</h3>
+              <p>Turn interests, marks, experience, and career goals into country and program options worth pursuing.</p>
+            </article>
+            <article class="service-card reveal">
+              <i data-lucide="building-2"></i>
+              <h3>University Shortlisting</h3>
+              <p>Build ambitious, realistic, and secure lists with admissions fit, costs, city life, and outcomes in view.</p>
+            </article>
+            <article class="service-card reveal">
+              <i data-lucide="file-text"></i>
+              <h3>Applications and Essays</h3>
+              <p>Shape documents, SOPs, personal statements, activity records, and recommendations into a coherent story.</p>
+            </article>
+            <article class="service-card reveal">
+              <i data-lucide="wallet-cards"></i>
+              <h3>Scholarship and Finance</h3>
+              <p>Compare scholarships, assistantships, payment timelines, and loan readiness before final decisions.</p>
+            </article>
+            <article class="service-card reveal">
+              <i data-lucide="stamp"></i>
+              <h3>Visa Counseling</h3>
+              <p>Prepare documents, interview answers, intent clarity, and compliance basics with a structured checklist.</p>
+            </article>
+            <article class="service-card reveal">
+              <i data-lucide="plane-takeoff"></i>
+              <h3>Pre-Departure Support</h3>
+              <p>Plan accommodation, packing, banking, insurance, campus arrival, and the first 30 days abroad.</p>
             </article>
           </div>
         </div>

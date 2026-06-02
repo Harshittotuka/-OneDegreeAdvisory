@@ -22006,3 +22006,70 @@ html[data-color-theme="cream"] .contact-section {
     row-gap: 10px;
   }
 }
+
+/* ── Study Abroad — OLD "first move" CTA (white card), kept above the new
+   .va-cta for comparison. Neutralises the home hero-bridge gradient +
+   negative overlap (incl. the themed override) so the card sits cleanly on
+   this lighter page, and balances the heading against a tidy action group
+   (button + note) instead of letting them float apart. */
+.study-abroad-page .pathfinder,
+html[data-color-theme] .study-abroad-page .pathfinder {
+  padding: 8px 0 84px;
+  margin-top: 0;
+  background: none;
+}
+
+.study-abroad-page .pathfinder-shell {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 44px;
+  margin-top: 0;
+  padding: 34px 38px;
+}
+
+.study-abroad-page .pathfinder-action {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: 360px;
+  max-width: 100%;
+}
+
+.study-abroad-page .pathfinder-action .btn {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 30px;
+  font-size: 1.02rem;
+  gap: 10px;
+}
+
+.study-abroad-page .pathfinder-action .btn i,
+.study-abroad-page .pathfinder-action .btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+.study-abroad-page .pathfinder-action .finder-note {
+  margin: 0;
+  text-align: center;
+}
+
+@media (max-width: 920px) {
+  .study-abroad-page .pathfinder-shell {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 30px 26px;
+  }
+
+  .study-abroad-page .pathfinder-action {
+    width: 100%;
+  }
+}
+
+/* Home — the pathfinder used to sit between the hero and the signal strip
+   and provided the top gap. With it gone, give the first section breathing
+   room below the hero. */
+.home-page .signal-strip {
+  padding-top: 88px;
+}
