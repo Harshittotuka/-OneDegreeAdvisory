@@ -1,15 +1,15 @@
 {{--
-  Stripe-style header (opt-in alternative nav).
+  Stripe-style header — the site's only nav. All behaviour lives in
+  public/stripe-nav.js; the three dropdown panels share one overlay that morphs
+  (size + position + cross-fade) between triggers, Stripe-style.
 
-  This is a SECOND, fully independent header. It is hidden by default and only
-  rendered visible when the user flips the floating "Nav style" toggle (which sets
-  the `nav-stripe` class on <html>). It does NOT reuse the classic nav's data-*
-  hooks (data-nav-toggle / data-nav-menu / data-dropdown), so public/script.js
-  never touches it. All behaviour lives in public/stripe-nav.js.
-
-  The dropdown CONTENT mirrors partials/header.blade.php 1:1 so the design is
-  identical — the only difference is that all three panels live inside one shared
-  overlay that morphs (size + position + cross-fade) between triggers, Stripe-style.
+  Two content variants are rendered and toggled by the floating "Nav" switcher
+  (html.nav-updated, wired in public/ui-switchers.js):
+    • Current  — the existing layout (Services menu, full Courses list).
+    • Updated  — Services removed; Courses led by MBBS (LLB dropped, other
+                 tracks → profiler); Destinations drop Tajikistan and gain a
+                 "Show more" tile. See the .nav-variant / .dest-more rules and
+                 the html.nav-updated overrides in styles.css.
 --}}
 @php
     $mbbsCountries = [
@@ -24,6 +24,10 @@
 
     $destinations = app(\App\Support\StudyLocationContent::class)->destinations();
     $mbbsCountryRoutes = ['georgia','russia','kazakhstan','kyrgyzstan','uzbekistan'];
+
+    // External student profiler — the "Updated" nav links the non-MBBS course
+    // tracks and the destination "Show more" cards here.
+    $profilingUrl = 'https://gatewayhub.onedegreeadvisory.com/student-profiler/?channel_id=NDg4OQ==';
 @endphp
 
 <header class="stripe-site-header" data-stripe-header>
@@ -93,6 +97,11 @@
                         <span class="dest-meta"><strong>{{ $destination['name'] }}</strong></span>
                       </a>
                     @endforeach
+                    {{-- "Updated" nav only: a non-clickable "and more" cell that sits like another country. --}}
+                    <span class="dest-card dest-more" aria-hidden="true">
+                      <span class="dest-flag dest-more-icon"><i data-lucide="ellipsis"></i></span>
+                      <span class="dest-meta"><strong>and more</strong></span>
+                    </span>
                   </div>
 
                   <div class="nav-dropdown-topline nav-dropdown-topline--mbbs">
@@ -102,13 +111,18 @@
                   <div class="nav-dropdown-grid">
                     @foreach ($mbbsCountries as $country)
                       @php($mbbsSlug = strtolower($country['name']))
-                      <a class="dest-card" href="{{ in_array($mbbsSlug, $mbbsCountryRoutes, true) ? route('mbbs.country', $mbbsSlug) : route('mbbs.student').'#corridor' }}">
+                      <a @class(['dest-card', 'dest-card--hide-updated' => $mbbsSlug === 'tajikistan']) href="{{ in_array($mbbsSlug, $mbbsCountryRoutes, true) ? route('mbbs.country', $mbbsSlug) : route('mbbs.student').'#corridor' }}">
                         <span class="dest-flag" aria-hidden="true">
                           <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt="">
                         </span>
                         <span class="dest-meta"><strong>{{ $country['name'] }}</strong></span>
                       </a>
                     @endforeach
+                    {{-- "Updated" nav only: a non-clickable "and more" cell that sits like another country. --}}
+                    <span class="dest-card dest-more" aria-hidden="true">
+                      <span class="dest-flag dest-more-icon"><i data-lucide="ellipsis"></i></span>
+                      <span class="dest-meta"><strong>and more</strong></span>
+                    </span>
                   </div>
                 </div>
 
@@ -129,37 +143,71 @@
             <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-courses" data-stripe-section="courses" role="region" aria-label="Courses">
               <div class="nav-dropdown-shell">
                 <div class="nav-dropdown-main course-menu">
-                  <div class="nav-dropdown-topline course-menu-topline">
-                    <span class="nav-dropdown-badge">Course pathways</span>
-                    <span class="course-menu-count">6 tracks</span>
+                  {{-- CURRENT nav --}}
+                  <div class="nav-variant nav-variant--current">
+                    <div class="nav-dropdown-topline course-menu-topline">
+                      <span class="nav-dropdown-badge">Course pathways</span>
+                      <span class="course-menu-count">6 tracks</span>
+                    </div>
+
+                    <div class="course-menu-grid">
+                      <span class="course-menu-card course-menu-card--disabled">
+                        <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="award"></i></span>
+                        <span class="course-menu-copy"><strong>Postgraduate</strong><small>Master's and PG</small></span>
+                      </span>
+                      <span class="course-menu-card course-menu-card--disabled">
+                        <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+                        <span class="course-menu-copy"><strong>Undergraduate</strong><small>Bachelor's degrees</small></span>
+                      </span>
+                      <a class="course-menu-card course-menu-card--mbbs" href="{{ route('mbbs.student') }}">
+                        <span class="course-icon course-icon--mbbs" aria-hidden="true"><i data-lucide="stethoscope"></i></span>
+                        <span class="course-menu-copy"><strong>MBBS</strong><small>Medicine abroad</small></span>
+                        <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
+                      </a>
+                      <span class="course-menu-card course-menu-card--disabled">
+                        <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="trending-up"></i></span>
+                        <span class="course-menu-copy"><strong>MBA</strong><small>Business abroad</small></span>
+                      </span>
+                      <span class="course-menu-card course-menu-card--disabled">
+                        <span class="course-icon course-icon--llb" aria-hidden="true"><i data-lucide="scale"></i></span>
+                        <span class="course-menu-copy"><strong>LLB</strong><small>Law abroad</small></span>
+                      </span>
+                      <span class="course-menu-card course-menu-card--disabled">
+                        <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="microscope"></i></span>
+                        <span class="course-menu-copy"><strong>Doctoral</strong><small>PhD and research</small></span>
+                      </span>
+                    </div>
                   </div>
 
-                  <div class="course-menu-grid">
-                    <span class="course-menu-card course-menu-card--disabled">
-                      <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="award"></i></span>
-                      <span class="course-menu-copy"><strong>Postgraduate</strong><small>Master's and PG</small></span>
-                    </span>
-                    <span class="course-menu-card course-menu-card--disabled">
-                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
-                      <span class="course-menu-copy"><strong>Undergraduate</strong><small>Bachelor's degrees</small></span>
-                    </span>
-                    <a class="course-menu-card course-menu-card--mbbs" href="{{ route('mbbs.student') }}">
-                      <span class="course-icon course-icon--mbbs" aria-hidden="true"><i data-lucide="stethoscope"></i></span>
-                      <span class="course-menu-copy"><strong>MBBS</strong><small>Medicine abroad</small></span>
-                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
-                    </a>
-                    <span class="course-menu-card course-menu-card--disabled">
-                      <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="trending-up"></i></span>
-                      <span class="course-menu-copy"><strong>MBA</strong><small>Business abroad</small></span>
-                    </span>
-                    <span class="course-menu-card course-menu-card--disabled">
-                      <span class="course-icon course-icon--llb" aria-hidden="true"><i data-lucide="scale"></i></span>
-                      <span class="course-menu-copy"><strong>LLB</strong><small>Law abroad</small></span>
-                    </span>
-                    <span class="course-menu-card course-menu-card--disabled">
-                      <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="microscope"></i></span>
-                      <span class="course-menu-copy"><strong>Doctoral</strong><small>PhD and research</small></span>
-                    </span>
+                  {{-- UPDATED nav: MBBS first + simplified, LLB removed, other tracks link to the profiler. --}}
+                  <div class="nav-variant nav-variant--updated">
+                    <div class="nav-dropdown-topline course-menu-topline">
+                      <span class="nav-dropdown-badge">Course pathways</span>
+                      <span class="course-menu-count">5 tracks</span>
+                    </div>
+
+                    <div class="course-menu-grid">
+                      <a class="course-menu-card" href="{{ route('mbbs.student') }}">
+                        <span class="course-icon course-icon--mbbs" aria-hidden="true"><i data-lucide="stethoscope"></i></span>
+                        <span class="course-menu-copy"><strong>MBBS</strong><small>Medicine abroad</small></span>
+                      </a>
+                      <a class="course-menu-card" href="{{ $profilingUrl }}" target="_blank" rel="noopener">
+                        <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="award"></i></span>
+                        <span class="course-menu-copy"><strong>Postgraduate</strong><small>Master's and PG</small></span>
+                      </a>
+                      <a class="course-menu-card" href="{{ $profilingUrl }}" target="_blank" rel="noopener">
+                        <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
+                        <span class="course-menu-copy"><strong>Undergraduate</strong><small>Bachelor's degrees</small></span>
+                      </a>
+                      <a class="course-menu-card" href="{{ $profilingUrl }}" target="_blank" rel="noopener">
+                        <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="trending-up"></i></span>
+                        <span class="course-menu-copy"><strong>MBA</strong><small>Business abroad</small></span>
+                      </a>
+                      <a class="course-menu-card" href="{{ $profilingUrl }}" target="_blank" rel="noopener">
+                        <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="microscope"></i></span>
+                        <span class="course-menu-copy"><strong>Doctoral</strong><small>PhD and research</small></span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

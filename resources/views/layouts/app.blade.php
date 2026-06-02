@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-color-theme="signature">
+<html lang="en" data-color-theme="cream">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,34 +33,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;450;500;600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       (function () {
-        document.documentElement.classList.add("js");
+        var root = document.documentElement;
+        root.classList.add("js");
+        // Apply persisted preview-switcher choices early to avoid a flash.
         try {
-          var t = sessionStorage.getItem("oda:color-theme");
-          if (t === "signature" || t === "signature-white" || t === "fedex" || t === "cream") {
-            document.documentElement.dataset.colorTheme = t;
+          if (localStorage.getItem("oda:nav-content") === "updated") {
+            root.classList.add("nav-updated");
           }
         } catch (e) {}
         try {
-          var ns = localStorage.getItem("oda:nav-style");
-          if (ns === "stripe") document.documentElement.classList.add("nav-stripe");
-          else if (ns === "pro") document.documentElement.classList.add("nav-pro");
+          var tb = localStorage.getItem("oda:topbar");
+          if (tb === "minimal" || tb === "compact") root.classList.add("topbar-" + tb);
         } catch (e) {}
       })();
     </script>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
     <link rel="stylesheet" href="{{ asset('stripe-nav.css') }}">
-    <link rel="stylesheet" href="{{ asset('pro-nav.css') }}">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="{{ asset('script.js') }}" defer></script>
     <script src="{{ asset('stripe-nav.js') }}" defer></script>
-    <script src="{{ asset('pro-nav.js') }}" defer></script>
+    <script src="{{ asset('ui-switchers.js') }}" defer></script>
   </head>
   <body class="{{ $bodyClass ?? '' }}">
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
 
-    @include('partials.header', ['activeNav' => $activeNav ?? null])
     @include('partials.header-stripe', ['activeNav' => $activeNav ?? null])
-    @include('partials.header-pro', ['activeNav' => $activeNav ?? null])
 
     <div class="students-hub-overlay" id="students-hub-coming-soon" data-students-hub-overlay role="dialog" aria-modal="true" aria-labelledby="students-hub-title" aria-describedby="students-hub-desc" aria-hidden="true" hidden>
       <div class="students-hub-backdrop" data-students-hub-close></div>
@@ -103,28 +100,21 @@
       </a>
     @endunless
 
-    <div class="nav-style-switch" role="group" aria-label="Navigation style">
-      <span class="nav-style-switch__label">Nav style</span>
-      <div class="nav-style-switch__options">
-        <button class="nav-style-switch__btn" type="button" data-nav-style-option="classic" aria-pressed="true">Classic</button>
-        <button class="nav-style-switch__btn" type="button" data-nav-style-option="stripe" aria-pressed="false">Stripe</button>
-        <button class="nav-style-switch__btn" type="button" data-nav-style-option="pro" aria-pressed="false">Pro</button>
+    <div class="ui-switch ui-switch--nav" role="group" aria-label="Navigation content" data-nav-content-switch>
+      <span class="ui-switch__label">Nav</span>
+      <div class="ui-switch__options">
+        <button class="ui-switch__btn" type="button" data-nav-content-option="current" aria-pressed="true">Current</button>
+        <button class="ui-switch__btn" type="button" data-nav-content-option="updated" aria-pressed="false">Updated</button>
       </div>
     </div>
 
-    <div class="theme-switcher" aria-label="Color theme switcher" data-theme-switcher>
-      <button class="theme-swatch theme-swatch-signature" type="button" data-theme-option="signature" aria-label="Use Original color theme" aria-pressed="true">
-        <span class="visually-hidden">Original</span>
-      </button>
-      <button class="theme-swatch theme-swatch-signature-white" type="button" data-theme-option="signature-white" aria-label="Use Original theme with white background" aria-pressed="false">
-        <span class="visually-hidden">Original + white background</span>
-      </button>
-      <button class="theme-swatch theme-swatch-fedex" type="button" data-theme-option="fedex" aria-label="Use FedEx color theme" aria-pressed="false">
-        <span class="visually-hidden">FedEx</span>
-      </button>
-      <button class="theme-swatch theme-swatch-cream" type="button" data-theme-option="cream" aria-label="Use Logo Colours theme" aria-pressed="false">
-        <span class="visually-hidden">Logo Colours</span>
-      </button>
+    <div class="ui-switch ui-switch--topbar" role="group" aria-label="Top bar style" data-topbar-switch>
+      <span class="ui-switch__label">Top bar</span>
+      <div class="ui-switch__options">
+        <button class="ui-switch__btn" type="button" data-topbar-option="original" aria-pressed="true">Original</button>
+        <button class="ui-switch__btn" type="button" data-topbar-option="minimal" aria-pressed="false">No socials</button>
+        <button class="ui-switch__btn" type="button" data-topbar-option="compact" aria-pressed="false">WA icon</button>
+      </div>
     </div>
 
     <script type="application/ld+json">

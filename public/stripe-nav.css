@@ -1,30 +1,15 @@
 /* ============================================================================
-   Stripe-style navigation (opt-in alternative)
+   Stripe-style navigation (the site's only nav)
    ----------------------------------------------------------------------------
-   Loaded on every page but inert until the user flips the floating "Nav style"
-   toggle, which adds `.nav-stripe` to <html>. This file only adds NEW selectors
-   (.stripe-*) and a handful of `.stripe-flyout`-scoped re-declarations of the
-   classic card rules (which are scoped to `.nav-menu` in styles.css and would
-   otherwise not reach the shared overlay). It never modifies classic selectors.
-   The dropdown design is therefore identical to the classic nav — the only new
-   thing is the single overlay that MORPHS (size + position + cross-fade) between
-   triggers, the way Stripe's global nav does.
+   This file adds the .stripe-* selectors plus a handful of `.stripe-flyout`-
+   scoped re-declarations of the shared dropdown card rules (defined against
+   `.nav-menu` in styles.css) so they reach the morphing overlay. The overlay
+   MORPHS (size + position + cross-fade) between triggers, the way Stripe's
+   global nav does.
    ========================================================================== */
 
-/* ---- Which header is visible --------------------------------------------
-   NB: the "Pro" 3rd nav (header-pro.blade.php) also carries .stripe-site-header
-   to inherit this styling, so the show/hide selectors below are keyed on the
-   data-stripe-header attribute to target ONLY the Stripe header. The Pro
-   header's own visibility lives in pro-nav.css (html.nav-pro). */
+/* Stripe is the only nav — always visible. */
 .stripe-site-header {
-  display: none;
-}
-
-html.nav-stripe .site-header {
-  display: none;
-}
-
-html.nav-stripe [data-stripe-header] {
   display: block;
 }
 

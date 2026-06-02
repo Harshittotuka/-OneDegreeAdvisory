@@ -26,53 +26,7 @@
     };
 
     /* ----------------------------------------------------------------------
-       1. Floating "Nav style" switch — 3-way: classic / stripe / pro
-       (persisted). This owns the switch for ALL nav styles; the Pro header
-       (pro-nav.js) just listens for the "oda:nav-style-change" event below.
-       ---------------------------------------------------------------------- */
-    const STORAGE_KEY = "oda:nav-style";
-    const root = document.documentElement;
-    const styleButtons = Array.from(
-      document.querySelectorAll("[data-nav-style-option]")
-    );
-
-    const currentStyle = () =>
-      root.classList.contains("nav-pro")
-        ? "pro"
-        : root.classList.contains("nav-stripe")
-        ? "stripe"
-        : "classic";
-
-    const syncStyleUi = () => {
-      const cur = currentStyle();
-      styleButtons.forEach((b) =>
-        b.setAttribute("aria-pressed", String(b.dataset.navStyleOption === cur))
-      );
-    };
-
-    const setNavStyle = (style) => {
-      root.classList.toggle("nav-stripe", style === "stripe");
-      root.classList.toggle("nav-pro", style === "pro");
-      try {
-        localStorage.setItem(STORAGE_KEY, style);
-      } catch (e) {}
-      // Tidy up whichever nav is being hidden.
-      document.body.classList.remove("nav-open"); // classic mobile menu
-      closeMobileDrawer(); // this (stripe) header
-      closeFlyout();
-      // Let the Pro header tidy its own drawer/overlay.
-      window.dispatchEvent(new CustomEvent("oda:nav-style-change"));
-      syncStyleUi();
-      refreshIcons();
-    };
-
-    styleButtons.forEach((b) =>
-      b.addEventListener("click", () => setNavStyle(b.dataset.navStyleOption))
-    );
-    syncStyleUi();
-
-    /* ----------------------------------------------------------------------
-       2 + 3. The Stripe header itself
+       The Stripe header (now the only nav)
        ---------------------------------------------------------------------- */
     const header = document.querySelector("[data-stripe-header]");
     const nav = document.querySelector("[data-stripe-nav]");
