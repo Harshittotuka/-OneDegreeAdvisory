@@ -19092,6 +19092,14 @@ html[data-color-theme] .country-main--dynamic .dynamic-cost-panel-head {
   color: #ffe6a3;
 }
 
+/* Multiple category chips (post hero + listing cards) wrap with even spacing. */
+.blog-post-chips,
+.blog-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .blog-list-title {
   margin: 14px 0 10px;
   font-family: "Cormorant Garamond", Georgia, serif;

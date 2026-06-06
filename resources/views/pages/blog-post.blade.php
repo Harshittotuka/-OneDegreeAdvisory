@@ -22,7 +22,11 @@
         <i data-lucide="arrow-left"></i>
         <span>All articles</span>
       </a>
-      <span class="blog-chip blog-chip--on-dark">{{ $post['category'] }}</span>
+      <div class="blog-post-chips">
+        @foreach($post['categories'] ?? array_filter([$post['category'] ?? null]) as $cat)
+          <span class="blog-chip blog-chip--on-dark">{{ $cat }}</span>
+        @endforeach
+      </div>
       <h1 class="blog-post-title">{{ $post['title'] }}</h1>
       <p class="blog-post-meta">
         <time datetime="{{ $post['date'] }}">{{ $fmtDate($post['date']) }}</time>
@@ -95,6 +99,7 @@
           @endswitch
         @endforeach
 
+        @if($post['show_cta'] ?? true)
         <aside class="blog-post-inline-cta">
           <div>
             <span class="eyebrow">Toward the right shortlist</span>
@@ -106,6 +111,7 @@
             <i data-lucide="arrow-up-right"></i>
           </a>
         </aside>
+        @endif
       </div>
     </div>
   </article>

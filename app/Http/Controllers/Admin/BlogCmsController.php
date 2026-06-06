@@ -86,7 +86,7 @@ class BlogCmsController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatePost($request);
-        $post = $this->buildPost($data, null, $request->boolean('featured'), $request->boolean('visible'));
+        $post = $this->buildPost($data, null, $request->boolean('featured'), $request->boolean('visible'), $request->boolean('show_cta'));
         $this->store->save($post, null);
         if ($post['featured']) {
             $this->store->makeSoleFeatured($post['slug']);
@@ -118,7 +118,7 @@ class BlogCmsController extends Controller
         }
 
         $data = $this->validatePost($request);
-        $post = $this->buildPost($data, $slug, $request->boolean('featured'), $request->boolean('visible'));
+        $post = $this->buildPost($data, $slug, $request->boolean('featured'), $request->boolean('visible'), $request->boolean('show_cta'));
         $this->store->save($post, $slug);
         if ($post['featured']) {
             $this->store->makeSoleFeatured($post['slug']);
@@ -248,7 +248,7 @@ class BlogCmsController extends Controller
         ]);
     }
 
-    private function buildPost(array $data, ?string $originalSlug, bool $featured = false, bool $visible = true): array
+    private function buildPost(array $data, ?string $originalSlug, bool $featured = false, bool $visible = true, bool $showCta = true): array
     {
         $body = $this->sanitizeBody($data['body'] ?? '');
         $desiredSlug = $data['slug'] ?: $data['title'];
@@ -274,6 +274,7 @@ class BlogCmsController extends Controller
             'alt' => trim($data['alt'] ?? ''),
             'featured' => $featured,
             'visible' => $visible || $featured, // a featured post is always visible
+            'show_cta' => $showCta, // show the "Book a free strategy call" block at the end
             'body' => $body,
         ];
     }
@@ -395,6 +396,7 @@ class BlogCmsController extends Controller
             'alt' => '',
             'featured' => false,
             'visible' => true,
+            'show_cta' => true,
             'body' => [],
         ];
     }

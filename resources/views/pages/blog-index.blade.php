@@ -37,7 +37,11 @@
             <img src="{{ $featured['image'] }}" alt="{{ $featured['alt'] ?? '' }}" loading="lazy">
           </a>
           <div class="blog-featured-copy">
-            <span class="blog-chip">{{ $featured['category'] }}</span>
+            <div class="blog-card-chips">
+              @foreach($featured['categories'] ?? array_filter([$featured['category'] ?? null]) as $cat)
+                <span class="blog-chip">{{ $cat }}</span>
+              @endforeach
+            </div>
             <h2>
               <a href="{{ route('blog.post', $featured['slug']) }}">{{ $featured['title'] }}</a>
             </h2>
@@ -81,7 +85,11 @@
                 <img src="{{ $post['image'] }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy">
               </a>
               <div class="blog-grid-card-body">
-                <span class="blog-chip">{{ $post['category'] }}</span>
+                <div class="blog-card-chips">
+                  @foreach($post['categories'] ?? array_filter([$post['category'] ?? null]) as $cat)
+                    <span class="blog-chip">{{ $cat }}</span>
+                  @endforeach
+                </div>
                 <h2>
                   <a href="{{ route('blog.post', $post['slug']) }}">{{ $post['title'] }}</a>
                 </h2>
@@ -104,7 +112,11 @@
                   <img src="{{ $post['image'] }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy">
                 </a>
                 <div class="blog-grid-card-body">
-                  <span class="blog-chip">{{ $post['category'] }}</span>
+                  <div class="blog-card-chips">
+                  @foreach($post['categories'] ?? array_filter([$post['category'] ?? null]) as $cat)
+                    <span class="blog-chip">{{ $cat }}</span>
+                  @endforeach
+                </div>
                   <h2>
                     <a href="{{ route('blog.post', $post['slug']) }}">{{ $post['title'] }}</a>
                   </h2>

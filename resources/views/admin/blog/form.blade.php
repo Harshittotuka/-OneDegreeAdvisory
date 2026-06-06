@@ -62,6 +62,9 @@
     font-size: .84rem; color: var(--muted); cursor: pointer; }
   .filedrop:hover { border-color: var(--teal); color: var(--teal); }
   .save-row { display: flex; gap: 10px; }
+  /* "Visit blog" greyed state when the post isn't saved (or has unsaved edits) */
+  .btn.is-disabled { opacity: .5; cursor: not-allowed; }
+  .btn.is-disabled:hover { border-color: var(--line); color: var(--ink); background: #fff; }
   /* Hero image: Upload / Link toggle + preview */
   .hero-tabs { display: flex; gap: 5px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 4px; margin-bottom: 12px; }
   .hero-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0;
@@ -146,10 +149,16 @@
             <button class="btn btn-primary" type="submit" style="flex:1;justify-content:center;">
               <i data-lucide="check" style="width:16px;height:16px;"></i> {{ $mode === 'create' ? 'Create post' : 'Save changes' }}
             </button>
-            @if($mode === 'edit')
-              <a class="btn btn-ghost" href="{{ route('blog.post', $post['slug']) }}" target="_blank" title="Preview"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>
-            @endif
           </div>
+          <button type="button" class="btn btn-ghost" id="visit-blog"
+                  style="width:100%;margin-top:10px;justify-content:center;"
+                  data-post-url="{{ $mode === 'edit' ? route('blog.post', $post['slug']) : '' }}"
+                  data-saved="{{ $mode === 'edit' ? '1' : '0' }}">
+            <i data-lucide="external-link" style="width:16px;height:16px;"></i> Visit blog
+          </button>
+          <p class="hint" id="visit-blog-hint" style="margin-top:8px;color:var(--danger);display:none;">
+            <i data-lucide="alert-triangle" style="width:13px;height:13px;vertical-align:-2px;"></i> Save the post to visit the live blog.
+          </p>
         </div>
 
         <div class="panel panel-pad panel-details">
@@ -193,6 +202,10 @@
           <label class="status-toggle">
             <input type="checkbox" name="featured" value="1" @checked(old('featured', $post['featured'] ?? false))>
             <span>⭐ Feature this post<br><span class="hint">Pins it to the top of the blog on every page. Only one post can be featured.</span></span>
+          </label>
+          <label class="status-toggle">
+            <input type="checkbox" name="show_cta" value="1" @checked(old('show_cta', $post['show_cta'] ?? true))>
+            <span>Show the “book a call” CTA<br><span class="hint">Adds the “Toward the right shortlist… book a free strategy call” block at the end of the article. On by default.</span></span>
           </label>
         </div>
 
@@ -468,6 +481,40 @@
   wrap.addEventListener('click', () => input.focus());
 
   render();
+})();
+</script>
+
+<script>
+// ── "Visit blog" button: only opens the live post when it's saved & unedited ──
+(function () {
+  const btn = document.getElementById('visit-blog');
+  if (!btn) return;
+  const hint = document.getElementById('visit-blog-hint');
+  const url = btn.dataset.postUrl;
+  const saved = btn.dataset.saved === '1'; // false in create mode (no post yet)
+  const form = document.getElementById('post-form');
+  let dirty = false;
+
+  function sync() {
+    const ok = saved && !dirty && !!url;
+    btn.classList.toggle('is-disabled', !ok);
+    if (hint) hint.style.display = ok ? 'none' : 'block';
+  }
+  sync();
+
+  const markDirty = () => { if (!dirty) { dirty = true; sync(); } };
+  if (form) { form.addEventListener('input', markDirty); form.addEventListener('change', markDirty); }
+
+  btn.addEventListener('click', () => {
+    if (saved && !dirty && url) {
+      window.open(url, '_blank', 'noopener');
+    } else {
+      const msg = saved
+        ? 'Save your changes first to visit the updated blog.'
+        : 'Save the post first to visit the blog.';
+      if (window.cmsToast) window.cmsToast(msg, 'error'); else alert(msg);
+    }
+  });
 })();
 </script>
 @endpush

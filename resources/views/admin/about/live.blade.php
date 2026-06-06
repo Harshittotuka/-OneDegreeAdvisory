@@ -205,6 +205,7 @@
         @endforeach
       </div>
     </div>
+    <a class="le-tbtn" href="{{ route('about') }}" target="_blank" rel="noopener"><i data-lucide="external-link"></i> View live page</a>
     <button class="le-tbtn primary" type="button" id="le-save"><i data-lucide="save"></i> Save</button>
   </header>
 

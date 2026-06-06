@@ -183,6 +183,7 @@
   <span class="le-hint">Only the hero is editable - click text, its palette dot, the photo, or an icon. Other sections are locked.</span>
   <span class="le-sp"></span>
   <span class="le-status" id="le-status"></span>
+  <a class="le-tbtn" href="{{ route('home') }}" target="_blank" rel="noopener"><i data-lucide="external-link"></i> View live page</a>
   <button class="le-tbtn" type="button" id="le-phone-btn"><i data-lucide="smartphone"></i> Phone preview</button>
   <button class="le-tbtn primary" type="button" id="le-save"><i data-lucide="save"></i> Save</button>
 </div>
