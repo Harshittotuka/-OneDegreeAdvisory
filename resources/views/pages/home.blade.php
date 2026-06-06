@@ -9,76 +9,7 @@
 
 @section('content')
 <main id="main" class="home-page">
-      <section class="hero" id="top" aria-label="One Degree Advisory">
-        <div class="hero-media" aria-hidden="true"></div>
-        <div class="hero-overlay" aria-hidden="true"></div>
-
-        <div class="container hero-grid">
-          <div class="hero-copy reveal">
-            <span class="eyebrow">Global Admissions</span>
-            <h1 class="hero-headline">You are <span class="gold-text">one degree</span><br />away from the world.</h1>
-            <div class="hero-actions">
-              <span class="btn btn-disabled" aria-disabled="true">
-                <i data-lucide="compass"></i>
-                <span>Career Mentoring</span>
-              </span>
-              <span class="btn btn-disabled" aria-disabled="true">
-                <i data-lucide="graduation-cap"></i>
-                <span>Student Development Programme</span>
-              </span>
-              <a class="btn btn-orange" href="{{ route('study-abroad') }}">
-                <i data-lucide="globe"></i>
-                <span>Study Abroad</span>
-              </a>
-            </div>
-          </div>
-
-          {{--
-          <form class="hero-consult reveal" data-hero-consult aria-label="Book your free consultation">
-            <h2 class="hero-consult-title">Book your free Consultation</h2>
-
-            <label class="hc-field">
-              <input type="text" name="fullName" autocomplete="name" required placeholder=" ">
-              <span class="hc-label">Full Name<em>*</em></span>
-            </label>
-
-            <label class="hc-field">
-              <input type="email" name="email" autocomplete="email" required placeholder=" ">
-              <span class="hc-label">Email address<em>*</em></span>
-            </label>
-
-            <div class="hc-field hc-phone">
-              <div class="hc-phone-country" data-country-select></div>
-              <input type="hidden" name="phoneCountry" data-phone-country-input value="+91">
-              <input type="tel" name="phone" data-phone-input autocomplete="tel" inputmode="numeric" placeholder=" " maxlength="10" aria-label="Phone number (10 digits)" required>
-            </div>
-
-            <label class="hc-field hc-select">
-              <select name="state" data-state-select required>
-                <option value="" disabled selected hidden></option>
-              </select>
-              <span class="hc-label">Current State</span>
-              <i class="hc-chevron" data-lucide="chevron-down"></i>
-            </label>
-
-            <label class="hc-field hc-select">
-              <select name="city" data-city-select required disabled>
-                <option value="" disabled selected hidden></option>
-              </select>
-              <span class="hc-label">Current City</span>
-              <i class="hc-chevron" data-lucide="chevron-down"></i>
-            </label>
-
-            <label class="hc-consent">
-              <input type="checkbox" required>
-              <span>I have read and agreed to <a href="#terms">terms</a> &amp; <a href="#privacy">privacy policy</a></span>
-            </label>
-
-            <button type="submit" class="hc-submit">SUBMIT</button>
-          </form>
-          --}}
-        </div>
-      </section>
+      @include('partials.home.hero', ['data' => $hero, 'edit' => ($heroEdit ?? false)])
 
       <section class="signal-strip" aria-labelledby="signal-title">
         <div class="container">

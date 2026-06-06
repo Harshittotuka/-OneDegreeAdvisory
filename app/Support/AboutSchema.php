@@ -118,7 +118,8 @@ class AboutSchema
                         ['key' => 'role', 'type' => 'text', 'label' => 'Role'],
                         ['key' => 'bio', 'type' => 'textarea', 'label' => 'Bio'],
                         ['key' => 'desk', 'type' => 'text', 'label' => 'Desk coverage'],
-                        ['key' => 'linkedin', 'type' => 'text', 'label' => 'LinkedIn URL'],
+                        ['key' => 'hand_text', 'type' => 'text', 'label' => 'Hand icon — hover help text'],
+                        ['key' => 'linkedin', 'type' => 'text', 'label' => 'Hand icon — click link (URL)'],
                     ]],
                 ],
             ],
@@ -164,8 +165,16 @@ class AboutSchema
     /** A blank data payload for a new section of the given type. */
     public static function blank(string $type): array
     {
+        return self::blankItem(self::type($type)['fields'] ?? []);
+    }
+
+    /** Blank values for a set of fields. Repeaters get one starter item so the
+     *  live editor always has something to edit/duplicate (empty items are
+     *  dropped again on save). */
+    private static function blankItem(array $fields): array
+    {
         $data = [];
-        foreach (self::type($type)['fields'] ?? [] as $field) {
+        foreach ($fields as $field) {
             $data[$field['key']] = self::blankValue($field);
         }
 
@@ -175,7 +184,7 @@ class AboutSchema
     private static function blankValue(array $field): mixed
     {
         return match ($field['type']) {
-            'repeater' => [],
+            'repeater' => [self::blankItem($field['fields'] ?? [])],
             'checkbox' => false,
             'select' => array_key_first($field['options'] ?? ['' => '']),
             default => '',

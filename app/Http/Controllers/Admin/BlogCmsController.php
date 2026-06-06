@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\CmsAuth;
 use App\Support\BlogStore;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
 class BlogCmsController extends Controller
@@ -23,8 +25,11 @@ class BlogCmsController extends Controller
 
     public function showLogin(Request $request): View|RedirectResponse
     {
-        if ($request->session()->get('cms_authenticated')) {
-            return redirect()->route('admin.blog.index');
+        // Already signed in, or carrying a valid "keep me signed in" cookie.
+        if ($request->session()->get('cms_authenticated') || CmsAuth::validRemember($request)) {
+            $request->session()->put('cms_authenticated', true);
+
+            return redirect()->route('admin.dashboard');
         }
 
         return view('admin.login');
@@ -41,14 +46,23 @@ class BlogCmsController extends Controller
         $request->session()->regenerate();
         $request->session()->put('cms_authenticated', true);
 
-        return redirect()->route('admin.blog.index');
+        $response = redirect()->route('admin.dashboard');
+
+        // "Keep me signed in" → 30-day encrypted, http-only persistent-login cookie.
+        if ($request->boolean('remember')) {
+            $response->withCookie(cookie(CmsAuth::REMEMBER_COOKIE, CmsAuth::rememberToken(), 60 * 24 * 30));
+        } else {
+            $response->withCookie(Cookie::forget(CmsAuth::REMEMBER_COOKIE));
+        }
+
+        return $response;
     }
 
     public function logout(Request $request): RedirectResponse
     {
         $request->session()->forget('cms_authenticated');
 
-        return redirect()->route('admin.login');
+        return redirect()->route('admin.login')->withCookie(Cookie::forget(CmsAuth::REMEMBER_COOKIE));
     }
 
     /* ───────────────────────── CRUD ───────────────────────── */

@@ -1,5 +1,15 @@
+@php
+    // Top blue notice bar — its display variant (original / minimal / compact) is
+    // managed in the CMS (/admin/notice-bar) and applied server-side here so
+    // there is no flash and no dependence on the old floating switcher.
+    $topbarVariant = app(\App\Support\NoticeBarStore::class)->get()['variant'] ?? 'original';
+
+    // When a CMS live-editor renders a real page (e.g. the home-hero editor),
+    // $cmsEdit injects the editor chrome and locks every non-edited section.
+    $cmsEdit = $cmsEdit ?? false;
+@endphp
 <!doctype html>
-<html lang="en" data-color-theme="cream">
+<html lang="en" data-color-theme="cream"@if($topbarVariant !== 'original') class="topbar-{{ $topbarVariant }}"@endif>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -36,14 +46,12 @@
         var root = document.documentElement;
         root.classList.add("js");
         // Apply persisted preview-switcher choices early to avoid a flash.
+        // (The top-bar variant is set server-side from the CMS; only the Nav
+        // content switcher remains a client-side preview toggle.)
         try {
           if (localStorage.getItem("oda:nav-content") === "updated") {
             root.classList.add("nav-updated");
           }
-        } catch (e) {}
-        try {
-          var tb = localStorage.getItem("oda:topbar");
-          if (tb === "minimal" || tb === "compact") root.classList.add("topbar-" + tb);
         } catch (e) {}
       })();
     </script>
@@ -54,7 +62,7 @@
     <script src="{{ asset('stripe-nav.js') }}" defer></script>
     <script src="{{ asset('ui-switchers.js') }}" defer></script>
   </head>
-  <body class="{{ $bodyClass ?? '' }}">
+  <body class="{{ trim(($bodyClass ?? '').($cmsEdit ? ' cms-editing' : '')) }}">
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
 
     @include('partials.header-stripe', ['activeNav' => $activeNav ?? null])
@@ -108,15 +116,6 @@
       </div>
     </div>
 
-    <div class="ui-switch ui-switch--topbar" role="group" aria-label="Top bar style" data-topbar-switch>
-      <span class="ui-switch__label">Top bar</span>
-      <div class="ui-switch__options">
-        <button class="ui-switch__btn" type="button" data-topbar-option="original" aria-pressed="true">Original</button>
-        <button class="ui-switch__btn" type="button" data-topbar-option="minimal" aria-pressed="false">No socials</button>
-        <button class="ui-switch__btn" type="button" data-topbar-option="compact" aria-pressed="false">WA icon</button>
-      </div>
-    </div>
-
     <script type="application/ld+json">
       {!! json_encode([
           '@context' => 'https://schema.org',
@@ -131,5 +130,9 @@
           'areaServed' => 'Worldwide',
       ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
+
+    @if($cmsEdit)
+      @include('admin.home-hero._editor_chrome')
+    @endif
   </body>
 </html>

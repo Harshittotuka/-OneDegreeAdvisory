@@ -16,6 +16,7 @@ import hashlib
 import html
 import json
 import re
+import socket
 import sys
 import time
 from collections import OrderedDict
@@ -39,6 +40,9 @@ USER_AGENT = (
     "Mozilla/5.0 (compatible; OneDegree-LeverageEduStudyLocationAudit/1.0; "
     "+https://leverageedu.com)"
 )
+_ORIGINAL_GETADDRINFO = socket.getaddrinfo
+_DNS_FALLBACK_HOSTS: dict[str, list[str]] = {}
+_DNS_FALLBACK_PATCHED = False
 
 EXCEL_CELL_LIMIT = 32767
 SAFE_CELL_LIMIT = 32000
@@ -664,10 +668,113 @@ def tags_between(start: Tag, stop: Tag | None, tag_name: str) -> list[Tag]:
     return tags
 
 
+def dns_failure_for_url(exc: requests.RequestException, url: str) -> bool:
+    host = (urlparse(url).hostname or "").rstrip(".").lower()
+    if host != BASE_DOMAIN:
+        return False
+
+    text = str(exc).lower()
+    return "getaddrinfo" in text or "name resolution" in text or "failed to resolve" in text
+
+
+def resolve_host_with_doh(host: str, timeout: int) -> list[str]:
+    providers = [
+        (
+            "Cloudflare",
+            "https://1.1.1.1/dns-query",
+            {"Accept": "application/dns-json"},
+            {"name": host, "type": "A"},
+        ),
+        (
+            "Google",
+            "https://8.8.8.8/resolve",
+            {},
+            {"name": host, "type": "A"},
+        ),
+    ]
+
+    for provider, endpoint, headers, params in providers:
+        try:
+            response = requests.get(endpoint, params=params, headers=headers, timeout=min(timeout, 10))
+            response.raise_for_status()
+            payload = response.json()
+        except requests.RequestException as exc:
+            print(f"  DNS fallback via {provider} failed: {exc}", file=sys.stderr)
+            continue
+
+        addresses = []
+        for answer in payload.get("Answer", []):
+            if answer.get("type") != 1:
+                continue
+            address = str(answer.get("data", "")).strip()
+            if re.match(r"^\d{1,3}(?:\.\d{1,3}){3}$", address):
+                addresses.append(address)
+
+        if addresses:
+            return addresses
+
+    return []
+
+
+def install_dns_fallback(host: str, addresses: list[str]) -> None:
+    global _DNS_FALLBACK_PATCHED
+
+    normalized = host.rstrip(".").lower()
+    _DNS_FALLBACK_HOSTS[normalized] = addresses
+
+    if _DNS_FALLBACK_PATCHED:
+        return
+
+    def patched_getaddrinfo(
+        query_host: str,
+        port: int | str | None,
+        family: int = 0,
+        type: int = 0,
+        proto: int = 0,
+        flags: int = 0,
+    ) -> list[Any]:
+        key = str(query_host).rstrip(".").lower()
+        fallback_addresses = _DNS_FALLBACK_HOSTS.get(key)
+
+        if fallback_addresses and family in {socket.AF_UNSPEC, socket.AF_INET}:
+            results = []
+            for address in fallback_addresses:
+                results.extend(_ORIGINAL_GETADDRINFO(address, port, socket.AF_INET, type, proto, flags))
+            return results
+
+        return _ORIGINAL_GETADDRINFO(query_host, port, family, type, proto, flags)
+
+    socket.getaddrinfo = patched_getaddrinfo
+    _DNS_FALLBACK_PATCHED = True
+
+
 def fetch_html(session: requests.Session, url: str, timeout: int) -> tuple[str, int, str]:
-    response = session.get(url, timeout=timeout)
-    response.raise_for_status()
-    return response.text, response.status_code, response.url
+    last_error: requests.RequestException | None = None
+    for attempt in range(1, 4):
+        try:
+            response = session.get(url, timeout=timeout)
+            response.raise_for_status()
+            return response.text, response.status_code, response.url
+        except requests.RequestException as exc:
+            last_error = exc
+            host = (urlparse(url).hostname or "").rstrip(".").lower()
+            if dns_failure_for_url(exc, url) and host not in _DNS_FALLBACK_HOSTS:
+                addresses = resolve_host_with_doh(host, timeout)
+                if addresses:
+                    install_dns_fallback(host, addresses)
+                    print(
+                        f"  Local DNS failed for {host}; using DNS-over-HTTPS fallback: {', '.join(addresses)}",
+                        file=sys.stderr,
+                    )
+                    continue
+            if attempt >= 3:
+                break
+            print(f"  Fetch failed for {url}; retrying ({attempt}/2): {exc}", file=sys.stderr)
+            time.sleep(min(2 * attempt, 5))
+
+    if last_error:
+        raise last_error
+    raise RuntimeError(f"Could not fetch {url}")
 
 
 _JS_BACKSLASH = "\\"
@@ -1926,7 +2033,16 @@ def main() -> int:
 
     run_id = make_run_id()
     old_snapshot = load_snapshot(snapshot_path)
-    dataset = build_dataset(args)
+    try:
+        dataset = build_dataset(args)
+    except requests.RequestException as exc:
+        print(
+            "Could not fetch LeverageEdu source data. "
+            "Check internet/DNS access from this server and try again. "
+            f"Details: {exc}",
+            file=sys.stderr,
+        )
+        return 1
     comparison = compare_datasets(old_snapshot, dataset, run_id)
     comparison["run_id"] = run_id
 

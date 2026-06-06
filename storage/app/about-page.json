@@ -248,6 +248,7 @@
                     "role": "Founder · Managing Partner",
                     "bio": "Edtech leader and former admissions reader at a top-ten US university. TEDx speaker; mentors first-generation applicants worldwide. Leads strategy for selective undergraduate and MBA files.",
                     "desk": "US · Canada",
+                    "hand_text": "",
                     "linkedin": "#"
                 },
                 {
@@ -256,6 +257,7 @@
                     "role": "Founder · Partner",
                     "bio": "Serial entrepreneur with 25+ years in global education. Oxford alum and 15-year admissions interviewer. Runs the Europe desk and the in-house scholarship lab.",
                     "desk": "UK · ffd",
+                    "hand_text": "",
                     "linkedin": "#"
                 },
                 {
@@ -264,7 +266,8 @@
                     "role": "Founder · Partner",
                     "bio": "Investment banking and equity research background. Kelley School of Business alumna. Advisor to Mount Litera School International (4 years); recognised among “Young Women Entrepreneurs Leading a New India.”",
                     "desk": "Profile · Finance",
-                    "linkedin": "#"
+                    "hand_text": "",
+                    "linkedin": ""
                 }
             ]
         }

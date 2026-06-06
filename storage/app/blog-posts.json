@@ -1,41 +1,5 @@
 [
     {
-        "slug": "test",
-        "title": "test",
-        "categories": [
-            "College Admissions"
-        ],
-        "category": "College Admissions",
-        "date": "2026-05-29",
-        "read_time": 1,
-        "author": "One Degree",
-        "excerpt": "test",
-        "image": "https://multipurposethemes.com/wp-content/uploads/2023/09/Fox-Bootstrap-Admin-Dashboard-Template.jpg",
-        "alt": "",
-        "featured": false,
-        "visible": true,
-        "body": [
-            {
-                "kind": "p",
-                "text": "test"
-            },
-            {
-                "kind": "image",
-                "url": "http://127.0.0.1:8000/storage/blog/byIGW0vVks3axxZlJIWdzOwQOSv7pXKjnG7cMoeI.jpg",
-                "caption": "hergerger"
-            },
-            {
-                "kind": "quote",
-                "text": "test",
-                "attribution": "teste tgetg"
-            },
-            {
-                "kind": "h2",
-                "text": "gergergerg"
-            }
-        ]
-    },
-    {
         "slug": "fallout-of-federal-cuts",
         "title": "The Impact of Federal Funding Cuts on Harvard, Columbia, & Elite Universities",
         "category": "One Degree",

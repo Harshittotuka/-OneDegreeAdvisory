@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Admin\AboutCmsController;
 use App\Http\Controllers\Admin\BlogCmsController;
+use App\Http\Controllers\Admin\CountryDataSyncController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\HomeHeroCmsController;
+use App\Http\Controllers\Admin\NoticeBarCmsController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,7 +54,9 @@ Route::prefix('admin')->group(function () {
     Route::post('logout', [BlogCmsController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('cms.auth')->group(function () {
-        Route::get('/', fn () => redirect()->route('admin.blog.index'));
+        Route::get('/', fn () => redirect()->route('admin.dashboard'));
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
         Route::get('blog', [BlogCmsController::class, 'index'])->name('admin.blog.index');
         Route::get('blog/create', [BlogCmsController::class, 'create'])->name('admin.blog.create');
         Route::post('blog', [BlogCmsController::class, 'store'])->name('admin.blog.store');
@@ -67,24 +73,33 @@ Route::prefix('admin')->group(function () {
         Route::delete('blog/{slug}', [BlogCmsController::class, 'destroy'])
             ->where('slug', '[a-z0-9-]+')->name('admin.blog.destroy');
 
-        /* ── About-page CMS ── */
-        Route::get('about', [AboutCmsController::class, 'index'])->name('admin.about.index');
-        Route::get('about/create', [AboutCmsController::class, 'create'])->name('admin.about.create');
-        Route::post('about', [AboutCmsController::class, 'store'])->name('admin.about.store');
-        Route::post('about/upload', [AboutCmsController::class, 'upload'])->name('admin.about.upload');
-        Route::post('about/reorder', [AboutCmsController::class, 'reorder'])->name('admin.about.reorder');
-
-        /* ── About-page CMS · Live editor (Mode 2) ── */
+        /* ── About-page CMS · Live editor (the only editor) ── */
+        Route::get('about', [AboutCmsController::class, 'index'])->name('admin.about.index'); // → redirects to live
         Route::get('about/live', [AboutCmsController::class, 'live'])->name('admin.about.live');
         Route::post('about/live', [AboutCmsController::class, 'liveSave'])->name('admin.about.live.save');
         Route::get('about/live/section', [AboutCmsController::class, 'liveSection'])->name('admin.about.live.section');
-        Route::post('about/{id}/visibility', [AboutCmsController::class, 'toggleVisibility'])
-            ->where('id', '[a-z0-9-]+')->name('admin.about.visibility');
-        Route::get('about/{id}/edit', [AboutCmsController::class, 'edit'])
-            ->where('id', '[a-z0-9-]+')->name('admin.about.edit');
-        Route::put('about/{id}', [AboutCmsController::class, 'update'])
-            ->where('id', '[a-z0-9-]+')->name('admin.about.update');
-        Route::delete('about/{id}', [AboutCmsController::class, 'destroy'])
-            ->where('id', '[a-z0-9-]+')->name('admin.about.destroy');
+        Route::post('about/upload', [AboutCmsController::class, 'upload'])->name('admin.about.upload');
+        Route::post('about/import', [AboutCmsController::class, 'importUrl'])->name('admin.about.import');
+
+        /* ── Home-hero CMS · Live editor ── */
+        Route::get('home-hero', [HomeHeroCmsController::class, 'live'])->name('admin.home-hero.index');
+        Route::get('home-hero/live', [HomeHeroCmsController::class, 'live'])->name('admin.home-hero.live');
+        Route::post('home-hero/live', [HomeHeroCmsController::class, 'liveSave'])->name('admin.home-hero.live.save');
+        Route::post('home-hero/upload', [HomeHeroCmsController::class, 'upload'])->name('admin.home-hero.upload');
+        Route::post('home-hero/import', [HomeHeroCmsController::class, 'importUrl'])->name('admin.home-hero.import');
+        Route::post('home-hero/preview', [HomeHeroCmsController::class, 'preview'])->name('admin.home-hero.preview');
+
+        /* ── Notice-bar CMS (top blue nav) ── */
+        Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
+        Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
+
+        Route::get('country-sync', [CountryDataSyncController::class, 'index'])->name('admin.country-sync.index');
+        Route::post('country-sync/check', [CountryDataSyncController::class, 'check'])->name('admin.country-sync.check');
+        Route::post('country-sync/start', [CountryDataSyncController::class, 'start'])->name('admin.country-sync.start');
+        Route::get('country-sync/progress', [CountryDataSyncController::class, 'progress'])->name('admin.country-sync.progress');
+        Route::post('country-sync/apply', [CountryDataSyncController::class, 'applyAll'])->name('admin.country-sync.apply');
+        Route::post('country-sync/selected', [CountryDataSyncController::class, 'applySelected'])->name('admin.country-sync.selected');
+        Route::get('country-sync/report', [CountryDataSyncController::class, 'downloadReport'])->name('admin.country-sync.report');
+        Route::get('country-sync/workbook', [CountryDataSyncController::class, 'downloadWorkbook'])->name('admin.country-sync.workbook');
     });
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Support\AboutContent;
 use App\Support\BlogContent;
+use App\Support\HeroContent;
 use App\Support\MbbsCountryContent;
 use App\Support\StudyLocationContent;
 use Illuminate\Contracts\View\View;
@@ -11,31 +12,17 @@ use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-    public function home(BlogContent $blog): View
+    public function home(Request $request, BlogContent $blog, HeroContent $hero): View
     {
-        // The home "Insights" section surfaces the latest blog posts. Mirror the
-        // blog index: only visible posts, with the pinned/featured one leading.
-        $posts = array_values(array_filter(
-            $blog->all(),
-            fn (array $p) => ($p['visible'] ?? true) === true
-        ));
-
-        $featured = null;
-        foreach ($posts as $i => $candidate) {
-            if (! empty($candidate['featured'])) {
-                $featured = $candidate;
-                unset($posts[$i]);
-                break;
-            }
-        }
-
-        $posts = array_values($posts);
-        if ($featured) {
-            array_unshift($posts, $featured);
-        }
+        // The live CMS can preview unsaved hero edits via ?__hero_preview=1; the
+        // data is stashed in the editor's own session and never published.
+        $heroData = $request->boolean('__hero_preview') && $request->session()->has('home_hero_preview')
+            ? $request->session()->get('home_hero_preview')
+            : $hero->forDisplay();
 
         return view('pages.home', [
-            'insights' => array_slice($posts, 0, 4),
+            'insights' => $blog->homeInsights(),
+            'hero' => $heroData,
         ]);
     }
 

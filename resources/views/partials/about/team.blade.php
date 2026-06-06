@@ -25,8 +25,11 @@
             @if($edit || !empty($m['bio']))<p{!! $ed('bio') !!}>{{ $m['bio'] ?? '' }}</p>@endif
             <div class="va-team-meta">
               @if($edit || !empty($m['desk']))<span class="va-team-desk"{!! $ed('desk') !!}>{{ $m['desk'] ?? '' }}</span>@endif
-              @if($edit || !empty($m['linkedin']))
-                <a class="va-team-social" href="{{ $m['linkedin'] ?? '#' }}" aria-label="Say hi to {{ $m['name'] ?? 'this partner' }}">
+              @php $handUrl = trim((string) ($m['linkedin'] ?? '')); $hasHandUrl = $handUrl !== '' && $handUrl !== '#'; @endphp
+              @if($edit || $hasHandUrl || !empty($m['hand_text']))
+                <a class="va-team-social"@if($hasHandUrl) href="{{ $handUrl }}"@endif
+                   @if(!empty($m['hand_text'])) data-tip="{{ $m['hand_text'] }}"@endif
+                   aria-label="{{ !empty($m['hand_text']) ? $m['hand_text'] : 'Say hi to '.($m['name'] ?? 'this partner') }}"{!! $edit ? ' data-ed-hand' : '' !!}>
                   <i data-lucide="hand" class="va-team-wave"></i>
                 </a>
               @endif

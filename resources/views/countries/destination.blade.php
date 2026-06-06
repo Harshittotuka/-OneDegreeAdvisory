@@ -64,10 +64,15 @@
         ->take(2)
         ->map(fn ($row) => $row['value'])
         ->join(' / ');
-    $bannerImage = (string) ($featureImages[0]['image_url'] ?? '');
-    $bannerImageAlt = (string) ($featureImages[0]['image_alt'] ?? $countryLabel);
-    $intakeImage = (string) ($featureImages[1]['image_url'] ?? ($featureImages[0]['image_url'] ?? ''));
-    $intakeImageAlt = (string) ($featureImages[1]['image_alt'] ?? ($featureImages[0]['image_alt'] ?? $countryLabel));
+    // Banner/intake photos come from the scraped feature images. Some countries
+    // (e.g. Europe) scraped only lazy-load placeholders, which validImages() drops,
+    // leaving none — so fall back to the country's hero photo instead of an empty
+    // <img>. hero_image is an asset path, so wrap it in asset() for a real URL.
+    $heroPhoto = ($destination['hero_image'] ?? '') !== '' ? asset($destination['hero_image']) : '';
+    $bannerImage = (string) ($featureImages[0]['image_url'] ?? '') ?: $heroPhoto;
+    $bannerImageAlt = (string) ($featureImages[0]['image_alt'] ?? '') ?: $countryLabel;
+    $intakeImage = (string) ($featureImages[1]['image_url'] ?? ($featureImages[0]['image_url'] ?? '')) ?: $heroPhoto;
+    $intakeImageAlt = (string) ($featureImages[1]['image_alt'] ?? ($featureImages[0]['image_alt'] ?? '')) ?: $countryLabel;
     $icons = ['award', 'clock', 'briefcase', 'badge-check', 'flask-conical', 'globe-2'];
 
     // Per-country SEO: social share image + canonical (URL is already unique per country).
@@ -183,7 +188,17 @@
         @endif
         <div class="band-inner">
           <span class="eyebrow">{{ $indianStudents['subtitle'] ?: $text('indian_subtitle_fallback') }}</span>
-          <h2>{{ $indianStudents['heading_before'] }}<span class="gold-text">{{ $indianStudents['heading_highlight'] }}</span>{{ $indianStudents['heading_after'] }}</h2>
+          @php
+            // The heading is stored as three separate fields (each trimmed), so we
+            // re-insert the spaces around the highlighted phrase here. Skip the
+            // trailing space when the "after" fragment starts with punctuation.
+            $hb = trim((string) ($indianStudents['heading_before'] ?? ''));
+            $hh = trim((string) ($indianStudents['heading_highlight'] ?? ''));
+            $ha = trim((string) ($indianStudents['heading_after'] ?? ''));
+            $spaceBefore = ($hb !== '' && $hh !== '') ? ' ' : '';
+            $spaceAfter = ($hh !== '' && $ha !== '' && ! preg_match('/^\p{P}/u', $ha)) ? ' ' : '';
+          @endphp
+          <h2>{{ $hb }}{{ $spaceBefore }}<span class="gold-text">{{ $hh }}</span>{{ $spaceAfter }}{{ $ha }}</h2>
           <div class="band-stats">
             @foreach($indianCards as $index => $card)
               <div @class(['band-stat', 'band-stat--highlight' => $card['highlighted'] ?? false]) style="--card-index: {{ $index }}">

@@ -80,10 +80,10 @@
   /* Category tag input */
   .tagbox { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; border: 1px solid var(--line);
     border-radius: 10px; padding: 8px 10px; background: #fff; }
-  .tagbox:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(239,108,26,.13); }
+  .tagbox:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(102,108,255,.13); }
   .tagbox input { border: 0; outline: 0; box-shadow: none; padding: 4px; flex: 1; min-width: 120px; font-size: .9rem; }
   .tag { display: inline-flex; align-items: center; gap: 6px; background: var(--teal-soft); color: var(--teal-dark);
-    border: 1px solid #f6cdaa; border-radius: 999px; padding: 4px 6px 4px 11px; font-size: .82rem; font-weight: 700; }
+    border: 1px solid #cdd0ff; border-radius: 999px; padding: 4px 6px 4px 11px; font-size: .82rem; font-weight: 700; }
   .tag button { border: 0; background: none; cursor: pointer; color: var(--teal-dark); line-height: 1; font-size: 1rem; padding: 0 2px; }
   .tag button:hover { color: var(--danger); }
   /* Status toggles */

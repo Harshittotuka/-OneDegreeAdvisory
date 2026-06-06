@@ -9,6 +9,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AboutCmsController extends Controller
@@ -17,135 +19,18 @@ class AboutCmsController extends Controller
     {
     }
 
-    /* ───────────────────────── List / reorder ───────────────────────── */
+    /* ───────────────────────── Entry ───────────────────────── */
 
-    public function index(): View
+    /**
+     * The structured list/form editor was removed — the live editor is now the
+     * single way to edit the About page. The dashboard nav still points here.
+     */
+    public function index(): RedirectResponse
     {
-        return view('admin.about.index', [
-            'sections' => $this->store->all(),
-            'types' => AboutSchema::types(),
-        ]);
+        return redirect()->route('admin.about.live');
     }
 
-    public function reorder(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'ids' => ['required', 'array'],
-            'ids.*' => ['string'],
-        ]);
-
-        $this->store->reorder($data['ids']);
-
-        return response()->json(['ok' => true]);
-    }
-
-    public function toggleVisibility(Request $request, string $id): RedirectResponse|JsonResponse
-    {
-        $section = $this->store->find($id);
-        if (! $section) {
-            return $this->toggleResponse($request, $id, false, 'Section not found.');
-        }
-
-        $new = ! ($section['visible'] ?? true);
-        $this->store->setVisibility($id, $new);
-
-        $label = AboutSchema::type($section['type'])['label'] ?? 'Section';
-
-        return $this->toggleResponse(
-            $request,
-            $id,
-            $new,
-            $new ? "“{$label}” is now visible." : "“{$label}” is hidden from the page."
-        );
-    }
-
-    private function toggleResponse(Request $request, string $id, bool $visible, string $message): RedirectResponse|JsonResponse
-    {
-        if ($request->expectsJson()) {
-            return response()->json([
-                'ok' => true,
-                'id' => $id,
-                'visible' => $visible,
-                'message' => $message,
-            ]);
-        }
-
-        return back()->with('status', $message);
-    }
-
-    /* ───────────────────────── Create / edit ───────────────────────── */
-
-    public function create(Request $request): View|RedirectResponse
-    {
-        $type = (string) $request->query('type', '');
-        if (! AboutSchema::isType($type)) {
-            return redirect()->route('admin.about.index')->with('status', 'Pick a section type to add.');
-        }
-
-        return view('admin.about.form', [
-            'mode' => 'create',
-            'section' => [
-                'id' => '',
-                'type' => $type,
-                'visible' => true,
-                'data' => AboutSchema::blank($type),
-            ],
-            'schema' => AboutSchema::type($type),
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $type = (string) $request->input('type');
-        if (! AboutSchema::isType($type)) {
-            return redirect()->route('admin.about.index')->with('status', 'Unknown section type.');
-        }
-
-        $section = $this->buildSection($request, $type, null);
-        $this->store->save($section, null);
-
-        return redirect()
-            ->route('admin.about.edit', $section['id'])
-            ->with('status', 'Section added.');
-    }
-
-    public function edit(string $id): View|RedirectResponse
-    {
-        $section = $this->store->find($id);
-        if (! $section || ! AboutSchema::isType($section['type'] ?? '')) {
-            return redirect()->route('admin.about.index')->with('status', 'Section not found.');
-        }
-
-        return view('admin.about.form', [
-            'mode' => 'edit',
-            'section' => $section,
-            'schema' => AboutSchema::type($section['type']),
-        ]);
-    }
-
-    public function update(Request $request, string $id): RedirectResponse
-    {
-        $existing = $this->store->find($id);
-        if (! $existing || ! AboutSchema::isType($existing['type'] ?? '')) {
-            return redirect()->route('admin.about.index')->with('status', 'Section not found.');
-        }
-
-        $section = $this->buildSection($request, $existing['type'], $id);
-        $this->store->save($section, $id);
-
-        return redirect()
-            ->route('admin.about.edit', $section['id'])
-            ->with('status', 'Section saved.');
-    }
-
-    public function destroy(string $id): RedirectResponse
-    {
-        $this->store->delete($id);
-
-        return redirect()->route('admin.about.index')->with('status', 'Section deleted.');
-    }
-
-    /* ───────────────────────── Live editor (Mode 2) ───────────────────────── */
+    /* ───────────────────────── Live editor ───────────────────────── */
 
     public function live(): View
     {
@@ -229,29 +114,48 @@ class AboutCmsController extends Controller
         ]);
     }
 
-    /* ───────────────────────── Helpers ───────────────────────── */
-
-    private function buildSection(Request $request, string $type, ?string $originalId): array
+    /**
+     * Download a remote image to local public storage and return a same-origin
+     * URL. Lets the browser crop remote images (e.g. Unsplash) without the
+     * canvas being tainted by cross-origin pixels.
+     */
+    public function importUrl(Request $request): JsonResponse
     {
-        $raw = $request->input('data', []);
-        $raw = is_array($raw) ? $raw : [];
+        $url = trim((string) $request->input('url', ''));
+        if (! preg_match('#^https?://#i', $url)) {
+            return response()->json(['ok' => false, 'message' => 'Enter a valid http(s) image URL.'], 422);
+        }
 
-        $data = $this->sanitizeData($type, $raw);
+        try {
+            $resp = Http::timeout(12)->withHeaders(['User-Agent' => 'OneDegreeCMS/1.0'])->get($url);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'message' => 'Could not fetch that image.'], 422);
+        }
 
-        // On edit keep the existing id stable; on create derive it from the
-        // anchor field (if any) or fall back to the type name.
-        $desiredId = (string) $request->input('id', '')
-            ?: $originalId
-            ?: ($data['anchor'] ?? '')
-            ?: $type;
+        $type = strtolower((string) $resp->header('Content-Type'));
+        if (! $resp->ok() || ! str_starts_with($type, 'image/')) {
+            return response()->json(['ok' => false, 'message' => 'That URL is not a reachable image.'], 422);
+        }
 
-        return [
-            'id' => $this->store->uniqueId($desiredId, $originalId),
-            'type' => $type,
-            'visible' => $request->boolean('visible'),
-            'data' => $data,
-        ];
+        $body = $resp->body();
+        if (strlen($body) > 5 * 1024 * 1024) {
+            return response()->json(['ok' => false, 'message' => 'Image is larger than 5 MB.'], 422);
+        }
+
+        $ext = match (true) {
+            str_contains($type, 'png') => 'png',
+            str_contains($type, 'webp') => 'webp',
+            str_contains($type, 'gif') => 'gif',
+            str_contains($type, 'svg') => 'svg',
+            default => 'jpg',
+        };
+        $name = 'about/import-'.bin2hex(random_bytes(6)).'.'.$ext;
+        Storage::disk('public')->put($name, $body);
+
+        return response()->json(['ok' => true, 'url' => asset('storage/'.$name)]);
     }
+
+    /* ───────────────────────── Helpers ───────────────────────── */
 
     /** Walk the type's schema and pull only declared fields out of the raw input. */
     private function sanitizeData(string $type, array $raw): array

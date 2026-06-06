@@ -1,40 +1,45 @@
 {{--
-  Top blue notice bar (shared by the classic and Stripe headers).
+  Top blue notice bar.
 
   Layout: social icons pinned left · scrolling announcement marquee in the
-  middle · WhatsApp number pinned right. Each marquee item shows only its first
-  four words followed by "....." as a teaser and links to the related page.
+  middle · WhatsApp number pinned right. Content + behaviour are managed in the
+  CMS (/admin/notice-bar, backed by App\Support\NoticeBarStore):
+    • the announcement list (text + optional link),
+    • how many words of each item show as a teaser (word_count; 0 = full text),
+    • the scroll speed (seconds per loop, fed to --marquee-duration),
+    • the display variant (original / minimal / compact) — applied as the
+      html.topbar-* class in the layout.
+  An item with no link renders as plain, non-clickable text.
 --}}
 @php
-    $toTeaser = static function (string $text): string {
-        $words = preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $teaser = implode(' ', array_slice($words, 0, 5));
-        if (count($words) > 5) {
+    $bar = app(\App\Support\NoticeBarStore::class)->get();
+    $wordCount = (int) ($bar['word_count'] ?? 5);
+
+    $toTeaser = static function (string $text) use ($wordCount): string {
+        $text = trim($text);
+        if ($wordCount <= 0) {
+            return $text;
+        }
+
+        $words = preg_split('/\s+/', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $teaser = implode(' ', array_slice($words, 0, $wordCount));
+        if (count($words) > $wordCount) {
             $teaser .= ' .....';
         }
+
         return $teaser;
     };
 
-    $notices = collect(config('site.notices', []))
-        ->map(function ($item) use ($toTeaser) {
-            $text = is_array($item) ? ($item['text'] ?? '') : (string) $item;
-            $href = null;
-            if (is_array($item)) {
-                $href = ! empty($item['route']) ? route($item['route']) : ($item['href'] ?? null);
-            }
-            return ['teaser' => $toTeaser($text), 'full' => trim($text), 'href' => $href ?? route('contact')];
-        })
-        ->filter(fn ($n) => $n['teaser'] !== '')
+    $notices = collect($bar['items'] ?? [])
+        ->filter(fn ($item) => ($item['visible'] ?? true) && trim((string) ($item['text'] ?? '')) !== '')
+        ->map(fn ($item) => [
+            'teaser' => $toTeaser((string) $item['text']),
+            'full'   => trim((string) $item['text']),
+            'href'   => trim((string) ($item['href'] ?? '')),
+        ])
         ->values();
 
-    // Fall back to the legacy single-string notice if no list is configured.
-    if ($notices->isEmpty() && config('site.notice')) {
-        $notices = collect([[
-            'teaser' => $toTeaser((string) config('site.notice')),
-            'full'   => (string) config('site.notice'),
-            'href'   => route('contact'),
-        ]]);
-    }
+    $marqueeSpeed = (int) ($bar['speed'] ?? 14);
 
     $waPhone = config('site.contact.phone');
     $waE164  = config('site.contact.phone_e164');
@@ -63,17 +68,25 @@
         $shift = '-' . rtrim(rtrim(number_format(100 / $copies, 4, '.', ''), '0'), '.') . '%';
     @endphp
     <div class="notice-marquee" data-notice-marquee>
-      <div class="notice-marquee-track" style="--marquee-shift: {{ $shift }}">
+      <div class="notice-marquee-track" style="--marquee-shift: {{ $shift }}; --marquee-duration: {{ $marqueeSpeed }}s;">
         @for ($copy = 0; $copy < $copies; $copy++)
           <div class="notice-marquee-group" @if ($copy > 0) aria-hidden="true" @endif>
             @foreach ($notices as $notice)
-              <a class="notice-marquee-item"
-                 href="{{ $notice['href'] }}"
-                 title="{{ $notice['full'] }}"
-                 @if ($copy > 0) tabindex="-1" @endif>
-                <span class="notice-marquee-dot" aria-hidden="true"></span>
-                <span>{{ $notice['teaser'] }}</span>
-              </a>
+              @if ($notice['href'] !== '')
+                <a class="notice-marquee-item"
+                   href="{{ $notice['href'] }}"
+                   title="{{ $notice['full'] }}"
+                   @if ($copy > 0) tabindex="-1" @endif>
+                  <span class="notice-marquee-dot" aria-hidden="true"></span>
+                  <span>{{ $notice['teaser'] }}</span>
+                </a>
+              @else
+                {{-- No link configured → plain, non-clickable text. --}}
+                <span class="notice-marquee-item notice-marquee-item--static" title="{{ $notice['full'] }}">
+                  <span class="notice-marquee-dot" aria-hidden="true"></span>
+                  <span>{{ $notice['teaser'] }}</span>
+                </span>
+              @endif
             @endforeach
           </div>
         @endfor

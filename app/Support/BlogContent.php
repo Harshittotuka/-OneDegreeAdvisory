@@ -9,6 +9,31 @@ class BlogContent
         return app(BlogStore::class)->all();
     }
 
+    /** Latest visible posts for the home "Insights" strip, featured post first. */
+    public function homeInsights(int $limit = 4): array
+    {
+        $posts = array_values(array_filter(
+            $this->all(),
+            fn (array $p) => ($p['visible'] ?? true) === true
+        ));
+
+        $featured = null;
+        foreach ($posts as $i => $candidate) {
+            if (! empty($candidate['featured'])) {
+                $featured = $candidate;
+                unset($posts[$i]);
+                break;
+            }
+        }
+
+        $posts = array_values($posts);
+        if ($featured) {
+            array_unshift($posts, $featured);
+        }
+
+        return array_slice($posts, 0, $limit);
+    }
+
     /**
      * The built-in seed posts. Used once to populate the editable JSON store
      * the first time the CMS runs; after that the store is the source of truth.

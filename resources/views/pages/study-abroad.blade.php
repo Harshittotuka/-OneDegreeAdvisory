@@ -191,7 +191,7 @@
             </article>
             <article class="service-card reveal">
               <i data-lucide="plane-takeoff"></i>
-              <h3>Pre-Departure Support</h3>
+              <h3>Pre and Post Departure Support</h3>
               <p>Plan accommodation, packing, banking, insurance, campus arrival, and the first 30 days abroad.</p>
             </article>
           </div>

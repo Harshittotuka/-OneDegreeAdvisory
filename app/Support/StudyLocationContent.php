@@ -25,10 +25,10 @@ class StudyLocationContent
             'uiText' => $uiText,
             'sections' => $sections,
             'sectionCopy' => [
-                'why' => $this->sectionLike($sections, 'Why'),
-                'courses' => $this->sectionLike($sections, 'Top Courses'),
-                'intakes' => $this->sectionLike($sections, 'Intakes'),
-                'costs' => $this->sectionLike($sections, 'Cost of Studying'),
+                'why' => $this->withTidyHeading($this->sectionLike($sections, 'Why')),
+                'courses' => $this->withTidyHeading($this->sectionLike($sections, 'Top Courses')),
+                'intakes' => $this->withTidyHeading($this->sectionLike($sections, 'Intakes')),
+                'costs' => $this->withTidyHeading($this->sectionLike($sections, 'Cost of Studying')),
             ],
             'whyCards' => $whyCards,
             'topCourses' => $courses,
@@ -190,6 +190,49 @@ class StudyLocationContent
         }
 
         return [];
+    }
+
+    private function withTidyHeading(array $section): array
+    {
+        if ($section === []) {
+            return $section;
+        }
+
+        $section['section_heading'] = $this->tidyHeading((string) ($section['section_heading'] ?? ''));
+
+        return $section;
+    }
+
+    /**
+     * Source headings from the Leverage Edu workbook sometimes prepend a stray
+     * definite article to the country name (e.g. "Why the Australia?"). We strip
+     * it, but keep it for the handful of countries that legitimately take "the"
+     * (the UK, the USA, the Netherlands…). This runs on every heading rather than
+     * being hardcoded per country, so it keeps working as the workbook updates.
+     */
+    private function tidyHeading(string $heading): string
+    {
+        $articleCountries = [
+            'netherlands', 'united kingdom', 'united states', 'uk', 'usa', 'us',
+            'uae', 'united arab emirates', 'philippines', 'czech republic',
+            'maldives', 'bahamas', 'gambia', 'dominican republic', 'ivory coast',
+        ];
+
+        return (string) preg_replace_callback(
+            '/\bthe\s+(\p{Lu}[\p{L}.\-]*(?:\s+\p{Lu}[\p{L}.\-]*)*)/u',
+            function (array $match) use ($articleCountries): string {
+                $phrase = $match[1];
+
+                foreach ($articleCountries as $country) {
+                    if (stripos($phrase, $country) === 0) {
+                        return $match[0]; // legitimate "the" — leave it intact
+                    }
+                }
+
+                return $phrase; // drop the stray article
+            },
+            $heading
+        );
     }
 
     private function cardsLike(array $cards, string $needle): array

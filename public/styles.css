@@ -20,7 +20,11 @@
   --container: 1280px;
   --container-edge: 1408px;
   --header-offset: 112px;
-  --animated-text-gradient: linear-gradient(120deg, #18224d 0%, #4a247c 22%, #b9802d 40%, #ffe6a6 52%, #ee9c35 64%, #ff6232 80%, #18224d 100%);
+  /* Single brand gold for ALL animated/gold text across the entire site — home
+     hero, country pages, eyebrows, headings, etc. Warm gold matching the deployed
+     home hero. Everything below resolves to this one gradient. */
+  --hero-gold-gradient: linear-gradient(105deg, #a9791d 0%, #d9a83a 28%, #f7da82 50%, #d9a020 72%, #a9791d 100%);
+  --animated-text-gradient: var(--hero-gold-gradient);
   --animated-text-size: 220% 100%;
   --animated-text-duration: 8s;
   --theme-highlight-gradient: var(--animated-text-gradient);
@@ -181,7 +185,8 @@ button {
   display: flex;
   width: max-content;
   will-change: transform;
-  animation: notice-marquee 14s linear infinite;
+  /* Duration (scroll speed) is set inline from the CMS via --marquee-duration. */
+  animation: notice-marquee var(--marquee-duration, 14s) linear infinite;
 }
 
 /* Pause on hover / keyboard focus so readers can click a banner. */
@@ -220,6 +225,16 @@ button {
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
+}
+
+/* Items with no link configured in the CMS: plain, non-clickable text. */
+.notice-marquee-item--static {
+  cursor: default;
+}
+
+.notice-marquee-item--static:hover {
+  color: #f7fffb;
+  text-decoration: none;
 }
 
 .notice-marquee-dot {
@@ -1925,6 +1940,14 @@ h3 {
     transform: none;
     transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
   }
+}
+
+/* Hero buttons stack into one or more responsive rows (set via the CMS). */
+.hero-actions-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .hero-actions {
@@ -12042,6 +12065,24 @@ body.nav-open .country-snapshot {
   margin-bottom: 36px;
 }
 
+/* The About hero sits on a LIGHT background, so the default white ghost button
+   (built for dark heroes) is invisible. Give it dark ink + a subtle outline.
+   Scoped to .va-hero so the dark CTA ghost (.va-cta-ghost) is unaffected. */
+html[data-color-theme] .va-hero .btn-ghost,
+.va-hero .btn-ghost {
+  color: var(--navy);
+  border: 1px solid rgba(13, 35, 60, 0.2);
+  background: rgba(13, 35, 60, 0.045);
+  backdrop-filter: none;
+}
+html[data-color-theme] .va-hero .btn-ghost:hover,
+.va-hero .btn-ghost:hover {
+  color: var(--teal-dark);
+  border-color: var(--teal-dark);
+  background: rgba(13, 122, 120, 0.09);
+}
+.va-hero .btn-ghost svg { opacity: 0.85; }
+
 .va-hero-trust {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -12682,6 +12723,53 @@ body.nav-open .country-snapshot {
   background: var(--teal-dark);
   color: #fff;
   transform: translateY(-2px);
+}
+
+/* Hover help text on the founder hand icon (set per-member in the About CMS). */
+.va-team-social[data-tip] {
+  position: relative;
+}
+.va-team-social[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 11px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 11px;
+  background: #14253e;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(8, 20, 40, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 6;
+}
+.va-team-social[data-tip]::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #14253e;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 6;
+}
+.va-team-social[data-tip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.va-team-social[data-tip]:hover::before {
+  opacity: 1;
 }
 
 .va-team-social i,
@@ -13924,7 +14012,7 @@ html[data-color-theme="cream"] {
   --theme-focus-ring: rgba(255, 94, 50, 0.32);
   --theme-accent-hover: #d8431d;
   --theme-brand-gradient: linear-gradient(135deg, #1a0088 0%, #2a16a0 50%, #ff5e32 100%);
-  --theme-highlight-gradient: linear-gradient(120deg, #ff5e32 0%, #ff8a5c 34%, #f4f1ec 48%, #ff5e32 64%, #1a0088 100%);
+  --theme-highlight-gradient: var(--animated-text-gradient);
   --theme-hero-overlay:
     linear-gradient(90deg, rgba(16, 2, 88, 0.92) 0%, rgba(26, 0, 136, 0.7) 50%, rgba(255, 94, 50, 0.18) 100%),
     linear-gradient(180deg, rgba(16, 2, 88, 0.36) 0%, rgba(16, 2, 88, 0.06) 52%, rgba(16, 2, 88, 0.84) 100%);
@@ -14066,12 +14154,8 @@ html[data-color-theme] .country-hero h1 .gold-text {
   background-image: var(--animated-text-gradient);
 }
 
-/* Home hero — "Global Admissions" eyebrow + "one degree" share one static
-   golden gradient (no shimmer). */
-.home-page .hero {
-  --hero-gold-gradient: linear-gradient(105deg, #a9791d 0%, #d9a83a 28%, #f7da82 50%, #d9a020 72%, #a9791d 100%);
-}
-
+/* Home hero — "Global Admissions" eyebrow + "one degree" share the golden
+   gradient defined in :root as --hero-gold-gradient. */
 html[data-color-theme] .home-page .hero .eyebrow,
 .home-page .hero .eyebrow,
 html[data-color-theme] .home-page .hero .hero-headline .gold-text,
@@ -14106,6 +14190,117 @@ html[data-color-theme] .home-page .hero .eyebrow::before,
 
 html[data-color-theme] .hero .eyebrow::before {
   background: var(--animated-text-gradient);
+}
+
+html[data-color-theme] .home-page .hero [data-he-style-part].he-text-solid,
+.home-page .hero [data-he-style-part].he-text-solid {
+  background: none !important;
+  -webkit-background-clip: border-box;
+          background-clip: border-box;
+  -webkit-text-fill-color: var(--he-text-color) !important;
+          color: var(--he-text-color) !important;
+  animation: none;
+}
+
+html[data-color-theme] .home-page .hero [data-he-style-part].he-text-gradient,
+.home-page .hero [data-he-style-part].he-text-gradient {
+  background-image: linear-gradient(105deg, var(--he-grad-a), var(--he-grad-b), var(--he-grad-a)) !important;
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+          color: transparent;
+  animation: goldShimmer 7s ease-in-out infinite;
+}
+
+html[data-color-theme] .home-page .hero .eyebrow.he-text-solid::before,
+.home-page .hero .eyebrow.he-text-solid::before {
+  background: var(--he-text-color);
+}
+
+html[data-color-theme] .home-page .hero .eyebrow.he-text-gradient::before,
+.home-page .hero .eyebrow.he-text-gradient::before {
+  background: linear-gradient(105deg, var(--he-grad-a), var(--he-grad-b));
+}
+
+.home-page .hero [data-he-style-part].he-anim-none {
+  animation: none !important;
+  background-position: 50% 50%;
+}
+
+.home-page .hero [data-he-style-part].he-anim-shimmer {
+  animation: goldShimmer 7s ease-in-out infinite !important;
+  background-size: 220% 100%;
+}
+
+.home-page .hero [data-he-style-part].he-anim-pulse {
+  animation: heHeroTextPulse 2.8s ease-in-out infinite !important;
+}
+
+.home-page .hero [data-he-style-part].he-anim-lift {
+  animation: heHeroTextLift 4s ease-in-out infinite !important;
+  will-change: transform;
+}
+
+.home-page .hero .eyebrow.he-anim-lift {
+  display: inline-flex;
+}
+
+.home-page .hero .gold-text.he-anim-lift,
+.home-page .hero .he-heading-text.he-anim-lift {
+  display: inline-block;
+}
+
+@keyframes heHeroTextPulse {
+  0%, 100% {
+    filter: drop-shadow(0 1px 6px rgba(16, 4, 70, 0.22));
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 1px 12px rgba(255, 214, 122, 0.56));
+    opacity: 0.82;
+  }
+}
+
+@keyframes heHeroTextLift {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page .hero [data-he-style-part].he-anim-shimmer,
+  .home-page .hero [data-he-style-part].he-anim-pulse,
+  .home-page .hero [data-he-style-part].he-anim-lift {
+    animation: none !important;
+  }
+}
+
+/* Destination page gold text (hero name, "Indian students" band highlight, etc.)
+   uses the multi-colour animated gradient, matching the deployed site. */
+html[data-color-theme] .country-hero h1 .gold-text,
+html[data-color-theme] .country-main--dynamic .gold-text,
+.country-hero h1 .gold-text,
+.country-main--dynamic .gold-text {
+  background-image: var(--animated-text-gradient);
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  animation: goldShimmer 7s ease-in-out infinite;
+  filter: drop-shadow(0 1px 6px rgba(16, 4, 70, 0.30));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-color-theme] .country-hero h1 .gold-text,
+  html[data-color-theme] .country-main--dynamic .gold-text,
+  .country-hero h1 .gold-text,
+  .country-main--dynamic .gold-text {
+    animation: none;
+    background-position: 50% 50%;
+  }
 }
 
 html[data-color-theme] .btn-ghost,
@@ -14453,6 +14648,32 @@ html[data-color-theme] .mbbs-routes-grid span::before {
 
 html[data-color-theme] .country-hero {
   background-color: var(--deep);
+}
+
+/* Base hero overlay ends on a teal-green corner wash; re-tint that stop to the
+   active theme so it matches the rest of the site. */
+html[data-color-theme] .country-hero::before {
+  background:
+    linear-gradient(120deg, rgba(7, 25, 34, 0.55) 0%, rgba(7, 25, 34, 0.32) 50%, color-mix(in srgb, var(--teal) 18%, transparent) 100%),
+    linear-gradient(180deg, rgba(7, 25, 34, 0.22) 0%, rgba(7, 25, 34, 0.08) 50%, rgba(7, 25, 34, 0.5) 100%);
+}
+
+/* One simple, flat deep-indigo wash over the photo (matches the theme; no
+   multi-stop gradient). Calm and even, not fancy. */
+html[data-color-theme] .country-band::before {
+  background: rgba(16, 2, 88, 0.32);
+}
+
+/* "At a glance" snapshot rail shipped a teal-green glass gradient; re-tint it
+   (and its hover/open state) to the active theme so no green leaks through. */
+html[data-color-theme] .country-snapshot {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--navy) 48%, transparent) 0%, color-mix(in srgb, var(--deep) 56%, transparent) 100%);
+}
+
+html[data-color-theme] .country-snapshot:hover,
+html[data-color-theme] .country-snapshot:focus-within,
+html[data-color-theme] .country-snapshot.is-open {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--navy) 58%, transparent) 0%, color-mix(in srgb, var(--deep) 66%, transparent) 100%);
 }
 
 html[data-color-theme] .country-back,
@@ -15683,16 +15904,20 @@ html[data-color-theme] .cr-field-full {
 }
 
 .dynamic-why-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  /* Flex (not grid) so an incomplete last row — odd counts like 4 or 5 cards —
+     centers instead of hugging the left with an empty gap. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: stretch;
+  gap: 24px;
   max-width: 1180px;
   margin: 46px auto 0;
 }
 
 .dynamic-why-card {
   position: relative;
+  flex: 0 1 calc((100% - 48px) / 3); /* 3 per row (two 24px gaps) */
   display: flex;
   flex-direction: column;
   min-height: 252px;
@@ -16256,7 +16481,9 @@ html[data-color-theme] .cr-field-full {
   padding: 30px;
   border-radius: 20px;
   color: #ffffff;
-  background: linear-gradient(150deg, rgba(7, 25, 34, 0.92) 0%, rgba(13, 82, 83, 0.82) 70%, rgba(199, 146, 74, 0.55) 142%);
+  /* Original layered backdrop, re-tinted blue instead of teal-green (the dimmed
+     photo below blends with it for the original depth/fancy look). */
+  background: linear-gradient(150deg, rgba(7, 25, 34, 0.84) 0%, rgba(26, 0, 136, 0.72) 70%, rgba(199, 146, 74, 0.55) 142%);
   box-shadow: 0 28px 68px rgba(7, 25, 34, 0.18);
   overflow: hidden;
   isolation: isolate;
@@ -16279,6 +16506,7 @@ html[data-color-theme] .cr-field-full {
   filter: saturate(1.1) contrast(1.05);
   transform: scale(1.06);
   transition: transform 0.7s ease, opacity 0.4s ease;
+  /* Dimmed so the layered blue backdrop blends through, for the original depth. */
   opacity: 0.42;
 }
 
@@ -16319,7 +16547,7 @@ html[data-color-theme] .cr-field-full {
 
 .dynamic-intake-feature p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.84);
+  color: rgba(255, 255, 255, 0.92);
   line-height: 1.62;
 }
 
@@ -16817,10 +17045,34 @@ html[data-color-theme] .country-main--dynamic .dynamic-city-slide {
   border-color: color-mix(in srgb, var(--gold) 36%, transparent);
 }
 
+/* Decorative washes the base rules hardcode in teal-green — re-tint them to the
+   active theme so no green leaks through on the destination cards. */
+html[data-color-theme] .country-main--dynamic .dynamic-course-card::before {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--teal) 12%, transparent) 0%, transparent 42%),
+    radial-gradient(70% 70% at 95% 0%, color-mix(in srgb, var(--gold) 14%, transparent) 0%, transparent 60%);
+}
+
+/* Original layered veil (radial gold + diagonal wash), re-tinted blue instead of
+   the old teal-green. */
+html[data-color-theme] .country-main--dynamic .dynamic-intake-feature__veil {
+  background:
+    radial-gradient(60% 80% at 18% 22%, color-mix(in srgb, var(--gold) 30%, transparent) 0%, transparent 60%),
+    linear-gradient(150deg, rgba(7, 25, 34, 0.78) 0%, rgba(26, 0, 136, 0.64) 60%, rgba(7, 25, 34, 0.80) 100%);
+}
+
+html[data-color-theme] .country-main--dynamic .dynamic-cost-panel-head {
+  border-bottom-color: var(--theme-border);
+}
+
 @media (max-width: 1100px) {
   .dynamic-why-grid,
   .dynamic-course-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dynamic-why-card {
+    flex-basis: calc((100% - 24px) / 2); /* 2 per row (one 24px gap) */
   }
 
   .dynamic-course-set {
@@ -16874,6 +17126,10 @@ html[data-color-theme] .country-main--dynamic .dynamic-city-slide {
   .dynamic-visa-steps,
   .dynamic-scholarship-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dynamic-why-card {
+    flex-basis: 100%; /* single column */
   }
 
   .dynamic-carousel-frame {
@@ -21928,7 +22184,6 @@ html[data-color-theme] .study-abroad-page .pathfinder {
 }
 
 .ui-switch--nav { bottom: 24px; }
-.ui-switch--topbar { bottom: 78px; }
 
 .ui-switch__label {
   padding-left: 4px;
@@ -21976,7 +22231,6 @@ html[data-color-theme] .study-abroad-page .pathfinder {
     transform-origin: left bottom;
   }
   .ui-switch--nav { bottom: 16px; }
-  .ui-switch--topbar { bottom: 62px; }
   .ui-switch__label { display: none; }
 }
 
@@ -22019,25 +22273,62 @@ html.nav-updated .dest-card--hide-updated { display: none; }
    Top blue notice bar — variant switcher
    original (default) · minimal (no socials/WhatsApp) · compact (WA icon left)
    ============================================================ */
+/* WhatsApp icon (compact variant) — matches the notice social icons' hover
+   animation: a springy 3D lift + tilt + scale, with the glyph scaling/rotating. */
 .notice-wa-icon {
   display: none;          /* shown only in the "compact" variant */
+  position: relative;
   align-items: center;
   justify-content: center;
   width: 30px;
   height: 30px;
   flex: 0 0 auto;
-  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.94);
+  transform-style: preserve-3d;
+  transition:
+    transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 240ms ease;
+  will-change: transform;
+}
+
+.notice-wa-icon svg {
+  width: 20px;
+  height: 20px;
+  transition:
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 240ms ease;
+  will-change: transform;
+}
+
+.notice-wa-icon:hover,
+.notice-wa-icon:focus-visible {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.16);
-  transition: background 160ms ease, transform 160ms ease;
+  transform: translateY(-4px) rotateX(14deg) rotateY(-8deg) scale(1.06);
 }
 
-.notice-wa-icon:hover {
-  background: rgba(255, 255, 255, 0.28);
-  transform: translateY(-1px);
+.notice-wa-icon:hover svg,
+.notice-wa-icon:focus-visible svg {
+  transform: translateZ(6px) scale(1.18) rotate(-6deg);
 }
 
-.notice-wa-icon svg { width: 16px; height: 16px; }
+.notice-wa-icon:active {
+  transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(0.96);
+  transition-duration: 140ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-wa-icon,
+  .notice-wa-icon svg {
+    transition: color 200ms ease;
+  }
+
+  .notice-wa-icon:hover,
+  .notice-wa-icon:focus-visible,
+  .notice-wa-icon:hover svg,
+  .notice-wa-icon:focus-visible svg {
+    transform: none;
+  }
+}
 
 /* minimal: keep only the scrolling marquee — and let it span the full width
    (drop the reserved left social-icon zone + the marquee's side margins). */

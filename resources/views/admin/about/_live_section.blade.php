@@ -14,7 +14,7 @@
       <i data-lucide="grip-vertical"></i><span class="le-drag-label">{{ $schema['label'] ?? ucfirst($section['type']) }}</span>
     </span>
     <button type="button" class="le-bbtn" data-act="vis" title="Show / hide section"><i data-lucide="{{ $vis ? 'eye' : 'eye-off' }}"></i></button>
-    <a class="le-bbtn le-fields" href="{{ route('admin.about.edit', $section['id']) }}" target="_blank" title="Open the structured field editor"><i data-lucide="sliders-horizontal"></i></a>
+    <button type="button" class="le-bbtn" data-act="opts" title="Section options"><i data-lucide="sliders-horizontal"></i></button>
     <button type="button" class="le-bbtn le-del" data-act="del-sec" title="Delete section"><i data-lucide="trash-2"></i></button>
   </div>
 

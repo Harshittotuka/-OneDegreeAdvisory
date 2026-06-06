@@ -1,17 +1,16 @@
 /* ============================================================================
-   Floating preview switchers (demo/compare aids)
+   Floating preview switcher (demo/compare aid)
    ----------------------------------------------------------------------------
-   1. Nav content — flip the Stripe nav between its CURRENT layout and the
-      UPDATED layout (Services removed, courses reworked, destinations trimmed).
-      Toggles `html.nav-updated`. Persisted as "oda:nav-content".
-   2. Top bar — switch the blue notice bar between three variants:
-      original | minimal (no socials/WhatsApp) | compact (WhatsApp icon left).
-      Toggles `html.topbar-minimal` / `html.topbar-compact`. Persisted as
-      "oda:topbar".
+   Nav content — flip the Stripe nav between its CURRENT layout and the
+   UPDATED layout (Services removed, courses reworked, destinations trimmed).
+   Toggles `html.nav-updated`. Persisted as "oda:nav-content".
 
-   The persisted choices are applied EARLY by the inline boot script in the
+   The persisted choice is applied EARLY by the inline boot script in the
    layout <head> (to avoid a flash); this file only wires the click handlers
    and keeps the buttons' aria-pressed state in sync.
+
+   (The top-bar variant used to live here too, but it now lives in the CMS at
+   /admin/notice-bar and is applied server-side as html.topbar-*.)
    ========================================================================== */
 (function () {
   var root = document.documentElement;
@@ -59,24 +58,13 @@
     sync(stored || opts.fallback);
   }
 
-  // 1. Nav content — Current vs Updated
+  // Nav content — Current vs Updated
   bindSwitch({
     attr: "data-nav-content-option",
     key: "oda:nav-content",
     fallback: "current",
     set: function (v) {
       root.classList.toggle("nav-updated", v === "updated");
-    },
-  });
-
-  // 2. Top bar — Original / Minimal / Compact
-  bindSwitch({
-    attr: "data-topbar-option",
-    key: "oda:topbar",
-    fallback: "original",
-    set: function (v) {
-      root.classList.toggle("topbar-minimal", v === "minimal");
-      root.classList.toggle("topbar-compact", v === "compact");
     },
   });
 })();
