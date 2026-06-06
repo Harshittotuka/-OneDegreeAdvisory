@@ -1,6 +1,6 @@
 *
 !.gitignore
 
-# Track CMS-uploaded hero images so content + its images stay versioned together.
-!home-hero/
-!home-hero/**
+# Track CMS-uploaded public assets so content + its images stay versioned together.
+!*/
+!**/*

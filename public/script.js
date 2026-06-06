@@ -552,23 +552,118 @@ ready(() => {
   });
 
   let testimonialIndex = 0;
-  const showTestimonial = (index) => {
-    if (!testimonials.length) return;
-    testimonialIndex = (index + testimonials.length) % testimonials.length;
+  let isAnimating = false;
+  const EXIT_MS = 460;
+
+  const positionTestimonials = () => {
+    const count = testimonials.length;
     testimonials.forEach((testimonial, itemIndex) => {
-      testimonial.classList.toggle("is-active", itemIndex === testimonialIndex);
+      const pos = (itemIndex - testimonialIndex + count) % count;
+      testimonial.dataset.pos = pos;
+      testimonial.classList.toggle("is-active", pos === 0);
+      testimonial.setAttribute("aria-hidden", pos === 0 ? "false" : "true");
     });
   };
 
-  if (testimonials.length) {
-    prevTestimonial?.addEventListener("click", () => showTestimonial(testimonialIndex - 1));
-    nextTestimonial?.addEventListener("click", () => showTestimonial(testimonialIndex + 1));
+  // Animated step: the outgoing front card flies aside and fades while the rest
+  // of the deck slides forward, then the outgoing card is snapped to the back
+  // with its transition suppressed so there is no visible sweep across the deck.
+  // direction (+1/-1) decides which card comes to the front; exitSide controls
+  // which way the outgoing card flies off. Auto-advance/buttons/tap leave the
+  // side unset so it is randomized; a swipe passes the side it was dragged.
+  const advanceTestimonial = (direction, exitSide) => {
+    if (isAnimating || testimonials.length < 2) return;
+    isAnimating = true;
+    const side = exitSide || (Math.random() < 0.5 ? "left" : "right");
+    const outgoing = testimonials[testimonialIndex];
+    outgoing.style.transform = ""; // drop any live-drag transform first
+    outgoing.classList.add(side === "left" ? "is-exiting-left" : "is-exiting-right");
+    testimonialIndex =
+      (testimonialIndex + direction + testimonials.length) % testimonials.length;
+    positionTestimonials();
+    window.setTimeout(() => {
+      outgoing.style.transition = "none";
+      outgoing.classList.remove("is-exiting-left", "is-exiting-right");
+      void outgoing.offsetWidth; // reflow so the snap to the back is instant
+      outgoing.style.transition = "";
+      isAnimating = false;
+    }, EXIT_MS);
+  };
 
-    let autoAdvance = window.setInterval(() => showTestimonial(testimonialIndex + 1), 6800);
-    testimonialTrack.addEventListener("mouseenter", () => window.clearInterval(autoAdvance));
-    testimonialTrack.addEventListener("mouseleave", () => {
-      autoAdvance = window.setInterval(() => showTestimonial(testimonialIndex + 1), 6800);
+  if (testimonials.length) {
+    positionTestimonials();
+
+    const AUTO_DELAY = 6500;
+    let autoAdvance = window.setInterval(() => advanceTestimonial(1), AUTO_DELAY);
+    const stopAuto = () => window.clearInterval(autoAdvance);
+    const restartAuto = () => {
+      stopAuto();
+      autoAdvance = window.setInterval(() => advanceTestimonial(1), AUTO_DELAY);
+    };
+
+    prevTestimonial?.addEventListener("click", () => {
+      advanceTestimonial(-1);
+      restartAuto();
     });
+    nextTestimonial?.addEventListener("click", () => {
+      advanceTestimonial(1);
+      restartAuto();
+    });
+
+    testimonialTrack.addEventListener("mouseenter", stopAuto);
+    testimonialTrack.addEventListener("mouseleave", restartAuto);
+
+    // Drag / swipe to flip the deck, plus tap-to-advance. This is the only
+    // navigation on phones, where the prev/next buttons are hidden.
+    let dragging = false;
+    let startX = 0;
+    let deltaX = 0;
+    let moved = false;
+
+    const onPointerDown = (event) => {
+      if (event.button != null && event.button !== 0) return;
+      if (event.target.closest("a, button")) return;
+      if (isAnimating) return;
+      dragging = true;
+      moved = false;
+      startX = event.clientX;
+      deltaX = 0;
+      testimonialTrack.classList.add("is-dragging");
+      testimonialTrack.setPointerCapture?.(event.pointerId);
+      stopAuto();
+    };
+    const onPointerMove = (event) => {
+      if (!dragging) return;
+      deltaX = event.clientX - startX;
+      if (Math.abs(deltaX) > 5) moved = true;
+      const card = testimonials[testimonialIndex];
+      if (card) {
+        card.style.transform = `translate(${deltaX}px, 0) rotate(${deltaX * 0.02}deg)`;
+      }
+    };
+    const onPointerUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      testimonialTrack.classList.remove("is-dragging");
+      const card = testimonials[testimonialIndex];
+      const threshold = 60;
+      if (deltaX <= -threshold) {
+        advanceTestimonial(1, "left");
+      } else if (deltaX >= threshold) {
+        advanceTestimonial(-1, "right");
+      } else if (!moved) {
+        advanceTestimonial(1); // tap → random side
+      } else if (card) {
+        card.style.transform = ""; // below threshold: snap back to the front
+      }
+      deltaX = 0;
+      restartAuto();
+    };
+
+    testimonialTrack.addEventListener("pointerdown", onPointerDown);
+    testimonialTrack.addEventListener("pointermove", onPointerMove);
+    testimonialTrack.addEventListener("pointerup", onPointerUp);
+    testimonialTrack.addEventListener("pointercancel", onPointerUp);
   }
 
   if (consultForm && formStatus) {

@@ -373,6 +373,11 @@
 
       <section class="about-section" id="about" aria-labelledby="about-title">
         <div class="container about-grid">
+          <div class="about-head reveal">
+            <span class="eyebrow">Why we do it</span>
+            <h2 id="about-title">Because ambition deserves a better map.</h2>
+          </div>
+
           <div class="about-media reveal">
             <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1050&q=84" alt="Students and advisor in a university setting">
             <span class="badge badge-one">Student victory</span>
@@ -380,9 +385,7 @@
             <span class="badge badge-three">AI-assisted research</span>
           </div>
 
-          <div class="about-copy reveal">
-            <span class="eyebrow">Why we do it</span>
-            <h2 id="about-title">Because ambition deserves a better map.</h2>
+          <div class="about-copy about-body reveal">
             <p>
               Academic journeys can feel overwhelming: hundreds of countries, changing visa rules,
               hidden costs, unclear rankings, and conflicting advice. One Degree Advisory exists to make
