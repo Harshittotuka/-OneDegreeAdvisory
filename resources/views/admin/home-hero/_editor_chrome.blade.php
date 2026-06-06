@@ -178,7 +178,7 @@
 </style>
 
 <div class="le-bottombar">
-  <a class="le-home" href="{{ route('admin.blog.index') }}" title="Back to dashboard"><i data-lucide="arrow-left"></i> <span>Dashboard</span></a>
+  <a class="le-home" href="{{ route('admin.dashboard') }}" title="Back to dashboard"><i data-lucide="arrow-left"></i> <span>Dashboard</span></a>
   <span class="le-title">Home page <span class="le-badge">Live Edit</span></span>
   <span class="le-hint">Only the hero is editable - click text, its palette dot, the photo, or an icon. Other sections are locked.</span>
   <span class="le-sp"></span>

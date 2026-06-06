@@ -189,7 +189,7 @@
 <body class="le-body">
 
   <header class="le-top">
-    <a class="le-home" href="{{ route('admin.blog.index') }}" title="Back to dashboard"><i data-lucide="arrow-left"></i> Dashboard</a>
+    <a class="le-home" href="{{ route('admin.dashboard') }}" title="Back to dashboard"><i data-lucide="arrow-left"></i> Dashboard</a>
     <span class="le-title">About <span class="le-badge">Live Edit</span></span>
     <span class="le-hint">Click any text, image or icon to edit. Hover a section for its controls.</span>
     <span class="le-sp"></span>

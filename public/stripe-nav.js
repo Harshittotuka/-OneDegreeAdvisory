@@ -250,9 +250,36 @@
     };
 
     if (mobileToggle) {
-      mobileToggle.addEventListener("click", () => {
+      let lastTouchToggle = 0;
+
+      const toggleMobileDrawer = () => {
         if (header.classList.contains("stripe-nav-open")) closeMobileDrawer();
         else openMobileDrawer();
+      };
+
+      const toggleMobileDrawerFromTouch = (event) => {
+        if (event.cancelable) event.preventDefault();
+        event.stopPropagation();
+        if (Date.now() - lastTouchToggle < 500) return;
+        lastTouchToggle = Date.now();
+        toggleMobileDrawer();
+      };
+
+      mobileToggle.addEventListener("click", (event) => {
+        if (Date.now() - lastTouchToggle < 500) {
+          event.preventDefault();
+          return;
+        }
+        toggleMobileDrawer();
+      });
+
+      mobileToggle.addEventListener("touchend", toggleMobileDrawerFromTouch, {
+        passive: false,
+      });
+
+      mobileToggle.addEventListener("pointerup", (event) => {
+        if (event.pointerType !== "touch") return;
+        toggleMobileDrawerFromTouch(event);
       });
     }
 

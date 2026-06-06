@@ -9,6 +9,8 @@ class CountryDataSync
 {
     private const LIVE_BASE = 'leverageedu_study_locations_content';
     private const REVIEW_BASE = 'leverageedu_study_locations_content.review';
+    private const STARTUP_GRACE_SECONDS = 20;
+    private const MAX_RUN_SECONDS = 1800;
     private const SHEETS = [
         'Pages',
         'Sections',
@@ -108,12 +110,13 @@ class CountryDataSync
         $this->deleteIfExists($this->reviewWorkbookPath());
         $this->deleteIfExists($this->reviewJsonPath());
         $this->deleteIfExists($this->exitPath());
+        $this->deleteIfExists($this->liveLogPath());
 
         $command = $this->reviewCommand();
         $environment = $this->processEnvironment();
 
-        $bat = $this->buildBatch($command, $environment);
-        $this->writeText($this->batPath(), $bat);
+        $scriptPath = $this->launcherScriptPath();
+        $this->writeText($scriptPath, $this->buildLauncherScript($command, $environment));
 
         $this->writeStatus([
             'state' => 'running',
@@ -121,16 +124,17 @@ class CountryDataSync
             'started_unix' => time(),
         ]);
 
-        // start /B launches the batch in its own (window-less) process and returns
-        // instantly, so the detached scraper outlives this HTTP request. The
-        // >nul redirect keeps the detached tree off the launcher's stdout pipe.
-        $launch = 'start "" /B "'.$this->batPath().'" >nul 2>&1';
+        $launch = $this->backgroundLaunchCommand($scriptPath);
         $handle = @popen($launch, 'r');
         if ($handle === false) {
             $this->writeStatus(['state' => 'failed', 'finished_at' => gmdate('Y-m-d H:i:s').' UTC']);
             throw new RuntimeException('Could not launch the country sync process.');
         }
-        pclose($handle);
+        $launchExit = pclose($handle);
+        if ($launchExit !== 0) {
+            $this->writeStatus(['state' => 'failed', 'finished_at' => gmdate('Y-m-d H:i:s').' UTC']);
+            throw new RuntimeException('Could not launch the country sync process on this server. Check shell execution permissions and the configured Python path.');
+        }
 
         return ['started' => true];
     }
@@ -143,15 +147,31 @@ class CountryDataSync
         $status = $this->readStatus();
         $state = (string) ($status['state'] ?? 'idle');
         $log = $this->readLiveLog();
-        $parsed = $this->parseProgress($log);
 
         $exitExists = is_file($this->exitPath());
         $exitCode = $exitExists ? (int) trim((string) @file_get_contents($this->exitPath())) : null;
 
         $done = false;
         $failed = false;
+        $failureMessage = null;
 
-        if ($exitExists) {
+        if ($state === 'running' && ! $exitExists && $this->launcherStartupExpired($status) && ! is_file($this->liveLogPath())) {
+            $failed = true;
+            $failureMessage = 'The country sync launcher did not create a live log. Check PHP shell execution and COUNTRY_SYNC_PYTHON on the production server.';
+            $log = $failureMessage;
+            $this->writeLastRun($log);
+            $status['state'] = $state = 'failed';
+            $status['finished_at'] = gmdate('Y-m-d H:i:s').' UTC';
+            $this->writeStatus($status);
+        } elseif ($state === 'running' && ! $exitExists && $this->runExpired($status)) {
+            $failed = true;
+            $failureMessage = 'Source check timed out after 30 minutes.';
+            $log = trim($log) !== '' ? $log : $failureMessage;
+            $this->writeLastRun($log);
+            $status['state'] = $state = 'failed';
+            $status['finished_at'] = gmdate('Y-m-d H:i:s').' UTC';
+            $this->writeStatus($status);
+        } elseif ($exitExists) {
             if ($exitCode === 0 && is_file($this->reviewJsonPath())) {
                 $done = true;
             } else {
@@ -171,6 +191,7 @@ class CountryDataSync
             $failed = true;
         }
 
+        $parsed = $this->parseProgress($log);
         $running = $state === 'running' && ! $exitExists;
         $percent = ($done || $failed) ? 100 : $parsed['percent'];
 
@@ -196,7 +217,7 @@ class CountryDataSync
                 ? "Done — {$summary['changed_percent']}% changed across {$summary['changed_records']} record(s), {$summary['field_changes']} field change(s)."
                 : 'Source check complete.';
         } elseif ($failed) {
-            $result['message'] = 'Source check failed. See the log below.';
+            $result['message'] = $failureMessage ?: 'Source check failed. See the log below.';
         }
 
         return $result;
@@ -215,9 +236,13 @@ class CountryDataSync
             return false;
         }
 
-        // Safety valve: never report "running" forever if the process vanished.
-        $started = (int) ($status['started_unix'] ?? 0);
-        if ($started > 0 && (time() - $started) > 1800) {
+        // Safety valves: never report "running" forever if the process vanished
+        // or if the platform launcher failed before creating the live log.
+        if ($this->launcherStartupExpired($status) && ! is_file($this->liveLogPath())) {
+            return false;
+        }
+
+        if ($this->runExpired($status)) {
             return false;
         }
 
@@ -624,6 +649,11 @@ class CountryDataSync
      * Build a self-contained .bat that runs the scraper unbuffered, streams output
      * to the live log, and records the exit code so progress() can detect completion.
      */
+    private function buildLauncherScript(array $command, array $environment): string
+    {
+        return $this->isWindows() ? $this->buildBatch($command, $environment) : $this->buildShellScript($command, $environment);
+    }
+
     private function buildBatch(array $command, array $environment): string
     {
         $python = (string) array_shift($command);
@@ -653,6 +683,35 @@ class CountryDataSync
         return implode("\r\n", $lines)."\r\n";
     }
 
+    private function buildShellScript(array $command, array $environment): string
+    {
+        $python = (string) array_shift($command);
+        $args = array_map(fn ($arg) => escapeshellarg((string) $arg), $command);
+
+        $live = $this->liveLogPath();
+        $exit = $this->exitPath();
+        $path = (string) ($environment['PATH'] ?? getenv('PATH') ?: '');
+
+        $lines = [
+            '#!/usr/bin/env sh',
+            'export PYTHONIOENCODING=utf-8',
+            'export PYTHONUTF8=1',
+            'export PATH='.escapeshellarg($path),
+            'cd '.escapeshellarg(base_path()),
+            'printf "%s\n" "Country source check started." > '.escapeshellarg($live),
+            'printf "%s\n" '.escapeshellarg('Launcher: '.$python).' >> '.escapeshellarg($live),
+            'printf "\n" >> '.escapeshellarg($live),
+            escapeshellarg($python).' -u '.implode(' ', $args).' >> '.escapeshellarg($live).' 2>&1',
+            'rc=$?',
+            'printf "\n" >> '.escapeshellarg($live),
+            'printf "%s\n" "[[COUNTRY-SYNC-EXIT $rc]]" >> '.escapeshellarg($live),
+            'printf "%s\n" "$rc" > '.escapeshellarg($exit),
+            'exit "$rc"',
+        ];
+
+        return implode("\n", $lines)."\n";
+    }
+
     private function pythonCommand(): array
     {
         $configured = trim((string) env('COUNTRY_SYNC_PYTHON', ''));
@@ -667,11 +726,22 @@ class CountryDataSync
             }
         }
 
-        return ['python'];
+        return [$this->isWindows() ? 'python' : 'python3'];
     }
 
     private function pythonCandidates(): array
     {
+        if (! $this->isWindows()) {
+            return [
+                '/usr/local/bin/python3',
+                '/usr/bin/python3',
+                '/bin/python3',
+                '/opt/alt/python311/bin/python3',
+                '/opt/alt/python310/bin/python3',
+                '/opt/alt/python39/bin/python3',
+            ];
+        }
+
         $userProfile = rtrim((string) (getenv('USERPROFILE') ?: 'C:\Users\harsh'), '\\/');
 
         return [
@@ -686,6 +756,29 @@ class CountryDataSync
 
     private function processEnvironment(): array
     {
+        if (! $this->isWindows()) {
+            $standardPath = implode(PATH_SEPARATOR, [
+                '/usr/local/sbin',
+                '/usr/local/bin',
+                '/usr/sbin',
+                '/usr/bin',
+                '/sbin',
+                '/bin',
+            ]);
+            $existingPath = getenv('PATH') ?: '';
+            $path = $existingPath !== '' ? $existingPath.PATH_SEPARATOR.$standardPath : $standardPath;
+            $temp = sys_get_temp_dir() ?: '/tmp';
+
+            return [
+                'PATH' => $path,
+                'TEMP' => $temp,
+                'TMP' => $temp,
+                'HOME' => getenv('HOME') ?: base_path(),
+                'PYTHONIOENCODING' => 'utf-8',
+                'PYTHONUTF8' => '1',
+            ];
+        }
+
         $windows = getenv('SystemRoot') ?: getenv('WINDIR') ?: 'C:\Windows';
         $systemPath = implode(PATH_SEPARATOR, [
             $windows.'\System32',
@@ -715,6 +808,15 @@ class CountryDataSync
     private function launcherSummary(array $command, array $environment): string
     {
         $python = (string) ($command[0] ?? 'python');
+
+        if (! $this->isWindows()) {
+            return implode(PHP_EOL, [
+                'Python launcher: '.$python,
+                'OS family: '.PHP_OS_FAMILY,
+                'PATH: '.(string) ($environment['PATH'] ?? ''),
+            ]);
+        }
+
         $systemRoot = (string) ($environment['SystemRoot'] ?? '');
         $path = strtolower((string) ($environment['PATH'] ?? ''));
         $system32 = strtolower($systemRoot.'\System32');
@@ -904,6 +1006,47 @@ class CountryDataSync
     private function batPath(): string
     {
         return storage_path('app/country-sync-run.bat');
+    }
+
+    private function shellPath(): string
+    {
+        return storage_path('app/country-sync-run.sh');
+    }
+
+    private function launcherScriptPath(): string
+    {
+        return $this->isWindows() ? $this->batPath() : $this->shellPath();
+    }
+
+    private function backgroundLaunchCommand(string $scriptPath): string
+    {
+        if ($this->isWindows()) {
+            return 'start "" /B "'.$scriptPath.'" >nul 2>&1';
+        }
+
+        return 'cd '.escapeshellarg(base_path()).' && nohup sh '.escapeshellarg($scriptPath).' >/dev/null 2>&1 &';
+    }
+
+    private function launcherStartupExpired(array $status): bool
+    {
+        return $this->runningAge($status) > self::STARTUP_GRACE_SECONDS;
+    }
+
+    private function runExpired(array $status): bool
+    {
+        return $this->runningAge($status) > self::MAX_RUN_SECONDS;
+    }
+
+    private function runningAge(array $status): int
+    {
+        $started = (int) ($status['started_unix'] ?? 0);
+
+        return $started > 0 ? max(0, time() - $started) : 0;
+    }
+
+    private function isWindows(): bool
+    {
+        return PHP_OS_FAMILY === 'Windows';
     }
 
     private function liveJsonPath(): string

@@ -491,7 +491,7 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
    ========================================================================== */
 @media (max-width: 920px) {
   body.stripe-nav-open {
-    overflow: hidden;
+    overflow-x: clip;
   }
 
   .stripe-nav {
@@ -503,8 +503,8 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
 
   /* The panel becomes the drawer; its children stack inside it */
   .stripe-nav-panel {
-    position: fixed;
-    top: 106px;
+    position: absolute;
+    top: calc(100% + 8px);
     right: 14px;
     left: 14px;
     display: grid;

@@ -54,6 +54,7 @@
   </section>
 
   {{-- First-move CTA — start the student profiler --}}
+  {{--
   <section class="pathfinder" aria-labelledby="pathfinder-title">
     <div class="container pathfinder-shell reveal">
       <div class="pathfinder-top">
@@ -103,6 +104,7 @@
       </ul>
     </div>
   </section>
+  --}}
 
       <section class="method-section" id="method" aria-labelledby="method-title">
         <div class="container method-layout">

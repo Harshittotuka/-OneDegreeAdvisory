@@ -21776,6 +21776,11 @@ html[data-color-theme="cream"] .contact-section {
   .home-page .outcome-band {
     grid-template-columns: 1fr;
   }
+
+  .home-page .about-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
 }
 
 @media (max-width: 720px) {
