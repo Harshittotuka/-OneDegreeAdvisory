@@ -15,6 +15,132 @@ ready(() => {
 
   refreshIcons();
 
+  // "Why One Degree" — phone-only infinite carousel (2 rows, columns scrolling
+  // sideways, one full column centred with ~20% peeks). It's a real scroll
+  // container: script auto-scrolls scrollLeft continuously AND the user can grab
+  // and hold-drag to scrub it. Each card is cloned once so the loop has a full
+  // second copy to wrap onto. Gated to ≤720 (clones stay display:none above it).
+  document.querySelectorAll(".whyus-carousel").forEach((carousel) => {
+    const grid = carousel.querySelector(".whyus-grid");
+    if (!grid) return;
+    const originals = Array.from(grid.children);
+    if (originals.length < 2) return;
+    const originalCount = originals.length;
+
+    originals.forEach((card) => {
+      // Reveal originals now: a moving carousel would otherwise fade each card
+      // in as the scroll-reveal observer first notices it sliding into view.
+      card.classList.add("is-visible");
+      const clone = card.cloneNode(true);
+      clone.classList.add("is-clone", "is-visible"); // clones aren't observed
+      clone.setAttribute("aria-hidden", "true");
+      clone.querySelectorAll("a, button, [tabindex]").forEach((el) => {
+        el.setAttribute("tabindex", "-1");
+      });
+      grid.appendChild(clone);
+    });
+    carousel.classList.add("is-marquee");
+
+    const phone = window.matchMedia("(max-width: 720px)");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const SECONDS_PER_COPY = 26; // gentle continuous glide
+
+    let copyWidth = 0; // px width of one copy (= left offset of the first clone)
+    let paused = false;
+    let dragging = false;
+    let rafId = null;
+    let lastT = null;
+    let autoScrollLeft = 0;
+
+    const measure = () => {
+      const firstClone = grid.children[originalCount];
+      copyWidth = firstClone ? firstClone.offsetLeft : 0;
+    };
+
+    const step = (t) => {
+      if (lastT === null) lastT = t;
+      const dt = (t - lastT) / 1000;
+      lastT = t;
+      if (!paused && copyWidth > 0) {
+        // Keep fractional movement outside scrollLeft. Some mobile browsers
+        // round scrollLeft to whole pixels, which can swallow tiny per-frame
+        // increments and make the carousel look like it stopped.
+        autoScrollLeft += (copyWidth / SECONDS_PER_COPY) * dt;
+        if (autoScrollLeft >= copyWidth) autoScrollLeft -= copyWidth;
+        carousel.scrollLeft = autoScrollLeft;
+      }
+      rafId = window.requestAnimationFrame(step);
+    };
+    const startAuto = () => {
+      if (rafId !== null || reduce.matches) return;
+      measure();
+      autoScrollLeft = carousel.scrollLeft;
+      lastT = null;
+      rafId = window.requestAnimationFrame(step);
+    };
+    const stopAuto = () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+    const resumeSoon = () => {
+      window.setTimeout(() => {
+        if (!dragging) paused = false;
+      }, 900);
+    };
+
+    // No hover-pause: this is a phone-only carousel (no hover on touch), and
+    // pausing on hover only made it look frozen when previewed on desktop. It
+    // pauses solely while the user is actively holding/dragging it.
+
+    // Hold-drag to scrub. Touch uses native scrolling (just pause auto); mouse
+    // and pen are dragged manually since overflow doesn't drag with a mouse.
+    let startX = 0;
+    let startScroll = 0;
+    carousel.addEventListener("pointerdown", (e) => {
+      paused = true;
+      if (e.pointerType === "touch") return; // let native momentum scroll handle it
+      if (e.button != null && e.button !== 0) return;
+      dragging = true;
+      startX = e.clientX;
+      startScroll = carousel.scrollLeft;
+      carousel.classList.add("is-dragging");
+      carousel.setPointerCapture?.(e.pointerId);
+    });
+    carousel.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      carousel.scrollLeft = startScroll - (e.clientX - startX);
+      autoScrollLeft = carousel.scrollLeft;
+    });
+    carousel.addEventListener("scroll", () => {
+      if (!paused && !dragging) return;
+      autoScrollLeft = copyWidth > 0 ? carousel.scrollLeft % copyWidth : carousel.scrollLeft;
+    }, { passive: true });
+    const endDrag = () => {
+      if (dragging) {
+        dragging = false;
+        carousel.classList.remove("is-dragging");
+      }
+      resumeSoon();
+    };
+    carousel.addEventListener("pointerup", endDrag);
+    carousel.addEventListener("pointercancel", endDrag);
+
+    const sync = () => {
+      carousel.scrollLeft = 0;
+      autoScrollLeft = 0;
+      if (phone.matches && !reduce.matches) startAuto();
+      else stopAuto();
+    };
+    const onMq = (mq, fn) =>
+      mq.addEventListener ? mq.addEventListener("change", fn) : mq.addListener(fn);
+    onMq(phone, sync);
+    onMq(reduce, sync);
+    sync();
+  });
+  refreshIcons();
+
   const header = document.querySelector("[data-header]");
   const navToggle = document.querySelector("[data-nav-toggle]");
   const navMenu = document.querySelector("[data-nav-menu]");

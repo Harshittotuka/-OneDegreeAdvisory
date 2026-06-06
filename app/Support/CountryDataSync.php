@@ -733,6 +733,12 @@ class CountryDataSync
     {
         if (! $this->isWindows()) {
             return [
+                // Prefer a project-local virtualenv if one was created. On shared
+                // hosting the system python3 usually can't pip-install the scraper
+                // deps (bs4/lxml/openpyxl/requests), so the deploy step is:
+                //   python3 -m venv scripts/.venv
+                //   scripts/.venv/bin/pip install -r scripts/requirements-leverageedu-scraper.txt
+                base_path('scripts/.venv/bin/python3'),
                 '/usr/local/bin/python3',
                 '/usr/bin/python3',
                 '/bin/python3',
@@ -745,6 +751,7 @@ class CountryDataSync
         $userProfile = rtrim((string) (getenv('USERPROFILE') ?: 'C:\Users\harsh'), '\\/');
 
         return [
+            base_path('scripts\.venv\Scripts\python.exe'),
             $userProfile.'\AppData\Local\Programs\Python\Python314\python.exe',
             $userProfile.'\AppData\Local\Programs\Python\Python313\python.exe',
             $userProfile.'\AppData\Local\Programs\Python\Python312\python.exe',

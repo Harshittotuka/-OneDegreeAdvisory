@@ -40,6 +40,9 @@ Thumbs.db
 # Auth
 auth.json
 
+# Python scraper virtualenv (country-sync). Created per environment, never committed.
+/scripts/.venv
+
 # Helpers
 _ide_helper.php
 

@@ -21879,6 +21879,17 @@ html[data-color-theme="cream"] .contact-section {
   }
 }
 
+/* Marquee clones are inert except inside the phone marquee (below). */
+.whyus-card.is-clone {
+  display: none;
+}
+
+/* The "Why One Degree" carousel is a real scroll container driven by script.js:
+   it auto-scrolls scrollLeft continuously, pauses on hover/drag, and is
+   hold-draggable. No CSS keyframes — that's what lets native touch swipe and
+   mouse hold-drag scrub it too. Reduced-motion is handled in JS (no auto-scroll,
+   manual scroll still works). */
+
 @media (max-width: 720px) {
   .home-page .audience-section,
   .home-page .whyus-section,
@@ -21889,9 +21900,56 @@ html[data-color-theme="cream"] .contact-section {
     padding-bottom: 76px;
   }
 
-  .home-page .audience-grid,
-  .home-page .whyus-grid {
+  .home-page .audience-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* "Why One Degree": phone-only infinite carousel — 2 rows, columns flowing
+     sideways with one full column centered and ~20% of each neighbour peeking.
+     script.js clones the cards (a full second copy), auto-scrolls, and makes it
+     hold-draggable; the loop wraps by exactly one copy (3 columns). It's a real
+     scroll container so native touch swipe + mouse hold-drag scrub it too. */
+  .home-page .whyus-carousel {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox: hide the scrollbar */
+    -ms-overflow-style: none;
+    cursor: grab;
+  }
+
+  .home-page .whyus-carousel::-webkit-scrollbar {
+    display: none; /* WebKit/Blink: hide the scrollbar */
+  }
+
+  .home-page .whyus-carousel.is-dragging {
+    cursor: grabbing;
+  }
+
+  .home-page .whyus-grid {
+    /* One full column centered with ~20% of the neighbouring columns peeking
+       on each side. Column ≈ 62% of the viewport so the two side columns show
+       roughly a fifth each. */
+    --whyus-col: 62vw;
+    --whyus-gap: 14px;
+    display: grid;
+    grid-auto-flow: column; /* fill top→bottom (2 rows), then the next column */
+    grid-template-columns: none; /* clear the ≤920 repeat(2,1fr) so columns use grid-auto-columns */
+    grid-template-rows: repeat(2, auto);
+    grid-auto-columns: var(--whyus-col);
+    column-gap: var(--whyus-gap);
+    row-gap: 34px; /* clears the icon badge that straddles each row-2 card top */
+    width: max-content;
+    margin-top: 44px;
+  }
+
+  .home-page .whyus-card {
+    margin-top: 0;
+    padding: 40px 18px 24px;
+  }
+
+  .home-page .whyus-card.is-clone {
+    display: block;
   }
 
   .home-page .audience-card {

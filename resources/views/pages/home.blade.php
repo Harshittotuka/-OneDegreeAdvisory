@@ -143,7 +143,8 @@
             <p>Amid the sea of education consultants, what sets us apart? Here's the answer:</p>
           </div>
 
-          <div class="whyus-grid">
+          <div class="whyus-carousel">
+            <div class="whyus-grid">
             <article class="whyus-card reveal">
               <span class="whyus-icon"><i data-lucide="headphones"></i></span>
               <h3>Comprehensive Support</h3>
@@ -174,6 +175,7 @@
               <h3>Fast Turnaround</h3>
               <p>Benefit from a quick 36 hrs response time on edits to keep your application on track</p>
             </article>
+            </div>
           </div>
         </div>
       </section>
