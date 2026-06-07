@@ -90,16 +90,6 @@
   .dsh-tl .tl-meta { color: var(--muted); font-size: .8rem; margin-top: 2px; }
   .dsh-empty { color: var(--muted); font-size: .88rem; padding: 8px 0; }
 
-  /* ── Site status list ── */
-  .dsh-list { list-style: none; margin: 0; padding: 0; }
-  .dsh-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
-  .dsh-list li:first-child { border-top: 0; padding-top: 0; }
-  .dsh-list .dsh-ico { margin: 0; width: 36px; height: 36px; }
-  .dsh-list .dsh-ico i { width: 17px; height: 17px; }
-  .dsh-list .l-main { font-weight: 700; font-size: .9rem; }
-  .dsh-list .l-sub { color: var(--muted); font-size: .8rem; }
-  .dsh-list .l-end { margin-left: auto; }
-
   @media (max-width: 1100px) {
     .span-3 { grid-column: span 6; }
     .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
@@ -116,13 +106,12 @@
   $hour = (int) now()->format('G');
   $greet = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
 
-  $totalContent = $stats['posts_total'] + $stats['countries'] + $stats['sections_total'] + $stats['notice_total'];
+  $totalContent = $stats['posts_total'] + $stats['countries'] + $stats['notice_total'];
 
   // Content mix → CSS conic-gradient (no JS, no chart library).
   $mix = [
     ['label' => 'Blog posts',     'value' => $stats['posts_total'],    'color' => '#666cff'],
     ['label' => 'Destinations',   'value' => $stats['countries'],      'color' => '#3f6fd6'],
-    ['label' => 'About sections', 'value' => $stats['sections_total'], 'color' => '#7b6ef0'],
     ['label' => 'Notification items', 'value' => $stats['notice_total'],   'color' => '#28c76f'],
   ];
   $mixTotal = max(1, array_sum(array_column($mix, 'value')));
@@ -144,7 +133,7 @@
   <section class="panel dsh-hero span-8">
     <div class="blob"></div><div class="ring"></div>
     <h2>{{ $greet }} 👋 Welcome to <b>{{ config('site.name') }}</b> Content Studio</h2>
-    <p>You're managing <b>{{ $totalContent }}</b> pieces of content across the site — blog posts, study destinations, About sections and notification-bar announcements. Everything here is file-backed and updates the live site instantly.</p>
+    <p>You're managing <b>{{ $totalContent }}</b> pieces of content across the site — blog posts, study destinations and notification-bar announcements. Everything here is file-backed and updates the live site instantly.</p>
     <div class="btn-row">
       <a class="btn btn-primary" href="{{ route('admin.blog.create') }}"><i data-lucide="plus" style="width:16px;height:16px;"></i> New blog post</a>
       <a class="btn btn-ghost" href="{{ route('home') }}" target="_blank"><i data-lucide="external-link" style="width:16px;height:16px;"></i> View live site</a>
@@ -221,9 +210,6 @@
       <a class="dsh-act" href="{{ route('admin.home-hero.live') }}">
         <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="panel-top"></i></span> Home page
       </a>
-      <a class="dsh-act" href="{{ route('admin.about.index') }}">
-        <span class="dsh-ico" style="--c:#7b6ef0;--cb:#efedfd"><i data-lucide="layout-template"></i></span> About page
-      </a>
       <a class="dsh-act" href="{{ route('admin.notice-bar.index') }}">
         <span class="dsh-ico" style="--c:#28c76f;--cb:#e6f8ee"><i data-lucide="megaphone"></i></span> Notification bar
       </a>
@@ -256,7 +242,7 @@
   </section>
 
   {{-- Recent posts timeline --}}
-  <section class="panel dsh-card span-8">
+  <section class="panel dsh-card span-12">
     <div class="dsh-card-head">
       <div><h3>Recent blog posts</h3><p>Your latest articles</p></div>
       <a class="chip blue" href="{{ route('admin.blog.index') }}" style="text-decoration:none;">View all <i data-lucide="arrow-right"></i></a>
@@ -287,28 +273,6 @@
     @else
       <p class="dsh-empty">No posts yet. <a href="{{ route('admin.blog.create') }}">Create your first one →</a></p>
     @endif
-  </section>
-
-  {{-- Site status --}}
-  <section class="panel dsh-card span-4">
-    <div class="dsh-card-head"><div><h3>Site at a glance</h3><p>Live configuration</p></div></div>
-    <ul class="dsh-list">
-      <li>
-        <span class="dsh-ico" style="--c:#666cff;--cb:#ebecff"><i data-lucide="panel-top"></i></span>
-        <div><div class="l-main">Home page</div><div class="l-sub">{{ $stats['hero_actions'] }} call-to-action {{ \Illuminate\Support\Str::plural('button', $stats['hero_actions']) }}</div></div>
-        <a class="l-end chip grey" href="{{ route('admin.home-hero.live') }}" style="text-decoration:none;">Edit</a>
-      </li>
-      <li>
-        <span class="dsh-ico" style="--c:#28c76f;--cb:#e6f8ee"><i data-lucide="megaphone"></i></span>
-        <div><div class="l-main">Notification bar</div><div class="l-sub">{{ $stats['notice_visible'] }} of {{ $stats['notice_total'] }} showing · {{ $variantLabel }}</div></div>
-        <a class="l-end chip grey" href="{{ route('admin.notice-bar.index') }}" style="text-decoration:none;">Edit</a>
-      </li>
-      <li>
-        <span class="dsh-ico" style="--c:#7b6ef0;--cb:#efedfd"><i data-lucide="layout-template"></i></span>
-        <div><div class="l-main">About page</div><div class="l-sub">{{ $stats['sections_visible'] }} of {{ $stats['sections_total'] }} sections visible</div></div>
-        <a class="l-end chip grey" href="{{ route('admin.about.index') }}" style="text-decoration:none;">Edit</a>
-      </li>
-    </ul>
   </section>
 
 </div>

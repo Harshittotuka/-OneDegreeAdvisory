@@ -23,10 +23,14 @@ class AboutCmsController extends Controller
 
     /**
      * The structured list/form editor was removed — the live editor is now the
-     * single way to edit the About page. The dashboard nav still points here.
+     * single way to edit the About page. Keep this route for direct internal use.
      */
-    public function index(): RedirectResponse
+    public function index(): View|RedirectResponse
     {
+        if (! $this->enabled()) {
+            return $this->inDevelopment();
+        }
+
         return redirect()->route('admin.about.live');
     }
 
@@ -34,6 +38,10 @@ class AboutCmsController extends Controller
 
     public function live(): View
     {
+        if (! $this->enabled()) {
+            return $this->inDevelopment();
+        }
+
         return view('admin.about.live', [
             'sections' => $this->store->all(),
             'types' => AboutSchema::types(),
@@ -43,6 +51,10 @@ class AboutCmsController extends Controller
     /** Render one blank, fully-instrumented section wrapper for the "Add section" action. */
     public function liveSection(Request $request): View|RedirectResponse
     {
+        if (! $this->enabled()) {
+            abort(404);
+        }
+
         $type = (string) $request->query('type', '');
         if (! AboutSchema::isType($type)) {
             abort(404);
@@ -63,6 +75,10 @@ class AboutCmsController extends Controller
     /** Persist the whole page from the live editor: order, visibility and every field. */
     public function liveSave(Request $request): JsonResponse
     {
+        if (! $this->enabled()) {
+            return response()->json(['ok' => false, 'message' => 'About page editor is in development.'], 423);
+        }
+
         $incoming = $request->input('sections');
         if (! is_array($incoming)) {
             return response()->json(['ok' => false, 'message' => 'Bad payload.'], 422);
@@ -103,6 +119,10 @@ class AboutCmsController extends Controller
 
     public function upload(Request $request): JsonResponse
     {
+        if (! $this->enabled()) {
+            return response()->json(['ok' => false, 'message' => 'About page editor is in development.'], 423);
+        }
+
         $request->validate([
             'file' => ['required', 'image', 'max:5120'], // 5 MB
         ]);
@@ -121,6 +141,10 @@ class AboutCmsController extends Controller
      */
     public function importUrl(Request $request): JsonResponse
     {
+        if (! $this->enabled()) {
+            return response()->json(['ok' => false, 'message' => 'About page editor is in development.'], 423);
+        }
+
         $url = trim((string) $request->input('url', ''));
         if (! preg_match('#^https?://#i', $url)) {
             return response()->json(['ok' => false, 'message' => 'Enter a valid http(s) image URL.'], 422);
@@ -227,5 +251,18 @@ class AboutCmsController extends Controller
             'textarea' => mb_substr(trim((string) $value), 0, 5000),
             default => mb_substr(trim((string) $value), 0, 1000),
         };
+    }
+
+    private function enabled(): bool
+    {
+        return (bool) config('site.about_cms_enabled');
+    }
+
+    private function inDevelopment(): View
+    {
+        return view('admin.in-development', [
+            'title' => 'About Page',
+            'message' => 'This section is in development.',
+        ]);
     }
 }

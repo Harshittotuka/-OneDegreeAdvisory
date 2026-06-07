@@ -7,6 +7,12 @@ return [
     /* Password for the /admin blog CMS. Override via CMS_PASSWORD in .env. */
     'cms_password' => env('CMS_PASSWORD', 'onedegree'),
 
+    /*
+     * Keep the About-page CMS hidden until it is ready for client use.
+     * Set ABOUT_CMS_ENABLED=true locally to re-enable the existing editor.
+     */
+    'about_cms_enabled' => env('ABOUT_CMS_ENABLED', false),
+
     'notice' => 'Spring and Fall 2027 intake planning is open',
 
     /* Scrolling announcement marquee shown in the top blue notice bar.

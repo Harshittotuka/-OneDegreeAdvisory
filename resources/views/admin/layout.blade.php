@@ -136,11 +136,11 @@
       ['label' => 'Content', 'items' => [
         ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
         ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
-        ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.index', 'match' => 'admin.about'],
         ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'],
         ['label' => 'Sync non-MBBS countries', 'icon' => 'globe', 'route' => 'admin.country-sync.index', 'match' => 'admin.country-sync'],
       ]],
       ['label' => 'Coming soon', 'items' => [
+        ['label' => 'About Page', 'icon' => 'layout-template', 'soon' => true],
         ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],
       ]],
     ];
