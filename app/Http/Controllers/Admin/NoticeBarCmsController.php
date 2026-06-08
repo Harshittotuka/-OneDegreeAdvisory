@@ -7,6 +7,7 @@ use App\Support\NoticeBarStore;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 class NoticeBarCmsController extends Controller
 {
@@ -18,7 +19,59 @@ class NoticeBarCmsController extends Controller
     {
         return view('admin.notice-bar.edit', [
             'bar' => $this->store->get(),
+            'linkSuggestions' => $this->linkSuggestions(),
         ]);
+    }
+
+    /**
+     * Link targets offered as autocomplete in the item "link" field:
+     * every public page (derived from the router so it stays in sync) plus
+     * the homepage's in-page section anchors. Returned as value => label.
+     */
+    private function linkSuggestions(): array
+    {
+        $pages = [];
+
+        foreach (Route::getRoutes() as $route) {
+            if (! in_array('GET', $route->methods(), true)) {
+                continue;
+            }
+
+            $uri = $route->uri();
+
+            if (str_starts_with($uri, 'admin')              // back-office
+                || str_contains($uri, '{')                  // needs a parameter
+                || str_ends_with($uri, '.html')) {          // legacy alias
+                continue;
+            }
+
+            $path = $uri === '/' ? '/' : '/'.$uri;
+            $pages[$path] = $this->humanisePath($uri);
+        }
+
+        ksort($pages);
+
+        // Real section IDs on the homepage — linkable from any page via /#id.
+        $sections = [
+            '/#destinations' => 'Home → Destinations',
+            '/#outcomes'     => 'Home → Outcomes',
+            '/#about'        => 'Home → About',
+            '/#insights'     => 'Home → Insights',
+            '/#contact'      => 'Home → Contact',
+        ];
+
+        return ['Page' => $pages, 'Section' => $sections];
+    }
+
+    private function humanisePath(string $uri): string
+    {
+        if ($uri === '/' || $uri === '') {
+            return 'Home';
+        }
+
+        return collect(explode('/', $uri))
+            ->map(fn ($segment) => ucwords(str_replace('-', ' ', $segment)))
+            ->implode(' › ');
     }
 
     public function update(Request $request): RedirectResponse

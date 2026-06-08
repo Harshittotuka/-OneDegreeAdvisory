@@ -5,10 +5,10 @@
 <style>
   .cms-wrap { max-width: 1320px; }
 
-  .dsh-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; }
+  .dsh-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; align-items: stretch; }
   .dsh-grid > * { min-width: 0; }
   .span-3 { grid-column: span 3; } .span-4 { grid-column: span 4; }
-  .span-5 { grid-column: span 5; } .span-7 { grid-column: span 7; }
+  .span-5 { grid-column: span 5; } .span-6 { grid-column: span 6; } .span-7 { grid-column: span 7; }
   .span-8 { grid-column: span 8; } .span-12 { grid-column: span 12; }
 
   /* ── Welcome banner ── */
@@ -24,7 +24,7 @@
     border: 22px solid rgba(102,108,255,.08); pointer-events: none; }
 
   /* ── KPI cards ── */
-  .dsh-kpi { padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 2px;
+  .dsh-kpi { min-height: 178px; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 2px;
     transition: transform .18s ease, box-shadow .18s ease; }
   .dsh-kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
   .dsh-ico { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px;
@@ -34,7 +34,7 @@
   .dsh-kpi:hover .dsh-ico { transform: scale(1.06) rotate(-3deg); }
   .dsh-num { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
   .dsh-kpi-label { font-weight: 700; font-size: .95rem; }
-  .dsh-kpi-sub { color: var(--muted); font-size: .82rem; margin-top: 4px; }
+  .dsh-kpi-sub { color: var(--muted); font-size: .82rem; margin-top: auto; padding-top: 10px; }
 
   /* ── Card heading ── */
   .dsh-card { padding: 22px; height: 100%; }
@@ -94,7 +94,7 @@
 
   @media (max-width: 1100px) {
     .span-3 { grid-column: span 6; }
-    .span-4, .span-5, .span-7, .span-8 { grid-column: span 12; }
+    .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
   }
   @media (max-width: 620px) {
     .span-3 { grid-column: span 12; }
@@ -147,16 +147,16 @@
   </section>
 
   {{-- Featured / quick highlight --}}
-  <section class="panel dsh-kpi span-3">
+  <section class="panel dsh-kpi span-4">
     <span class="dsh-ico" style="--c:#9a6b00;--cb:#fdf3dd"><i data-lucide="star"></i></span>
     <div class="dsh-kpi-label">Featured blog post</div>
     @if($stats['featured'])
       <div class="dsh-num" style="font-size:1.15rem;line-height:1.35;margin-top:6px;">{{ \Illuminate\Support\Str::limit($stats['featured']['title'], 60) }}</div>
-      <a class="dsh-kpi-sub" style="color:var(--teal);font-weight:700;margin-top:8px;display:inline-flex;gap:5px;align-items:center;" href="{{ route('admin.blog.edit', $stats['featured']['slug']) }}">
+      <a class="dsh-kpi-sub" style="color:var(--teal);font-weight:700;margin-top:auto;display:inline-flex;gap:5px;align-items:center;" href="{{ route('admin.blog.edit', $stats['featured']['slug']) }}">
         <i data-lucide="pencil" style="width:13px;height:13px;"></i> Edit featured post
       </a>
     @else
-      <div class="dsh-kpi-sub" style="margin-top:8px;">No post is currently featured. Pick one from <a href="{{ route('admin.blog.index') }}">Blog Posts</a>.</div>
+      <div class="dsh-kpi-sub" style="margin-top:auto;">No post is currently featured. Pick one from <a href="{{ route('admin.blog.index') }}">Blog Posts</a>.</div>
     @endif
   </section>
 
@@ -185,7 +185,7 @@
     <div class="dsh-kpi-sub">Non-MBBS country pages, kept in sync from Leverage&nbsp;Edu.</div>
   </section>
 
-  <section class="panel dsh-kpi span-4">
+  <section class="panel dsh-kpi span-3">
     <span class="dsh-ico" style="--c:#28c76f;--cb:#e6f8ee"><i data-lucide="megaphone"></i></span>
     <div class="dsh-num">{{ $stats['notice_total'] }}</div>
     <div class="dsh-kpi-label">Notification-bar items</div>
@@ -193,7 +193,7 @@
   </section>
 
   {{-- Content mix donut --}}
-  <section class="panel dsh-card span-4">
+  <section class="panel dsh-card span-6">
     <div class="dsh-card-head">
       <div><h3>Content mix</h3><p>Where your content lives</p></div>
     </div>
@@ -214,7 +214,7 @@
   </section>
 
   {{-- Quick actions --}}
-  <section class="panel dsh-card span-4">
+  <section class="panel dsh-card span-6">
     <div class="dsh-card-head"><div><h3>Quick actions</h3><p>Jump straight in</p></div></div>
     <div class="dsh-actions">
       <a class="dsh-act" href="{{ route('admin.blog.create') }}">
@@ -236,6 +236,9 @@
         <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="eye"></i></span> Country visibility
       </a>
       @endif
+      <a class="dsh-act" href="{{ route('admin.country-sync.index') }}">
+        <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="globe"></i></span> Non-MBBS sync
+      </a>
       <a class="dsh-act" href="{{ route('admin.mbbs-country-sync.index') }}">
         <span class="dsh-ico" style="--c:#0f7a78;--cb:#e7f7f5"><i data-lucide="stethoscope"></i></span> MBBS sync
       </a>
@@ -243,7 +246,7 @@
   </section>
 
   {{-- Country sync status --}}
-  <section class="panel dsh-card span-4">
+  <section class="panel dsh-card span-6">
     <div class="dsh-card-head">
       <div><h3>Country data</h3><p>non-MBBS · Leverage&nbsp;Edu</p></div>
       @if($countrySync['running'])
@@ -268,7 +271,7 @@
   </section>
 
   {{-- MBBS country sync status --}}
-  <section class="panel dsh-card span-4">
+  <section class="panel dsh-card span-6">
     <div class="dsh-card-head">
       <div><h3>MBBS country data</h3><p>AV Global Overseas</p></div>
       @if($mbbsCountrySync['running'])

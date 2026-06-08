@@ -73,7 +73,7 @@
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 14px;">
       <div>
         <h2 class="nb-section-title">Announcement items</h2>
-        <p class="nb-section-sub" style="margin:0;">Add, remove and reorder. An item with no link shows as plain (non-clickable) text.</p>
+        <p class="nb-section-sub" style="margin:0;">Add, remove and reorder. An item with no link shows as plain (non-clickable) text. Click the <strong>link field</strong> to pick from available pages &amp; sections.</p>
       </div>
       <button type="button" class="btn btn-ghost btn-sm" data-nb-add><i data-lucide="plus"></i> Add item</button>
     </div>
@@ -94,6 +94,15 @@
     <a class="btn btn-ghost" href="{{ route('home') }}" target="_blank"><i data-lucide="external-link" style="width:16px;height:16px;"></i> Preview site</a>
   </div>
 </form>
+
+{{-- Shared link suggestions — referenced by every row's link field via list="nb-link-options". --}}
+<datalist id="nb-link-options">
+  @foreach($linkSuggestions as $group => $options)
+    @foreach($options as $value => $label)
+      <option value="{{ $value }}">{{ $group }} · {{ $label }} ({{ $value }})</option>
+    @endforeach
+  @endforeach
+</datalist>
 
 {{-- Hidden template cloned by “Add item”. __INDEX__ is swapped for a unique token. --}}
 <template id="nb-row-tpl">

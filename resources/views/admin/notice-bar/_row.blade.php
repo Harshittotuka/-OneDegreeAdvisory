@@ -3,7 +3,8 @@
     <input type="text" name="items[{{ $i }}][text]" value="{{ $item['text'] ?? '' }}"
            placeholder="Announcement text (e.g. Spring 2027 intake planning is open)">
     <input type="text" name="items[{{ $i }}][href]" value="{{ $item['href'] ?? '' }}"
-           placeholder="Link — /contact, https://…, #section (leave empty = not clickable)">
+           list="nb-link-options" autocomplete="off"
+           placeholder="Link — pick a page/section or type /contact, https://…, #section (empty = not clickable)">
   </div>
 
   <label class="nb-vis" title="Show this item on the site">
