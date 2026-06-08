@@ -17,6 +17,10 @@ class CountryVisibilityController extends Controller
         MbbsCountryContent $mbbsContent,
         CountryVisibilityStore $visibility
     ): View {
+        if (! $this->superOnly()) {
+            return $this->inDevelopment();
+        }
+
         return view('admin.country-visibility.edit', [
             'nonMbbsCountries' => $this->withVisibility(
                 $locations->allDestinations(),
@@ -37,6 +41,10 @@ class CountryVisibilityController extends Controller
         MbbsCountryContent $mbbsContent,
         CountryVisibilityStore $visibility
     ): RedirectResponse {
+        if (! $this->superOnly()) {
+            abort(404);
+        }
+
         $request->validate([
             'visible' => 'array',
             'visible.'.CountryVisibilityStore::GROUP_NON_MBBS => 'array',
@@ -67,5 +75,23 @@ class CountryVisibilityController extends Controller
 
             return $country;
         }, $countries);
+    }
+
+    /**
+     * Country visibility is a super-admin-only tool. A standard CMS login does
+     * not see the nav entry; a direct visit gets the same "in development"
+     * placeholder used elsewhere for super-only sections.
+     */
+    private function superOnly(): bool
+    {
+        return (bool) session('cms_super_admin');
+    }
+
+    private function inDevelopment(): View
+    {
+        return view('admin.in-development', [
+            'title' => 'Country visibility',
+            'message' => 'This section is in development.',
+        ]);
     }
 }

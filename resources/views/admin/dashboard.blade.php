@@ -27,9 +27,11 @@
   .dsh-kpi { padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 2px;
     transition: transform .18s ease, box-shadow .18s ease; }
   .dsh-kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-  .dsh-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 11px;
-    background: var(--cb, #ebecff); color: var(--c, var(--teal)); margin-bottom: 12px; }
-  .dsh-ico i { width: 22px; height: 22px; }
+  .dsh-ico { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px;
+    background: var(--cb, #ebecff); color: var(--c, var(--teal)); margin-bottom: 12px;
+    transition: transform .2s ease, background .2s ease; }
+  .dsh-ico i { width: 24px; height: 24px; }
+  .dsh-kpi:hover .dsh-ico { transform: scale(1.06) rotate(-3deg); }
   .dsh-num { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
   .dsh-kpi-label { font-weight: 700; font-size: .95rem; }
   .dsh-kpi-sub { color: var(--muted); font-size: .82rem; margin-top: 4px; }
@@ -229,9 +231,11 @@
       <a class="dsh-act" href="{{ route('admin.notice-bar.index') }}">
         <span class="dsh-ico" style="--c:#28c76f;--cb:#e6f8ee"><i data-lucide="megaphone"></i></span> Notification bar
       </a>
+      @if(session('cms_super_admin'))
       <a class="dsh-act" href="{{ route('admin.country-visibility.index') }}">
         <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="eye"></i></span> Country visibility
       </a>
+      @endif
       <a class="dsh-act" href="{{ route('admin.mbbs-country-sync.index') }}">
         <span class="dsh-ico" style="--c:#0f7a78;--cb:#e7f7f5"><i data-lucide="stethoscope"></i></span> MBBS sync
       </a>

@@ -142,7 +142,10 @@
       $contentItems[] = ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.live', 'match' => 'admin.about'];
     }
     $contentItems[] = ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'];
-    $contentItems[] = ['label' => 'Country visibility', 'icon' => 'eye', 'route' => 'admin.country-visibility.index', 'match' => 'admin.country-visibility'];
+    // Country visibility is a super-admin-only tool.
+    if ($isSuper) {
+      $contentItems[] = ['label' => 'Country visibility', 'icon' => 'eye', 'route' => 'admin.country-visibility.index', 'match' => 'admin.country-visibility'];
+    }
     $contentItems[] = ['label' => 'Sync non-MBBS countries', 'icon' => 'globe', 'route' => 'admin.country-sync.index', 'match' => 'admin.country-sync'];
     $contentItems[] = ['label' => 'Sync MBBS countries', 'icon' => 'stethoscope', 'route' => 'admin.mbbs-country-sync.index', 'match' => 'admin.mbbs-country-sync'];
 

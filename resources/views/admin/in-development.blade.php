@@ -13,16 +13,16 @@
   .dev-state__icon {
     display: grid;
     place-items: center;
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     margin: 0 auto 16px;
-    border-radius: 14px;
+    border-radius: 16px;
     background: var(--teal-soft);
     color: var(--teal);
   }
   .dev-state__icon i {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
   .dev-state h2 {
     margin: 0 0 6px;

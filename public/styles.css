@@ -23491,3 +23491,143 @@ html[data-color-theme] .study-abroad-page .solutions-section,
   .mbc-marquee__viewport { overflow-x: auto; scrollbar-width: none; }
   .mbc-marquee__viewport::-webkit-scrollbar { display: none; }
 }
+
+/* ============================================================
+   UNIFIED ICON-TILE SYSTEM
+   ------------------------------------------------------------
+   Every feature / section / card icon across the site now uses
+   the home "signal" treatment (see .signal-icon ~line 2780): a
+   soft rounded-square tile holding a 24px Lucide icon, with a
+   scale + rotate hover.
+
+     recipe : background #e8f7f3 ; icon color var(--teal-dark)
+     shape  : rounded square, radius 16px (compact 14px)
+     icon   : 24px (compact 22px)
+     hover  : scale(1.06) rotate(-3deg) + warm tile tint
+
+   Selectors are wrapped in `html[data-color-theme] :is(...)` so
+   this layer wins over the per-page theme overrides above. Under
+   the permanent cream theme `var(--teal-dark)` resolves to orange
+   (#d8431d), so every tile renders as a pale tile + orange icon
+   -- identical to the reference signal cards (gradient fills,
+   gold/teal/navy accents and circles are all flattened to match).
+   The admin CMS keeps its own palette (styled inline in its
+   views). Appended last on purpose so source order wins. */
+
+/* ---- STANDARD tier · 52px tile / radius 16 / 24px icon ---- */
+html[data-color-theme] :is(
+  .whyus-icon,
+  .reason-card .reason-icon,
+  .dynamic-why-card .reason-icon,
+  .dynamic-scholarship-card .reason-icon,
+  .va-vm-icon,
+  .va-vm-card--mission .va-vm-icon,
+  .adm-cta__crest,
+  .study-abroad-page .signal .signal-icon,
+  .mbbs-v2-service-icon,
+  .mbbsx-careers__callout-icon,
+  .mbbsx-career-card__icon,
+  .mbbsx-adv__icon,
+  .mbbsx-panel__icon,
+  .mbbsx-process__badge,
+  .mbbsx-card__icon,
+  .mbc-factcard__icon,
+  .mbc-quote
+) {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: #e8f7f3;
+  color: var(--teal-dark);
+  border: 0;
+  box-shadow: none;
+  transition: transform 0.28s ease, background 0.28s ease;
+}
+
+html[data-color-theme] :is(
+  .whyus-icon,
+  .reason-card .reason-icon,
+  .dynamic-why-card .reason-icon,
+  .dynamic-scholarship-card .reason-icon,
+  .va-vm-icon,
+  .adm-cta__crest,
+  .study-abroad-page .signal .signal-icon,
+  .mbbs-v2-service-icon,
+  .mbbsx-careers__callout-icon,
+  .mbbsx-career-card__icon,
+  .mbbsx-adv__icon,
+  .mbbsx-panel__icon,
+  .mbbsx-process__badge,
+  .mbbsx-card__icon,
+  .mbc-factcard__icon,
+  .mbc-quote
+) :is(i, svg) {
+  width: 24px !important;
+  height: 24px !important;
+  color: var(--teal-dark) !important;
+  stroke-width: 2;
+}
+
+/* ---- COMPACT tier · native size / radius 14 / 22px icon ----
+   nav menu, inline badges, over-image + corner accents. Size is
+   left at each element's footprint so dense layouts don't break;
+   circles become rounded squares, fills/borders/shadows dropped. */
+html[data-color-theme] :is(
+  .course-icon,
+  .adm-track__icon,
+  .adm-step__icon,
+  .adm-hero__badge-icon,
+  .sserv-intro__badge-icon,
+  .va-impact-icon,
+  .insight-card-more-icon
+) {
+  border-radius: 14px;
+  background: #e8f7f3;
+  color: var(--teal-dark);
+  border: 0;
+  box-shadow: none;
+  transition: transform 0.28s ease, background 0.28s ease;
+}
+
+html[data-color-theme] :is(
+  .course-icon,
+  .adm-track__icon,
+  .adm-step__icon,
+  .adm-hero__badge-icon,
+  .sserv-intro__badge-icon,
+  .va-impact-icon,
+  .insight-card-more-icon
+) :is(i, svg) {
+  width: 22px !important;
+  height: 22px !important;
+  color: var(--teal-dark) !important;
+  stroke-width: 2;
+}
+
+/* ---- Shared hover · scale + rotate + warm tile tint ---- */
+html[data-color-theme] :is(
+  .reason-card:hover .reason-icon,
+  .dynamic-why-card:hover .reason-icon,
+  .dynamic-scholarship-card:hover .reason-icon,
+  .va-vm-card:hover .va-vm-icon,
+  .va-impact-card:hover .va-impact-icon,
+  .adm-track:hover .adm-track__icon,
+  .course-menu-card:hover .course-icon,
+  .study-abroad-page .signal:hover .signal-icon,
+  .mbbs-v2-service-card:hover .mbbs-v2-service-icon,
+  .mbbsx-career-card:hover .mbbsx-career-card__icon,
+  .mbbsx-adv__card:hover .mbbsx-adv__icon,
+  .mbc-factcard:hover .mbc-factcard__icon
+) {
+  transform: scale(1.06) rotate(-3deg);
+  background: color-mix(in srgb, #ff5e32 18%, #e8f7f3);
+  color: var(--teal-dark);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* whyus badge straddles the card edge -- keep its centring transform */
+html[data-color-theme] .whyus-card:hover .whyus-icon {
+  transform: translate(-50%, -50%) scale(1.06) rotate(-3deg);
+  background: color-mix(in srgb, #ff5e32 18%, #e8f7f3);
+}
