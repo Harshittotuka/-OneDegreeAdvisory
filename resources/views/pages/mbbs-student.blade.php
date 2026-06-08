@@ -10,7 +10,6 @@
     $featuredMbbsCountries = array_slice($mbbsCountries, 0, 5);
     $additionalMbbsCountries = array_slice($mbbsCountries, 5);
     $additionalMbbsCountryCount = count($additionalMbbsCountries);
-    $additionalMbbsCountryNames = array_slice(array_column($additionalMbbsCountries, 'name'), 0, 3);
 
     $fact = function (array $facts, array $labels): string {
         foreach ($labels as $label) {
@@ -126,14 +125,6 @@
                 <h3>And many&nbsp;more</h3>
               </span>
               <p>More MBBS routes matched to your budget, NEET score, climate, and intake timeline.</p>
-              <span class="mbbs-v2-more-card__chips" aria-label="Examples of more MBBS destinations">
-                @foreach($additionalMbbsCountryNames as $countryName)
-                  <span>{{ $countryName }}</span>
-                @endforeach
-                @if($additionalMbbsCountryCount > count($additionalMbbsCountryNames))
-                  <span class="mbbs-v2-more-card__chip-extra">+{{ $additionalMbbsCountryCount - count($additionalMbbsCountryNames) }} more</span>
-                @endif
-              </span>
               <span class="mbbs-v2-more-card__action">
                 <span>Build my shortlist</span>
                 <i data-lucide="arrow-up-right"></i>
