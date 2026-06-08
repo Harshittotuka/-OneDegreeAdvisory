@@ -14471,6 +14471,16 @@ html[data-color-theme] .home-page .hero .hero-headline .gold-text,
   }
 }
 
+/* Italic text painted with background-clip:text is filled only inside the
+   element's box. The italic slant on the final letter (the "e" in "one degree")
+   overshoots that box on the right and loses its gradient fill, so it looks
+   clipped. A hair of right padding extends the paint area to cover the slant;
+   the matching negative margin keeps the layout unchanged. */
+.home-page .hero .hero-headline .gold-text {
+  padding-right: 0.12em;
+  margin-right: -0.12em;
+}
+
 /* The eyebrow's little leading line picks up the same gold. */
 html[data-color-theme] .home-page .hero .eyebrow::before,
 .home-page .hero .eyebrow::before {
