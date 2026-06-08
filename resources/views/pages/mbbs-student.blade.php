@@ -2,11 +2,15 @@
     use Illuminate\Support\Str;
 
     $pageTitle = 'MBBS Abroad Route Desk | One Degree Advisory';
-    $pageDescription = 'A focused MBBS abroad comparison page with six destination desks, admission support services, and profile-led counselling for Indian students.';
+    $pageDescription = 'A focused MBBS abroad comparison page with highlighted destination desks, admission support services, and profile-led counselling for Indian students.';
     $activeNav = 'mbbs';
     $mainId = 'mbbs-v2-main';
 
     $mbbsCountries = $mbbsCountries ?? [];
+    $featuredMbbsCountries = array_slice($mbbsCountries, 0, 5);
+    $additionalMbbsCountries = array_slice($mbbsCountries, 5);
+    $additionalMbbsCountryCount = count($additionalMbbsCountries);
+    $additionalMbbsCountryNames = array_slice(array_column($additionalMbbsCountries, 'name'), 0, 3);
 
     $fact = function (array $facts, array $labels): string {
         foreach ($labels as $label) {
@@ -71,7 +75,7 @@
 
       <aside class="mbbs-v2-country-panel" id="corridor" aria-label="MBBS country comparison board">
         <div class="mbbs-v2-country-carousel" aria-label="MBBS country comparison cards">
-          @foreach ($mbbsCountries as $i => $c)
+          @foreach ($featuredMbbsCountries as $i => $c)
             <article class="mbbs-country-card mbbs-v2-country-card">
               <header class="mbbs-country-head">
                 <span class="mbbs-country-flag">
@@ -110,6 +114,32 @@
               </a>
             </article>
           @endforeach
+
+          @if($additionalMbbsCountryCount > 0)
+            <a class="mbbs-country-card mbbs-v2-country-card mbbs-v2-country-more-card" href="{{ route('contact') }}" aria-label="Ask about more MBBS destinations">
+              <span class="mbbs-v2-more-card__index">{{ str_pad(count($featuredMbbsCountries) + 1, 2, '0', STR_PAD_LEFT) }}</span>
+              <span class="mbbs-v2-more-card__mark" aria-hidden="true">
+                <i data-lucide="compass"></i>
+              </span>
+              <span class="mbbs-v2-more-card__head">
+                <span class="mbbs-v2-more-card__eyebrow">Additional destinations</span>
+                <h3>And many&nbsp;more</h3>
+              </span>
+              <p>More MBBS routes matched to your budget, NEET score, climate, and intake timeline.</p>
+              <span class="mbbs-v2-more-card__chips" aria-label="Examples of more MBBS destinations">
+                @foreach($additionalMbbsCountryNames as $countryName)
+                  <span>{{ $countryName }}</span>
+                @endforeach
+                @if($additionalMbbsCountryCount > count($additionalMbbsCountryNames))
+                  <span class="mbbs-v2-more-card__chip-extra">+{{ $additionalMbbsCountryCount - count($additionalMbbsCountryNames) }} more</span>
+                @endif
+              </span>
+              <span class="mbbs-v2-more-card__action">
+                <span>Build my shortlist</span>
+                <i data-lucide="arrow-up-right"></i>
+              </span>
+            </a>
+          @endif
         </div>
       </aside>
     </div>
