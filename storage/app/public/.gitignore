@@ -1,6 +1,2 @@
 *
 !.gitignore
-
-# Track CMS-uploaded public assets so content + its images stay versioned together.
-!*/
-!**/*
