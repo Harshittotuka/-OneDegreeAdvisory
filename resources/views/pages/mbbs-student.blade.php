@@ -7,9 +7,6 @@
     $mainId = 'mbbs-v2-main';
 
     $mbbsCountries = $mbbsCountries ?? [];
-    $featuredMbbsCountries = array_slice($mbbsCountries, 0, 5);
-    $additionalMbbsCountries = array_slice($mbbsCountries, 5);
-    $additionalMbbsCountryCount = count($additionalMbbsCountries);
 
     $fact = function (array $facts, array $labels): string {
         foreach ($labels as $label) {
@@ -74,7 +71,7 @@
 
       <aside class="mbbs-v2-country-panel" id="corridor" aria-label="MBBS country comparison board">
         <div class="mbbs-v2-country-carousel" aria-label="MBBS country comparison cards">
-          @foreach ($featuredMbbsCountries as $i => $c)
+          @foreach ($mbbsCountries as $i => $c)
             <article class="mbbs-country-card mbbs-v2-country-card">
               <header class="mbbs-country-head">
                 <span class="mbbs-country-flag">
@@ -114,9 +111,9 @@
             </article>
           @endforeach
 
-          @if($additionalMbbsCountryCount > 0)
+          @if(count($mbbsCountries) > 0)
             <a class="mbbs-country-card mbbs-v2-country-card mbbs-v2-country-more-card" href="{{ route('contact') }}" aria-label="Ask about more MBBS destinations">
-              <span class="mbbs-v2-more-card__index">{{ str_pad(count($featuredMbbsCountries) + 1, 2, '0', STR_PAD_LEFT) }}</span>
+              <span class="mbbs-v2-more-card__index">{{ str_pad(count($mbbsCountries) + 1, 2, '0', STR_PAD_LEFT) }}</span>
               <span class="mbbs-v2-more-card__mark" aria-hidden="true">
                 <i data-lucide="compass"></i>
               </span>
