@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\BlogStore;
 use App\Support\CountryDataSync;
+use App\Support\MbbsCountryContent;
+use App\Support\MbbsCountryDataSync;
 use App\Support\NoticeBarStore;
 use App\Support\StudyLocationContent;
 use Illuminate\Contracts\View\View;
@@ -23,6 +25,8 @@ class DashboardController extends Controller
         NoticeBarStore $notice,
         StudyLocationContent $locations,
         CountryDataSync $countrySync,
+        MbbsCountryContent $mbbsContent,
+        MbbsCountryDataSync $mbbsCountrySync,
     ): View {
         $posts = $blog->all();
         $visiblePosts = array_values(array_filter($posts, fn ($p) => ($p['visible'] ?? true) === true));
@@ -39,12 +43,17 @@ class DashboardController extends Controller
         $noticeVisible = array_values(array_filter($noticeItems, fn ($i) => ($i['visible'] ?? true) === true));
 
         $destinations = $locations->destinations();
+        $mbbsCountries = $mbbsContent->countries();
 
         // Country-sync status — cheap reads only (file mtime + the small status file).
         // We intentionally skip CountryDataSync::state(), which would run a full diff.
         $liveJson = storage_path('app/leverageedu_study_locations_content.json');
         $countryUpdatedAt = is_file($liveJson)
             ? Carbon::createFromTimestamp(filemtime($liveJson))
+            : null;
+        $mbbsLiveJson = storage_path('app/mbbs_avglobal_content.json');
+        $mbbsCountryUpdatedAt = is_file($mbbsLiveJson)
+            ? Carbon::createFromTimestamp(filemtime($mbbsLiveJson))
             : null;
 
         return view('admin.dashboard', [
@@ -57,12 +66,18 @@ class DashboardController extends Controller
                 'notice_visible' => count($noticeVisible),
                 'notice_variant' => (string) ($noticeData['variant'] ?? 'original'),
                 'countries' => count($destinations),
+                'mbbs_countries' => count($mbbsCountries),
             ],
             'recentPosts' => array_slice($posts, 0, 6),
             'countrySync' => [
                 'running' => $countrySync->isRunning(),
                 'updated_at' => $countryUpdatedAt,
                 'exists' => is_file($liveJson),
+            ],
+            'mbbsCountrySync' => [
+                'running' => $mbbsCountrySync->isRunning(),
+                'updated_at' => $mbbsCountryUpdatedAt,
+                'exists' => is_file($mbbsLiveJson),
             ],
         ]);
     }

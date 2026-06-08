@@ -55,15 +55,22 @@
     $cardBody = fn (array $card, int $limit = 190): string => \Illuminate\Support\Str::limit((string) ($card['card_body_clean'] ?? $card['card_body'] ?? ''), $limit);
     $tableRows = fn (int $index): \Illuminate\Support\Collection => collect($costTables[$index]['rows'] ?? []);
     $tuitionSnapshotKeywords = array_filter(array_map('trim', explode('|', $text('tuition_snapshot_keywords'))));
-    $tuitionSnapshot = $tableRows(0)
+    // Render each "/"-separated figure as a non-breaking unit on its own line,
+    // with the slash kept on the line above — e.g. "CAD 18,000 - 38,000 /\nCAD
+    // 16,000 - 28,000". The <br> forces the stack so short figures (e.g. euros)
+    // don't sit together on one line; nbsp keeps a stray "CAD" with its number.
+    $snapshotFigures = fn ($values): string => collect($values)
+        ->map(fn ($v) => trim((string) $v))
+        ->filter(fn ($v) => $v !== '')
+        ->map(fn ($v) => '<span class="snapshot-figure">'.e($v).'</span>')
+        ->join("\u{00A0}/<br>");
+    $tuitionSnapshot = $snapshotFigures($tableRows(0)
         ->filter(fn ($row) => collect($tuitionSnapshotKeywords)->contains(fn ($keyword) => str_contains($row['label'], $keyword)))
         ->map(fn ($row) => $row['value'])
+        ->take(2));
+    $livingSnapshot = $snapshotFigures($tableRows(1)
         ->take(2)
-        ->join(' / ');
-    $livingSnapshot = $tableRows(1)
-        ->take(2)
-        ->map(fn ($row) => $row['value'])
-        ->join(' / ');
+        ->map(fn ($row) => $row['value']));
     // Banner/intake photos come from the scraped feature images. Some countries
     // (e.g. Europe) scraped only lazy-load placeholders, which validImages() drops,
     // leaving none — so fall back to the country's hero photo instead of an empty
@@ -78,33 +85,38 @@
     // Per-country SEO: social share image + canonical (URL is already unique per country).
     $ogImage = (string) ($destination['hero_image'] ?? '') ?: $bannerImage;
     $ogType = 'article';
+
+    // JSON-LD built here (raw PHP) so the literal '@context' key is never parsed
+    // as Blade's @context directive (which would corrupt the structured data).
+    $breadcrumbJsonLd = json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Destinations', 'item' => route('home').'#destinations'],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => url()->current()],
+        ],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $webPageJsonLd = json_encode(array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebPage',
+        'name' => $pageTitle,
+        'description' => $pageDescription,
+        'url' => url()->current(),
+        'about' => $countryName !== '' ? ['@type' => 'Place', 'name' => $countryName] : null,
+        'inLanguage' => 'en',
+        'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => route('home')],
+    ]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 @endphp
 
 @extends('layouts.app')
 
 @push('head')
   <script type="application/ld+json">
-  {!! json_encode([
-      '@context' => 'https://schema.org',
-      '@type' => 'BreadcrumbList',
-      'itemListElement' => [
-          ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
-          ['@type' => 'ListItem', 'position' => 2, 'name' => 'Destinations', 'item' => route('home').'#destinations'],
-          ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => url()->current()],
-      ],
-  ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+  {!! $breadcrumbJsonLd !!}
   </script>
   <script type="application/ld+json">
-  {!! json_encode(array_filter([
-      '@context' => 'https://schema.org',
-      '@type' => 'WebPage',
-      'name' => $pageTitle,
-      'description' => $pageDescription,
-      'url' => url()->current(),
-      'about' => $countryName !== '' ? ['@type' => 'Place', 'name' => $countryName] : null,
-      'inLanguage' => 'en',
-      'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => route('home')],
-  ]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+  {!! $webPageJsonLd !!}
   </script>
 @endpush
 
@@ -114,14 +126,19 @@
     <div class="container country-hero-grid">
       <div class="country-hero-copy">
         <a class="country-back" href="{{ route('home') }}#destinations"><i data-lucide="arrow-left"></i><span>{{ $text('back_label') }}</span></a>
-        <span class="country-flag-lg">
-          @if($destination['eu'] ?? false)
-            @include('partials.eu-flag')
-          @elseif(! empty($destination['flag']))
-            <img src="https://flagcdn.com/w160/{{ $destination['flag'] }}.png" alt="{{ $destination['flag_alt'] ?? '' }}">
-          @endif
-        </span>
-        <span class="eyebrow">{{ $text('hero_eyebrow') }}</span>
+        <div class="country-hero__crest">
+          <span class="country-flag-lg">
+            @if($destination['eu'] ?? false)
+              @include('partials.eu-flag')
+            @elseif(! empty($destination['flag']))
+              <img src="https://flagcdn.com/w160/{{ $destination['flag'] }}.png" alt="{{ $destination['flag_alt'] ?? '' }}">
+            @endif
+          </span>
+          <div class="country-hero__crestmeta">
+            <span class="eyebrow">{{ $text('hero_eyebrow') }}</span>
+            <span class="country-hero__route">India &nbsp;&rarr;&nbsp; {{ $countryLabel }}</span>
+          </div>
+        </div>
         <h1>{!! $heroPrefix !== '' ? e($heroPrefix).' ' : '' !!}<span class="gold-text">{{ $countryLabel }}</span></h1>
         <p class="country-lede">{{ $heroLead }}</p>
         <div class="country-actions">
@@ -148,10 +165,10 @@
           <div><dt>{{ $text('snapshot_intakes_label') }}</dt><dd>{{ $snapshotIntakes }}</dd></div>
         @endif
         @if($tuitionSnapshot !== '')
-          <div><dt>{{ $text('snapshot_tuition_label') }}</dt><dd>{{ $tuitionSnapshot }}</dd></div>
+          <div><dt>{{ $text('snapshot_tuition_label') }}</dt><dd>{!! $tuitionSnapshot !!}</dd></div>
         @endif
         @if($livingSnapshot !== '')
-          <div><dt>{{ $text('snapshot_living_cost_label') }}</dt><dd>{{ $livingSnapshot }}</dd></div>
+          <div><dt>{{ $text('snapshot_living_cost_label') }}</dt><dd>{!! $livingSnapshot !!}</dd></div>
         @endif
       </dl>
     </aside>
@@ -227,8 +244,8 @@
 
       <div class="dynamic-course-carousel" data-course-carousel aria-label="{{ $sectionCopy['courses']['section_heading'] ?? $text('courses_eyebrow') }}">
         <div class="dynamic-course-track" data-course-track>
-          @for($copy = 0; $copy < 2; $copy++)
-            <div class="dynamic-course-set dynamic-course-set--count-{{ $courseCount }}" @if($copy === 1) aria-hidden="true" @endif>
+          @for($copy = 0; $copy < 3; $copy++)
+            <div class="dynamic-course-set dynamic-course-set--count-{{ $courseCount }}" @if($copy !== 0) aria-hidden="true" @endif>
               @foreach($topCourses as $index => $course)
                 <article class="course-card dynamic-course-card" style="--card-index: {{ $index }}">
                   <div class="dynamic-course-card__top">
@@ -263,6 +280,15 @@
             </div>
           @endfor
         </div>
+      </div>
+
+      <div class="dynamic-course-controls" data-course-controls>
+        <button type="button" class="dynamic-course-nav" data-course-prev aria-label="Scroll to previous courses">
+          <i data-lucide="arrow-left"></i>
+        </button>
+        <button type="button" class="dynamic-course-nav" data-course-next aria-label="Scroll to next courses">
+          <i data-lucide="arrow-right"></i>
+        </button>
       </div>
     </div>
   </section>

@@ -95,10 +95,16 @@
     .le-sec [data-ed-img] { cursor: pointer; position: relative; }
     .le-sec img[data-ed-img] { outline-offset: -2px; }
     .le-sec [data-ed-img]:hover { outline: 2px solid var(--le-accent); }
-    .le-sec [data-ed-img]::after { content: "✎ Change"; position: absolute; top: 8px; left: 8px; z-index: 30;
-      background: var(--le-bar); color: #fff; font: 700 .72rem/1 "Manrope",sans-serif; padding: 5px 9px; border-radius: 8px;
-      opacity: 0; transition: opacity .15s; pointer-events: none; }
-    .le-sec [data-ed-img]:hover::after { opacity: 1; }
+
+    /* Always-visible "Change image" button injected over every editable image
+       (works for both <img> and background-image divs — pseudo-elements don't
+       render on <img>, so this is a real element). */
+    .le-img-change { position: absolute; top: 8px; left: 8px; z-index: 35; display: inline-flex; align-items: center; gap: 5px;
+      border: 1px solid rgba(255,255,255,.5); background: rgba(14,31,61,.82); color: #fff; backdrop-filter: blur(6px);
+      border-radius: 8px; padding: 6px 10px; font: 800 .74rem/1 "Manrope", sans-serif; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(8,20,40,.32); opacity: .9; transition: background .15s, opacity .15s, transform .12s; }
+    .le-img-change:hover { background: var(--le-accent); border-color: var(--le-accent); opacity: 1; transform: translateY(-1px); }
+    .le-img-change i { width: 14px; height: 14px; }
 
     /* ── Repeater item tools ── */
     .le-sec [data-ed-item] { position: relative; }
@@ -322,6 +328,22 @@
     function decorate(scope) {
       scope.querySelectorAll('[data-ed]').forEach(el => el.setAttribute('contenteditable', 'true'));
       scope.querySelectorAll('img[data-ed-img]').forEach(img => img.setAttribute('draggable', 'false'));
+      // Inject an always-visible "Change" button over each editable image. The
+      // click is handled by delegation (below) so it survives item duplication.
+      scope.querySelectorAll('[data-ed-img]').forEach(el => {
+        if (el.dataset.leImgBtn === '1') return;
+        el.dataset.leImgBtn = '1';
+        const host = el.tagName === 'IMG' ? el.parentElement : el;
+        if (!host || host.querySelector(':scope > [data-le-img-btn]')) return;
+        if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'le-img-change';
+        btn.setAttribute('contenteditable', 'false');
+        btn.setAttribute('data-le-img-btn', '');
+        btn.innerHTML = '<i data-lucide="image"></i> Change';
+        host.appendChild(btn);
+      });
       scope.querySelectorAll('[data-ed-item]').forEach(item => {
         if (item.dataset.leDeco === '1') return;
         item.dataset.leDeco = '1';
@@ -551,17 +573,13 @@
       const canvas = cropper.getCroppedCanvas({ maxWidth: 2400, maxHeight: 2400, imageSmoothingQuality: 'high' });
       if (!canvas) { toast('Could not crop this image.', true); return; }
       if (Math.min(canvas.width, canvas.height) < 600) toast('Heads up: this crop is low-resolution and may look soft.', true);
-      cropBusy.hidden = false;
-      canvas.toBlob((blob) => {
-        if (!blob) { cropBusy.hidden = true; toast('This remote image blocks cropping — upload the file instead.', true); return; }
-        const fd = new FormData(); fd.append('file', blob, 'about.jpg');
-        fetch(UPLOAD_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }, body: fd })
-          .then(r => r.ok ? r.json() : Promise.reject()).then(d => {
-            cropBusy.hidden = true;
-            if (cropTarget) setImage(cropTarget, d.url);
-            closeCrop(); closePop(); toast('Cropped & applied');
-          }).catch(() => { cropBusy.hidden = true; toast('Upload failed (JPG/PNG/WebP under 5 MB).', true); });
-      }, 'image/jpeg', 0.9);
+      // Hold the crop as an inline data URL — it's only written to storage when the
+      // page is saved (a discarded edit leaves nothing behind on the server).
+      let dataUrl;
+      try { dataUrl = canvas.toDataURL('image/jpeg', 0.9); }
+      catch (e) { toast('This remote image blocks cropping — upload the file instead.', true); return; }
+      if (cropTarget) setImage(cropTarget, dataUrl);
+      closeCrop(); closePop(); toast('Cropped — saved when you press Save');
     };
 
     /* ════════ Options popover (select / checkbox / link / anchor / alt) ════════ */
@@ -684,7 +702,7 @@
     root.addEventListener('pointercancel', endItemDrag);
 
     document.addEventListener('mousedown', (e) => {
-      if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('#le-crop,[data-ed-img],[data-ed-icon],[data-ed-hand],[data-le-tool],[data-act="opts"]')) closePop();
+      if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('#le-crop,[data-ed-img],[data-le-img-btn],[data-ed-icon],[data-ed-hand],[data-le-tool],[data-act="opts"]')) closePop();
     });
 
     /* ════════ Click handling inside the page ════════ */
@@ -733,6 +751,14 @@
         return;
       }
       // Image / icon editors
+      const imgBtn = e.target.closest('[data-le-img-btn]');
+      if (imgBtn) {
+        e.preventDefault(); e.stopPropagation();
+        const host = imgBtn.parentElement;
+        const target = host && (host.matches('[data-ed-img]') ? host : host.querySelector('[data-ed-img]'));
+        if (target) openImagePopover(target);
+        return;
+      }
       const img = e.target.closest('[data-ed-img]');
       if (img) { e.preventDefault(); openImagePopover(img); return; }
       const icon = e.target.closest('[data-ed-icon]');

@@ -31,6 +31,70 @@ class CountryDataSync
         'UiText' => ['page_slug', 'text_key'],
     ];
 
+    protected function liveBase(): string
+    {
+        return self::LIVE_BASE;
+    }
+
+    protected function reviewBase(): string
+    {
+        return self::REVIEW_BASE;
+    }
+
+    protected function sheets(): array
+    {
+        return self::SHEETS;
+    }
+
+    protected function keyFields(): array
+    {
+        return self::KEY_FIELDS;
+    }
+
+    protected function scraperScript(): string
+    {
+        return 'scripts/leverageedu_study_locations.py';
+    }
+
+    protected function runFilePrefix(): string
+    {
+        return 'country-sync';
+    }
+
+    protected function backupDirectoryName(): string
+    {
+        return 'country-sync-backups';
+    }
+
+    protected function syncDisplayName(): string
+    {
+        return 'Country sync';
+    }
+
+    protected function sourceHost(): string
+    {
+        return 'leverageedu.com';
+    }
+
+    protected function pythonEnvKeys(): array
+    {
+        return ['COUNTRY_SYNC_PYTHON'];
+    }
+
+    protected function rowLabelFields(string $sheet): array
+    {
+        return match ($sheet) {
+            'Pages' => ['country', 'page_slug', 'hero_heading'],
+            'Sections' => ['country', 'section_heading'],
+            'Cards' => ['country', 'section_heading', 'card_title'],
+            'Courses' => ['country', 'course_name', 'university_name'],
+            'Images' => ['country', 'section_heading', 'image_alt'],
+            'IndianStudents' => ['country', 'card_value', 'card_description'],
+            'UiText' => ['country', 'text_key'],
+            default => ['country', 'page_slug'],
+        };
+    }
+
     public function state(): array
     {
         $live = $this->readJsonIfExists($this->liveJsonPath());
@@ -157,7 +221,7 @@ class CountryDataSync
 
         if ($state === 'running' && ! $exitExists && $this->launcherStartupExpired($status) && ! is_file($this->liveLogPath())) {
             $failed = true;
-            $failureMessage = 'The country sync launcher did not create a live log. Check PHP shell execution and COUNTRY_SYNC_PYTHON on the production server.';
+            $failureMessage = 'The '.$this->syncDisplayName().' launcher did not create a live log. Check PHP shell execution and '.implode('/', $this->pythonEnvKeys()).' on the production server.';
             $log = $failureMessage;
             $this->writeLastRun($log);
             $status['state'] = $state = 'failed';
@@ -350,12 +414,12 @@ class CountryDataSync
 
     public function reviewReportPath(): string
     {
-        return storage_path('app/'.self::LIVE_BASE.'_review_pending_changes.xlsx');
+        return storage_path('app/'.$this->liveBase().'_review_pending_changes.xlsx');
     }
 
     public function reviewWorkbookPath(): string
     {
-        return storage_path('app/'.self::REVIEW_BASE.'.xlsx');
+        return storage_path('app/'.$this->reviewBase().'.xlsx');
     }
 
     private function compare(array $oldDataset, array $newDataset): array
@@ -438,7 +502,7 @@ class CountryDataSync
         $map = [];
         $sheets = $dataset['sheets'] ?? [];
 
-        foreach (self::SHEETS as $sheet) {
+        foreach ($this->sheets() as $sheet) {
             $rows = $sheets[$sheet] ?? [];
             if (! is_array($rows)) {
                 continue;
@@ -492,7 +556,7 @@ class CountryDataSync
 
     private function rowKey(string $sheet, array $row, int $index): string
     {
-        $fields = self::KEY_FIELDS[$sheet] ?? [];
+        $fields = $this->keyFields()[$sheet] ?? [];
         $parts = [];
 
         foreach ($fields as $field) {
@@ -508,16 +572,7 @@ class CountryDataSync
 
     private function rowLabel(string $sheet, array $row, string $rowKey): string
     {
-        $fields = match ($sheet) {
-            'Pages' => ['country', 'page_slug', 'hero_heading'],
-            'Sections' => ['country', 'section_heading'],
-            'Cards' => ['country', 'section_heading', 'card_title'],
-            'Courses' => ['country', 'course_name', 'university_name'],
-            'Images' => ['country', 'section_heading', 'image_alt'],
-            'IndianStudents' => ['country', 'card_value', 'card_description'],
-            'UiText' => ['country', 'text_key'],
-            default => ['country', 'page_slug'],
-        };
+        $fields = $this->rowLabelFields($sheet);
 
         $values = [];
         foreach ($fields as $field) {
@@ -585,7 +640,7 @@ class CountryDataSync
 
     private function backupLiveFiles(): string
     {
-        $backupDir = storage_path('app/country-sync-backups/'.gmdate('Ymd-His'));
+        $backupDir = storage_path('app/'.$this->backupDirectoryName().'/'.gmdate('Ymd-His'));
         $this->ensureDirectory($backupDir);
 
         foreach ([
@@ -632,7 +687,7 @@ class CountryDataSync
     private function reviewCommand(): array
     {
         return array_merge($this->pythonCommand(), [
-            (string) base_path('scripts/leverageedu_study_locations.py'),
+            (string) base_path($this->scraperScript()),
             '--approve',
             '--output',
             $this->reviewWorkbookPath(),
@@ -668,7 +723,7 @@ class CountryDataSync
             'set "PYTHONIOENCODING=utf-8"',
             'set "PYTHONUTF8=1"',
             'set "PATH='.($environment['PATH'] ?? '%PATH%').'"',
-            'echo Country source check started.>"'.$live.'"',
+            'echo '.$this->syncDisplayName().' source check started.>"'.$live.'"',
             'echo Launcher: '.$python.'>>"'.$live.'"',
             'echo.>>"'.$live.'"',
             '"'.$python.'" -u '.implode(' ', $args).' >>"'.$live.'" 2>&1',
@@ -698,7 +753,7 @@ class CountryDataSync
             'export PYTHONUTF8=1',
             'export PATH='.escapeshellarg($path),
             'cd '.escapeshellarg(base_path()),
-            'printf "%s\n" "Country source check started." > '.escapeshellarg($live),
+            'printf "%s\n" '.escapeshellarg($this->syncDisplayName().' source check started.').' > '.escapeshellarg($live),
             'printf "%s\n" '.escapeshellarg('Launcher: '.$python).' >> '.escapeshellarg($live),
             'printf "\n" >> '.escapeshellarg($live),
             escapeshellarg($python).' -u '.implode(' ', $args).' >> '.escapeshellarg($live).' 2>&1',
@@ -714,10 +769,11 @@ class CountryDataSync
 
     private function pythonCommand(): array
     {
-        $configured = trim((string) env('COUNTRY_SYNC_PYTHON', ''));
-
-        if ($configured !== '') {
-            return [$configured];
+        foreach ($this->pythonEnvKeys() as $key) {
+            $configured = trim((string) env($key, ''));
+            if ($configured !== '') {
+                return [$configured];
+            }
         }
 
         foreach ($this->pythonCandidates() as $candidate) {
@@ -876,7 +932,7 @@ class CountryDataSync
     private function writeLastRun(string $output): void
     {
         $text = trim($output);
-        $header = 'Country sync run at '.gmdate('Y-m-d H:i:s').' UTC';
+        $header = $this->syncDisplayName().' run at '.gmdate('Y-m-d H:i:s').' UTC';
         $this->writeText($this->lastRunPath(), $header.PHP_EOL.PHP_EOL.($text !== '' ? $text : 'No output.'));
     }
 
@@ -917,12 +973,12 @@ class CountryDataSync
         $sawWrite = false;
 
         foreach ($lines as $line) {
-            if (stripos($line, 'Discovering country URLs') !== false) {
+            if (stripos($line, 'Discovering') !== false && stripos($line, 'country URLs') !== false) {
                 $sawDiscovering = true;
                 $phase = 'Discovering pages';
-                $step = 'Finding country pages on leverageedu.com…';
+                $step = 'Finding country pages on '.$this->sourceHost().'…';
             }
-            if (preg_match('/Discovered\s+(\d+)\s+country/i', $line, $m)) {
+            if (preg_match('/Discovered\s+(\d+)\s+(?:MBBS\s+)?country/i', $line, $m)) {
                 $total = max(1, (int) $m[1]);
             }
             if (preg_match('#^\[(\d+)/(\d+)\]\s+Fetching\s+(\S+)#i', $line, $m)) {
@@ -973,7 +1029,7 @@ class CountryDataSync
     {
         $path = trim((string) (parse_url($url, PHP_URL_PATH) ?: $url), '/');
         $segment = $path !== '' ? basename($path) : $url;
-        $segment = (string) preg_replace('/^study-in-/i', '', $segment);
+        $segment = (string) preg_replace('/^(study-in|mbbs-in)-/i', '', $segment);
         $segment = trim(str_replace('-', ' ', $segment));
 
         return $segment !== '' ? ucwords($segment) : $url;
@@ -997,27 +1053,27 @@ class CountryDataSync
 
     private function liveLogPath(): string
     {
-        return storage_path('app/country-sync-live.log');
+        return storage_path('app/'.$this->runFilePrefix().'-live.log');
     }
 
     private function statusPath(): string
     {
-        return storage_path('app/country-sync-status.json');
+        return storage_path('app/'.$this->runFilePrefix().'-status.json');
     }
 
     private function exitPath(): string
     {
-        return storage_path('app/country-sync-exit.txt');
+        return storage_path('app/'.$this->runFilePrefix().'-exit.txt');
     }
 
     private function batPath(): string
     {
-        return storage_path('app/country-sync-run.bat');
+        return storage_path('app/'.$this->runFilePrefix().'-run.bat');
     }
 
     private function shellPath(): string
     {
-        return storage_path('app/country-sync-run.sh');
+        return storage_path('app/'.$this->runFilePrefix().'-run.sh');
     }
 
     private function launcherScriptPath(): string
@@ -1058,31 +1114,31 @@ class CountryDataSync
 
     private function liveJsonPath(): string
     {
-        return storage_path('app/'.self::LIVE_BASE.'.json');
+        return storage_path('app/'.$this->liveBase().'.json');
     }
 
     private function liveWorkbookPath(): string
     {
-        return storage_path('app/'.self::LIVE_BASE.'.xlsx');
+        return storage_path('app/'.$this->liveBase().'.xlsx');
     }
 
     private function liveSnapshotPath(): string
     {
-        return storage_path('app/'.self::LIVE_BASE.'.snapshot.json');
+        return storage_path('app/'.$this->liveBase().'.snapshot.json');
     }
 
     private function reviewJsonPath(): string
     {
-        return storage_path('app/'.self::REVIEW_BASE.'.json');
+        return storage_path('app/'.$this->reviewBase().'.json');
     }
 
     private function reviewSnapshotPath(): string
     {
-        return storage_path('app/'.self::REVIEW_BASE.'.snapshot.json');
+        return storage_path('app/'.$this->reviewBase().'.snapshot.json');
     }
 
     private function lastRunPath(): string
     {
-        return storage_path('app/country-sync-last-run.log');
+        return storage_path('app/'.$this->runFilePrefix().'-last-run.log');
     }
 }

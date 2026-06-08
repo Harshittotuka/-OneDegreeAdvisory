@@ -6,6 +6,10 @@ class StudyLocationContent
 {
     private const DEFAULT_PATH = 'app/leverageedu_study_locations_content.json';
 
+    public function __construct(private CountryVisibilityStore $visibility)
+    {
+    }
+
     public function forSlug(string $slug): array
     {
         $sheets = $this->loadSheets();
@@ -41,7 +45,7 @@ class StudyLocationContent
         ];
     }
 
-    public function destinations(): array
+    public function destinations(bool $visibleOnly = true): array
     {
         $sheets = $this->loadSheets();
         $destinations = array_values(array_filter(
@@ -49,9 +53,29 @@ class StudyLocationContent
             fn (array $destination) => ($destination['slug'] ?? '') !== '' && ($destination['name'] ?? '') !== ''
         ));
 
+        if ($visibleOnly) {
+            $destinations = array_values(array_filter(
+                $destinations,
+                fn (array $destination): bool => $this->visibility->isVisible(
+                    CountryVisibilityStore::GROUP_NON_MBBS,
+                    (string) ($destination['slug'] ?? '')
+                )
+            ));
+        }
+
         usort($destinations, fn (array $a, array $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''));
 
         return $destinations;
+    }
+
+    public function allDestinations(): array
+    {
+        return $this->destinations(false);
+    }
+
+    public function isVisible(string $slug): bool
+    {
+        return $this->visibility->isVisible(CountryVisibilityStore::GROUP_NON_MBBS, $slug);
     }
 
     private function destinationFromPage(array $page): array

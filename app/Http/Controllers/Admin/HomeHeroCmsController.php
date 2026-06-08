@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\BlogContent;
 use App\Support\HeroContent;
+use App\Support\PersistsInlineImages;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 class HomeHeroCmsController extends Controller
 {
+    use PersistsInlineImages;
+
     public function __construct(private HeroContent $hero)
     {
     }
@@ -40,6 +42,10 @@ class HomeHeroCmsController extends Controller
             return response()->json(['ok' => false, 'message' => 'Bad payload.'], 422);
         }
 
+        // Freshly-cropped images arrive as inline data URLs — write them to disk
+        // now (only on a real save), then store the resulting file URLs.
+        $data = $this->persistInlineImages($data, 'home-hero');
+
         $this->hero->save($this->hero->sanitize($data));
 
         return response()->json(['ok' => true, 'message' => 'Hero saved.']);
@@ -60,9 +66,9 @@ class HomeHeroCmsController extends Controller
     }
 
     /**
-     * Download a remote image to local public storage and return a same-origin
-     * URL. Lets the browser crop remote images (e.g. Unsplash) without the
-     * canvas being tainted by cross-origin pixels.
+     * Fetch a remote image and return it as a same-origin base64 data URL, so the
+     * browser can crop it without tainting the canvas. Nothing is written to disk
+     * here — the cropped result is only persisted when the page is saved.
      */
     public function importUrl(Request $request): JsonResponse
     {
@@ -87,17 +93,10 @@ class HomeHeroCmsController extends Controller
             return response()->json(['ok' => false, 'message' => 'Image is larger than 8 MB.'], 422);
         }
 
-        $ext = match (true) {
-            str_contains($type, 'png') => 'png',
-            str_contains($type, 'webp') => 'webp',
-            str_contains($type, 'gif') => 'gif',
-            str_contains($type, 'svg') => 'svg',
-            default => 'jpg',
-        };
-        $name = 'home-hero/import-'.bin2hex(random_bytes(6)).'.'.$ext;
-        Storage::disk('public')->put($name, $body);
-
-        return response()->json(['ok' => true, 'url' => asset('storage/'.$name)]);
+        return response()->json([
+            'ok' => true,
+            'url' => 'data:'.$type.';base64,'.base64_encode($body),
+        ]);
     }
 
     /**

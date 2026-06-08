@@ -497,7 +497,7 @@
   }
 
   document.addEventListener('mousedown', (e) => {
-    if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('[data-ed-img],[data-ed-icon],[data-le-tool],[data-he-bg-edit],[data-he-style-open]')) closePop();
+    if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('#le-crop,[data-ed-img],[data-ed-icon],[data-le-tool],[data-he-bg-edit],[data-he-style-open]')) closePop();
   });
 
   /* ── Drag-to-reorder: swap a button with others / move it between rows ── */
@@ -682,9 +682,12 @@
   const cropEl = document.getElementById('le-crop');
   const cropImg = document.getElementById('le-crop-img');
   const cropBusy = document.getElementById('le-crop-busy');
-  let cropper = null;
+  let cropper = null, cropTarget = null;
   const isLocalUrl = (u) => u.startsWith('blob:') || u.startsWith('data:') || u.startsWith('/') || u.startsWith(location.origin);
   function openCropper(src) {
+    // Remember the image element now — interacting with the crop modal can close
+    // the popover (clearing popTarget), so the applied crop must use this instead.
+    cropTarget = popTarget;
     // Remote images (e.g. Unsplash) would taint the crop canvas, so pull them
     // to local storage first via the server, then crop the same-origin copy.
     if (!isLocalUrl(src)) {
@@ -726,17 +729,13 @@
     const canvas = cropper.getCroppedCanvas({ maxWidth: 2600, maxHeight: 1600, imageSmoothingQuality: 'high' });
     if (!canvas) { toast('Could not crop this image.', true); return; }
     if (canvas.width < 1100) toast('Heads up: this crop is low-resolution and may look soft on large screens.', true);
-    cropBusy.hidden = false;
-    canvas.toBlob((blob) => {
-      if (!blob) { cropBusy.hidden = true; toast('This remote image blocks cropping — upload the file instead.', true); return; }
-      const fd = new FormData(); fd.append('file', blob, 'hero.jpg');
-      fetch(UPLOAD_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }, body: fd })
-        .then(r => r.ok ? r.json() : Promise.reject()).then(d => {
-          cropBusy.hidden = true;
-          if (popTarget) setImage(popTarget, d.url);
-          closeCrop(); closePop(); toast('Cropped & applied');
-        }).catch(() => { cropBusy.hidden = true; toast('Upload failed (max 8 MB).', true); });
-    }, 'image/jpeg', 0.88);
+    // Hold the crop as an inline data URL — it's only written to storage when the
+    // page is saved (a discarded edit leaves nothing behind on the server).
+    let dataUrl;
+    try { dataUrl = canvas.toDataURL('image/jpeg', 0.88); }
+    catch (e) { toast('This remote image blocks cropping — upload the file instead.', true); return; }
+    if (cropTarget) setImage(cropTarget, dataUrl);
+    closeCrop(); closePop(); toast('Cropped — saved when you press Save');
   };
 
   /* ── Clicks inside the hero ── */

@@ -8,13 +8,11 @@
     $facts          = $mbbsContent['facts']          ?? [];
     $admissionSteps = $mbbsContent['admissionSteps'] ?? [];
 
-    $countryName = $countryMeta['name'] ?? ucfirst($countrySlug);
-    $countryFlag = $countryMeta['flag'] ?? 'ge';
-
-    $heroFiles = ['georgia', 'kazakhstan'];
-    $heroImage = in_array($countrySlug, $heroFiles, true)
-        ? asset('assets/heroes/'.$countrySlug.'.jpg')
-        : null;
+    $countryName = $page['country'] ?? ($countryMeta['name'] ?? Str::headline($countrySlug));
+    $countryFlag = $page['flag_code'] ?? ($countryMeta['flag'] ?? '');
+    $flagUrl     = $page['flag_url'] ?? ($countryMeta['flag_url'] ?? '');
+    $heroImage   = $page['hero_image'] ?? ($countryMeta['hero_image'] ?? '');
+    $updated     = trim((string) ($page['source_updated'] ?? ''));
 
     $pageTitle       = ($page['page_title'] ?? 'MBBS in '.$countryName).' | One Degree Advisory';
     $pageDescription = $page['hero_text'] ?? 'Study MBBS in '.$countryName.' with One Degree Advisory.';
@@ -22,462 +20,411 @@
     $mainId          = 'mbbs-main';
     $bodyClass       = 'page-mbbs-country';
 
-    $forIndianStudents = $sections['for_indian_students'] ?? [];
-    $advantages        = $sections['advantages']          ?? [];
-    $eligibility       = $sections['eligibility']         ?? [];
-    $whyPopular        = $sections['why_popular']         ?? [];
+    $sectionRows = array_values($sections);
+    usort($sectionRows, fn ($a, $b) => ((int) ($a['section_order'] ?? 0)) <=> ((int) ($b['section_order'] ?? 0)));
 
-    $advantageBullets   = $bullets['advantages']  ?? ($bullets['for_indian_students'] ?? []);
-    $eligibilityBullets = $bullets['eligibility'] ?? [];
+    $introSection = $sections['for_indian_students'] ?? null;
+    $contentSections = array_values(array_filter(
+        $sectionRows,
+        fn ($section) => ! in_array((string) ($section['section_key'] ?? ''), ['for_indian_students', 'admission_process'], true)
+    ));
 
-    $advantageIcons = [
-        'award', 'globe-2', 'badge-check', 'book-open',
-        'languages', 'graduation-cap', 'shield-check', 'sparkles',
-        'plane', 'utensils', 'users', 'wallet', 'heart-pulse',
-    ];
-
-    $documentKeywords = ['marksheet', 'mark-sheet', 'passport', 'photo', 'aadhar', 'pan', 'card', 'document'];
-    $eligibilityRules = [];
-    $eligibilityDocs  = [];
-
-    foreach ($eligibilityBullets as $bullet) {
-        $text = trim((string) ($bullet['bullet_text'] ?? ''));
-        if ($text === '') {
-            continue;
+    $subpointsBySection = [];
+    foreach ($subpoints as $subpoint) {
+        $key = (string) ($subpoint['section_key'] ?? '');
+        if ($key !== '') {
+            $subpointsBySection[$key][] = $subpoint;
         }
-        $isDoc = false;
-        foreach ($documentKeywords as $kw) {
-            if (stripos($text, $kw) !== false) {
-                $isDoc = true;
-                break;
-            }
-        }
-        $isDoc ? $eligibilityDocs[] = $text : $eligibilityRules[] = $text;
     }
 
-    $heroFacts = array_slice($facts, 0, 4);
-    $sideFacts = array_slice($facts, 0, 8);
-
-    /* Split the intro body into 2-3 sentence paragraphs at natural sentence breaks */
-    $introBody  = trim((string) ($forIndianStudents['section_body'] ?? ''));
-    $introParas = [];
-    if ($introBody !== '') {
-        $sentences = preg_split('/(?<=[\.!?])\s+(?=[A-Z])/u', $introBody) ?: [$introBody];
-        if (count($sentences) <= 3) {
-            $introParas = [implode(' ', $sentences)];
-        } else {
+    // Break a long body string into readable paragraphs — first on explicit
+    // " | " separators, otherwise grouping sentences in pairs.
+    $splitText = function (?string $text, int $max = 4): array {
+        $text = trim((string) $text);
+        if ($text === '') {
+            return [];
+        }
+        $parts = preg_split('/\s+\|\s+/', $text) ?: [];
+        if (count($parts) <= 1) {
+            $sentences = preg_split('/(?<=[.!?])\s+(?=[A-Z(])/u', $text) ?: [$text];
+            $parts = [];
             $buffer = [];
-            foreach ($sentences as $i => $s) {
-                $buffer[] = $s;
-                if (count($buffer) >= 3 && $i < count($sentences) - 1) {
-                    $introParas[] = implode(' ', $buffer);
+            foreach ($sentences as $sentence) {
+                $buffer[] = trim($sentence);
+                if (count($buffer) >= 2) {
+                    $parts[] = implode(' ', array_filter($buffer));
                     $buffer = [];
                 }
             }
             if ($buffer) {
-                $introParas[] = implode(' ', $buffer);
+                $parts[] = implode(' ', array_filter($buffer));
             }
         }
-    }
 
-    $subpointsRich = array_values(array_filter(
-        $subpoints,
-        fn ($sp) => trim((string) ($sp['subpoint_body'] ?? '')) !== ''
-    ));
-
-    $trustChips = [
-        ['icon' => 'badge-check',  'label' => 'NMC & WHO approved'],
-        ['icon' => 'languages',    'label' => 'English-medium MBBS'],
-        ['icon' => 'shield-check', 'label' => 'NEET-qualified entry'],
-        ['icon' => 'wallet',       'label' => 'Low total cost of study'],
-    ];
-
-    /*
-     * Admission process steps come from the scraped bookmyuniversity content
-     * (sheet: AdmissionSteps). $admissionSteps is the raw rows for this slug.
-     * The icon is decorative only and chosen by keyword on each row's title.
-     */
-    $admissionIconFor = function (string $title): string {
-        $checks = [
-            'research'      => 'search',
-            'selection'     => 'search',
-            'application'   => 'file-text',
-            'apply'         => 'file-text',
-            'submission'    => 'send',
-            'admission'     => 'mail-check',
-            'offer'         => 'mail-check',
-            'letter'        => 'send',
-            'apostille'     => 'stamp',
-            'translation'   => 'languages',
-            'document'      => 'folder-open',
-            'tuition'       => 'credit-card',
-            'fee'           => 'credit-card',
-            'invitation'    => 'send',
-            'visa'          => 'globe-2',
-            'approval'      => 'badge-check',
-            'travel'        => 'plane-takeoff',
-            'flight'        => 'plane-takeoff',
-            'registration'  => 'graduation-cap',
-            'residence'     => 'home',
-            'permit'        => 'home',
-        ];
-        $needle = strtolower($title);
-        foreach ($checks as $kw => $icon) {
-            if (str_contains($needle, $kw)) {
-                return $icon;
-            }
-        }
-        return 'circle-dot';
+        return array_slice(array_values(array_filter(array_map('trim', $parts))), 0, $max);
     };
 
-    $admissionSectionHeading = $sections['admission_process']['section_heading'] ?? '';
-    $admissionSectionHeading = trim(preg_replace('/^[^\p{L}\p{N}]+/u', '', $admissionSectionHeading));
+    // Strip a leading list glyph from scraped bullets so we don't double the marker.
+    $cleanBullet = fn (?string $t) => trim((string) preg_replace('/^[\s•·▪◦\-–—]+/u', '', (string) $t));
+
+    $sectionAnchor = fn (array $section, int $index): string
+        => 'mbc-sec-'.Str::slug(($section['section_key'] ?? '') !== '' ? (string) $section['section_key'] : 'section-'.$index);
+
+    $factIcons = ['clock-3', 'languages', 'badge-check', 'wallet', 'graduation-cap', 'landmark', 'calendar-days', 'file-check-2', 'globe-2', 'shield-check', 'book-open-check', 'plane'];
+
+    // Highlights ticker — a short curated set of facts for the marquee band.
+    $marqueeFacts = array_slice($facts, 0, 6);
+    $totalSections = count($contentSections);
+
+    // Where the hero "Read the guide" button jumps to (first available block).
+    $guideStartHref = $facts ? '#quick-facts'
+        : ($introSection ? '#overview'
+        : ($contentSections ? '#'.$sectionAnchor($contentSections[0], 0) : '#top'));
 @endphp
 
 @extends('layouts.app')
 
 @section('content')
-<main id="mbbs-main" class="mbbs-country">
+<main id="mbbs-main" class="mbc">
 
-  {{-- ========== HERO ========== --}}
-  <section class="mbbsx-hero {{ $heroImage ? 'has-image' : 'no-image' }}" id="top">
-    @if($heroImage)
-      <img class="mbbsx-hero__image" src="{{ $heroImage }}" alt="" loading="eager">
-    @endif
-    <div class="mbbsx-hero__veil" aria-hidden="true"></div>
-    <div class="mbbsx-hero__glow" aria-hidden="true"></div>
+  {{-- ============================ HERO ============================ --}}
+  <section class="mbc-hero" id="top">
+    <div class="mbc-hero__bg" aria-hidden="true">
+      @if($heroImage !== '')
+        <img class="mbc-hero__img" src="{{ $heroImage }}" alt="" loading="eager" fetchpriority="high">
+      @endif
+      <span class="mbc-hero__veil"></span>
+      <span class="mbc-hero__glow"></span>
+    </div>
 
-    <div class="mbbsx-container mbbsx-hero__grid">
-      <div class="mbbsx-hero__copy">
-        <a class="mbbsx-back" href="{{ route('mbbs.student') }}">
-          <i data-lucide="arrow-left"></i>
-          <span>All MBBS destinations</span>
-        </a>
+    <div class="mbc-shell mbc-hero__inner">
+      <a class="mbc-back" href="{{ route('mbbs.student') }}">
+        <i data-lucide="arrow-left"></i>
+        <span>All MBBS destinations</span>
+      </a>
 
-        <div class="mbbsx-hero__crest">
-          <span class="mbbsx-flag">
-            <img src="https://flagcdn.com/w160/{{ $countryFlag }}.png" alt="{{ $countryName }} flag">
+      <div class="mbc-hero__meta">
+        <span class="mbc-flagchip">
+          <span class="mbc-flagchip__flag" aria-hidden="true">
+            @if($countryFlag !== '')
+              <img src="https://flagcdn.com/w80/{{ strtolower($countryFlag) }}.png" alt="">
+            @elseif($flagUrl !== '')
+              <img src="{{ $flagUrl }}" alt="">
+            @else
+              {{ Str::upper(Str::substr($countryName, 0, 1)) }}
+            @endif
           </span>
-          <div class="mbbsx-hero__crestmeta">
-            <span class="mbbsx-eyebrow">Medical education corridor</span>
-            <span class="mbbsx-hero__route">India &nbsp;&rarr;&nbsp; {{ $countryName }}</span>
-          </div>
-        </div>
-
-        <h1>
-          Study <span class="gold-text">MBBS</span><br>
-          in <span class="gold-text">{{ $countryName }}</span>
-        </h1>
-
-        <p class="mbbsx-lede">
-          {{ $page['hero_text'] ?? 'Globally recognised medical degrees, NMC-approved universities and a focused pathway for Indian students.' }}
-        </p>
-
-        <div class="mbbsx-actions">
-          <a class="btn btn-primary" href="{{ route('contact') }}">
-            <span>Talk to a counsellor</span>
-            <i data-lucide="arrow-up-right"></i>
-          </a>
-          <a class="btn btn-ghost" href="{{ route('contact') }}">
-            <i data-lucide="phone-call"></i>
-            <span>Request a callback</span>
-          </a>
-        </div>
-
-        <ul class="mbbsx-trust">
-          @foreach($trustChips as $chip)
-            <li>
-              <i data-lucide="{{ $chip['icon'] }}"></i>
-              <span>{{ $chip['label'] }}</span>
-            </li>
-          @endforeach
-        </ul>
+          <span class="mbc-flagchip__txt">
+            <small>MBBS destination</small>
+            <b>{{ $countryName }}</b>
+          </span>
+        </span>
+        @if($updated !== '')
+          <span class="mbc-stamp"><i data-lucide="badge-check"></i> Updated {{ $updated }}</span>
+        @endif
       </div>
 
-      <aside class="mbbsx-snapshot">
-        <div class="mbbsx-snapshot__head">
-          <span class="mbbsx-snapshot__eyebrow">At a glance</span>
-          <h2>{{ $countryName }}</h2>
-          <p>The essentials before you commit &mdash; verified for the 2026&ndash;27 intake.</p>
-        </div>
+      <h1 class="mbc-hero__title">{{ $page['hero_heading'] ?? 'MBBS in '.$countryName }}</h1>
 
-        @if($heroFacts)
-          <dl class="mbbsx-snapshot__facts">
-            @foreach($heroFacts as $fact)
-              <div>
-                <dt>{{ $fact['fact_label'] }}</dt>
-                <dd>{{ $fact['fact_value'] }}</dd>
-              </div>
-            @endforeach
-          </dl>
-        @else
-          <dl class="mbbsx-snapshot__facts">
-            <div><dt>Duration</dt><dd>5 + 1 year internship</dd></div>
-            <div><dt>Medium</dt><dd>English</dd></div>
-            <div><dt>Recognition</dt><dd>NMC, WHO, WFME</dd></div>
-            <div><dt>Intake</dt><dd>September &ndash; October</dd></div>
-          </dl>
-        @endif
+      @if(! empty($page['hero_text']))
+        <p class="mbc-hero__lede">{{ $page['hero_text'] }}</p>
+      @endif
 
-        <a class="mbbsx-snapshot__link" href="#why-popular">
-          <span>See full country profile</span>
-          <i data-lucide="arrow-down-right"></i>
+      <div class="mbc-hero__actions">
+        <a class="btn btn-primary mbc-cta-btn" href="{{ route('contact') }}">
+          <span>Talk to a counsellor</span>
+          <i data-lucide="arrow-up-right"></i>
         </a>
-      </aside>
+        @if($facts || $introSection || $contentSections)
+          <a class="btn mbc-btn-ghost" href="{{ $guideStartHref }}">
+            <i data-lucide="book-open"></i>
+            <span>Read the guide</span>
+          </a>
+        @endif
+      </div>
     </div>
   </section>
 
-  {{-- ========== INTRO / FOR INDIAN STUDENTS ========== --}}
-  @if($introParas)
-    <section id="intro" class="mbbsx-section mbbsx-section--intro">
-      <div class="mbbsx-container mbbsx-intro__grid">
-        <div class="mbbsx-intro__copy">
-          <span class="eyebrow">For Indian students</span>
-          <h2>{{ $forIndianStudents['section_heading'] ?? 'MBBS in '.$countryName.' for Indian students' }}</h2>
-
-          <div class="mbbsx-intro__prose">
-            @foreach($introParas as $i => $para)
-              <p class="mbbsx-intro__para {{ $i === 0 ? 'has-dropcap' : '' }}">{{ $para }}</p>
-            @endforeach
-          </div>
-        </div>
-
-        <aside class="mbbsx-intro__callout">
-          <span class="mbbsx-monogram" aria-hidden="true">{{ Str::upper(Str::substr($countryName, 0, 1)) }}</span>
-          <span class="mbbsx-callout__eyebrow">Quick truths</span>
-          <ul>
-            <li><i data-lucide="check"></i><span>WHO &amp; NMC approved universities</span></li>
-            <li><i data-lucide="check"></i><span>English-medium MBBS programmes</span></li>
-            <li><i data-lucide="check"></i><span>No donation, NEET-qualified entry</span></li>
-            <li><i data-lucide="check"></i><span>Indian food &amp; community support</span></li>
-          </ul>
-        </aside>
-      </div>
-    </section>
-  @endif
-
-  {{-- ========== ADVANTAGES ========== --}}
-  @php
-      $advantagesBody = trim((string) ($advantages['section_body'] ?? ''));
-  @endphp
-  @if($advantageBullets || $advantagesBody !== '')
-    <section id="advantages" class="mbbsx-section mbbsx-section--advantages">
-      <div class="mbbsx-container">
-        <div class="mbbsx-head">
-          <span class="eyebrow">Why choose this corridor</span>
-          <h2>{{ $advantages['section_heading'] ?? 'Advantages of studying MBBS in '.$countryName }}</h2>
-          @if($advantagesBody !== '' && ! $advantageBullets)
-            <p>{{ $advantagesBody }}</p>
-          @else
-            <p>Reasons Indian families consistently pick {{ $countryName }} over higher-cost alternatives.</p>
-          @endif
-        </div>
-
-        @if($advantageBullets)
-          <div class="mbbsx-adv__grid">
-            @foreach($advantageBullets as $index => $bullet)
-              <article class="mbbsx-adv__card">
-                <div class="mbbsx-adv__top">
-                  <span class="mbbsx-adv__icon" aria-hidden="true">
-                    <i data-lucide="{{ $advantageIcons[$index % count($advantageIcons)] }}"></i>
-                  </span>
-                  <span class="mbbsx-adv__no">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</span>
-                </div>
-                <p>{{ $bullet['bullet_text'] }}</p>
-                <span class="mbbsx-adv__rule" aria-hidden="true"></span>
-              </article>
-            @endforeach
-          </div>
-        @endif
-      </div>
-    </section>
-  @endif
-
-  {{-- ========== ELIGIBILITY & DOCUMENTS ========== --}}
-  @if($eligibilityRules || $eligibilityDocs)
-    <section id="eligibility" class="mbbsx-section mbbsx-section--eligibility">
-      <div class="mbbsx-container">
-        <div class="mbbsx-head">
-          <span class="eyebrow">Eligibility &amp; documents</span>
-          <h2>{{ $eligibility['section_heading'] ?? 'Eligibility criteria & required documents for MBBS in '.$countryName }}</h2>
-          <p>Plan your application around clear, verified benchmarks &mdash; no surprises later.</p>
-        </div>
-
-        <div class="mbbsx-elig__grid">
-          @if($eligibilityRules)
-            <article class="mbbsx-elig__panel">
-              <header>
-                <span class="mbbsx-panel__icon"><i data-lucide="badge-check"></i></span>
-                <div>
-                  <span class="eyebrow">Eligibility criteria</span>
-                  <h3>Who can apply</h3>
-                </div>
-              </header>
-              <ul class="mbbsx-check">
-                @foreach($eligibilityRules as $rule)
-                  <li>
-                    <i data-lucide="check"></i>
-                    <span>{{ $rule }}</span>
-                  </li>
-                @endforeach
-              </ul>
-            </article>
-          @endif
-
-          @if($eligibilityDocs)
-            <article class="mbbsx-elig__panel mbbsx-elig__panel--dark">
-              <header>
-                <span class="mbbsx-panel__icon"><i data-lucide="file-text"></i></span>
-                <div>
-                  <span class="eyebrow">Documents required</span>
-                  <h3>What to keep ready</h3>
-                </div>
-              </header>
-              <ul class="mbbsx-check">
-                @foreach($eligibilityDocs as $doc)
-                  <li>
-                    <i data-lucide="check"></i>
-                    <span>{{ $doc }}</span>
-                  </li>
-                @endforeach
-              </ul>
-            </article>
-          @endif
-        </div>
-      </div>
-    </section>
-  @endif
-
-  {{-- ========== WHY POPULAR — editorial redesign ========== --}}
-  @if($subpointsRich || $sideFacts)
-    <section id="why-popular" class="mbbsx-section mbbsx-section--why">
-      <div class="mbbsx-container">
-        <div class="mbbsx-head">
-          <span class="eyebrow">The {{ $countryName }} edge</span>
-          <h2>{{ $whyPopular['section_heading'] ?? 'Why '.$countryName.' is most popular for MBBS' }}</h2>
-          <p>A closer look at what makes {{ $countryName }} a confident choice &mdash; climate, cost, culture and life on campus.</p>
-        </div>
-
-        @if($sideFacts)
-          <div class="mbbsx-profile">
-            <div class="mbbsx-profile__head">
-              <div>
-                <span class="mbbsx-callout__eyebrow">Country profile</span>
-                <h3>{{ $countryName }} at a glance</h3>
-              </div>
-              <span class="mbbsx-profile__flag" aria-hidden="true">
-                <img src="https://flagcdn.com/w160/{{ $countryFlag }}.png" alt="">
-              </span>
-            </div>
-            <dl class="mbbsx-profile__grid">
-              @foreach($sideFacts as $fact)
-                <div>
-                  <dt>{{ $fact['fact_label'] }}</dt>
-                  <dd>{{ $fact['fact_value'] }}</dd>
-                </div>
-              @endforeach
-            </dl>
-          </div>
-        @endif
-
-        @if($subpointsRich)
-          <div class="mbbsx-stories">
-            @foreach($subpointsRich as $index => $sp)
-              <article class="mbbsx-story">
-                <div class="mbbsx-story__index">
-                  <span class="mbbsx-story__no">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</span>
-                  <h3>{{ $sp['subpoint_heading'] }}</h3>
-                </div>
-                <div class="mbbsx-story__body">
-                  <p>{{ $sp['subpoint_body'] }}</p>
-                </div>
-              </article>
-            @endforeach
-          </div>
-        @endif
-      </div>
-    </section>
-  @endif
-
-  {{-- ========== ADMISSION PROCESS (scraped) ========== --}}
-  @if($admissionSteps)
-    <section id="process" class="mbbsx-section mbbsx-section--process">
-      <div class="mbbsx-container">
-        <div class="mbbsx-head">
-          <span class="eyebrow">Admission process</span>
-          <h2>{{ $admissionSectionHeading !== '' ? $admissionSectionHeading : 'MBBS in '.$countryName.' admission process' }}</h2>
-          <p>{{ count($admissionSteps) }} structured steps sourced from the latest {{ $countryName }} university admission flow.</p>
-        </div>
-
-        <ol class="mbbsx-process">
-          @foreach($admissionSteps as $step)
-            @php
-              $stepOrder = (int) ($step['step_order'] ?? 0);
-              $stepTitle = trim((string) ($step['step_title'] ?? ''));
-              $stepBody  = trim((string) ($step['step_body'] ?? ''));
-              $stepIcon  = $admissionIconFor($stepTitle);
-              $subSteps  = $stepBody === ''
-                  ? []
-                  : array_values(array_filter(array_map('trim', explode('|', $stepBody))));
-            @endphp
-            <li class="mbbsx-process__step">
-              <header class="mbbsx-process__head">
-                <span class="mbbsx-process__badge" aria-hidden="true">
-                  <i data-lucide="{{ $stepIcon }}"></i>
+  {{-- ======================= HIGHLIGHTS MARQUEE ======================= --}}
+  @if($marqueeFacts)
+    <section class="mbc-marquee" aria-label="{{ $countryName }} highlights">
+      <div class="mbc-marquee__viewport">
+        <div class="mbc-marquee__track">
+          @for($copy = 0; $copy < 2; $copy++)
+            <div class="mbc-marquee__group" @if($copy === 1) aria-hidden="true" @endif>
+              @foreach($marqueeFacts as $index => $fact)
+                <span class="mbc-chip">
+                  <i data-lucide="{{ $factIcons[$index % count($factIcons)] }}"></i>
+                  <span class="mbc-chip__label">{{ $fact['fact_label'] }}</span>
+                  <span class="mbc-chip__value">{{ $fact['fact_value'] }}</span>
                 </span>
-                <div class="mbbsx-process__heading">
-                  <span class="mbbsx-process__no">Step {{ str_pad((string) $stepOrder, 2, '0', STR_PAD_LEFT) }}</span>
-                  <h3>{{ $stepTitle }}</h3>
-                </div>
-              </header>
-
-              @if($subSteps)
-                <ul class="mbbsx-process__substeps">
-                  @foreach($subSteps as $sub)
-                    <li><i data-lucide="check"></i><span>{{ $sub }}</span></li>
-                  @endforeach
-                </ul>
-              @endif
-            </li>
-          @endforeach
-        </ol>
+              @endforeach
+            </div>
+          @endfor
+        </div>
       </div>
     </section>
   @endif
 
-  {{-- ========== CTA ========== --}}
-  <section class="mbbsx-cta">
-    <div class="mbbsx-cta__bg" aria-hidden="true"></div>
-    <div class="mbbsx-container mbbsx-cta__grid">
-      <div class="mbbsx-cta__copy">
-        <span class="eyebrow">Ready when you are</span>
-        <h2>Map your <span class="gold-text">MBBS in {{ $countryName }}</span> in one call.</h2>
-        <p>A One Degree advisor will walk you through universities, NMC alignment, fee structures and admission timelines &mdash; tailored to your NEET score and budget.</p>
-        <div class="mbbsx-actions">
-          <a class="btn btn-primary" href="{{ route('contact') }}">
-            <span>Book a free counselling call</span>
+  {{-- ============================ AT A GLANCE (sticky title) ============================ --}}
+  @if($facts)
+    <section class="mbc-sec mbc-sec--light" id="quick-facts">
+      <div class="mbc-shell mbc-sec__grid">
+        <aside class="mbc-sec__aside">
+          <span class="mbc-eyebrow"><i data-lucide="sparkles"></i> Quick facts</span>
+          <h2>MBBS in {{ $countryName }} at a glance</h2>
+          <p class="mbc-sec__note">Verified, source-backed essentials — fees, duration, eligibility and recognition for {{ $countryName }}.</p>
+          <a class="mbc-textlink" href="{{ route('contact') }}">
+            <span>Ask about {{ $countryName }}</span>
+            <i data-lucide="arrow-right"></i>
+          </a>
+        </aside>
+        <div class="mbc-sec__main">
+          <div class="mbc-facts">
+            @foreach($facts as $index => $fact)
+              <article class="mbc-factcard reveal" style="--i: {{ $index % 4 }};">
+                <span class="mbc-factcard__icon" aria-hidden="true"><i data-lucide="{{ $factIcons[$index % count($factIcons)] }}"></i></span>
+                <p class="mbc-factcard__label">{{ $fact['fact_label'] }}</p>
+                <strong class="mbc-factcard__value">{{ $fact['fact_value'] }}</strong>
+              </article>
+            @endforeach
+          </div>
+        </div>
+      </div>
+    </section>
+  @endif
+
+  {{-- ============================ OVERVIEW (sticky title + image) ============================ --}}
+  @if($introSection)
+    <section class="mbc-sec mbc-sec--paper" id="overview">
+      <div class="mbc-shell mbc-sec__grid">
+        <aside class="mbc-sec__aside">
+          <span class="mbc-eyebrow"><i data-lucide="compass"></i> Overview</span>
+          <h2>{{ $introSection['section_heading'] }}</h2>
+          @if($heroImage !== '')
+            <figure class="mbc-figure">
+              <img src="{{ $heroImage }}" alt="{{ $countryName }}" loading="lazy">
+              <figcaption><i data-lucide="map-pin"></i> {{ $countryName }}</figcaption>
+            </figure>
+          @endif
+          <a class="mbc-textlink" href="{{ route('contact') }}">
+            <span>Speak to our {{ $countryName }} team</span>
+            <i data-lucide="arrow-right"></i>
+          </a>
+        </aside>
+        <div class="mbc-sec__main">
+          <div class="mbc-prose mbc-prose--lead">
+            <span class="mbc-quote" aria-hidden="true"><i data-lucide="quote"></i></span>
+            @foreach($splitText($introSection['section_body'] ?? '', 6) as $paragraph)
+              <p>{{ $paragraph }}</p>
+            @endforeach
+          </div>
+        </div>
+      </div>
+    </section>
+  @endif
+
+  {{-- ============================ GUIDE SECTIONS (each: sticky title + scrolling content) ============================ --}}
+  @foreach($contentSections as $i => $section)
+    @php
+      $key = (string) ($section['section_key'] ?? '');
+      $anchor = $sectionAnchor($section, $i);
+      $sectionBullets = $bullets[$key] ?? [];
+      $sectionSubpoints = $subpointsBySection[$key] ?? [];
+      $paragraphs = $splitText($section['section_body'] ?? '', 6);
+      $useCarousel = count($sectionSubpoints) >= 3;
+    @endphp
+    <section class="mbc-sec {{ $i % 2 === 0 ? 'mbc-sec--light' : 'mbc-sec--paper' }}" id="{{ $anchor }}">
+      <div class="mbc-shell mbc-sec__grid">
+        <aside class="mbc-sec__aside">
+          <span class="mbc-sec__index">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }} <i>/</i> {{ str_pad((string) $totalSections, 2, '0', STR_PAD_LEFT) }}</span>
+          <h2>{{ $section['section_heading'] }}</h2>
+          <a class="mbc-textlink" href="{{ route('contact') }}">
+            <span>Questions? Talk to us</span>
+            <i data-lucide="arrow-right"></i>
+          </a>
+        </aside>
+
+        <div class="mbc-sec__main">
+          @if($paragraphs)
+            <div class="mbc-prose">
+              @foreach($paragraphs as $paragraph)
+                <p>{{ $paragraph }}</p>
+              @endforeach
+            </div>
+          @endif
+
+          @if($sectionBullets)
+            <ul class="mbc-checks">
+              @foreach(array_slice($sectionBullets, 0, 16) as $bullet)
+                <li>
+                  <i data-lucide="check"></i>
+                  <span>{{ $cleanBullet($bullet['bullet_text'] ?? '') }}</span>
+                </li>
+              @endforeach
+            </ul>
+          @endif
+
+          @if($sectionSubpoints && $useCarousel)
+            <div class="mbc-carousel" data-mbc-carousel>
+              <div class="mbc-carousel__bar">
+                <span class="mbc-carousel__count"><i data-lucide="layers"></i> {{ count($sectionSubpoints) }} listed</span>
+                <div class="mbc-carousel__nav">
+                  <button type="button" class="carousel-btn mbc-cbtn" data-mbc-prev aria-label="Previous"><i data-lucide="chevron-left"></i></button>
+                  <button type="button" class="carousel-btn mbc-cbtn" data-mbc-next aria-label="Next"><i data-lucide="chevron-right"></i></button>
+                </div>
+              </div>
+              <div class="mbc-carousel__track" data-mbc-track>
+                @foreach($sectionSubpoints as $subpoint)
+                  <article class="mbc-uni" data-mbc-item>
+                    @if(! empty($subpoint['subpoint_heading']))
+                      <h3>{{ $subpoint['subpoint_heading'] }}</h3>
+                    @endif
+                    @foreach($splitText($subpoint['subpoint_body'] ?? '', 4) as $paragraph)
+                      <p>{{ $paragraph }}</p>
+                    @endforeach
+                  </article>
+                @endforeach
+              </div>
+            </div>
+          @elseif($sectionSubpoints)
+            <div class="mbc-cards">
+              @foreach($sectionSubpoints as $subpoint)
+                <article class="mbc-card reveal">
+                  @if(! empty($subpoint['subpoint_heading']))
+                    <h3>{{ $subpoint['subpoint_heading'] }}</h3>
+                  @endif
+                  @foreach($splitText($subpoint['subpoint_body'] ?? '', 4) as $paragraph)
+                    <p>{{ $paragraph }}</p>
+                  @endforeach
+                </article>
+              @endforeach
+            </div>
+          @endif
+        </div>
+      </div>
+    </section>
+  @endforeach
+
+  {{-- ============================ ADMISSION PROCESS (carousel) ============================ --}}
+  @if($admissionSteps)
+    <section class="mbc-process" id="admission-process">
+      <div class="mbc-shell">
+        <header class="mbc-head mbc-head--center reveal">
+          <span class="mbc-eyebrow"><i data-lucide="route"></i> Admission process</span>
+          <h2>{{ $sections['admission_process']['section_heading'] ?? 'How we take you from shortlist to seat' }}</h2>
+        </header>
+
+        <div class="mbc-carousel mbc-carousel--steps" data-mbc-carousel>
+          <div class="mbc-carousel__track" data-mbc-track>
+            @foreach($admissionSteps as $i => $step)
+              @php
+                $parts = array_values(array_filter(array_map('trim', explode('|', (string) ($step['step_body'] ?? '')))));
+              @endphp
+              <article class="mbc-stepcard" data-mbc-item>
+                <span class="mbc-stepcard__num">{{ str_pad((string) ($step['step_order'] ?? $i + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                <h3>{{ $step['step_title'] }}</h3>
+                @if($parts)
+                  <ul>
+                    @foreach($parts as $part)
+                      <li>{{ $part }}</li>
+                    @endforeach
+                  </ul>
+                @endif
+              </article>
+            @endforeach
+          </div>
+          <div class="mbc-carousel__nav mbc-carousel__nav--center">
+            <button type="button" class="carousel-btn mbc-cbtn" data-mbc-prev aria-label="Previous step"><i data-lucide="chevron-left"></i></button>
+            <button type="button" class="carousel-btn mbc-cbtn" data-mbc-next aria-label="Next step"><i data-lucide="chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  @endif
+
+  {{-- ============================ CTA ============================ --}}
+  <section class="mbc-cta">
+    <div class="mbc-shell mbc-cta__panel reveal">
+      @if($heroImage !== '')
+        <img class="mbc-cta__img" src="{{ $heroImage }}" alt="" aria-hidden="true" loading="lazy">
+      @endif
+      <span class="mbc-cta__orb mbc-cta__orb--a" aria-hidden="true"></span>
+      <span class="mbc-cta__orb mbc-cta__orb--b" aria-hidden="true"></span>
+      <div class="mbc-cta__copy">
+        <span class="mbc-eyebrow mbc-eyebrow--light"><i data-lucide="graduation-cap"></i> One Degree Advisory</span>
+        <h2>Build your {{ $countryName }} MBBS shortlist with verified details.</h2>
+        <p>Bring your NEET score, budget range, and intake target. We will help you compare universities, requirements, timelines, and the exact next steps.</p>
+        <div class="mbc-cta__actions">
+          <a class="btn btn-primary mbc-cta-btn" href="{{ route('contact') }}">
+            <span>Book free counselling</span>
             <i data-lucide="arrow-up-right"></i>
           </a>
-          <a class="btn btn-ghost" href="{{ route('mbbs.student') }}#corridor">
-            <i data-lucide="compass"></i>
-            <span>Compare MBBS corridors</span>
+          <a class="mbc-cta__alt" href="{{ route('mbbs.student') }}">
+            <i data-lucide="layout-grid"></i>
+            <span>Compare all destinations</span>
           </a>
         </div>
-      </div>
-
-      <div class="mbbsx-cta__card">
-        <span class="mbbsx-cta__monogram" aria-hidden="true">{{ Str::upper(Str::substr($countryName, 0, 1)) }}</span>
-        <span class="mbbsx-callout__eyebrow">What you'll get</span>
-        <h3>A clear plan, in writing.</h3>
-        <ul>
-          <li><i data-lucide="check"></i><span>NEET-aware university shortlist</span></li>
-          <li><i data-lucide="check"></i><span>Total cost of education breakdown</span></li>
-          <li><i data-lucide="check"></i><span>Visa &amp; document timeline</span></li>
-          <li><i data-lucide="check"></i><span>India return &amp; FMGE planning</span></li>
-        </ul>
       </div>
     </div>
   </section>
 
 </main>
+
+<script>
+  // Scoped, self-contained carousels (universities + admission steps). Pure
+  // progressive enhancement: the track is a native scroll-snap row, so it works
+  // by swipe/scroll even if this never runs. Buttons + mouse-drag are extras.
+  (function () {
+    var roots = document.querySelectorAll('[data-mbc-carousel]');
+    if (!roots.length) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    roots.forEach(function (root) {
+      var track = root.querySelector('[data-mbc-track]');
+      if (!track) return;
+      var prev = root.querySelector('[data-mbc-prev]');
+      var next = root.querySelector('[data-mbc-next]');
+
+      var stepBy = function (dir) {
+        var item = track.querySelector('[data-mbc-item]');
+        var amount = item ? (item.getBoundingClientRect().width + 18) : (track.clientWidth * 0.85);
+        track.scrollBy({ left: dir * amount, behavior: reduce ? 'auto' : 'smooth' });
+      };
+
+      if (prev) prev.addEventListener('click', function () { stepBy(-1); });
+      if (next) next.addEventListener('click', function () { stepBy(1); });
+
+      var sync = function () {
+        var max = track.scrollWidth - track.clientWidth - 2;
+        if (prev) prev.disabled = track.scrollLeft <= 2;
+        if (next) next.disabled = track.scrollLeft >= max;
+      };
+      track.addEventListener('scroll', sync, { passive: true });
+      window.addEventListener('resize', sync);
+      sync();
+
+      // Mouse drag-to-scroll (touch uses native momentum scrolling).
+      var down = false, startX = 0, startLeft = 0, moved = false;
+      track.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'touch') return;
+        down = true; moved = false; startX = e.clientX; startLeft = track.scrollLeft;
+        track.classList.add('is-grab');
+      });
+      window.addEventListener('pointermove', function (e) {
+        if (!down) return;
+        var dx = e.clientX - startX;
+        if (Math.abs(dx) > 3) moved = true;
+        track.scrollLeft = startLeft - dx;
+      });
+      window.addEventListener('pointerup', function () {
+        down = false; track.classList.remove('is-grab');
+      });
+      // Swallow click after a drag so cards/links don't fire accidentally.
+      track.addEventListener('click', function (e) {
+        if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+      }, true);
+    });
+  })();
+</script>
 @endsection

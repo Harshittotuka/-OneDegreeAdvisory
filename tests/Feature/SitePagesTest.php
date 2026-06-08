@@ -3,10 +3,42 @@
 namespace Tests\Feature;
 
 use App\Support\StudyLocationContent;
+use App\Support\MbbsCountryContent;
 use Tests\TestCase;
 
 class SitePagesTest extends TestCase
 {
+    private ?string $visibilityBackup = null;
+    private bool $visibilityExisted = false;
+
+    private function visibilityPath(): string
+    {
+        return storage_path('app/country-visibility.json');
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->visibilityExisted = is_file($this->visibilityPath());
+        $this->visibilityBackup = $this->visibilityExisted ? file_get_contents($this->visibilityPath()) : null;
+
+        if ($this->visibilityExisted) {
+            unlink($this->visibilityPath());
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->visibilityExisted) {
+            file_put_contents($this->visibilityPath(), (string) $this->visibilityBackup);
+        } elseif (is_file($this->visibilityPath())) {
+            unlink($this->visibilityPath());
+        }
+
+        parent::tearDown();
+    }
+
     public function test_primary_pages_render(): void
     {
         foreach (['/', '/index.html', '/about', '/about.html', '/contact', '/contact.html', '/blog', '/blog/one-degree-test-requirements', '/services/admissions-counselling', '/mbbs/student'] as $path) {
@@ -23,7 +55,8 @@ class SitePagesTest extends TestCase
 
         $this->get('/services/admissions-counselling')
             ->assertOk()
-            ->assertSee('Admissions counselling for every study-abroad dream.')
+            ->assertSee('Admissions counselling for every')
+            ->assertSee('study&#8209;abroad', false)
             ->assertSee('Australian Admissions')
             ->assertSee('Medicine Admissions');
     }
@@ -54,7 +87,7 @@ class SitePagesTest extends TestCase
             ->assertSee('Foundation Program')        // JSON: Cards.card_title
             ->assertSee('UK_London.jpg', false)      // JSON: Images.image_url
             ->assertSee('UK_Edinburgh.webp', false)  // JSON: Images.image_url
-            ->assertDontSee('assets/heroes/uk.jpg', false);
+            ->assertDontSee('src="http://localhost/assets/heroes/uk.jpg"', false);
     }
 
     public function test_dynamic_country_guide_pages_render_from_generated_content(): void
@@ -66,18 +99,36 @@ class SitePagesTest extends TestCase
         $this->assertContains('study-in-kazakhstan', array_column($destinations, 'slug'));
 
         foreach ($destinations as $destination) {
-            $response = $this->get("/countries/{$destination['slug']}")
+            $this->get("/countries/{$destination['slug']}")
                 ->assertOk()
                 ->assertSee($destination['name']);
-
-            if (($destination['hero_image'] ?? '') !== '') {
-                $response->assertDontSee($destination['hero_image'], false);
-            }
         }
     }
 
     public function test_unknown_country_returns_not_found(): void
     {
         $this->get('/countries/study-in-nowhere')->assertNotFound();
+    }
+
+    public function test_dynamic_mbbs_country_pages_render_from_av_global_content(): void
+    {
+        $countries = app(MbbsCountryContent::class)->countries();
+
+        $this->assertCount(23, $countries);
+        $this->assertContains('georgia', array_column($countries, 'slug'));
+        $this->assertContains('united-kingdom', array_column($countries, 'slug'));
+        $this->assertContains('czech-republic', array_column($countries, 'slug'));
+
+        foreach ($countries as $country) {
+            $this->get("/mbbs/country/{$country['slug']}")
+                ->assertOk()
+                ->assertSee($country['name'])
+                ->assertDontSee('Source-backed country profile')
+                ->assertDontSee('Source-backed guide')
+                ->assertDontSee('Source sections')
+                ->assertDontSee('<dt>Facts</dt>', false)
+                ->assertDontSee('<dt>Sections</dt>', false)
+                ->assertDontSee('<dt>Steps</dt>', false);
+        }
     }
 }

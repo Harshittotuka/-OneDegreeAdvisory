@@ -29,6 +29,12 @@ class BlogCmsController extends Controller
         if ($request->session()->get('cms_authenticated') || CmsAuth::validRemember($request)) {
             $request->session()->put('cms_authenticated', true);
 
+            // Restore the role from the remember cookie when re-establishing.
+            $role = CmsAuth::rememberedRole($request);
+            if ($role !== null) {
+                $request->session()->put('cms_super_admin', $role === 'super');
+            }
+
             return redirect()->route('admin.dashboard');
         }
 
@@ -39,18 +45,29 @@ class BlogCmsController extends Controller
     {
         $request->validate(['password' => ['required', 'string']]);
 
-        if (! hash_equals((string) config('site.cms_password'), (string) $request->input('password'))) {
+        // The same form accepts either the standard CMS password or the
+        // super-admin ("infolith") password — the latter unlocks every page.
+        $password = (string) $request->input('password');
+        $role = null;
+        if (hash_equals((string) config('site.super_admin_password'), $password)) {
+            $role = 'super';
+        } elseif (hash_equals((string) config('site.cms_password'), $password)) {
+            $role = 'admin';
+        }
+
+        if ($role === null) {
             return back()->withErrors(['password' => 'Incorrect password.']);
         }
 
         $request->session()->regenerate();
         $request->session()->put('cms_authenticated', true);
+        $request->session()->put('cms_super_admin', $role === 'super');
 
         $response = redirect()->route('admin.dashboard');
 
         // "Keep me signed in" → 30-day encrypted, http-only persistent-login cookie.
         if ($request->boolean('remember')) {
-            $response->withCookie(cookie(CmsAuth::REMEMBER_COOKIE, CmsAuth::rememberToken(), 60 * 24 * 30));
+            $response->withCookie(cookie(CmsAuth::REMEMBER_COOKIE, CmsAuth::rememberToken($role), 60 * 24 * 30));
         } else {
             $response->withCookie(Cookie::forget(CmsAuth::REMEMBER_COOKIE));
         }
@@ -61,6 +78,7 @@ class BlogCmsController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         $request->session()->forget('cms_authenticated');
+        $request->session()->forget('cms_super_admin');
 
         return redirect()->route('admin.login')->withCookie(Cookie::forget(CmsAuth::REMEMBER_COOKIE));
     }

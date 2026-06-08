@@ -4,7 +4,78 @@ namespace App\Support;
 
 class MbbsCountryContent
 {
-    private const DEFAULT_PATH = 'app/mbbs_bookmyuniversity_content.json';
+    private const DEFAULT_PATH = 'app/mbbs_avglobal_content.json';
+
+    public function __construct(private CountryVisibilityStore $visibility)
+    {
+    }
+
+    public function countries(bool $visibleOnly = true): array
+    {
+        $sheets = $this->loadSheets();
+        $pages = $sheets['Pages'] ?? [];
+        $factsBySlug = [];
+        foreach ($sheets['Facts'] ?? [] as $fact) {
+            if (! is_array($fact)) {
+                continue;
+            }
+            $slug = (string) ($fact['page_slug'] ?? '');
+            $label = (string) ($fact['fact_label'] ?? '');
+            if ($slug === '' || $label === '') {
+                continue;
+            }
+            $factsBySlug[$slug][$label] = (string) ($fact['fact_value'] ?? '');
+        }
+
+        $countries = [];
+        foreach ($pages as $page) {
+            if (! is_array($page)) {
+                continue;
+            }
+
+            $slug = (string) ($page['page_slug'] ?? '');
+            $name = (string) ($page['country'] ?? '');
+            if ($slug === '' || $name === '') {
+                continue;
+            }
+
+            $countries[] = [
+                'slug' => $slug,
+                'name' => $name,
+                'flag' => strtolower((string) ($page['flag_code'] ?? '')),
+                'flag_url' => (string) ($page['flag_url'] ?? ''),
+                'hero_image' => (string) ($page['hero_image'] ?? ''),
+                'hero_heading' => (string) ($page['hero_heading'] ?? ''),
+                'hero_text' => (string) ($page['hero_text'] ?? ''),
+                'source_updated' => (string) ($page['source_updated'] ?? ''),
+                'facts' => $factsBySlug[$slug] ?? [],
+            ];
+        }
+
+        if ($visibleOnly) {
+            $countries = array_values(array_filter(
+                $countries,
+                fn (array $country): bool => $this->visibility->isVisible(
+                    CountryVisibilityStore::GROUP_MBBS,
+                    (string) ($country['slug'] ?? '')
+                )
+            ));
+        }
+
+        usort($countries, fn ($a, $b) => strcasecmp($a['name'], $b['name']));
+
+        return $countries;
+    }
+
+    public function allCountries(): array
+    {
+        return $this->countries(false);
+    }
+
+    public function isVisible(string $slug): bool
+    {
+        return $this->visibility->isVisible(CountryVisibilityStore::GROUP_MBBS, $slug);
+    }
 
     public function forSlug(string $slug): array
     {
@@ -30,6 +101,7 @@ class MbbsCountryContent
 
         return [
             'page' => $page,
+            'country' => $this->countryMetaFromPage($page),
             'sections' => $sections,
             'bullets' => $bullets,
             'subpoints' => $subpoints,
@@ -57,6 +129,18 @@ class MbbsCountryContent
             $rows,
             fn (array $row) => ($row['page_slug'] ?? '') === $slug
         ));
+    }
+
+    private function countryMetaFromPage(array $page): array
+    {
+        return [
+            'slug' => (string) ($page['page_slug'] ?? ''),
+            'name' => (string) ($page['country'] ?? ''),
+            'flag' => strtolower((string) ($page['flag_code'] ?? '')),
+            'flag_url' => (string) ($page['flag_url'] ?? ''),
+            'hero_image' => (string) ($page['hero_image'] ?? ''),
+            'source_updated' => (string) ($page['source_updated'] ?? ''),
+        ];
     }
 
     private function firstForSlug(array $rows, string $slug): array

@@ -1,6 +1,6 @@
 @extends('admin.layout')
 
-@section('title', 'Sync non-MBBS countries')
+@section('title', $tool['title'] ?? 'Sync non-MBBS countries')
 
 @push('head')
 <style>
@@ -67,6 +67,16 @@
 
 @section('content')
 @php
+  $tool = $tool ?? [
+    'title' => 'Sync non-MBBS countries',
+    'source_label' => 'Leverage Edu',
+    'source_url' => 'https://leverageedu.com/',
+    'description' => 'non-MBBS country pages, workbook, and website JSON review.',
+    'route_prefix' => 'admin.country-sync',
+    'apply_confirm' => 'Update live country data with the reviewed scrape?',
+    'note' => 'Selected changes update the website JSON. The full Update all data action also replaces the workbook and scraper snapshot.',
+  ];
+  $syncRoute = fn (string $name) => route($tool['route_prefix'].'.'.$name);
   $comparison = $state['comparison'] ?? null;
   $summary = $comparison['summary'] ?? null;
   $details = $comparison ? array_slice($comparison['details'], 0, 250) : [];
@@ -76,12 +86,12 @@
 <div class="panel sync-panel">
   <div class="sync-head">
     <div>
-      <h2 class="sync-title">Sync non-MBBS countries</h2>
-      <p class="sync-sub">Source: <a href="https://leverageedu.com/" target="_blank" rel="noopener">Leverage&nbsp;Edu</a> (leverageedu.com) — non-MBBS country pages, workbook, and website JSON review.</p>
+      <h2 class="sync-title">{{ $tool['title'] }}</h2>
+      <p class="sync-sub">Source: <a href="{{ $tool['source_url'] }}" target="_blank" rel="noopener">{{ $tool['source_label'] }}</a> &mdash; {{ $tool['description'] }}</p>
     </div>
     <div class="sync-actions">
       {{-- JS intercepts and runs the check in the background; the plain POST is a no-JS fallback. --}}
-      <form method="POST" action="{{ route('admin.country-sync.check') }}" id="sync-check-form">
+      <form method="POST" action="{{ $syncRoute('check') }}" id="sync-check-form">
         @csrf
         <button type="submit" class="btn btn-primary" id="sync-start-btn">
           <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i> Check source changes
@@ -89,7 +99,7 @@
       </form>
 
       @if($state['review']['exists'])
-        <form method="POST" action="{{ route('admin.country-sync.apply') }}" onsubmit="return confirm('Update live country data with the reviewed scrape?');">
+        <form method="POST" action="{{ $syncRoute('apply') }}" onsubmit="return confirm(@json($tool['apply_confirm']));">
           @csrf
           <button type="submit" class="btn btn-ghost">
             <i data-lucide="upload-cloud" style="width:16px;height:16px;"></i> Update all data
@@ -145,12 +155,12 @@
   @if($state['review']['report_exists'] || $state['review']['workbook_exists'])
     <div class="sync-actions" style="justify-content:flex-start; margin-top:16px;">
       @if($state['review']['report_exists'])
-        <a class="btn btn-ghost btn-sm" href="{{ route('admin.country-sync.report') }}">
+        <a class="btn btn-ghost btn-sm" href="{{ $syncRoute('report') }}">
           <i data-lucide="file-spreadsheet" style="width:15px;height:15px;"></i> Pending report
         </a>
       @endif
       @if($state['review']['workbook_exists'])
-        <a class="btn btn-ghost btn-sm" href="{{ route('admin.country-sync.workbook') }}">
+        <a class="btn btn-ghost btn-sm" href="{{ $syncRoute('workbook') }}">
           <i data-lucide="download" style="width:15px;height:15px;"></i> Review workbook
         </a>
       @endif
@@ -159,7 +169,7 @@
 </div>
 
 @if($comparison)
-  <form method="POST" action="{{ route('admin.country-sync.selected') }}">
+  <form method="POST" action="{{ $syncRoute('selected') }}">
     @csrf
     <div class="panel sync-panel">
       <div class="sync-head" style="margin-bottom:14px;">
@@ -219,7 +229,7 @@
         @if($detailCount > count($details))
           <p class="sync-note">{{ $detailCount - count($details) }} more change(s) are in the pending report workbook.</p>
         @endif
-        <p class="sync-note">Selected changes update the website JSON. The full Update all data action also replaces the workbook and scraper snapshot.</p>
+        <p class="sync-note">{{ $tool['note'] }}</p>
       @endif
     </div>
   </form>
@@ -229,8 +239,8 @@
 @push('scripts')
 <script>
 (function () {
-  const startUrl = @json(route('admin.country-sync.start'));
-  const progressUrl = @json(route('admin.country-sync.progress'));
+  const startUrl = @json($syncRoute('start'));
+  const progressUrl = @json($syncRoute('progress'));
   const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
   const form = document.getElementById('sync-check-form');

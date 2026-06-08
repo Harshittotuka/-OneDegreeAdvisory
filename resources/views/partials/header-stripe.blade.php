@@ -12,18 +12,8 @@
                  the html.nav-updated overrides in styles.css.
 --}}
 @php
-    $mbbsCountries = [
-        ['name' => 'Russia', 'flag' => 'ru'],
-        ['name' => 'Georgia', 'flag' => 'ge'],
-        ['name' => 'Kazakhstan', 'flag' => 'kz'],
-        ['name' => 'Kyrgyzstan', 'flag' => 'kg'],
-        ['name' => 'Tajikistan', 'flag' => 'tj'],
-        ['name' => 'Uzbekistan', 'flag' => 'uz'],
-    ];
-    usort($mbbsCountries, fn ($a, $b) => strcasecmp($a['name'], $b['name']));
-
     $destinations = app(\App\Support\StudyLocationContent::class)->destinations();
-    $mbbsCountryRoutes = ['georgia','russia','kazakhstan','kyrgyzstan','uzbekistan'];
+    $mbbsCountries = app(\App\Support\MbbsCountryContent::class)->countries();
 
     // External student profiler — the "Updated" nav links the non-MBBS course
     // tracks and the destination "Show more" cards here.
@@ -110,10 +100,15 @@
 
                   <div class="nav-dropdown-grid">
                     @foreach ($mbbsCountries as $country)
-                      @php($mbbsSlug = strtolower($country['name']))
-                      <a @class(['dest-card', 'dest-card--hide-updated' => $mbbsSlug === 'tajikistan']) href="{{ in_array($mbbsSlug, $mbbsCountryRoutes, true) ? route('mbbs.country', $mbbsSlug) : route('mbbs.student').'#corridor' }}">
+                      <a class="dest-card" href="{{ route('mbbs.country', $country['slug']) }}">
                         <span class="dest-flag" aria-hidden="true">
-                          <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt="">
+                          @if(! empty($country['flag']))
+                            <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt="">
+                          @elseif(! empty($country['flag_url']))
+                            <img src="{{ $country['flag_url'] }}" alt="">
+                          @else
+                            <i data-lucide="map-pin"></i>
+                          @endif
                         </span>
                         <span class="dest-meta"><strong>{{ $country['name'] }}</strong></span>
                       </a>
@@ -255,7 +250,7 @@
                         </a>
                         <a class="course-menu-card" href="{{ route('services.admissions-counselling') }}" role="menuitem">
                           <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="compass"></i></span>
-                          <span class="course-menu-copy"><strong>Admission Counselling</strong><small>Plan your application</small></span>
+                          <span class="course-menu-copy"><strong>Admissions Counselling</strong><small>Plan your application</small></span>
                           <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
                         </a>
                       </div>

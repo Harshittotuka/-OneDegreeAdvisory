@@ -106,12 +106,13 @@
   $hour = (int) now()->format('G');
   $greet = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
 
-  $totalContent = $stats['posts_total'] + $stats['countries'] + $stats['notice_total'];
+  $totalContent = $stats['posts_total'] + $stats['countries'] + $stats['mbbs_countries'] + $stats['notice_total'];
 
   // Content mix → CSS conic-gradient (no JS, no chart library).
   $mix = [
     ['label' => 'Blog posts',     'value' => $stats['posts_total'],    'color' => '#666cff'],
     ['label' => 'Destinations',   'value' => $stats['countries'],      'color' => '#3f6fd6'],
+    ['label' => 'MBBS countries', 'value' => $stats['mbbs_countries'], 'color' => '#0f7a78'],
     ['label' => 'Notification items', 'value' => $stats['notice_total'],   'color' => '#28c76f'],
   ];
   $mixTotal = max(1, array_sum(array_column($mix, 'value')));
@@ -132,6 +133,9 @@
   {{-- Welcome banner --}}
   <section class="panel dsh-hero span-8">
     <div class="blob"></div><div class="ring"></div>
+    @if(session('cms_super_admin'))
+      <span class="chip blue" style="margin-bottom:10px;"><i data-lucide="shield-check"></i> Super Admin — all pages unlocked</span>
+    @endif
     <h2>{{ $greet }} 👋 Welcome to <b>{{ config('site.name') }}</b> Content Studio</h2>
     <p>You're managing <b>{{ $totalContent }}</b> pieces of content across the site — blog posts, study destinations and notification-bar announcements. Everything here is file-backed and updates the live site instantly.</p>
     <div class="btn-row">
@@ -141,7 +145,7 @@
   </section>
 
   {{-- Featured / quick highlight --}}
-  <section class="panel dsh-kpi span-4">
+  <section class="panel dsh-kpi span-3">
     <span class="dsh-ico" style="--c:#9a6b00;--cb:#fdf3dd"><i data-lucide="star"></i></span>
     <div class="dsh-kpi-label">Featured blog post</div>
     @if($stats['featured'])
@@ -155,7 +159,7 @@
   </section>
 
   {{-- KPI cards --}}
-  <section class="panel dsh-kpi span-4">
+  <section class="panel dsh-kpi span-3">
     <span class="dsh-ico" style="--c:#666cff;--cb:#ebecff"><i data-lucide="newspaper"></i></span>
     <div class="dsh-num">{{ $stats['posts_total'] }}</div>
     <div class="dsh-kpi-label">Blog posts</div>
@@ -165,7 +169,14 @@
     </div>
   </section>
 
-  <section class="panel dsh-kpi span-4">
+  <section class="panel dsh-kpi span-3">
+    <span class="dsh-ico" style="--c:#0f7a78;--cb:#e7f7f5"><i data-lucide="stethoscope"></i></span>
+    <div class="dsh-num">{{ $stats['mbbs_countries'] }}</div>
+    <div class="dsh-kpi-label">MBBS countries</div>
+    <div class="dsh-kpi-sub">Country pages kept in sync from AV Global Overseas.</div>
+  </section>
+
+  <section class="panel dsh-kpi span-3">
     <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="globe"></i></span>
     <div class="dsh-num">{{ $stats['countries'] }}</div>
     <div class="dsh-kpi-label">Study destinations</div>
@@ -210,8 +221,19 @@
       <a class="dsh-act" href="{{ route('admin.home-hero.live') }}">
         <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="panel-top"></i></span> Home page
       </a>
+      @if(session('cms_super_admin'))
+      <a class="dsh-act" href="{{ route('admin.about.live') }}">
+        <span class="dsh-ico" style="--c:#9a6b00;--cb:#fdf3dd"><i data-lucide="layout-template"></i></span> About page
+      </a>
+      @endif
       <a class="dsh-act" href="{{ route('admin.notice-bar.index') }}">
         <span class="dsh-ico" style="--c:#28c76f;--cb:#e6f8ee"><i data-lucide="megaphone"></i></span> Notification bar
+      </a>
+      <a class="dsh-act" href="{{ route('admin.country-visibility.index') }}">
+        <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="eye"></i></span> Country visibility
+      </a>
+      <a class="dsh-act" href="{{ route('admin.mbbs-country-sync.index') }}">
+        <span class="dsh-ico" style="--c:#0f7a78;--cb:#e7f7f5"><i data-lucide="stethoscope"></i></span> MBBS sync
       </a>
     </div>
   </section>
@@ -238,6 +260,31 @@
     </p>
     <a class="btn btn-ghost btn-sm" href="{{ route('admin.country-sync.index') }}">
       <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Open sync tool
+    </a>
+  </section>
+
+  {{-- MBBS country sync status --}}
+  <section class="panel dsh-card span-4">
+    <div class="dsh-card-head">
+      <div><h3>MBBS country data</h3><p>AV Global Overseas</p></div>
+      @if($mbbsCountrySync['running'])
+        <span class="chip amber"><i data-lucide="loader"></i> Running</span>
+      @elseif($mbbsCountrySync['exists'])
+        <span class="chip green"><i data-lucide="check"></i> Synced</span>
+      @else
+        <span class="chip grey"><i data-lucide="minus"></i> No data</span>
+      @endif
+    </div>
+    <div class="dsh-stat-line"><b>{{ $stats['mbbs_countries'] }}</b> <span style="color:var(--muted);">MBBS countries</span></div>
+    <p class="dsh-meta">
+      @if($mbbsCountrySync['updated_at'])
+        Last updated {{ $mbbsCountrySync['updated_at']->diffForHumans() }}
+      @else
+        No MBBS source data has been pulled yet.
+      @endif
+    </p>
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.mbbs-country-sync.index') }}">
+      <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Open MBBS sync tool
     </a>
   </section>
 

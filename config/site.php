@@ -7,6 +7,11 @@ return [
     /* Password for the /admin blog CMS. Override via CMS_PASSWORD in .env. */
     'cms_password' => env('CMS_PASSWORD', 'onedegree'),
 
+    /* Super-admin password (the "infolith" login). Same /admin login form, but
+       this password unlocks every CMS page — including ones hidden from the
+       standard editor, such as the About page. Override via SUPER_ADMIN_PASSWORD. */
+    'super_admin_password' => env('SUPER_ADMIN_PASSWORD', 'infolith@123'),
+
     /*
      * Keep the About-page CMS hidden until it is ready for client use.
      * Set ABOUT_CMS_ENABLED=true locally to re-enable the existing editor.
@@ -51,6 +56,12 @@ return [
             'slug'  => 'linkedin',
             'label' => 'LinkedIn',
             'href'  => 'https://www.linkedin.com/company/onedegreeadvisory/',
+        ],
+        [
+            'slug'  => 'whatsapp',
+            'label' => 'WhatsApp',
+            /* Number mirrors contact.phone_e164 (digits only, country code first). */
+            'href'  => 'https://wa.me/918233365888',
         ],
     ],
 

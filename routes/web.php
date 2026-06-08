@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Admin\AboutCmsController;
 use App\Http\Controllers\Admin\BlogCmsController;
+use App\Http\Controllers\Admin\CountryVisibilityController;
 use App\Http\Controllers\Admin\CountryDataSyncController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
+use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
@@ -40,7 +42,7 @@ Route::get('/courses/doctoral', [PageController::class, 'doctoral'])->name('cour
 Route::get('/mbbs/student', [PageController::class, 'mbbsStudent'])->name('mbbs.student');
 
 Route::get('/mbbs/country/{country}', [PageController::class, 'mbbsCountry'])
-    ->where('country', '[a-z]+')
+    ->where('country', '[a-z0-9-]+')
     ->name('mbbs.country');
 
 Route::get('/countries/{country}', [PageController::class, 'country'])
@@ -93,6 +95,9 @@ Route::prefix('admin')->group(function () {
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
 
+        Route::get('country-visibility', [CountryVisibilityController::class, 'edit'])->name('admin.country-visibility.index');
+        Route::post('country-visibility', [CountryVisibilityController::class, 'update'])->name('admin.country-visibility.update');
+
         Route::get('country-sync', [CountryDataSyncController::class, 'index'])->name('admin.country-sync.index');
         Route::post('country-sync/check', [CountryDataSyncController::class, 'check'])->name('admin.country-sync.check');
         Route::post('country-sync/start', [CountryDataSyncController::class, 'start'])->name('admin.country-sync.start');
@@ -101,5 +106,14 @@ Route::prefix('admin')->group(function () {
         Route::post('country-sync/selected', [CountryDataSyncController::class, 'applySelected'])->name('admin.country-sync.selected');
         Route::get('country-sync/report', [CountryDataSyncController::class, 'downloadReport'])->name('admin.country-sync.report');
         Route::get('country-sync/workbook', [CountryDataSyncController::class, 'downloadWorkbook'])->name('admin.country-sync.workbook');
+
+        Route::get('mbbs-country-sync', [MbbsCountryDataSyncController::class, 'index'])->name('admin.mbbs-country-sync.index');
+        Route::post('mbbs-country-sync/check', [MbbsCountryDataSyncController::class, 'check'])->name('admin.mbbs-country-sync.check');
+        Route::post('mbbs-country-sync/start', [MbbsCountryDataSyncController::class, 'start'])->name('admin.mbbs-country-sync.start');
+        Route::get('mbbs-country-sync/progress', [MbbsCountryDataSyncController::class, 'progress'])->name('admin.mbbs-country-sync.progress');
+        Route::post('mbbs-country-sync/apply', [MbbsCountryDataSyncController::class, 'applyAll'])->name('admin.mbbs-country-sync.apply');
+        Route::post('mbbs-country-sync/selected', [MbbsCountryDataSyncController::class, 'applySelected'])->name('admin.mbbs-country-sync.selected');
+        Route::get('mbbs-country-sync/report', [MbbsCountryDataSyncController::class, 'downloadReport'])->name('admin.mbbs-country-sync.report');
+        Route::get('mbbs-country-sync/workbook', [MbbsCountryDataSyncController::class, 'downloadWorkbook'])->name('admin.mbbs-country-sync.workbook');
     });
 });

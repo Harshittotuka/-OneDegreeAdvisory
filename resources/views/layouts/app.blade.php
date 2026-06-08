@@ -116,19 +116,10 @@
       </div>
     </div>
 
+    {{-- JSON is built in PHP so the literal context key is not read as a Blade directive. --}}
+    @php($orgJsonLd = json_encode(['@context' => 'https://schema.org', '@type' => 'EducationalOrganization', 'name' => config('site.name'), 'url' => url('/'), 'logo' => asset('assets/Logo/og-image.png'), 'description' => config('site.description'), 'email' => config('site.contact.email'), 'telephone' => config('site.contact.phone'), 'address' => config('site.contact.address'), 'areaServed' => 'Worldwide'], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT))
     <script type="application/ld+json">
-      {!! json_encode([
-          '@context' => 'https://schema.org',
-          '@type' => 'EducationalOrganization',
-          'name' => config('site.name'),
-          'url' => url('/'),
-          'logo' => asset('assets/Logo/og-image.png'),
-          'description' => config('site.description'),
-          'email' => config('site.contact.email'),
-          'telephone' => config('site.contact.phone'),
-          'address' => config('site.contact.address'),
-          'areaServed' => 'Worldwide',
-      ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+      {!! $orgJsonLd !!}
     </script>
 
     @if($cmsEdit)

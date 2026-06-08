@@ -1,78 +1,28 @@
 @php
+    use Illuminate\Support\Str;
+
     $pageTitle = 'MBBS Abroad Route Desk | One Degree Advisory';
     $pageDescription = 'A focused MBBS abroad comparison page with six destination desks, admission support services, and profile-led counselling for Indian students.';
     $activeNav = 'mbbs';
     $mainId = 'mbbs-v2-main';
 
-    $mbbsCountries = [
-        [
-            'slug' => 'russia',
-            'name' => 'Russia',
-            'desk' => 'Largest MBBS corridor',
-            'capital' => 'Moscow',
-            'duration' => '6 years',
-            'medium' => 'English + clinical Russian',
-            'feeLow' => 3500,
-            'feeHigh' => 6000,
-            'intake' => 'Sep',
-            'note' => 'Established public medical universities, large Indian student communities, and strong hospital exposure in bigger cities.',
-            'flag' => 'ru',
-        ],
-        [
-            'slug' => 'georgia',
-            'name' => 'Georgia',
-            'desk' => 'European-track curriculum',
-            'capital' => 'Tbilisi',
-            'duration' => '6 years',
-            'medium' => 'English',
-            'feeLow' => 4500,
-            'feeHigh' => 7000,
-            'intake' => 'Sep / Feb',
-            'note' => 'Modern campuses, English-medium teaching, and a compact student-life setup for families who want a European route.',
-            'flag' => 'ge',
-        ],
-        [
-            'slug' => 'kazakhstan',
-            'name' => 'Kazakhstan',
-            'desk' => 'Modern, low-cost route',
-            'capital' => 'Astana',
-            'duration' => '5-6 years',
-            'medium' => 'English',
-            'feeLow' => 3000,
-            'feeHigh' => 4800,
-            'intake' => 'Sep',
-            'note' => 'Affordable tuition, Indian food access in major cities, and medical universities with practical hospital networks.',
-            'flag' => 'kz',
-        ],
-        [
-            'slug' => 'kyrgyzstan',
-            'name' => 'Kyrgyzstan',
-            'desk' => 'Most affordable corridor',
-            'capital' => 'Bishkek',
-            'duration' => '5-6 years',
-            'medium' => 'English',
-            'feeLow' => 2800,
-            'feeHigh' => 4200,
-            'intake' => 'Sep',
-            'note' => 'Budget-led option with established Indian batches, hostel access, and a familiar consultant ecosystem.',
-            'flag' => 'kg',
-        ],
-        [
-            'slug' => 'uzbekistan',
-            'name' => 'Uzbekistan',
-            'desk' => 'Heritage medical schools',
-            'capital' => 'Tashkent',
-            'duration' => '6 years',
-            'medium' => 'English',
-            'feeLow' => 3500,
-            'feeHigh' => 5500,
-            'intake' => 'Sep / Oct',
-            'note' => 'A practical balance of cost, travel time, established universities, and a growing Indian student network.',
-            'flag' => 'uz',
-        ],
-    ];
+    $mbbsCountries = $mbbsCountries ?? [];
 
-    $fmtFee = fn ($v) => '$' . number_format($v, 0, '.', ',');
+    $fact = function (array $facts, array $labels): string {
+        foreach ($labels as $label) {
+            if (! empty($facts[$label])) {
+                return (string) $facts[$label];
+            }
+        }
+        foreach ($facts as $label => $value) {
+            foreach ($labels as $wanted) {
+                if (stripos((string) $label, $wanted) !== false && trim((string) $value) !== '') {
+                    return (string) $value;
+                }
+            }
+        }
+        return '';
+    };
 
     $services = [
         ['icon' => 'handshake', 'title' => 'Introduce', 'copy' => 'We introduce you to the universities and countries that fit your preferred course.'],
@@ -125,25 +75,37 @@
             <article class="mbbs-country-card mbbs-v2-country-card">
               <header class="mbbs-country-head">
                 <span class="mbbs-country-flag">
-                  <img src="https://flagcdn.com/w80/{{ $c['flag'] }}.png" alt="">
+                  @if(! empty($c['flag']))
+                    <img src="https://flagcdn.com/w80/{{ $c['flag'] }}.png" alt="">
+                  @elseif(! empty($c['flag_url']))
+                    <img src="{{ $c['flag_url'] }}" alt="">
+                  @else
+                    <i data-lucide="map-pin"></i>
+                  @endif
                 </span>
                 <div>
                   <span class="mbbs-country-index">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
                   <h3>{{ $c['name'] }}</h3>
-                  <p>{{ $c['desk'] }}</p>
                 </div>
               </header>
-              <p class="mbbs-country-note">{{ $c['note'] }}</p>
+              <p class="mbbs-country-note">{{ Str::limit($c['hero_text'] ?? $c['hero_heading'] ?? '', 155) }}</p>
+              @php
+                $facts = $c['facts'] ?? [];
+                $duration = $fact($facts, ['Duration']);
+                $medium = $fact($facts, ['Medium']);
+                $fee = $fact($facts, ['Total Course Fees', 'Annual Fee (INR)', 'Annual Fee']);
+                $eligibility = $fact($facts, ['Eligibility']);
+                $recognition = $fact($facts, ['Recognitions', 'Recognition']);
+              @endphp
               <dl class="mbbs-country-grid-meta">
-                <div><dt>Capital</dt><dd>{{ $c['capital'] }}</dd></div>
-                <div><dt>Duration</dt><dd>{{ $c['duration'] }}</dd></div>
-                <div><dt>Medium</dt><dd>{{ $c['medium'] }}</dd></div>
-                <div><dt>Tuition</dt><dd><span>{{ $fmtFee($c['feeLow']) }}</span>&ndash;<span>{{ $fmtFee($c['feeHigh']) }}</span> / yr</dd></div>
-                <div><dt>Intake</dt><dd>{{ $c['intake'] }}</dd></div>
-                <div><dt>Fit</dt><dd>Profile-led</dd></div>
+                @if($duration !== '')<div><dt>Duration</dt><dd>{{ $duration }}</dd></div>@endif
+                @if($medium !== '')<div><dt>Medium</dt><dd>{{ $medium }}</dd></div>@endif
+                @if($fee !== '')<div><dt>Fees</dt><dd>{{ $fee }}</dd></div>@endif
+                @if($eligibility !== '')<div><dt>Eligibility</dt><dd>{{ Str::limit($eligibility, 44) }}</dd></div>@endif
+                @if($recognition !== '')<div><dt>Recognition</dt><dd>{{ Str::limit($recognition, 44) }}</dd></div>@endif
               </dl>
-              <a href="{{ route('contact') }}" class="mbbs-country-cta">
-                <span>Study in {{ $c['name'] }}</span>
+              <a href="{{ route('mbbs.country', $c['slug']) }}" class="mbbs-country-cta">
+                <span>Open {{ $c['name'] }} guide</span>
                 <i data-lucide="arrow-up-right"></i>
               </a>
             </article>

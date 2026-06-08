@@ -1652,9 +1652,60 @@ ready(() => {
         suppressClick = false;
       }, true);
 
+      // Manual scroll buttons — step by one card (+ gap) with an eased glide.
+      let manualTransitionTimer = null;
+
+      const cardStep = () => {
+        const card = firstSet.querySelector(".dynamic-course-card");
+        const styles = window.getComputedStyle(firstSet);
+        const gap = parseFloat(styles.columnGap || styles.gap || "18") || 18;
+        if (card) return card.getBoundingClientRect().width + gap;
+        return setWidth ? setWidth / 3 : 0;
+      };
+
+      const animateBy = (delta) => {
+        if (!setWidth || !delta) return;
+        pauseAuto(1000);
+        window.clearTimeout(manualTransitionTimer);
+
+        // Snap to the normalized equivalent of the current position. The track
+        // holds three identical sets, so this never shows a visible jump — but it
+        // keeps rapid repeat clicks from drifting past the duplicated track and
+        // exposing empty space.
+        let from = normalize(targetOffset);
+        // Stepping backward past the start would expose the empty left edge, so
+        // hop forward by one identical set first to give the track room to reveal.
+        if (delta < 0 && from + delta < 0) from += setWidth;
+
+        track.style.transition = "none";
+        offset = targetOffset = from;
+        render();
+        void track.offsetWidth; // commit the snapped position before transitioning
+
+        const to = from + delta;
+        track.style.transition = reducedMotion.matches
+          ? "none"
+          : "transform 520ms cubic-bezier(0.22, 1, 0.36, 1)";
+        offset = targetOffset = to;
+        render();
+
+        manualTransitionTimer = window.setTimeout(() => {
+          track.style.transition = "";
+          targetOffset = normalize(to);
+          offset = targetOffset;
+          render();
+        }, 540);
+      };
+
+      const controlScope = carousel.closest(".dynamic-courses-bleed") || carousel.parentElement;
+      const prevBtn = controlScope ? controlScope.querySelector("[data-course-prev]") : null;
+      const nextBtn = controlScope ? controlScope.querySelector("[data-course-next]") : null;
+      if (prevBtn) prevBtn.addEventListener("click", () => animateBy(-cardStep()));
+      if (nextBtn) nextBtn.addEventListener("click", () => animateBy(cardStep()));
+
       const tick = (now) => {
         if (!reducedMotion.matches && !isDragging && !isHovering && now > resumeAt) {
-          moveTo(targetOffset + 0.42);
+          moveTo(targetOffset + 0.504);
         }
 
         window.requestAnimationFrame(tick);

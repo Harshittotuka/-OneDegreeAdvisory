@@ -139,13 +139,17 @@ class PageController extends Controller
         return view('pages.doctoral');
     }
 
-    public function mbbsStudent(): View
+    public function mbbsStudent(MbbsCountryContent $content): View
     {
-        return view('pages.mbbs-student');
+        return view('pages.mbbs-student', [
+            'mbbsCountries' => $content->countries(),
+        ]);
     }
 
     public function country(string $country, StudyLocationContent $content): View
     {
+        abort_unless($content->isVisible($country), 404);
+
         $studyContent = $content->forSlug($country);
 
         abort_unless($studyContent['page'] ?? null, 404);
@@ -158,22 +162,14 @@ class PageController extends Controller
 
     public function mbbsCountry(string $country, MbbsCountryContent $content): View
     {
-        $countries = [
-            'georgia' => ['name' => 'Georgia', 'flag' => 'ge'],
-            'russia' => ['name' => 'Russia', 'flag' => 'ru'],
-            'kazakhstan' => ['name' => 'Kazakhstan', 'flag' => 'kz'],
-            'kyrgyzstan' => ['name' => 'Kyrgyzstan', 'flag' => 'kg'],
-            'uzbekistan' => ['name' => 'Uzbekistan', 'flag' => 'uz'],
-        ];
-
-        abort_unless(isset($countries[$country]), 404);
+        abort_unless($content->isVisible($country), 404);
 
         $mbbsContent = $content->forSlug($country);
         abort_unless($mbbsContent['page'] ?? null, 404);
 
         return view('mbbs.country', [
             'countrySlug' => $country,
-            'countryMeta' => $countries[$country],
+            'countryMeta' => $mbbsContent['country'] ?? [],
             'mbbsContent' => $mbbsContent,
         ]);
     }

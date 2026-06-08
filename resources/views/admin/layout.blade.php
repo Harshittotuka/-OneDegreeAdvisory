@@ -37,6 +37,8 @@
     .cms-side-brand .mark img { width: 22px; height: 22px; filter: brightness(0) invert(1); }
     .cms-side-brand b { color: var(--ink); font-size: 1.06rem; font-weight: 800; letter-spacing: .04em; line-height: 1.1; text-transform: uppercase; }
     .cms-side-brand span { display: block; font-size: .7rem; color: var(--muted); font-weight: 600; letter-spacing: .02em; text-transform: none; }
+    /* Super admin: tint the subtitle so the role reads clearly, no extra chrome. */
+    .cms-side-brand.is-super span { color: var(--teal-dark); font-weight: 700; }
     .cms-nav { padding: 4px 14px 14px; flex: 1; }
     .cms-nav-label { padding: 18px 10px 7px; font-size: .67rem; font-weight: 800; letter-spacing: .1em;
       text-transform: uppercase; color: var(--side-label); }
@@ -129,20 +131,32 @@
 <body>
   @php
     $current = \Illuminate\Support\Facades\Route::currentRouteName() ?? '';
+    $isSuper = (bool) session('cms_super_admin');
+
+    $contentItems = [
+      ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
+      ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
+    ];
+    // Super admin unlocks the (otherwise hidden) About-page editor.
+    if ($isSuper) {
+      $contentItems[] = ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.live', 'match' => 'admin.about'];
+    }
+    $contentItems[] = ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'];
+    $contentItems[] = ['label' => 'Country visibility', 'icon' => 'eye', 'route' => 'admin.country-visibility.index', 'match' => 'admin.country-visibility'];
+    $contentItems[] = ['label' => 'Sync non-MBBS countries', 'icon' => 'globe', 'route' => 'admin.country-sync.index', 'match' => 'admin.country-sync'];
+    $contentItems[] = ['label' => 'Sync MBBS countries', 'icon' => 'stethoscope', 'route' => 'admin.mbbs-country-sync.index', 'match' => 'admin.mbbs-country-sync'];
+
+    $comingSoon = [['label' => 'Settings', 'icon' => 'settings', 'soon' => true]];
+    if (! $isSuper) {
+      array_unshift($comingSoon, ['label' => 'About Page', 'icon' => 'layout-template', 'soon' => true]);
+    }
+
     $navGroups = [
       ['label' => '', 'items' => [
         ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard'],
       ]],
-      ['label' => 'Content', 'items' => [
-        ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
-        ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
-        ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'],
-        ['label' => 'Sync non-MBBS countries', 'icon' => 'globe', 'route' => 'admin.country-sync.index', 'match' => 'admin.country-sync'],
-      ]],
-      ['label' => 'Coming soon', 'items' => [
-        ['label' => 'About Page', 'icon' => 'layout-template', 'soon' => true],
-        ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],
-      ]],
+      ['label' => 'Content', 'items' => $contentItems],
+      ['label' => 'Coming soon', 'items' => $comingSoon],
     ];
   @endphp
 
@@ -150,9 +164,9 @@
     <div class="cms-scrim" data-close></div>
 
     <aside class="cms-side">
-      <div class="cms-side-brand">
+      <div class="cms-side-brand @if($isSuper) is-super @endif">
         <span class="mark"><img src="{{ asset('assets/Logo/mark.svg') }}" alt=""></span>
-        <b>{{ config('site.name') }}<span>Content Studio</span></b>
+        <b>{{ config('site.name') }}<span>{{ $isSuper ? 'Super Admin · Content Studio' : 'Content Studio' }}</span></b>
       </div>
 
       <nav class="cms-nav">

@@ -154,12 +154,20 @@ class HeroContent
             ];
         }
 
+        // A freshly-cropped, not-yet-saved background arrives as a base64 data URL
+        // (used only for the live phone preview); keep it whole. A real save first
+        // converts it to a short file URL, so the 1000-char cap still applies there.
+        $rawBackground = trim((string) ($raw['background'] ?? ''));
+        $background = str_starts_with($rawBackground, 'data:image/')
+            ? $rawBackground
+            : $text($rawBackground, 1000);
+
         return [
             'eyebrow' => $text($raw['eyebrow'] ?? '', 120),
             'heading_pre' => $text($raw['heading_pre'] ?? '', 200),
             'heading_highlight' => $text($raw['heading_highlight'] ?? '', 200),
             'heading_post' => $text($raw['heading_post'] ?? '', 200),
-            'background' => $text($raw['background'] ?? '', 1000),
+            'background' => $background,
             'colors' => $colors,
             'styles' => $styles,
             'actions' => $actions,
