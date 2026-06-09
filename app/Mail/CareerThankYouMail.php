@@ -26,7 +26,7 @@ class CareerThankYouMail extends Mailable
     {
         return new Envelope(
             from: new Address(config('site.forms.careers.from'), config('site.forms.careers.from_name')),
-            subject: 'We received your application — One Degree Advisory',
+            subject: 'We received your application - One Degree Advisory',
         );
     }
 

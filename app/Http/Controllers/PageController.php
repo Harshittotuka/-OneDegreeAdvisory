@@ -52,6 +52,11 @@ class PageController extends Controller
         return view('pages.study-abroad');
     }
 
+    public function packages(): View
+    {
+        return view('pages.packages');
+    }
+
     public function contact(): View
     {
         return view('pages.contact');
@@ -76,7 +81,9 @@ class PageController extends Controller
         $data['consent'] = $request->boolean('consent');
 
         try {
-            Mail::to(config('site.forms.contact.to'))->send(new ContactEnquiryMail($data));
+            Mail::mailer(config('site.forms.contact.mailer'))
+                ->to(config('site.forms.contact.to'))
+                ->send(new ContactEnquiryMail($data));
         } catch (\Throwable $e) {
             report($e);
 
@@ -87,7 +94,9 @@ class PageController extends Controller
 
         // Confirmation to the visitor is best-effort — its failure never blocks success.
         try {
-            Mail::to($data['email'])->send(new ContactThankYouMail($data));
+            Mail::mailer(config('site.forms.contact.mailer'))
+                ->to($data['email'])
+                ->send(new ContactThankYouMail($data));
         } catch (\Throwable $e) {
             report($e);
         }
@@ -149,7 +158,9 @@ class PageController extends Controller
         ];
 
         try {
-            Mail::to(config('site.forms.careers.to'))->send(new CareerApplicationMail($data));
+            Mail::mailer(config('site.forms.careers.mailer'))
+                ->to(config('site.forms.careers.to'))
+                ->send(new CareerApplicationMail($data));
         } catch (\Throwable $e) {
             report($e);
 
@@ -159,7 +170,9 @@ class PageController extends Controller
         }
 
         try {
-            Mail::to($data['email'])->send(new CareerThankYouMail($data));
+            Mail::mailer(config('site.forms.careers.mailer'))
+                ->to($data['email'])
+                ->send(new CareerThankYouMail($data));
         } catch (\Throwable $e) {
             report($e);
         }

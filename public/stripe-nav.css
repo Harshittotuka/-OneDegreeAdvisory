@@ -85,6 +85,42 @@
   padding: 0 8px 0 14px;
 }
 
+/* Accent pill that flags the dedicated Packages page — reads as a button in the
+   menu while keeping the nav's pill geometry. Coloured from the theme tokens. */
+.stripe-nav-pill {
+  gap: 6px;
+  padding: 0 16px;
+  color: var(--navy, #1a0088);
+  background: color-mix(in srgb, var(--coral, #ff5e32) 12%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--coral, #ff5e32) 32%, transparent);
+}
+.stripe-nav-pill i,
+.stripe-nav-pill svg {
+  width: 15px;
+  height: 15px;
+  color: var(--coral, #ff5e32);
+}
+.stripe-nav-pill:hover {
+  background: var(--coral, #ff5e32);
+  color: #ffffff;
+}
+.stripe-nav-pill:hover i,
+.stripe-nav-pill:hover svg {
+  color: #ffffff;
+}
+.stripe-nav-pill.is-active {
+  background: var(--coral, #ff5e32);
+  color: #ffffff;
+}
+.stripe-nav-pill.is-active i,
+.stripe-nav-pill.is-active svg {
+  color: #ffffff;
+}
+/* The pill carries its own fill, so suppress the shared underline indicator. */
+.stripe-nav-pill::after {
+  display: none;
+}
+
 .stripe-nav-link::after {
   content: "";
   position: absolute;

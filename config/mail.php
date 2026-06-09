@@ -45,7 +45,31 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => (int) env('MAIL_TIMEOUT', 10),
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'contact_form' => [
+            'transport' => 'smtp',
+            'scheme' => env('CONTACT_MAIL_SCHEME', env('MAIL_SCHEME')),
+            'url' => env('CONTACT_MAIL_URL'),
+            'host' => env('CONTACT_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('CONTACT_MAIL_PORT', env('MAIL_PORT', 2525)),
+            'username' => env('CONTACT_MAIL_USERNAME'),
+            'password' => env('CONTACT_MAIL_PASSWORD'),
+            'timeout' => (int) env('CONTACT_MAIL_TIMEOUT', env('MAIL_TIMEOUT', 10)),
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
+        'careers_form' => [
+            'transport' => 'smtp',
+            'scheme' => env('CAREERS_MAIL_SCHEME', env('MAIL_SCHEME')),
+            'url' => env('CAREERS_MAIL_URL'),
+            'host' => env('CAREERS_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('CAREERS_MAIL_PORT', env('MAIL_PORT', 2525)),
+            'username' => env('CAREERS_MAIL_USERNAME'),
+            'password' => env('CAREERS_MAIL_PASSWORD'),
+            'timeout' => (int) env('CAREERS_MAIL_TIMEOUT', env('MAIL_TIMEOUT', 10)),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 

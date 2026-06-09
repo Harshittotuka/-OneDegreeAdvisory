@@ -36,6 +36,7 @@
       <div class="stripe-nav-menu" data-stripe-menu>
         <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'home']) href="{{ route('home') }}">Home</a>
         <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'about']) href="{{ route('about') }}">About</a>
+        <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'packages']) href="{{ route('packages') }}">Packages</a>
 
         <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'destinations'])
                 type="button" data-stripe-trigger="destinations" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-destinations">

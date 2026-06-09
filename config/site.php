@@ -48,11 +48,13 @@ return [
          - careers: application form on the Careers page */
     'forms' => [
         'contact' => [
-            'to'        => env('CONTACT_FORM_TO', 'Admission@onedegreeadvisory.com'),
-            'from'      => env('CONTACT_FORM_FROM', 'Admission@onedegreeadvisory.com'),
+            'mailer'    => env('CONTACT_FORM_MAILER'),
+            'to'        => env('CONTACT_FORM_TO', 'Admissions@onedegreeadvisory.com'),
+            'from'      => env('CONTACT_FORM_FROM', 'Admissions@onedegreeadvisory.com'),
             'from_name' => env('CONTACT_FORM_FROM_NAME', 'One Degree Advisory'),
         ],
         'careers' => [
+            'mailer'    => env('CAREERS_FORM_MAILER'),
             'to'        => env('CAREERS_FORM_TO', 'Smita@onedegreeadvisory.com'),
             'from'      => env('CAREERS_FORM_FROM', 'Smita@onedegreeadvisory.com'),
             'from_name' => env('CAREERS_FORM_FROM_NAME', 'One Degree Advisory · Careers'),

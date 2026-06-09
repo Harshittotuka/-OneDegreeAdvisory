@@ -26,3 +26,48 @@ The app supports clean URLs like `/contact` and legacy URLs like `/contact.html`
 ```bash
 php artisan test
 ```
+
+## Production Mail
+
+The contact and careers forms send email directly through SMTP. No queue worker
+is required.
+
+Set these on the server for the two Google Workspace mailboxes:
+
+```bash
+MAIL_MAILER=contact_form
+MAIL_FROM_ADDRESS="Admissions@onedegreeadvisory.com"
+MAIL_FROM_NAME="One Degree Advisory"
+MAIL_TIMEOUT=10
+MAIL_EHLO_DOMAIN=onedegreeadvisory.com
+
+CONTACT_FORM_MAILER=contact_form
+CONTACT_MAIL_HOST=smtp.gmail.com
+CONTACT_MAIL_PORT=587
+CONTACT_MAIL_SCHEME=smtp
+CONTACT_MAIL_USERNAME="Admissions@onedegreeadvisory.com"
+CONTACT_MAIL_PASSWORD="PASTE_ADMISSION_GOOGLE_APP_PASSWORD_HERE"
+CONTACT_FORM_TO="Admissions@onedegreeadvisory.com"
+CONTACT_FORM_FROM="Admissions@onedegreeadvisory.com"
+CONTACT_FORM_FROM_NAME="One Degree Advisory"
+
+CAREERS_FORM_MAILER=careers_form
+CAREERS_MAIL_HOST=smtp.gmail.com
+CAREERS_MAIL_PORT=587
+CAREERS_MAIL_SCHEME=smtp
+CAREERS_MAIL_USERNAME="Smita@onedegreeadvisory.com"
+CAREERS_MAIL_PASSWORD="PASTE_SMITA_GOOGLE_APP_PASSWORD_HERE"
+CAREERS_FORM_TO="Smita@onedegreeadvisory.com"
+CAREERS_FORM_FROM="Smita@onedegreeadvisory.com"
+CAREERS_FORM_FROM_NAME="One Degree Advisory Careers"
+```
+
+After changing mail env values:
+
+```bash
+php artisan config:clear
+php artisan mail:doctor
+php artisan mail:test you@example.com --mailer=contact_form
+php artisan mail:test you@example.com --mailer=careers_form
+php artisan config:cache
+```

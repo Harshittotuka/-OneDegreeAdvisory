@@ -28,7 +28,7 @@ class CareerApplicationMail extends Mailable
         return new Envelope(
             from: new Address(config('site.forms.careers.from'), config('site.forms.careers.from_name')),
             replyTo: [new Address($this->data['email'], $this->data['name'])],
-            subject: 'New career application — '.$this->data['name'].' ('.$this->data['role'].')',
+            subject: 'New career application - '.$this->data['name'].' ('.$this->data['role'].')',
         );
     }
 

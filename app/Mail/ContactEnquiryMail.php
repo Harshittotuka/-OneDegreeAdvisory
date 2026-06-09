@@ -28,7 +28,7 @@ class ContactEnquiryMail extends Mailable
         return new Envelope(
             from: new Address(config('site.forms.contact.from'), config('site.forms.contact.from_name')),
             replyTo: [new Address($this->data['email'], $this->data['name'])],
-            subject: 'New website enquiry — '.$this->data['name'],
+            subject: 'New website enquiry - '.$this->data['name'],
         );
     }
 
