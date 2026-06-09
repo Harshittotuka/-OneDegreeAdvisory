@@ -155,7 +155,7 @@
         <p>We don&rsquo;t advertise specific openings &mdash; we hire when the right person walks through the door. Send us your story; if there is a fit, a partner will reach out within ten working days.</p>
 
         <ul class="cr-apply-points">
-          <li><i data-lucide="mail"></i> careers@onedegreeadvisory.com</li>
+          <li><i data-lucide="mail"></i> Smita@onedegreeadvisory.com</li>
           <li><i data-lucide="clock"></i> 10-day reply window</li>
           <li><i data-lucide="lock"></i> Reviewed by a partner, not a bot</li>
         </ul>
@@ -168,7 +168,8 @@
       </aside>
 
       <div class="cr-apply-form-card">
-        <form action="#" method="POST" class="cr-apply-form" novalidate>
+        <form action="{{ route('careers.submit') }}" method="POST" enctype="multipart/form-data" class="cr-apply-form" data-career-form novalidate>
+          @csrf
           <div class="cr-form-row">
             <label class="cr-field" for="applicant-name">
               <span>Full name *</span>
@@ -222,9 +223,31 @@
             <textarea id="applicant-message" name="message" required placeholder="Tell us about your background and what you can bring to the team." rows="5"></textarea>
           </label>
 
+          <div class="cr-field cr-field-full">
+            <span>Resume *</span>
+            <div class="cr-dropzone" data-dropzone>
+              <input id="applicant-resume-file" name="resume_file" type="file"
+                     class="cr-dropzone__input" data-dropzone-input
+                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+              <div class="cr-dropzone__prompt" data-dropzone-prompt>
+                <i data-lucide="upload-cloud" aria-hidden="true"></i>
+                <span class="cr-dropzone__title">Drop your resume here, or <span class="cr-dropzone__browse">browse</span></span>
+                <span class="cr-dropzone__hint">PDF, DOC or DOCX &middot; up to 2&nbsp;MB</span>
+              </div>
+              <div class="cr-dropzone__file" data-dropzone-file hidden>
+                <i data-lucide="file-text" aria-hidden="true"></i>
+                <span class="cr-dropzone__filename" data-dropzone-filename></span>
+                <button type="button" class="cr-dropzone__remove" data-dropzone-remove aria-label="Remove file">
+                  <i data-lucide="x" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <p class="cr-dropzone__error" data-dropzone-error role="alert" hidden></p>
+          </div>
+
           <label class="cr-field cr-field-full" for="applicant-resume">
-            <span>Resume link &mdash; Google Drive, Dropbox, Notion *</span>
-            <input id="applicant-resume" name="resume_link" type="url" required placeholder="Paste a link to your resume">
+            <span>&hellip;or paste a resume link</span>
+            <input id="applicant-resume" name="resume_link" type="url" placeholder="Google Drive, Dropbox or Notion link">
           </label>
 
           <label class="cr-checkbox">
@@ -236,6 +259,7 @@
             <span>Submit application</span>
             <i data-lucide="arrow-up-right"></i>
           </button>
+          <p class="form-status{{ session('form_status') && ! session('form_ok') ? ' form-status--error' : '' }}" role="status" aria-live="polite" data-career-status>{{ session('form_status') }}</p>
         </form>
       </div>
 

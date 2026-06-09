@@ -1,4 +1,5 @@
-<form data-consult-form class="contact-form">
+<form data-consult-form class="contact-form" action="{{ route('contact.submit') }}" method="POST">
+  @csrf
   <div class="contact-form-row">
     <label class="contact-field" for="{{ ($formId ?? 'contact').'-name' }}">
       <span>Full name *</span>
@@ -63,5 +64,5 @@
     <i data-lucide="arrow-up-right"></i>
   </button>
   <p class="contact-privacy">By submitting, you agree to our <a href="#">Privacy Policy</a>. We never share your data.</p>
-  <p class="form-status" role="status" aria-live="polite" data-form-status></p>
+  <p class="form-status{{ session('form_status') && ! session('form_ok') ? ' form-status--error' : '' }}" role="status" aria-live="polite" data-form-status>{{ session('form_status') }}</p>
 </form>

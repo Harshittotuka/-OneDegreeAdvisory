@@ -47,6 +47,7 @@ class MbbsCountryContent
                 'hero_image' => (string) ($page['hero_image'] ?? ''),
                 'hero_heading' => (string) ($page['hero_heading'] ?? ''),
                 'hero_text' => (string) ($page['hero_text'] ?? ''),
+                'hero_badge' => (string) ($page['hero_badge'] ?? ''),
                 'source_updated' => (string) ($page['source_updated'] ?? ''),
                 'facts' => $factsBySlug[$slug] ?? [],
             ];
@@ -82,31 +83,33 @@ class MbbsCountryContent
         $sheets = $this->loadSheets();
 
         $page = $this->firstForSlug($sheets['Pages'] ?? [], $slug);
-        $sections = $this->indexBy(
-            $this->rowsForSlug($sheets['Sections'] ?? [], $slug),
-            'section_key'
-        );
-        $bullets = $this->groupBy(
-            $this->rowsForSlug($sheets['Bullets'] ?? [], $slug),
+
+        $sections = $this->rowsForSlug($sheets['Sections'] ?? [], $slug);
+        usort($sections, fn ($a, $b) => ((int) ($a['section_order'] ?? 0)) <=> ((int) ($b['section_order'] ?? 0)));
+
+        $subpoints = $this->groupBy(
+            $this->rowsForSlug($sheets['Subpoints'] ?? [], $slug),
             'section_key',
-            'bullet_order'
+            'subpoint_order'
         );
-        $subpoints = $this->rowsForSlug($sheets['Subpoints'] ?? [], $slug);
-        usort($subpoints, fn ($a, $b) => ((int) ($a['subpoint_order'] ?? 0)) <=> ((int) ($b['subpoint_order'] ?? 0)));
+
         $facts = $this->rowsForSlug($sheets['Facts'] ?? [], $slug);
         usort($facts, fn ($a, $b) => ((int) ($a['fact_order'] ?? 0)) <=> ((int) ($b['fact_order'] ?? 0)));
 
-        $admissionSteps = $this->rowsForSlug($sheets['AdmissionSteps'] ?? [], $slug);
-        usort($admissionSteps, fn ($a, $b) => ((int) ($a['step_order'] ?? 0)) <=> ((int) ($b['step_order'] ?? 0)));
+        $neet = $this->rowsForSlug($sheets['Neet'] ?? [], $slug);
+        usort($neet, fn ($a, $b) => ((int) ($a['neet_order'] ?? 0)) <=> ((int) ($b['neet_order'] ?? 0)));
+
+        $neetTrend = $this->rowsForSlug($sheets['NeetTrend'] ?? [], $slug);
+        usort($neetTrend, fn ($a, $b) => ((int) ($a['trend_order'] ?? 0)) <=> ((int) ($b['trend_order'] ?? 0)));
 
         return [
             'page' => $page,
             'country' => $this->countryMetaFromPage($page),
-            'sections' => $sections,
-            'bullets' => $bullets,
+            'sections' => $this->indexBy($sections, 'section_key'),
             'subpoints' => $subpoints,
             'facts' => $facts,
-            'admissionSteps' => $admissionSteps,
+            'neet' => $neet,
+            'neetTrend' => $neetTrend,
         ];
     }
 
@@ -139,6 +142,7 @@ class MbbsCountryContent
             'flag' => strtolower((string) ($page['flag_code'] ?? '')),
             'flag_url' => (string) ($page['flag_url'] ?? ''),
             'hero_image' => (string) ($page['hero_image'] ?? ''),
+            'hero_badge' => (string) ($page['hero_badge'] ?? ''),
             'source_updated' => (string) ($page['source_updated'] ?? ''),
         ];
     }

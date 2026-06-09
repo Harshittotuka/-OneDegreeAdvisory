@@ -792,21 +792,258 @@ ready(() => {
     testimonialTrack.addEventListener("pointercancel", onPointerUp);
   }
 
-  if (consultForm && formStatus) {
-    consultForm.addEventListener("submit", (event) => {
+  // ── Public form submission (Contact / Home enquiry + Careers application) ──
+  // Both POST via fetch to their Laravel route, then show the result in a
+  // branded popup (built below) instead of an inline line — the page never
+  // reloads. The CSRF token rides along in the FormData (@csrf hidden field)
+  // and as a header for good measure.
+  const csrfToken = () => {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute("content") : "";
+  };
+
+  /* ---- Result popup: lazy-built once, reused for every submission ---- */
+  const POPUP_ICONS = {
+    success:
+      '<svg class="oda-popup__check" viewBox="0 0 52 52" aria-hidden="true"><circle class="oda-popup__check-circle" cx="26" cy="26" r="24"/><path class="oda-popup__check-mark" d="M15 27l7.5 7.5L37 19"/></svg>',
+    error:
+      '<svg class="oda-popup__check" viewBox="0 0 52 52" aria-hidden="true"><circle class="oda-popup__check-circle" cx="26" cy="26" r="24"/><path class="oda-popup__check-mark" d="M18 18l16 16M34 18L18 34"/></svg>',
+  };
+
+  let popupEl = null;
+  let popupLastFocus = null;
+
+  const closeFormPopup = () => {
+    if (!popupEl || popupEl.hasAttribute("hidden")) return;
+    popupEl.setAttribute("hidden", "");
+    popupEl.setAttribute("aria-hidden", "true");
+    document.documentElement.classList.remove("oda-popup-open");
+    if (popupLastFocus && typeof popupLastFocus.focus === "function") {
+      popupLastFocus.focus();
+    }
+  };
+
+  const buildFormPopup = () => {
+    const el = document.createElement("div");
+    el.className = "oda-popup";
+    el.setAttribute("hidden", "");
+    el.setAttribute("aria-hidden", "true");
+    el.innerHTML =
+      '<div class="oda-popup__backdrop" data-popup-close></div>' +
+      '<div class="oda-popup__card" role="dialog" aria-modal="true" aria-labelledby="oda-popup-title" aria-describedby="oda-popup-message" tabindex="-1">' +
+      '<button class="oda-popup__close" type="button" data-popup-close aria-label="Close">' +
+      '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+      "</button>" +
+      '<div class="oda-popup__icon" data-popup-icon></div>' +
+      '<span class="oda-popup__eyebrow">One Degree Advisory</span>' +
+      '<h3 class="oda-popup__title" id="oda-popup-title" data-popup-title></h3>' +
+      '<p class="oda-popup__message" id="oda-popup-message" data-popup-message></p>' +
+      '<button class="btn btn-primary oda-popup__action" type="button" data-popup-close><span>Done</span></button>' +
+      "</div>";
+    document.body.appendChild(el);
+    el.addEventListener("click", (event) => {
+      if (event.target.closest("[data-popup-close]")) closeFormPopup();
+    });
+    return el;
+  };
+
+  const showFormPopup = ({ type = "success", title = "", message = "" }) => {
+    if (!popupEl) popupEl = buildFormPopup();
+    popupLastFocus = document.activeElement;
+
+    const icon = popupEl.querySelector("[data-popup-icon]");
+    icon.className = "oda-popup__icon oda-popup__icon--" + type;
+    icon.innerHTML = POPUP_ICONS[type] || POPUP_ICONS.success;
+    popupEl.querySelector("[data-popup-title]").textContent = title;
+    popupEl.querySelector("[data-popup-message]").textContent = message;
+
+    popupEl.removeAttribute("hidden");
+    popupEl.setAttribute("aria-hidden", "false");
+    document.documentElement.classList.add("oda-popup-open");
+
+    // Restart the card entrance animation each time the popup opens.
+    const card = popupEl.querySelector(".oda-popup__card");
+    card.style.animation = "none";
+    void card.offsetWidth;
+    card.style.animation = "";
+    card.focus();
+  };
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeFormPopup();
+  });
+
+  const wireFormSubmit = (form) => {
+    if (!form) return;
+
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      if (!consultForm.checkValidity()) {
-        consultForm.reportValidity();
+      if (!form.checkValidity()) {
+        form.reportValidity();
         return;
       }
 
-      const formData = new FormData(consultForm);
-      const name = String(formData.get("name") || "there").trim().split(" ")[0];
-      formStatus.textContent = `Thank you, ${name}. Your enquiry is ready for the One Degree Advisory team.`;
-      consultForm.reset();
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const btnLabel = submitBtn ? submitBtn.querySelector("span") : null;
+      const originalLabel = btnLabel ? btnLabel.textContent : "";
+      if (submitBtn) submitBtn.disabled = true;
+      if (btnLabel) btnLabel.textContent = "Sending…";
+
+      try {
+        const response = await fetch(form.action, {
+          method: "POST",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken(),
+            "X-Requested-With": "XMLHttpRequest",
+            Accept: "application/json",
+          },
+          body: new FormData(form),
+        });
+
+        let payload = {};
+        try {
+          payload = await response.json();
+        } catch (e) {
+          /* non-JSON response — fall through to generic messaging */
+        }
+
+        if (response.ok) {
+          form.reset();
+          showFormPopup({
+            type: "success",
+            title: payload.title || "Thank you!",
+            message: payload.message || "We'll be in touch shortly.",
+          });
+        } else {
+          const firstError =
+            payload.errors && typeof payload.errors === "object"
+              ? (Object.values(payload.errors)[0] || [])[0]
+              : null;
+          showFormPopup({
+            type: "error",
+            title: payload.title || "Something went wrong",
+            message: firstError || payload.message || "Please check the form and try again.",
+          });
+        }
+      } catch (e) {
+        showFormPopup({
+          type: "error",
+          title: "Network error",
+          message: "Please check your connection and try again.",
+        });
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnLabel) btnLabel.textContent = originalLabel;
+      }
     });
-  }
+  };
+
+  wireFormSubmit(consultForm);
+  wireFormSubmit(document.querySelector("[data-career-form]"));
+
+  // ── Resume drag-and-drop uploader (careers form) ──
+  // The native file input is hidden; the styled zone opens it on click and
+  // accepts dropped files by assigning them to the input, so the resume rides
+  // along in the form's FormData on submit.
+  const initResumeDropzone = () => {
+    const zone = document.querySelector("[data-dropzone]");
+    if (!zone) return;
+
+    const input = zone.querySelector("[data-dropzone-input]");
+    const prompt = zone.querySelector("[data-dropzone-prompt]");
+    const fileView = zone.querySelector("[data-dropzone-file]");
+    const filenameEl = zone.querySelector("[data-dropzone-filename]");
+    const removeBtn = zone.querySelector("[data-dropzone-remove]");
+    const errorEl = document.querySelector("[data-dropzone-error]");
+    if (!input) return;
+
+    const MAX_BYTES = 2 * 1024 * 1024; // 2 MB — matches the server + PHP limit
+    const ALLOWED = ["pdf", "doc", "docx"];
+
+    const prettySize = (bytes) => {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    };
+
+    const showError = (msg) => {
+      if (!errorEl) return;
+      errorEl.textContent = msg || "";
+      errorEl.hidden = !msg;
+    };
+
+    const clearFile = () => {
+      input.value = "";
+      zone.classList.remove("has-file");
+      if (fileView) fileView.hidden = true;
+      if (prompt) prompt.hidden = false;
+    };
+
+    const render = () => {
+      showError("");
+      const file = input.files && input.files[0];
+      if (!file) {
+        clearFile();
+        return;
+      }
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (!ALLOWED.includes(ext)) {
+        clearFile();
+        showError("Please upload a PDF, DOC or DOCX file.");
+        return;
+      }
+      if (file.size > MAX_BYTES) {
+        clearFile();
+        showError("That file is over 2 MB. Please upload a smaller file.");
+        return;
+      }
+      if (filenameEl) filenameEl.textContent = file.name + " · " + prettySize(file.size);
+      if (prompt) prompt.hidden = true;
+      if (fileView) fileView.hidden = false;
+      zone.classList.add("has-file");
+    };
+
+    zone.addEventListener("click", (event) => {
+      if (event.target.closest("[data-dropzone-remove]")) return;
+      input.click();
+    });
+
+    input.addEventListener("change", render);
+
+    ["dragenter", "dragover"].forEach((ev) =>
+      zone.addEventListener(ev, (event) => {
+        event.preventDefault();
+        zone.classList.add("is-dragover");
+      })
+    );
+    ["dragleave", "dragend", "drop"].forEach((ev) =>
+      zone.addEventListener(ev, (event) => {
+        event.preventDefault();
+        if (ev === "dragleave" && zone.contains(event.relatedTarget)) return;
+        zone.classList.remove("is-dragover");
+      })
+    );
+
+    zone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const dropped = event.dataTransfer && event.dataTransfer.files;
+      if (dropped && dropped.length) {
+        input.files = dropped; // assign the dropped FileList to the input
+        render();
+      }
+    });
+
+    if (removeBtn) {
+      removeBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        clearFile();
+        showError("");
+      });
+    }
+  };
+
+  initResumeDropzone();
 
   const FALLBACK_CITIES_BY_STATE = {
     "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Tirupati", "Rajahmundry", "Kakinada", "Anantapur", "Chittoor", "Kadapa", "Eluru", "Ongole"],

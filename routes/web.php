@@ -18,9 +18,11 @@ Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/about.html', [PageController::class, 'about'])->name('about.legacy');
 
 Route::get('/careers', [PageController::class, 'careers'])->name('careers');
+Route::post('/careers', [PageController::class, 'submitCareer'])->name('careers.submit');
 
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::get('/contact.html', [PageController::class, 'contact'])->name('contact.legacy');
+Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
 
 Route::get('/blog', [PageController::class, 'blogIndex'])->name('blog.index');
 Route::get('/blog/{slug}', [PageController::class, 'blogPost'])

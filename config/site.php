@@ -41,6 +41,24 @@ return [
         'address' => 'A-16A, Van Vihar colony, Tonk Road, Jaipur, Rajasthan, 302018',
     ],
 
+    /* Where the public website forms deliver to, and which mailbox the team
+       notification + applicant confirmation are sent from. Override per-env
+       in .env so the addresses are not hard-coded.
+         - contact: enquiry form on the Contact + Home pages
+         - careers: application form on the Careers page */
+    'forms' => [
+        'contact' => [
+            'to'        => env('CONTACT_FORM_TO', 'Admission@onedegreeadvisory.com'),
+            'from'      => env('CONTACT_FORM_FROM', 'Admission@onedegreeadvisory.com'),
+            'from_name' => env('CONTACT_FORM_FROM_NAME', 'One Degree Advisory'),
+        ],
+        'careers' => [
+            'to'        => env('CAREERS_FORM_TO', 'Smita@onedegreeadvisory.com'),
+            'from'      => env('CAREERS_FORM_FROM', 'Smita@onedegreeadvisory.com'),
+            'from_name' => env('CAREERS_FORM_FROM_NAME', 'One Degree Advisory · Careers'),
+        ],
+    ],
+
     'socials' => [
         [
             'slug'  => 'instagram',

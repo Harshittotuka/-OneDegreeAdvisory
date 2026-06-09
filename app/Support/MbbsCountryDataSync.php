@@ -16,18 +16,18 @@ class MbbsCountryDataSync extends CountryDataSync
 
     protected function sheets(): array
     {
-        return ['Pages', 'Sections', 'Bullets', 'Subpoints', 'Facts', 'AdmissionSteps'];
+        return ['Pages', 'Facts', 'Sections', 'Subpoints', 'Neet', 'NeetTrend'];
     }
 
     protected function keyFields(): array
     {
         return [
             'Pages' => ['page_slug'],
-            'Sections' => ['page_slug', 'section_key'],
-            'Bullets' => ['page_slug', 'section_key', 'bullet_order'],
-            'Subpoints' => ['page_slug', 'section_key', 'subpoint_order'],
             'Facts' => ['page_slug', 'fact_order'],
-            'AdmissionSteps' => ['page_slug', 'step_order'],
+            'Sections' => ['page_slug', 'section_key'],
+            'Subpoints' => ['page_slug', 'section_key', 'subpoint_order'],
+            'Neet' => ['page_slug', 'neet_order'],
+            'NeetTrend' => ['page_slug', 'trend_order'],
         ];
     }
 
@@ -65,11 +65,11 @@ class MbbsCountryDataSync extends CountryDataSync
     {
         return match ($sheet) {
             'Pages' => ['country', 'page_slug', 'hero_heading'],
-            'Sections' => ['country', 'section_heading'],
-            'Bullets' => ['country', 'section_key', 'bullet_text'],
-            'Subpoints' => ['country', 'section_key', 'subpoint_heading'],
             'Facts' => ['country', 'fact_label', 'fact_value'],
-            'AdmissionSteps' => ['country', 'step_title'],
+            'Sections' => ['country', 'section_heading'],
+            'Subpoints' => ['country', 'section_key', 'subpoint_heading'],
+            'Neet' => ['country', 'category', 'marks'],
+            'NeetTrend' => ['country', 'year', 'general_marks'],
             default => ['country', 'page_slug'],
         };
     }
