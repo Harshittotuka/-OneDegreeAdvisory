@@ -7,17 +7,17 @@
     $enrolLink = 'https://wa.me/' . config('site.contact.phone_e164');
 
     $destinations = [
-        ['flag' => 'DE', 'name' => 'Germany'],
-        ['flag' => 'FR', 'name' => 'France'],
-        ['flag' => 'NL', 'name' => 'Netherlands'],
-        ['flag' => 'IT', 'name' => 'Italy'],
-        ['flag' => 'PL', 'name' => 'Poland'],
-        ['flag' => 'AT', 'name' => 'Austria'],
-        ['flag' => 'SE', 'name' => 'Sweden'],
-        ['flag' => 'LV', 'name' => 'Latvia'],
-        ['flag' => 'LT', 'name' => 'Lithuania'],
-        ['flag' => 'FI', 'name' => 'Finland'],
-        ['flag' => '', 'name' => 'More Destinations Available'],
+        ['code' => 'de', 'name' => 'Germany'],
+        ['code' => 'fr', 'name' => 'France'],
+        ['code' => 'nl', 'name' => 'Netherlands'],
+        ['code' => 'it', 'name' => 'Italy'],
+        ['code' => 'pl', 'name' => 'Poland'],
+        ['code' => 'at', 'name' => 'Austria'],
+        ['code' => 'se', 'name' => 'Sweden'],
+        ['code' => 'lv', 'name' => 'Latvia'],
+        ['code' => 'lt', 'name' => 'Lithuania'],
+        ['code' => 'fi', 'name' => 'Finland'],
+        ['code' => null, 'name' => 'More Destinations'],
     ];
 
     $journey = [
@@ -42,16 +42,16 @@
             'label' => 'Step 3',
             'heading' => 'Visa Application Filing & Interview Preparation',
             'items' => [
-                ['name' => 'Visa Filing', 'desc' => 'Once your admission is received, a visa expert will review your documents.'],
+                ['name' => 'Visa Filing', 'desc' => 'Once your admission offer is received, a visa expert will review your documents.'],
                 ['name' => 'Visa Interview Preparation', 'desc' => 'Prepare for your interview with our expert visa counsellors.'],
             ],
         ],
     ];
 
     $vouchers = [
-        ['tier' => 'Explorer', 'icon' => '🌍', 'amount' => '₹1,000', 'variant' => 'explorer'],
-        ['tier' => 'Achiever', 'icon' => '🏆', 'amount' => '₹2,000', 'variant' => 'achiever-r', 'badge' => '⭐ Popular'],
-        ['tier' => 'Infinity', 'icon' => '♾️', 'amount' => '₹3,000', 'variant' => 'infinity'],
+        ['tier' => 'Explorer', 'icon' => '🌍', 'amount' => '₹2,500', 'variant' => 'explorer'],
+        ['tier' => 'Achiever', 'icon' => '🏆', 'amount' => '₹5,000', 'variant' => 'achiever-r', 'badge' => '⭐ Popular'],
+        ['tier' => 'Infinity', 'icon' => '♾️', 'amount' => '₹10,000', 'variant' => 'infinity'],
     ];
 
     $packages = [
@@ -59,7 +59,7 @@
             'variant' => 'starter',
             'name' => 'Explorer',
             'badge' => 'Explorer',
-            'price' => '₹54,999 + Gst',
+            'price' => '₹54,999 + GST',
             'desc' => 'Perfect for students applying to one European country.',
             'features' => [
                 'Profile Evaluation',
@@ -79,40 +79,41 @@
             'variant' => 'achiever',
             'name' => 'Achiever',
             'badge' => '⭐ Most Popular',
-            'price' => '₹69,999+ Gst',
+            'price' => '₹69,999+ GST',
             'desc' => 'Best for students targeting multiple European countries. (Access to 2 European Countries)',
             'features' => [
                 'Everything in Explorer',
-                'IELTS Preparation Included',
                 'Priority Counsellor Support',
-                'Backup Country Planning',
+                'Maximize Your Chances with Multi-Country Admission Support.',
             ],
         ],
         [
             'variant' => 'elite',
             'name' => 'Infinity',
             'badge' => '♾️ Infinity',
-            'price' => '₹99,999 + Gst',
-            'descHtml' => '<em><em>Admission Guarantee</em> Within Europe – Focused on Your First-Priority Destination</em>*',
+            'price' => '₹99,999 + GST',
+            'desc' => 'Admission Opportunities Across Europe, Centered on Your First-Choice Destination*',
             'features' => [
-                ['html' => 'Everything in Achiever, <strong>Explore Up to 5 European Countries</strong>'],
-                'Premium Counsellor Access',
-                'Extended Post-application Support',
+                ['html' => 'Everything in Achiever, Explore <strong>Up to 5 European Countries</strong>'],
+                'Priority Counsellor Support',
+                'Student–Alumni Interaction',
             ],
         ],
     ];
 
     $notIncluded = [
-        'IELTS / PTE / language exam fees',
-        'University application fees (varies by country/university)',
-        'Visa fees (Schengen or country-specific)',
-        'APS certificate fee (Germany)',
-        'Blocked account deposit (Germany)',
-        'HRD apostille / document legalisation charges',
-        'CIMEA evaluation fees (Italy)',
-        'DOV or equivalent authentication fees',
-        'Any consulate or embassy service charges',
-        ['html' => '<em><em>Admission Guarantee</em> with opportunities to explore multiple European destinations while prioritizing your preferred study destination.</em>*'],
+        'IELTS / PTE / language exam fees.',
+        'University application fees (varies by country/university).',
+        'Visa fees (Schengen or country-specific).',
+        'APS certificate fee (Germany).',
+        'Blocked account deposit (Germany).',
+        'HRD apostille / document legalisation charges.',
+        'CIMEA evaluation fees (Italy).',
+        'DOV or equivalent authentication fees.',
+        'Any consulate or embassy service charges.',
+        'Infinity - Guaranteed admission opportunities with the flexibility to explore multiple European destinations while prioritizing your preferred study destination. *',
+        "For all Public University packages, the consultancy service fee is non-refundable after the student's enrollment has been completed.",
+        ['html' => '<strong>Additional expenses shall be borne by the student.</strong>'],
     ];
 @endphp
 
@@ -345,11 +346,21 @@
   }
 
   .odp-dest-flag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-height: 28px;
     color: var(--file-blue);
     font-size: 28px;
     font-weight: 800;
     line-height: 1;
+  }
+
+  .odp-dest-flag img {
+    width: 36px;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
   }
 
   .odp-dest-name {
@@ -986,7 +997,13 @@
       <div class="odp-dest-flags">
         @foreach ($destinations as $destination)
           <div class="odp-dest-item">
-            <span class="odp-dest-flag">{{ $destination['flag'] }}</span>
+            <span class="odp-dest-flag">
+              @if (!empty($destination['code']))
+                <img src="https://flagcdn.com/{{ $destination['code'] }}.svg" alt="{{ $destination['name'] }} flag" width="36" height="27" loading="lazy">
+              @else
+                🌐
+              @endif
+            </span>
             <span class="odp-dest-name">{{ $destination['name'] }}</span>
           </div>
         @endforeach
