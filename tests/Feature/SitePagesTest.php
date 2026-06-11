@@ -46,12 +46,12 @@ class SitePagesTest extends TestCase
         }
     }
 
-    public function test_admissions_counselling_page_is_linked_from_services_menu(): void
+    public function test_admissions_counselling_page_is_live_and_listed_as_unlinked(): void
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('/services/admissions-counselling', false)
-            ->assertSee('Admissions Counselling');
+            ->assertDontSee('data-stripe-trigger="services"', false)
+            ->assertDontSee('/services/admissions-counselling', false);
 
         $this->get('/services/admissions-counselling')
             ->assertOk()
@@ -59,6 +59,14 @@ class SitePagesTest extends TestCase
             ->assertSee('study&#8209;abroad', false)
             ->assertSee('Australian Admissions')
             ->assertSee('Medicine Admissions');
+
+        $this->withSession(['cms_authenticated' => true]);
+
+        $this->get(route('admin.unlinked-pages.index'))
+            ->assertOk()
+            ->assertSee('Unlinked Pages')
+            ->assertSee('/services/admissions-counselling', false)
+            ->assertSee('Admissions Counselling');
     }
 
     public function test_insights_page_is_removed(): void

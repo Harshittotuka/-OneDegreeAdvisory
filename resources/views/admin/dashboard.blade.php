@@ -234,6 +234,9 @@
       <a class="dsh-act" href="{{ route('admin.notice-bar.index') }}">
         <span class="dsh-ico" style="--c:#28c76f;--cb:#e6f8ee"><i data-lucide="megaphone"></i></span> Notification bar
       </a>
+      <a class="dsh-act" href="{{ route('admin.unlinked-pages.index') }}">
+        <span class="dsh-ico" style="--c:#6e6b7b;--cb:#f0f0f5"><i data-lucide="unlink"></i></span> Unlinked pages
+      </a>
       @if(session('cms_super_admin'))
       <a class="dsh-act" href="{{ route('admin.country-visibility.index') }}">
         <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="eye"></i></span> Country visibility

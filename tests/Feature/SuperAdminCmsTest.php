@@ -112,9 +112,40 @@ class SuperAdminCmsTest extends TestCase
             ->assertSee('Check source changes');
     }
 
-    public function test_country_visibility_tool_hides_frontend_country_pages(): void
+    public function test_updated_nav_is_permanent_and_switcher_is_removed(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('ui-switchers.js', false)
+            ->assertDontSee('data-nav-content-switch', false)
+            ->assertDontSee('data-nav-content-option', false)
+            ->assertDontSee('nav-variant--current', false)
+            ->assertDontSee('nav-variant--updated', false)
+            ->assertDontSee('data-stripe-trigger="services"', false)
+            ->assertDontSee('id="stripe-sec-services"', false)
+            ->assertSee('data-stripe-trigger="courses"', false)
+            ->assertSee('/mbbs/student', false);
+    }
+
+    public function test_cms_lists_unlinked_pages(): void
     {
         $this->withSession(['cms_authenticated' => true]);
+
+        $this->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(route('admin.unlinked-pages.index'), false);
+
+        $this->get(route('admin.unlinked-pages.index'))
+            ->assertOk()
+            ->assertSee('Unlinked Pages')
+            ->assertSee('not linked from the updated primary navigation')
+            ->assertSee('/courses/postgraduate', false)
+            ->assertSee('/services/test-preparation', false);
+    }
+
+    public function test_country_visibility_tool_hides_frontend_country_pages(): void
+    {
+        $this->withSession(['cms_authenticated' => true, 'cms_super_admin' => true]);
 
         $nonMbbsCountries = app(StudyLocationContent::class)->allDestinations();
         $mbbsCountries = app(MbbsCountryContent::class)->allCountries();

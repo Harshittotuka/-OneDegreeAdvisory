@@ -322,18 +322,6 @@
   transform: translateY(-1px);
 }
 
-.stripe-flyout .course-menu-card--disabled {
-  cursor: default;
-}
-
-.stripe-flyout .course-menu-card--disabled:hover {
-  border-color: rgba(15, 41, 56, 0.08);
-  background: #fff;
-  color: inherit;
-  box-shadow: none;
-  transform: none;
-}
-
 .stripe-flyout .course-menu-card--mbbs {
   overflow: hidden;
   border-color: rgba(199, 146, 74, 0.52);

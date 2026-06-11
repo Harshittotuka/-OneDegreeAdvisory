@@ -918,18 +918,6 @@ button {
   transform: translateY(-1px);
 }
 
-.nav-menu .course-menu-card--disabled {
-  cursor: default;
-}
-
-.nav-menu .course-menu-card--disabled:hover {
-  border-color: rgba(15, 41, 56, 0.08);
-  background: #fff;
-  color: inherit;
-  box-shadow: none;
-  transform: none;
-}
-
 .nav-menu .course-menu-card--mbbs:hover {
   border-color: rgba(199, 146, 74, 0.52);
   background:
@@ -23045,94 +23033,9 @@ html[data-color-theme] .study-abroad-page .pathfinder {
   box-shadow: 0 14px 30px rgba(7, 25, 34, 0.18);
 }
 
-/* ============================================================
-   Floating preview switchers — Nav content + Top bar
-   (replaced the old Nav-style + Theme switchers)
-   ============================================================ */
-.ui-switch {
-  position: fixed;
-  left: 24px;
-  z-index: 96;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 6px 9px;
-  border: 1px solid var(--theme-border, rgba(26, 0, 136, 0.14));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--theme-surface-solid, #ffffff) 84%, transparent);
-  color: var(--ink, #13252f);
-  box-shadow: var(--theme-card-shadow, 0 16px 38px rgba(16, 4, 70, 0.16));
-  backdrop-filter: blur(18px) saturate(145%);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
-}
-
-.ui-switch--nav { bottom: 24px; }
-
-.ui-switch__label {
-  padding-left: 4px;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  opacity: 0.55;
-}
-
-.ui-switch__options {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 999px;
-  background: rgba(19, 37, 47, 0.07);
-}
-
-.ui-switch__btn {
-  padding: 6px 12px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink, #13252f);
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
-}
-
-.ui-switch__btn:hover { color: var(--teal-dark, #d8431d); }
-
-.ui-switch__btn[aria-pressed="true"] {
-  background: var(--theme-surface-solid, #ffffff);
-  color: var(--navy, #1a0088);
-  box-shadow: 0 2px 6px rgba(7, 25, 34, 0.16);
-}
-
-@media (max-width: 600px) {
-  .ui-switch {
-    left: 16px;
-    transform: scale(0.86);
-    transform-origin: left bottom;
-  }
-  .ui-switch--nav { bottom: 16px; }
-  .ui-switch__label { display: none; }
-}
-
-/* ---- Nav content variant: Current vs Updated -------------------------- */
-.nav-variant--updated { display: none; }
-html.nav-updated .nav-variant--current { display: none; }
-html.nav-updated .nav-variant--updated { display: block; }
-
-/* Updated nav drops the Services menu entirely. */
-html.nav-updated [data-stripe-trigger="services"],
-html.nav-updated #stripe-sec-services { display: none; }
-
-/* Updated nav destination tweaks: hide Tajikistan, reveal the "Show more" tiles. */
-.dest-more { display: none; }
-html.nav-updated .dest-more { display: flex; }
-html.nav-updated .dest-card--hide-updated { display: none; }
-
 /* "and more" — sits like another country cell in the grid, but non-interactive. */
 .dest-more {
+  display: flex;
   pointer-events: none;
   cursor: default;
 }

@@ -46,14 +46,6 @@
       (function () {
         var root = document.documentElement;
         root.classList.add("js");
-        // Apply persisted preview-switcher choices early to avoid a flash.
-        // (The top-bar variant is set server-side from the CMS; only the Nav
-        // content switcher remains a client-side preview toggle.)
-        try {
-          if (localStorage.getItem("oda:nav-content") === "updated") {
-            root.classList.add("nav-updated");
-          }
-        } catch (e) {}
       })();
     </script>
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
@@ -61,7 +53,6 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="{{ asset('script.js') }}" defer></script>
     <script src="{{ asset('stripe-nav.js') }}" defer></script>
-    <script src="{{ asset('ui-switchers.js') }}" defer></script>
   </head>
   <body class="{{ trim(($bodyClass ?? '').($cmsEdit ? ' cms-editing' : '')) }}">
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
@@ -108,14 +99,6 @@
         <span class="contact-fab__label" data-contact-fab-label>Talk to an advisor</span>
       </a>
     @endunless
-
-    <div class="ui-switch ui-switch--nav" role="group" aria-label="Navigation content" data-nav-content-switch>
-      <span class="ui-switch__label">Nav</span>
-      <div class="ui-switch__options">
-        <button class="ui-switch__btn" type="button" data-nav-content-option="current" aria-pressed="true">Current</button>
-        <button class="ui-switch__btn" type="button" data-nav-content-option="updated" aria-pressed="false">Updated</button>
-      </div>
-    </div>
 
     {{-- JSON is built in PHP so the literal context key is not read as a Blade directive. --}}
     @php($orgJsonLd = json_encode(['@context' => 'https://schema.org', '@type' => 'EducationalOrganization', 'name' => config('site.name'), 'url' => url('/'), 'logo' => asset('assets/Logo/og-image.png'), 'description' => config('site.description'), 'email' => config('site.contact.email'), 'telephone' => config('site.contact.phone'), 'address' => config('site.contact.address'), 'areaServed' => 'Worldwide'], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT))

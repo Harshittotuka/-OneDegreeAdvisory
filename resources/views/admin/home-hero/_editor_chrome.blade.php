@@ -9,7 +9,7 @@
   body.cms-editing { padding-bottom: 64px; }
   .cms-editing main.home-page > *:not(.hero) { opacity: .4; filter: grayscale(.6); pointer-events: none; user-select: none; }
   .cms-editing footer { opacity: .4; filter: grayscale(.6); pointer-events: none; user-select: none; }
-  .cms-editing .contact-fab, .cms-editing .ui-switch, .cms-editing .students-hub-overlay { display: none !important; }
+  .cms-editing .contact-fab, .cms-editing .students-hub-overlay { display: none !important; }
   /* hero stays fully lit + always visible (no scroll-reveal gating) */
   .cms-editing main.home-page > .hero { outline: 3px solid rgba(102,108,255,.55); outline-offset: -3px; }
   .cms-editing .hero .reveal { opacity: 1 !important; transform: none !important; }

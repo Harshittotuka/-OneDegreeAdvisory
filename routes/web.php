@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
+use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\BriefPageController;
 use App\Http\Controllers\PageController;
@@ -122,6 +123,8 @@ Route::prefix('admin')->group(function () {
         /* ── Notice-bar CMS (top blue nav) ── */
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
+
+        Route::get('unlinked-pages', [UnlinkedPagesController::class, 'index'])->name('admin.unlinked-pages.index');
 
         Route::get('country-visibility', [CountryVisibilityController::class, 'edit'])->name('admin.country-visibility.index');
         Route::post('country-visibility', [CountryVisibilityController::class, 'update'])->name('admin.country-visibility.update');
