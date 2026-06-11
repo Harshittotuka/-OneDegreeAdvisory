@@ -1,21 +1,71 @@
 @php
-    $pageTitle       = $post['title'].' | '.config('site.name').' Blog';
-    $pageDescription = $post['excerpt'] ?? config('site.name').' blog article.';
+    use App\Support\Seo;
+
+    $rawSeoTitle     = trim((string) ($post['seo_title'] ?? ''));
+    $pageTitle       = $rawSeoTitle !== '' ? $rawSeoTitle : $post['title'].' | '.config('site.name').' Blog';
+    $pageDescription = Seo::description($post['meta_description'] ?? null, ($post['excerpt'] ?? '') ?: Seo::blogBodyText($post['body'] ?? []));
     $activeNav       = 'blog';
     $mainId          = 'blog-main';
     $bodyClass       = 'page-blog page-blog-post';
+    $canonical       = route('blog.post', $post['slug']);
+    $ogImage         = $post['image'] ?? null;
+    $ogImageAlt      = $post['alt'] ?? $post['title'];
+    $ogType          = 'article';
+    $robots          = ($post['visible'] ?? true) === true ? null : 'noindex, nofollow';
 
     $fmtDate = fn (string $iso): string => date('F j, Y', strtotime($iso));
+    $publishedTime = date(DATE_ATOM, strtotime($post['date']));
+    $modifiedTime = date(DATE_ATOM, strtotime($post['updated_at'] ?? $post['date']));
+    $categories = $post['categories'] ?? array_filter([$post['category'] ?? null]);
+    $articleJsonLd = Seo::jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'BlogPosting',
+        'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $canonical],
+        'headline' => $post['title'],
+        'description' => $pageDescription,
+        'image' => Seo::imageUrl($post['image'] ?? null),
+        'datePublished' => $publishedTime,
+        'dateModified' => $modifiedTime,
+        'author' => ['@type' => 'Person', 'name' => $post['author'] ?? config('site.name')],
+        'publisher' => ['@type' => 'Organization', 'name' => config('site.name'), 'logo' => ['@type' => 'ImageObject', 'url' => asset('assets/Logo/og-image.png')]],
+        'articleSection' => array_values($categories),
+        'wordCount' => str_word_count(Seo::blogBodyText($post['body'] ?? [])),
+        'inLanguage' => 'en',
+    ]);
+    $breadcrumbJsonLd = Seo::jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => route('blog.index')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $post['title'], 'item' => $canonical],
+        ],
+    ]);
 @endphp
 
 @extends('layouts.app')
+
+@push('head')
+  <meta property="article:published_time" content="{{ $publishedTime }}">
+  <meta property="article:modified_time" content="{{ $modifiedTime }}">
+  <meta property="article:author" content="{{ $post['author'] ?? config('site.name') }}">
+  @foreach($categories as $category)
+    <meta property="article:section" content="{{ $category }}">
+  @endforeach
+  <script type="application/ld+json">
+  {!! $articleJsonLd !!}
+  </script>
+  <script type="application/ld+json">
+  {!! $breadcrumbJsonLd !!}
+  </script>
+@endpush
 
 @section('content')
 <main id="blog-main" class="blog-page blog-post">
 
   <header class="blog-post-hero">
     <div class="blog-post-hero-media">
-      <img src="{{ $post['image'] }}" alt="{{ $post['alt'] ?? '' }}" loading="eager">
+      <img src="{{ Seo::imageUrl($post['image'] ?? null) }}" alt="{{ $post['alt'] ?? '' }}" loading="eager" fetchpriority="high" decoding="async">
     </div>
     <div class="container blog-post-hero-copy">
       <a class="blog-post-back" href="{{ route('blog.index') }}">
@@ -90,7 +140,7 @@
 
             @case('image')
               <figure class="blog-post-figure">
-                <img src="{{ $block['url'] }}" alt="{{ $block['alt'] ?? '' }}" loading="lazy">
+                <img src="{{ Seo::imageUrl($block['url'] ?? null) }}" alt="{{ $block['alt'] ?? '' }}" loading="lazy" decoding="async">
                 @if(! empty($block['caption']))
                   <figcaption>{{ $block['caption'] }}</figcaption>
                 @endif
@@ -127,7 +177,7 @@
           @foreach($related as $rel)
             <a class="blog-related-card reveal" href="{{ route('blog.post', $rel['slug']) }}">
               <div class="blog-related-media">
-                <img src="{{ $rel['image'] }}" alt="{{ $rel['alt'] ?? '' }}" loading="lazy">
+                <img src="{{ Seo::imageUrl($rel['image'] ?? null) }}" alt="{{ $rel['alt'] ?? '' }}" loading="lazy" decoding="async">
               </div>
               <div class="blog-related-body">
                 <span class="blog-chip">{{ $rel['category'] }}</span>

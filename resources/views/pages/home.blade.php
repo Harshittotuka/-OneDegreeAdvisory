@@ -65,7 +65,7 @@
           <div class="audience-grid">
             {{--
             <article class="audience-card audience-card-mbbs reveal" data-mbbs-card tabindex="0" aria-expanded="false" aria-controls="mbbs-country-panel">
-              <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=640&q=82" alt="Medical students planning international study pathways">
+              <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=640&q=82" alt="Medical students planning international study pathways" loading="lazy" decoding="async">
               <div>
                 <h3>MBBS Students</h3>
                 <p>Clinical pathways, licensing exams, postgraduate options, research profiles, and country fit.</p>
@@ -92,7 +92,7 @@
             </article>
             --}}
             <article class="audience-card reveal">
-              <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=640&q=82" alt="School students discussing study options">
+              <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=640&q=82" alt="School students discussing study options" loading="lazy" decoding="async">
               <div>
                 <h3>School Students</h3>
                 <p>Subject choices, profile building, summer plans, and early university direction.</p>
@@ -102,7 +102,7 @@
               </a>
             </article>
             <article class="audience-card reveal">
-              <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=640&q=82" alt="College students working together">
+              <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=640&q=82" alt="College students working together" loading="lazy" decoding="async">
               <div>
                 <h3>College Students</h3>
                 <p>Masters planning, internships, research direction, portfolio polish, and tests.</p>
@@ -113,7 +113,7 @@
             </article>
             {{--
             <article class="audience-card reveal">
-              <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=640&q=82" alt="Graduate celebrating at university">
+              <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=640&q=82" alt="Graduate celebrating at university" loading="lazy" decoding="async">
               <div>
                 <h3>Graduates</h3>
                 <p>Career-led university choices, essays, recommendation strategy, and funding.</p>
@@ -124,7 +124,7 @@
             </article>
             --}}
             <article class="audience-card reveal">
-              <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=640&q=82" alt="Working professionals in advisory conversation">
+              <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=640&q=82" alt="Working professionals in advisory conversation" loading="lazy" decoding="async">
               <div>
                 <h3>Working Professionals</h3>
                 <p>MBA, executive programs, career pivot narratives, and return-on-investment planning.</p>
@@ -253,7 +253,7 @@
 
             <div class="destination-grid" data-destination-grid>
               <article class="destination-card reveal" data-group="popular career">
-                <img src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=640&q=82" alt="Historic university campus in the United Kingdom">
+                <img src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=640&q=82" alt="Historic university campus in the United Kingdom" loading="lazy" decoding="async">
                 <div>
                   <span>United Kingdom</span>
                   <h3>Depth, speed, global recognition</h3>
@@ -261,7 +261,7 @@
                 </div>
               </article>
               <article class="destination-card reveal" data-group="popular career">
-                <img src="https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=640&q=82" alt="Students walking across an international campus">
+                <img src="https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=640&q=82" alt="Students walking across an international campus" loading="lazy" decoding="async">
                 <div>
                   <span>Canada</span>
                   <h3>Academic quality with settlement pathways</h3>
@@ -269,7 +269,7 @@
                 </div>
               </article>
               <article class="destination-card reveal" data-group="career">
-                <img src="https://images.unsplash.com/photo-1492538368677-f6e0afe31dcc?auto=format&fit=crop&w=640&q=82" alt="Students studying outdoors on a campus lawn">
+                <img src="https://images.unsplash.com/photo-1492538368677-f6e0afe31dcc?auto=format&fit=crop&w=640&q=82" alt="Students studying outdoors on a campus lawn" loading="lazy" decoding="async">
                 <div>
                   <span>United States</span>
                   <h3>Choice, research, and specialization</h3>
@@ -277,7 +277,7 @@
                 </div>
               </article>
               <article class="destination-card reveal" data-group="popular value">
-                <img src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=640&q=82" alt="University student in a library">
+                <img src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=640&q=82" alt="University student in a library" loading="lazy" decoding="async">
                 <div>
                   <span>Australia</span>
                   <h3>Practical learning and vibrant cities</h3>
@@ -285,7 +285,7 @@
                 </div>
               </article>
               <article class="destination-card reveal" data-group="value career">
-                <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=640&q=82" alt="Library shelves at a university">
+                <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=640&q=82" alt="Library shelves at a university" loading="lazy" decoding="async">
                 <div>
                   <span>Germany</span>
                   <h3>Value-led public education</h3>
@@ -293,7 +293,7 @@
                 </div>
               </article>
               <article class="destination-card reveal" data-group="value">
-                <img src="https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=640&q=82" alt="Graduates standing near campus">
+                <img src="https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=640&q=82" alt="Graduates standing near campus" loading="lazy" decoding="async">
                 <div>
                   <span>Ireland</span>
                   <h3>Compact market, strong industry access</h3>
@@ -383,7 +383,7 @@
           </div>
 
           <div class="about-media reveal">
-            <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1050&q=84" alt="Students and advisor in a university setting">
+            <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1050&q=84" alt="Students and advisor in a university setting" loading="lazy" decoding="async">
             <span class="badge badge-one">Student victory</span>
             <span class="badge badge-two">Dream alignment</span>
             <span class="badge badge-three">AI-assisted research</span>

@@ -9,7 +9,7 @@
             'title' => 'Australian Admissions',
             'kicker' => 'Australia',
             'icon' => 'map-pin',
-            'image' => asset('assets/heroes/australia.jpg'),
+            'image' => asset('assets/heroes/australia.webp'),
             'alt' => 'Australian university campus and city skyline',
             'text' => 'Australia is one of the most preferred destinations for international education due to its globally recognized universities and excellent career opportunities. We assist students with university selection, course guidance, application processing, and visa support for successful admissions in Australia.',
         ],
@@ -17,7 +17,7 @@
             'title' => 'Canadian Admissions',
             'kicker' => 'Canada',
             'icon' => 'leaf',
-            'image' => asset('assets/heroes/canada.jpg'),
+            'image' => asset('assets/heroes/canada.webp'),
             'alt' => 'Students exploring study opportunities in Canada',
             'text' => 'Canada offers world-class education, affordable tuition, and excellent post-study work opportunities. Our counselling services help students choose the right colleges and universities while guiding them through applications, documentation, and admission procedures.',
         ],
@@ -25,7 +25,7 @@
             'title' => 'Europe Admissions',
             'kicker' => 'Europe',
             'icon' => 'landmark',
-            'image' => asset('assets/heroes/europe.jpg'),
+            'image' => asset('assets/heroes/europe.webp'),
             'alt' => 'Historic European university buildings',
             'text' => 'European universities provide high-quality education, globally accepted degrees, and affordable study options. We help students explore top institutions across Europe and assist with admissions, entrance exams, documentation, and visa requirements.',
         ],
@@ -33,7 +33,7 @@
             'title' => 'New Zealand Admissions',
             'kicker' => 'New Zealand',
             'icon' => 'mountain',
-            'image' => asset('assets/heroes/new-zealand.jpg'),
+            'image' => asset('assets/heroes/new-zealand.webp'),
             'alt' => 'New Zealand landscape near an international study destination',
             'text' => 'New Zealand is known for its student-friendly environment and internationally recognized qualifications. Our experts provide complete support for course selection, university applications, scholarships, and student visa processes.',
         ],
@@ -41,7 +41,7 @@
             'title' => 'UK Admissions',
             'kicker' => 'United Kingdom',
             'icon' => 'building-2',
-            'image' => asset('assets/heroes/uk.jpg'),
+            'image' => asset('assets/heroes/uk.webp'),
             'alt' => 'University buildings in the United Kingdom',
             'text' => 'The United Kingdom is home to some of the world\'s leading universities and academic institutions. We guide students through every stage of the UK admission process including university selection, SOP preparation, applications, and visa assistance.',
         ],
@@ -49,7 +49,7 @@
             'title' => 'USA Admissions',
             'kicker' => 'United States',
             'icon' => 'badge-check',
-            'image' => asset('assets/heroes/usa.jpg'),
+            'image' => asset('assets/heroes/usa.webp'),
             'alt' => 'University campus in the United States',
             'text' => 'Studying in the USA offers students access to globally ranked universities, advanced research opportunities, and diverse career pathways. Our counselling services help students with university shortlisting, application strategies, test preparation guidance, and visa support.',
         ],
@@ -113,7 +113,7 @@
 
       <aside class="adm-hero__media reveal" aria-hidden="true">
         <div class="adm-hero__frame">
-          <img src="{{ asset('assets/heroes/uk.jpg') }}" alt="">
+          <img src="{{ asset('assets/heroes/uk.webp') }}" alt="" width="1600" height="900" loading="eager" fetchpriority="high" decoding="async">
         </div>
         <div class="adm-hero__badge">
           <span class="adm-hero__badge-icon"><i data-lucide="award"></i></span>
@@ -127,7 +127,7 @@
   <section class="adm-overview" aria-labelledby="adm-overview-title">
     <div class="container adm-overview__grid">
       <figure class="adm-overview__media reveal">
-        <img src="{{ asset('assets/heroes/canada.jpg') }}" alt="Students planning international admissions with a counsellor" loading="lazy">
+        <img src="{{ asset('assets/heroes/canada.webp') }}" alt="Students planning international admissions with a counsellor" width="1600" height="960" loading="lazy" decoding="async">
         <figcaption class="adm-overview__stamp">
           <i data-lucide="route" aria-hidden="true"></i>
           <span>One journey, carefully sequenced</span>
@@ -164,7 +164,7 @@
         @foreach ($tracks as $track)
           <article class="adm-track reveal">
             <div class="adm-track__media">
-              <img src="{{ $track['image'] }}" alt="{{ $track['alt'] }}" loading="lazy">
+              <img src="{{ $track['image'] }}" alt="{{ $track['alt'] }}" loading="lazy" decoding="async">
               <span class="adm-track__icon" aria-hidden="true"><i data-lucide="{{ $track['icon'] }}"></i></span>
               <span class="adm-track__kicker">{{ $track['kicker'] }}</span>
             </div>

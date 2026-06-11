@@ -12,20 +12,24 @@ use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\BriefPageController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
-Route::get('/index.html', [PageController::class, 'home'])->name('home.legacy');
+Route::permanentRedirect('/index.html', '/');
 
 Route::get('/about', [PageController::class, 'about'])->name('about');
-Route::get('/about.html', [PageController::class, 'about'])->name('about.legacy');
+Route::permanentRedirect('/about.html', '/about');
 
 Route::get('/careers', [PageController::class, 'careers'])->name('careers');
 Route::post('/careers', [PageController::class, 'submitCareer'])->name('careers.submit');
 
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
-Route::get('/contact.html', [PageController::class, 'contact'])->name('contact.legacy');
+Route::permanentRedirect('/contact.html', '/contact');
 Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
+
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 
 Route::get('/blog', [PageController::class, 'blogIndex'])->name('blog.index');
 Route::get('/blog/{slug}', [PageController::class, 'blogPost'])
@@ -41,7 +45,7 @@ Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
 Route::get('/europe', [BriefPageController::class, 'show'])->defaults('slug', 'europe')->name('europe');
-Route::redirect('/packages', '/europe');
+Route::permanentRedirect('/packages', '/europe');
 Route::get('/wednesday-briefings', [BriefPageController::class, 'show'])->defaults('slug', 'wednesday-briefings')->name('wednesday-briefings');
 Route::get('/medicine-and-beyond', [BriefPageController::class, 'show'])->defaults('slug', 'medicine-and-beyond')->name('medicine-and-beyond');
 Route::get('/destination-new-zealand', [BriefPageController::class, 'show'])->defaults('slug', 'destination-new-zealand')->name('destination-new-zealand');

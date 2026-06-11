@@ -72,7 +72,7 @@
           </div>
         </div>
         <div class="inner-hero-right">
-          <img src="{{ asset('assets/test-prep/test-prep-bnr-img.webp') }}" alt="Test Preparation to Study Abroad">
+          <img src="{{ asset('assets/test-prep/test-prep-bnr-img.webp') }}" alt="Test Preparation to Study Abroad" width="540" height="540" loading="eager" fetchpriority="high" decoding="async">
         </div>
       </div>
     </div>
@@ -90,7 +90,7 @@
       <div class="benefit-content-wrap">
         <div class="benefit-img-wrap">
           <div class="benef-sticky-div">
-            <div class="benefit-img"><img src="{{ asset('assets/test-prep/benefit-img.webp') }}" alt=""></div>
+            <div class="benefit-img"><img src="{{ asset('assets/test-prep/benefit-img.webp') }}" alt="" width="738" height="796" loading="lazy" decoding="async"></div>
           </div>
         </div>
         <div class="benefit-content">
@@ -122,7 +122,7 @@
           @foreach ($tests as $test)
             <div class="f-col">
               <div class="prep-corse-box">
-                <div class="prep-cors-img"><img src="{{ $test['img'] }}" alt="{{ $test['title'] }}" loading="lazy"></div>
+                <div class="prep-cors-img"><img src="{{ $test['img'] }}" alt="{{ $test['title'] }}" loading="lazy" decoding="async"></div>
                 <div class="prep-corse-content">
                   <h4 class="prep-cors-title">{{ $test['title'] }}</h4>
                   <div class="comm-para">

@@ -41,9 +41,37 @@ class SitePagesTest extends TestCase
 
     public function test_primary_pages_render(): void
     {
-        foreach (['/', '/index.html', '/about', '/about.html', '/contact', '/contact.html', '/blog', '/blog/one-degree-test-requirements', '/services/admissions-counselling', '/mbbs/student'] as $path) {
+        foreach (['/', '/about', '/contact', '/blog', '/blog/one-degree-test-requirements', '/services/admissions-counselling', '/mbbs/student'] as $path) {
             $this->get($path)->assertOk();
         }
+    }
+
+    public function test_legacy_pages_redirect_to_canonical_urls(): void
+    {
+        foreach ([
+            '/index.html' => '/',
+            '/about.html' => '/about',
+            '/contact.html' => '/contact',
+            '/packages' => '/europe',
+        ] as $from => $to) {
+            $this->get($from)
+                ->assertStatus(301)
+                ->assertRedirect($to);
+        }
+    }
+
+    public function test_seo_files_render(): void
+    {
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
+            ->assertSee('<urlset', false)
+            ->assertSee('<loc>'.url('/').'</loc>', false);
+
+        $this->get('/robots.txt')
+            ->assertOk()
+            ->assertSee('Disallow: /admin/')
+            ->assertSee('Sitemap: https://onedegreeadvisory.com/sitemap.xml');
     }
 
     public function test_admissions_counselling_page_is_live_and_listed_as_unlinked(): void

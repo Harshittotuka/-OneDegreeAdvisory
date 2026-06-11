@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CmsAuth;
 use App\Support\BlogStore;
+use App\Support\Seo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -254,6 +255,8 @@ class BlogCmsController extends Controller
         return $request->validate([
             'title' => ['required', 'string', 'max:200'],
             'slug' => ['nullable', 'string', 'max:200'],
+            'seo_title' => ['nullable', 'string', 'max:200'],
+            'meta_description' => ['nullable', 'string', 'max:300'],
             'categories' => ['nullable', 'array'],
             'categories.*' => ['string', 'max:100'],
             'author' => ['nullable', 'string', 'max:100'],
@@ -270,6 +273,14 @@ class BlogCmsController extends Controller
     {
         $body = $this->sanitizeBody($data['body'] ?? '');
         $desiredSlug = $data['slug'] ?: $data['title'];
+        $bodyText = Seo::blogBodyText($body);
+        $excerpt = Seo::description(
+            $data['excerpt'] ?? '',
+            $bodyText ?: 'Study abroad advice from One Degree Advisory.',
+            240
+        );
+        $seoTitle = Seo::title($data['seo_title'] ?? '', '', 90);
+        $metaDescription = Seo::description($data['meta_description'] ?? '', '', 170);
 
         $categories = array_values(array_unique(array_filter(array_map(
             fn ($c) => trim((string) $c),
@@ -282,13 +293,15 @@ class BlogCmsController extends Controller
         return [
             'slug' => $this->store->uniqueSlug($desiredSlug, $originalSlug),
             'title' => trim($data['title']),
+            'seo_title' => $seoTitle,
+            'meta_description' => $metaDescription,
             'categories' => $categories,
             'category' => $categories[0], // primary category, kept for the public templates
             'date' => $data['date'],
-            'read_time' => (int) ($data['read_time'] ?? 0) ?: $this->estimateReadTime($body, $data['excerpt'] ?? ''),
+            'read_time' => (int) ($data['read_time'] ?? 0) ?: $this->estimateReadTime($body, $excerpt),
             'author' => trim($data['author'] ?? '') ?: 'One Degree',
-            'excerpt' => trim($data['excerpt'] ?? ''),
-            'image' => trim($data['image'] ?? '') ?: '/assets/heroes/uk.jpg',
+            'excerpt' => $excerpt,
+            'image' => trim($data['image'] ?? '') ?: '/assets/heroes/uk.webp',
             'alt' => trim($data['alt'] ?? ''),
             'featured' => $featured,
             'visible' => $visible || $featured, // a featured post is always visible
@@ -404,6 +417,8 @@ class BlogCmsController extends Controller
         return [
             'slug' => '',
             'title' => '',
+            'seo_title' => '',
+            'meta_description' => '',
             'categories' => ['College Admissions'],
             'category' => 'College Admissions',
             'date' => now()->toDateString(),

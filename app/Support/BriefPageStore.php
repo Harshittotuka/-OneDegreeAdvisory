@@ -139,6 +139,7 @@ class BriefPageStore
         $copy['slug'] = $this->uniqueSlug($slug.'-copy');
         $copy['path'] = '/briefs/'.$copy['slug'];
         $copy['title'] = ($source['title'] ?? 'Untitled').' (copy)';
+        $copy['page_title'] = $copy['title'].' | '.config('site.name', 'One Degree Advisory');
         $copy['visible'] = false;
 
         $pages = $this->all();

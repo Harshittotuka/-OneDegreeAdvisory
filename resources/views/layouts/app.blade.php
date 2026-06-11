@@ -13,34 +13,53 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @php
+      $metaTitle = \App\Support\Seo::title($pageTitle ?? null, config('site.name'), 90);
+      $metaDescription = \App\Support\Seo::description($pageDescription ?? null, config('site.description'), 170);
+      $canonicalUrl = \App\Support\Seo::pageUrl($canonical ?? url()->current());
+      $ogImageUrl = \App\Support\Seo::imageUrl($ogImage ?? null);
+      $robotsValue = $robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+      $googleSiteVerification = trim((string) config('services.google.site_verification'));
+      $googleTagId = app()->environment('production') && ! $cmsEdit ? trim((string) config('services.google.tag_id')) : '';
+      $googleTagManagerId = app()->environment('production') && ! $cmsEdit ? trim((string) config('services.google.tag_manager_id')) : '';
+    @endphp
     <meta name="theme-color" content="#1a0088">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="{{ $pageDescription ?? config('site.description') }}">
-    <title>{{ $pageTitle ?? config('site.name') }}</title>
-
-    @php($canonicalUrl = $canonical ?? url()->current())
-    @php($ogImageUrl = isset($ogImage) ? (\Illuminate\Support\Str::startsWith($ogImage, ['http://', 'https://']) ? $ogImage : asset(ltrim($ogImage, '/'))) : asset('assets/Logo/og-image.png'))
+    <meta name="robots" content="{{ $robotsValue }}">
+    <meta name="description" content="{{ $metaDescription }}">
+    @if($googleSiteVerification !== '')
+      <meta name="google-site-verification" content="{{ $googleSiteVerification }}">
+    @endif
+    <title>{{ $metaTitle }}</title>
     <link rel="canonical" href="{{ $canonicalUrl }}">
+    <link rel="alternate" hreflang="en" href="{{ $canonicalUrl }}">
+    <link rel="alternate" hreflang="x-default" href="{{ $canonicalUrl }}">
 
     <link rel="icon" type="image/svg+xml" href="{{ asset('assets/Logo/mark.svg') }}">
     <link rel="icon" type="image/png" href="{{ asset('assets/Logo/favicon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/Logo/favicon.png') }}">
 
     <meta property="og:type" content="{{ $ogType ?? 'website' }}">
+    <meta property="og:locale" content="en_IN">
     <meta property="og:site_name" content="{{ config('site.name') }}">
-    <meta property="og:title" content="{{ $pageTitle ?? config('site.name') }}">
-    <meta property="og:description" content="{{ $pageDescription ?? config('site.description') }}">
+    <meta property="og:title" content="{{ $metaTitle }}">
+    <meta property="og:description" content="{{ $metaDescription }}">
     <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:image" content="{{ $ogImageUrl }}">
+    <meta property="og:image:alt" content="{{ $ogImageAlt ?? config('site.name') }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $pageTitle ?? config('site.name') }}">
-    <meta name="twitter:description" content="{{ $pageDescription ?? config('site.description') }}">
+    <meta name="twitter:title" content="{{ $metaTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
     <meta name="twitter:image" content="{{ $ogImageUrl }}">
 
     @stack('head')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    @if($googleTagManagerId !== '' || $googleTagId !== '')
+      <link rel="preconnect" href="https://www.googletagmanager.com">
+    @endif
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;450;500;600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       (function () {
@@ -48,6 +67,23 @@
         root.classList.add("js");
       })();
     </script>
+    @if($googleTagManagerId !== '')
+      <script>
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer',@json($googleTagManagerId));
+      </script>
+    @elseif($googleTagId !== '')
+      <script async src="https://www.googletagmanager.com/gtag/js?id={{ rawurlencode($googleTagId) }}"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', @json($googleTagId), {'send_page_view': true});
+      </script>
+    @endif
     <link rel="stylesheet" href="{{ asset('styles.css') }}">
     <link rel="stylesheet" href="{{ asset('stripe-nav.css') }}">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
@@ -55,6 +91,9 @@
     <script src="{{ asset('stripe-nav.js') }}" defer></script>
   </head>
   <body class="{{ trim(($bodyClass ?? '').($cmsEdit ? ' cms-editing' : '')) }}">
+    @if($googleTagManagerId !== '')
+      <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ rawurlencode($googleTagManagerId) }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    @endif
     <a class="skip-link" href="#{{ $mainId ?? 'main' }}">Skip to content</a>
 
     @include('partials.header-stripe', ['activeNav' => $activeNav ?? null])
@@ -101,7 +140,10 @@
     @endunless
 
     {{-- JSON is built in PHP so the literal context key is not read as a Blade directive. --}}
-    @php($orgJsonLd = json_encode(['@context' => 'https://schema.org', '@type' => 'EducationalOrganization', 'name' => config('site.name'), 'url' => url('/'), 'logo' => asset('assets/Logo/og-image.png'), 'description' => config('site.description'), 'email' => config('site.contact.email'), 'telephone' => config('site.contact.phone'), 'address' => config('site.contact.address'), 'areaServed' => 'Worldwide'], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT))
+    @php($orgJsonLd = \App\Support\Seo::jsonLd(['@context' => 'https://schema.org', '@graph' => [
+      ['@type' => 'EducationalOrganization', '@id' => url('/#organization'), 'name' => config('site.name'), 'url' => url('/'), 'logo' => ['@type' => 'ImageObject', 'url' => asset('assets/Logo/og-image.png')], 'description' => config('site.description'), 'email' => config('site.contact.email'), 'telephone' => config('site.contact.phone'), 'address' => config('site.contact.address'), 'areaServed' => 'Worldwide', 'sameAs' => array_values(array_filter(array_column(config('site.socials', []), 'href')))],
+      ['@type' => 'WebSite', '@id' => url('/#website'), 'url' => url('/'), 'name' => config('site.name'), 'description' => config('site.description'), 'publisher' => ['@id' => url('/#organization')], 'inLanguage' => 'en'],
+    ]]))
     <script type="application/ld+json">
       {!! $orgJsonLd !!}
     </script>

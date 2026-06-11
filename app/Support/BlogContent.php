@@ -96,7 +96,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'A working placeholder on how policy shifts can ripple through admissions priorities at highly selective universities.',
-            'image' => '/assets/heroes/usa.jpg',
+            'image' => '/assets/heroes/usa.webp',
             'alt' => 'A university setting in the United States.',
             'body' => [
                 ['kind' => 'p', 'text' => 'When federal funding shifts at elite universities, the effects rarely stay confined to research labs and faculty budgets. They ripple outward into hiring, financial aid, graduate funding, and eventually the priorities an admissions office carries into a reading season.'],
@@ -123,7 +123,7 @@ class BlogContent
             'read_time' => 6,
             'author' => 'One Degree',
             'excerpt' => 'A dummy version of a One Degree-style post about testing policies across One Degree for the Class of 2030.',
-            'image' => '/assets/heroes/uk.jpg',
+            'image' => '/assets/heroes/uk.webp',
             'alt' => 'A historic university setting.',
             'body' => [
                 ['kind' => 'p', 'html' => 'In a highly competitive era of elite college admissions, testing requirements remain one of the clearest ways application processes vary among One Degree schools. This dummy copy is here only to preserve the page rhythm while the final editorial content is prepared.'],
@@ -156,7 +156,7 @@ class BlogContent
             'read_time' => 5,
             'author' => 'One Degree',
             'excerpt' => 'Dummy admissions statistics copy for a UCLA-focused article card.',
-            'image' => '/assets/heroes/canada.jpg',
+            'image' => '/assets/heroes/canada.webp',
             'alt' => 'A university campus scene.',
             'body' => [
                 ['kind' => 'p', 'text' => 'UCLA is one of the most applied-to universities in the world, and its acceptance rate reflects that scale. Reading the statistics correctly means separating the headline number from what it tells you about your own chances.'],
@@ -188,7 +188,7 @@ class BlogContent
             'read_time' => 6,
             'author' => 'One Degree',
             'excerpt' => 'A placeholder overview of the institutions with the most selective admissions outcomes.',
-            'image' => '/assets/heroes/australia.jpg',
+            'image' => '/assets/heroes/australia.webp',
             'alt' => 'A global university destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Every cycle, a familiar set of universities posts acceptance rates low enough to make headlines. Understanding why these institutions are so selective is more useful than memorizing the rankings.'],
@@ -218,7 +218,7 @@ class BlogContent
             'read_time' => 4,
             'author' => 'One Degree',
             'excerpt' => 'A dummy deadline guide for Regular Decision planning.',
-            'image' => '/assets/heroes/europe.jpg',
+            'image' => '/assets/heroes/europe.webp',
             'alt' => 'A European study destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Regular Decision gives applicants the most time to strengthen a file, but it also concentrates deadlines into a narrow January window. Planning backward from those dates is the difference between a polished application and a rushed one.'],
@@ -249,7 +249,7 @@ class BlogContent
             'read_time' => 5,
             'author' => 'One Degree',
             'excerpt' => 'A dummy post about early application strategy at Tulane.',
-            'image' => '/assets/heroes/dubai.jpg',
+            'image' => '/assets/heroes/dubai.webp',
             'alt' => 'A modern international study destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Tulane is frequently cited as a school where applying early carries real weight. The university values demonstrated interest, and its admissions patterns reward students who signal that Tulane is a genuine first choice.'],
@@ -274,7 +274,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'A placeholder admissions trends article with One Degree-style card length.',
-            'image' => '/assets/heroes/ireland.jpg',
+            'image' => '/assets/heroes/ireland.webp',
             'alt' => 'Students near a university building.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Conversations about admission rates for any single demographic are easy to sensationalize and hard to read well. The honest version is more nuanced than either side of the usual debate suggests.'],
@@ -299,7 +299,7 @@ class BlogContent
             'read_time' => 6,
             'author' => 'One Degree',
             'excerpt' => 'A dummy list-style article for the blog listing page.',
-            'image' => '/assets/heroes/germany.jpg',
+            'image' => '/assets/heroes/germany.webp',
             'alt' => 'A university destination abroad.',
             'body' => [
                 ['kind' => 'p', 'text' => 'The most selective universities get the headlines, but many less obvious institutions deliver outcomes that rival or exceed them. Building a list around these schools is one of the smartest moves an applicant can make.'],
@@ -330,7 +330,7 @@ class BlogContent
             'read_time' => 8,
             'author' => 'One Degree',
             'excerpt' => 'How to get into Syracuse University including acceptance rate trends, GPA expectations, and key admissions factors.',
-            'image' => '/assets/heroes/france.jpg',
+            'image' => '/assets/heroes/france.webp',
             'alt' => 'A European campus city.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into Syracuse University starts with understanding how its admissions office reads a file: not as a checklist of numbers, but as a story about whether a student will thrive across its mix of strong professional and liberal-arts programs.'],
@@ -357,7 +357,7 @@ class BlogContent
             'read_time' => 8,
             'author' => 'One Degree',
             'excerpt' => 'How to get into Indiana University including acceptance rate trends, class rank data, and key factors.',
-            'image' => '/assets/heroes/italy.jpg',
+            'image' => '/assets/heroes/italy.webp',
             'alt' => 'A historic international university city.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into Indiana University Bloomington means showing that you fit a large, academically broad public flagship known for its Kelley School of Business, music program, and strong research culture.'],
@@ -384,7 +384,7 @@ class BlogContent
             'read_time' => 8,
             'author' => 'One Degree',
             'excerpt' => 'How to get into UC Santa Cruz including acceptance rate trends, GPA expectations, and admissions factors.',
-            'image' => '/assets/heroes/netherlands.jpg',
+            'image' => '/assets/heroes/netherlands.webp',
             'alt' => 'An international study destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into UC Santa Cruz means navigating the University of California system, where the application is read holistically and the personal insight questions carry real weight alongside your academic record.'],
@@ -411,7 +411,7 @@ class BlogContent
             'read_time' => 8,
             'author' => 'One Degree',
             'excerpt' => 'How to get into UC Irvine with acceptance rate insights, GPA ranges, and admissions requirements.',
-            'image' => '/assets/heroes/spain.jpg',
+            'image' => '/assets/heroes/spain.webp',
             'alt' => 'A warm international campus setting.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into UC Irvine means standing out in one of the largest applicant pools in the country, where holistic review and strong performance in core subjects shape the decision.'],
@@ -438,7 +438,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'How to get into Bucknell University with acceptance rate insights and admissions requirements.',
-            'image' => '/assets/heroes/new-zealand.jpg',
+            'image' => '/assets/heroes/new-zealand.webp',
             'alt' => 'A scenic study destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into Bucknell University means presenting yourself to a selective liberal-arts university that values academic seriousness, community fit, and demonstrated interest in equal measure.'],
@@ -465,7 +465,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'How to get into College of the Holy Cross with acceptance rate trends and class rank data.',
-            'image' => '/assets/heroes/finland.jpg',
+            'image' => '/assets/heroes/finland.webp',
             'alt' => 'A northern European study destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into the College of the Holy Cross means showing fit with a selective Jesuit liberal-arts college that prizes intellectual curiosity, character, and a commitment to its values-driven mission.'],
@@ -492,7 +492,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'How to get into Brandeis University with a breakdown of acceptance rate and holistic review.',
-            'image' => '/assets/heroes/belgium.jpg',
+            'image' => '/assets/heroes/belgium.webp',
             'alt' => 'A European university destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into Brandeis University means appealing to a research-driven institution with deep strengths in the sciences, social justice, and the liberal arts, where holistic review weighs intellectual engagement heavily.'],
@@ -519,7 +519,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'How to get into Case Western Reserve University with acceptance rate and admissions data.',
-            'image' => '/assets/heroes/poland.jpg',
+            'image' => '/assets/heroes/poland.webp',
             'alt' => 'A study abroad destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into Case Western Reserve University means demonstrating real strength in STEM and pre-health while showing the curiosity and balance the university looks for in a rigorous, research-intensive environment.'],
@@ -546,7 +546,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'How to get into Bates College with class rank data, academic expectations, and application insights.',
-            'image' => '/assets/heroes/malta.jpg',
+            'image' => '/assets/heroes/malta.webp',
             'alt' => 'A coastal study destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into Bates College means connecting with a selective liberal-arts college that has long been test-optional and reads applications for character, curiosity, and fit as much as for numbers.'],
@@ -573,7 +573,7 @@ class BlogContent
             'read_time' => 7,
             'author' => 'One Degree',
             'excerpt' => 'How to get into Virginia Tech including acceptance rate trends, GPA expectations, and key factors.',
-            'image' => '/assets/heroes/georgia.jpg',
+            'image' => '/assets/heroes/georgia.webp',
             'alt' => 'A global education destination.',
             'body' => [
                 ['kind' => 'p', 'text' => 'Getting into Virginia Tech means appealing to a large public university known for engineering, technology, and a strong sense of community built around its Ut Prosim ("That I May Serve") motto.'],

@@ -200,10 +200,11 @@ class PageController extends Controller
             ->with('form_status', trim($title.' '.$message));
     }
 
-    public function blogIndex(Request $request, BlogContent $blog): View
+    public function blogIndex(Request $request, BlogContent $blog): View|RedirectResponse
     {
         $perPage = 9;
-        $page    = max(1, (int) $request->query('page', 1));
+        $requestedPage = max(1, (int) $request->query('page', 1));
+        $page = $requestedPage;
 
         // Only show posts whose visibility is on (default true for legacy posts).
         $allPosts = array_values(array_filter(
@@ -224,6 +225,11 @@ class PageController extends Controller
         $allPosts = array_values($allPosts);
 
         $totalPages = max(1, (int) ceil(count($allPosts) / $perPage));
+
+        if ($requestedPage > $totalPages) {
+            return redirect()->to($totalPages === 1 ? route('blog.index') : route('blog.index', ['page' => $totalPages]), 301);
+        }
+
         $page       = min($page, $totalPages);
         $posts      = array_slice($allPosts, ($page - 1) * $perPage, $perPage);
 
@@ -243,7 +249,7 @@ class PageController extends Controller
     public function blogPost(string $slug, BlogContent $blog): View
     {
         $post = $blog->forSlug($slug);
-        abort_unless($post, 404);
+        abort_unless($post && (($post['visible'] ?? true) === true || session('cms_authenticated')), 404);
 
         return view('pages.blog-post', [
             'post'    => $post,

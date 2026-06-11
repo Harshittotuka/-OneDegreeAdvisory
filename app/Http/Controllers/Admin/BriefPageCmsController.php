@@ -7,6 +7,7 @@ use App\Support\BriefPageStore;
 use App\Support\BriefPresets;
 use App\Support\BriefSchema;
 use App\Support\PersistsInlineImages;
+use App\Support\Seo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,7 +51,7 @@ class BriefPageCmsController extends Controller
             'slug' => $slug,
             'path' => '/briefs/'.$slug,
             'title' => trim((string) $request->input('title')),
-            'page_title' => trim((string) $request->input('title')).' | One Degree Advisory',
+            'page_title' => '',
             'meta_description' => '',
             'visible' => false,
             'sections' => [
@@ -132,13 +133,13 @@ class BriefPageCmsController extends Controller
         }
 
         $page['title'] = mb_substr(trim((string) $request->input('title', $page['title'] ?? 'Untitled')), 0, 160) ?: 'Untitled';
-        $page['page_title'] = mb_substr(trim((string) $request->input('page_title', $page['page_title'] ?? '')), 0, 200);
-        $page['meta_description'] = mb_substr(trim((string) $request->input('meta_description', $page['meta_description'] ?? '')), 0, 300);
         $page['visible'] = $request->boolean('visible');
         $page['path'] = $this->cleanPath((string) $request->input('path', $page['path'] ?? ''), $page);
         // Inline (freshly cropped/uploaded) images → disk, then sanitize every block.
         $layout = $this->persistInlineImages($layout, 'brief');
         $page['layout'] = $this->sanitizeLayout($layout);
+        $page['page_title'] = Seo::title((string) $request->input('page_title', $page['page_title'] ?? ''), '', 90);
+        $page['meta_description'] = Seo::description((string) $request->input('meta_description', $page['meta_description'] ?? ''), '', 170);
         unset($page['sections']); // fully migrated to the grid layout
 
         $this->store->save($page, $slug);

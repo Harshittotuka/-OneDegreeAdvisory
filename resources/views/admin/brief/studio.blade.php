@@ -322,8 +322,8 @@
     <div class="st-form-head"><i data-lucide="file-cog"></i> Page settings</div>
     <div class="bp-fields">
       <div class="bp-field"><label>Page title</label><input type="text" id="bp-title" value="{{ $page['title'] ?? '' }}"></div>
-      <div class="bp-field"><label>SEO title</label><input type="text" id="bp-page-title" value="{{ $page['page_title'] ?? '' }}"></div>
-      <div class="bp-field"><label>Meta description</label><textarea id="bp-meta-desc">{{ $page['meta_description'] ?? '' }}</textarea></div>
+      <div class="bp-field"><label>SEO title <span class="bp-hint">optional</span></label><input type="text" id="bp-page-title" value="{{ $page['page_title'] ?? '' }}" placeholder="Auto: page title + One Degree Advisory"></div>
+      <div class="bp-field"><label>Meta description <span class="bp-hint">optional</span></label><textarea id="bp-meta-desc" placeholder="Auto: compact summary from visible page content">{{ $page['meta_description'] ?? '' }}</textarea></div>
       <div class="bp-field bp-field--check"><label class="bp-check"><input type="checkbox" id="bp-visible" @checked($page['visible'] ?? false)> <span>Published (visible to everyone)</span></label></div>
       <div class="bp-field">
         <label>URL path <span class="bp-hint">e.g. /destination-canada — letters, numbers, dashes</span></label>

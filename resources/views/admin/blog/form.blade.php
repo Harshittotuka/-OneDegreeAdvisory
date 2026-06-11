@@ -125,6 +125,16 @@
             <textarea id="excerpt" name="excerpt" maxlength="400">{{ old('excerpt', $post['excerpt']) }}</textarea>
             <div class="hint">Shown on the blog listing and as the lead paragraph.</div>
           </div>
+          <div class="field" style="margin-top:16px;">
+            <label for="seo_title">SEO title</label>
+            <input type="text" id="seo_title" name="seo_title" maxlength="200" value="{{ old('seo_title', $post['seo_title'] ?? '') }}" placeholder="Optional custom search title">
+            <div class="hint">Optional. Leave blank to use the post title with the One Degree brand.</div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="meta_description">Meta description</label>
+            <textarea id="meta_description" name="meta_description" maxlength="300">{{ old('meta_description', $post['meta_description'] ?? '') }}</textarea>
+            <div class="hint">Optional. Leave blank to generate it from the excerpt or article body.</div>
+          </div>
         </div>
 
         <div class="panel panel-pad">

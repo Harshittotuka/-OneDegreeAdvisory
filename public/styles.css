@@ -7028,25 +7028,25 @@ html[data-color-theme] .site-socials .site-social {
   color: white;
 }
 
-.country-hero--australia { --country-hero-img: url("assets/heroes/australia.jpg"); }
-.country-hero--belgium { --country-hero-img: url("assets/heroes/belgium.jpg"); }
-.country-hero--canada { --country-hero-img: url("assets/heroes/canada.jpg"); }
-.country-hero--dubai { --country-hero-img: url("assets/heroes/dubai.jpg"); }
-.country-hero--europe { --country-hero-img: url("assets/heroes/europe.jpg"); }
-.country-hero--finland { --country-hero-img: url("assets/heroes/finland.jpg"); }
-.country-hero--france { --country-hero-img: url("assets/heroes/france.jpg"); }
-.country-hero--georgia { --country-hero-img: url("assets/heroes/georgia.jpg"); }
-.country-hero--germany { --country-hero-img: url("assets/heroes/germany.jpg"); }
-.country-hero--ireland { --country-hero-img: url("assets/heroes/ireland.jpg"); }
-.country-hero--italy { --country-hero-img: url("assets/heroes/italy.jpg"); }
-.country-hero--kazakhstan { --country-hero-img: url("assets/heroes/kazakhstan.jpg"); }
-.country-hero--malta { --country-hero-img: url("assets/heroes/malta.jpg"); }
-.country-hero--netherlands { --country-hero-img: url("assets/heroes/netherlands.jpg"); }
-.country-hero--new-zealand { --country-hero-img: url("assets/heroes/new-zealand.jpg"); }
-.country-hero--poland { --country-hero-img: url("assets/heroes/poland.jpg"); }
-.country-hero--spain { --country-hero-img: url("assets/heroes/spain.jpg"); }
-.country-hero--uk { --country-hero-img: url("assets/heroes/uk.jpg"); }
-.country-hero--usa { --country-hero-img: url("assets/heroes/usa.jpg"); }
+.country-hero--australia { --country-hero-img: url("assets/heroes/australia.webp"); }
+.country-hero--belgium { --country-hero-img: url("assets/heroes/belgium.webp"); }
+.country-hero--canada { --country-hero-img: url("assets/heroes/canada.webp"); }
+.country-hero--dubai { --country-hero-img: url("assets/heroes/dubai.webp"); }
+.country-hero--europe { --country-hero-img: url("assets/heroes/europe.webp"); }
+.country-hero--finland { --country-hero-img: url("assets/heroes/finland.webp"); }
+.country-hero--france { --country-hero-img: url("assets/heroes/france.webp"); }
+.country-hero--georgia { --country-hero-img: url("assets/heroes/georgia.webp"); }
+.country-hero--germany { --country-hero-img: url("assets/heroes/germany.webp"); }
+.country-hero--ireland { --country-hero-img: url("assets/heroes/ireland.webp"); }
+.country-hero--italy { --country-hero-img: url("assets/heroes/italy.webp"); }
+.country-hero--kazakhstan { --country-hero-img: url("assets/heroes/kazakhstan.webp"); }
+.country-hero--malta { --country-hero-img: url("assets/heroes/malta.webp"); }
+.country-hero--netherlands { --country-hero-img: url("assets/heroes/netherlands.webp"); }
+.country-hero--new-zealand { --country-hero-img: url("assets/heroes/new-zealand.webp"); }
+.country-hero--poland { --country-hero-img: url("assets/heroes/poland.webp"); }
+.country-hero--spain { --country-hero-img: url("assets/heroes/spain.webp"); }
+.country-hero--uk { --country-hero-img: url("assets/heroes/uk.webp"); }
+.country-hero--usa { --country-hero-img: url("assets/heroes/usa.webp"); }
 
 .country-hero::before {
   content: "";
@@ -20933,7 +20933,7 @@ body.tp-body {
 }
 
 .tp-edwise .inner-hero-2 {
-  background: url(/assets/test-prep/inner-hero-bg-2.png) center top no-repeat;
+  background: url(/assets/test-prep/inner-hero-bg-2.webp) center top no-repeat;
   background-size: contain;
 }
 

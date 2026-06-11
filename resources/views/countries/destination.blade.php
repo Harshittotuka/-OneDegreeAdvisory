@@ -1,4 +1,6 @@
 @php
+    use App\Support\Seo;
+
     $page = $studyContent['page'] ?? [];
     $sectionCopy = $studyContent['sectionCopy'] ?? [];
     $whyCards = array_slice($studyContent['whyCards'] ?? [], 0, 6);
@@ -17,8 +19,9 @@
     $countryName = $destination['name'] ?? $page['country'] ?? '';
     $countryLabel = $page['country'] ?? $countryName;
 
-    $pageTitle = $page['seo_title'] ?? $page['page_title'] ?? '';
-    $pageDescription = $page['seo_description'] ?? '';
+    $pageTitle = ($page['seo_title'] ?? $page['page_title'] ?? '') ?: 'Study in '.$countryName.' | '.config('site.name');
+    $pageDescription = Seo::description($page['seo_description'] ?? null, $text('hero_lead') ?: 'Study in '.$countryName.' with One Degree Advisory.', 170);
+    $canonical = route('country.show', $countrySlug);
     $activeNav = 'destinations';
     $mainId = 'country-main';
     $bodyClass = 'page-study-location-dynamic page-country-v2';
@@ -75,7 +78,7 @@
     // (e.g. Europe) scraped only lazy-load placeholders, which validImages() drops,
     // leaving none — so fall back to the country's hero photo instead of an empty
     // <img>. hero_image is an asset path, so wrap it in asset() for a real URL.
-    $heroPhoto = ($destination['hero_image'] ?? '') !== '' ? asset($destination['hero_image']) : '';
+    $heroPhoto = ($destination['hero_image'] ?? '') !== '' ? Seo::imageUrl($destination['hero_image']) : '';
     $bannerImage = (string) ($featureImages[0]['image_url'] ?? '') ?: $heroPhoto;
     $bannerImageAlt = (string) ($featureImages[0]['image_alt'] ?? '') ?: $countryLabel;
     $intakeImage = (string) ($featureImages[1]['image_url'] ?? ($featureImages[0]['image_url'] ?? '')) ?: $heroPhoto;
@@ -83,7 +86,8 @@
     $icons = ['award', 'clock', 'briefcase', 'badge-check', 'flask-conical', 'globe-2'];
 
     // Per-country SEO: social share image + canonical (URL is already unique per country).
-    $ogImage = (string) ($destination['hero_image'] ?? '') ?: $bannerImage;
+    $ogImage = $heroPhoto ?: $bannerImage;
+    $ogImageAlt = $bannerImageAlt;
     $ogType = 'article';
 
     // JSON-LD built here (raw PHP) so the literal '@context' key is never parsed
@@ -94,7 +98,7 @@
         'itemListElement' => [
             ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
             ['@type' => 'ListItem', 'position' => 2, 'name' => 'Destinations', 'item' => route('home').'#destinations'],
-            ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => url()->current()],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => $canonical],
         ],
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $webPageJsonLd = json_encode(array_filter([
@@ -102,7 +106,7 @@
         '@type' => 'WebPage',
         'name' => $pageTitle,
         'description' => $pageDescription,
-        'url' => url()->current(),
+        'url' => $canonical,
         'about' => $countryName !== '' ? ['@type' => 'Place', 'name' => $countryName] : null,
         'inLanguage' => 'en',
         'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => route('home')],
@@ -201,7 +205,7 @@
     <div class="container">
       <div class="country-band country-band--wide">
         @if($bannerImage !== '')
-          <img src="{{ $bannerImage }}" alt="{{ $bannerImageAlt }}">
+          <img src="{{ $bannerImage }}" alt="{{ $bannerImageAlt }}" loading="lazy" decoding="async">
         @endif
         <div class="band-inner">
           <span class="eyebrow">{{ $indianStudents['subtitle'] ?: $text('indian_subtitle_fallback') }}</span>
@@ -304,7 +308,7 @@
       <div class="dynamic-intake-board">
         <article class="dynamic-intake-feature">
           @if($intakeImage !== '')
-            <img class="dynamic-intake-feature__image" src="{{ $intakeImage }}" alt="{{ $intakeImageAlt }}" loading="lazy">
+            <img class="dynamic-intake-feature__image" src="{{ $intakeImage }}" alt="{{ $intakeImageAlt }}" loading="lazy" decoding="async">
           @endif
           <span class="dynamic-intake-feature__veil" aria-hidden="true"></span>
           <div class="dynamic-intake-feature__body">

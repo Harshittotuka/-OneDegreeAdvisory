@@ -1,2 +1,6 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /up
+Disallow: /preview/
+
+Sitemap: https://onedegreeadvisory.com/sitemap.xml

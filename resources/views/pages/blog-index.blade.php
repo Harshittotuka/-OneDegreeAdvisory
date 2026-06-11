@@ -1,19 +1,53 @@
 @php
-    $pageTitle       = 'Blog | '.config('site.name');
-    $pageDescription = 'Practical, evidence-led writing on global admissions, scholarships, applications, testing, and university strategy.';
+    use App\Support\Seo;
+
+    $pageTitle       = $page > 1 ? 'Blog Page '.$page.' | '.config('site.name') : 'Blog | '.config('site.name');
+    $pageDescription = $page > 1
+      ? 'Page '.$page.' of the One Degree Advisory journal: practical writing on admissions, scholarships, applications, testing, and university strategy.'
+      : 'Practical, evidence-led writing on global admissions, scholarships, applications, testing, and university strategy.';
     $activeNav       = 'blog';
     $mainId          = 'blog-main';
     $bodyClass       = 'page-blog';
+    $canonical       = $page > 1 ? route('blog.index', ['page' => $page]) : route('blog.index');
 
     $fmtDate = fn (string $iso): string => date('F j, Y', strtotime($iso));
+    $pageUrl = fn (int $p): string => $p <= 1 ? route('blog.index') : route('blog.index', ['page' => $p]);
 
     $featured = $posts[0] ?? null;
     $gridPosts = array_values(array_slice($posts, 1));
     $topPosts = array_slice($gridPosts, 0, 5);
     $masonryPosts = array_slice($gridPosts, 5);
+    $itemListJsonLd = Seo::jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'Blog',
+        'name' => 'The One Degree Journal',
+        'description' => $pageDescription,
+        'url' => $canonical,
+        'publisher' => ['@type' => 'Organization', 'name' => config('site.name'), 'url' => route('home')],
+        'blogPost' => array_values(array_map(fn (array $post): array => [
+            '@type' => 'BlogPosting',
+            'headline' => $post['title'] ?? '',
+            'url' => route('blog.post', $post['slug'] ?? ''),
+            'datePublished' => $post['date'] ?? null,
+            'image' => Seo::imageUrl($post['image'] ?? null),
+            'description' => Seo::description($post['meta_description'] ?? null, $post['excerpt'] ?? null),
+        ], $posts)),
+    ]);
 @endphp
 
 @extends('layouts.app')
+
+@push('head')
+  @if($page > 1)
+    <link rel="prev" href="{{ $pageUrl($page - 1) }}">
+  @endif
+  @if($page < $totalPages)
+    <link rel="next" href="{{ $pageUrl($page + 1) }}">
+  @endif
+  <script type="application/ld+json">
+  {!! $itemListJsonLd !!}
+  </script>
+@endpush
 
 @section('content')
 <main id="blog-main" class="blog-page">
@@ -34,7 +68,7 @@
       @if($featured)
         <article class="blog-featured-post reveal">
           <a class="blog-featured-media" href="{{ route('blog.post', $featured['slug']) }}" aria-label="Read: {{ $featured['title'] }}">
-            <img src="{{ $featured['image'] }}" alt="{{ $featured['alt'] ?? '' }}" loading="lazy">
+            <img src="{{ Seo::imageUrl($featured['image'] ?? null) }}" alt="{{ $featured['alt'] ?? '' }}" loading="eager" fetchpriority="high" decoding="async">
           </a>
           <div class="blog-featured-copy">
             <div class="blog-card-chips">
@@ -82,7 +116,7 @@
           @foreach($topPosts as $post)
             <article class="blog-grid-card reveal">
               <a class="blog-grid-card-media" href="{{ route('blog.post', $post['slug']) }}" aria-label="Read: {{ $post['title'] }}">
-                <img src="{{ $post['image'] }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy">
+                <img src="{{ Seo::imageUrl($post['image'] ?? null) }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy" decoding="async">
               </a>
               <div class="blog-grid-card-body">
                 <div class="blog-card-chips">
@@ -109,7 +143,7 @@
             @foreach($masonryPosts as $post)
               <article class="blog-grid-card reveal">
                 <a class="blog-grid-card-media" href="{{ route('blog.post', $post['slug']) }}" aria-label="Read: {{ $post['title'] }}">
-                  <img src="{{ $post['image'] }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy">
+                  <img src="{{ Seo::imageUrl($post['image'] ?? null) }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy" decoding="async">
                 </a>
                 <div class="blog-grid-card-body">
                   <div class="blog-card-chips">
@@ -136,7 +170,7 @@
       @if($totalPages > 1)
         <nav class="blog-pagination" aria-label="Blog pagination">
           @if($page > 1)
-            <a class="blog-pagination-arrow" href="{{ route('blog.index') }}?page={{ $page - 1 }}" rel="prev" aria-label="Previous page">
+            <a class="blog-pagination-arrow" href="{{ $pageUrl($page - 1) }}" rel="prev" aria-label="Previous page">
               <i data-lucide="chevron-left"></i>
             </a>
           @endif
@@ -145,12 +179,12 @@
             @if($p === $page)
               <span class="blog-pagination-page is-current" aria-current="page">{{ $p }}</span>
             @else
-              <a class="blog-pagination-page" href="{{ route('blog.index') }}?page={{ $p }}">{{ $p }}</a>
+              <a class="blog-pagination-page" href="{{ $pageUrl($p) }}">{{ $p }}</a>
             @endif
           @endfor
 
           @if($page < $totalPages)
-            <a class="blog-pagination-arrow" href="{{ route('blog.index') }}?page={{ $page + 1 }}" rel="next" aria-label="Next page">
+            <a class="blog-pagination-arrow" href="{{ $pageUrl($page + 1) }}" rel="next" aria-label="Next page">
               <i data-lucide="chevron-right"></i>
             </a>
           @endif

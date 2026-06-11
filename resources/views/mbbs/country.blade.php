@@ -1,4 +1,5 @@
 @php
+    use App\Support\Seo;
     use Illuminate\Support\Str;
 
     $page      = $mbbsContent['page']      ?? [];
@@ -11,15 +12,42 @@
     $countryName = $page['country']   ?? ($countryMeta['name'] ?? Str::headline($countrySlug));
     $countryFlag = $page['flag_code'] ?? ($countryMeta['flag'] ?? '');
     $flagUrl     = $page['flag_url']  ?? ($countryMeta['flag_url'] ?? '');
-    $heroImage   = $page['hero_image'] ?? ($countryMeta['hero_image'] ?? '');
+    $rawHeroImage = $page['hero_image'] ?? ($countryMeta['hero_image'] ?? '');
+    $heroImage   = trim((string) $rawHeroImage) !== '' ? Seo::imageUrl($rawHeroImage) : '';
     $heroBadge   = trim((string) ($page['hero_badge'] ?? ''));
     $updated     = trim((string) ($page['source_updated'] ?? ''));
 
-    $pageTitle       = ($page['page_title'] ?? 'MBBS in '.$countryName).' | One Degree Advisory';
-    $pageDescription = $page['hero_text'] ?? 'Study MBBS in '.$countryName.' with One Degree Advisory.';
+    $basePageTitle = trim((string) ($page['page_title'] ?? ''));
+    $pageTitle = $basePageTitle !== ''
+        ? (str_contains($basePageTitle, config('site.name')) ? $basePageTitle : $basePageTitle.' | '.config('site.name'))
+        : 'MBBS in '.$countryName.' | '.config('site.name');
+    $pageDescription = Seo::description($page['hero_text'] ?? null, 'Study MBBS in '.$countryName.' with One Degree Advisory.', 170);
     $activeNav       = 'mbbs';
     $mainId          = 'mbbs-main';
     $bodyClass       = 'page-mbbs-country';
+    $canonical       = route('mbbs.country', $countrySlug);
+    $ogImage         = $heroImage ?: null;
+    $ogImageAlt      = 'MBBS in '.$countryName;
+    $ogType          = 'article';
+    $webPageJsonLd = Seo::jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebPage',
+        'name' => $pageTitle,
+        'description' => $pageDescription,
+        'url' => $canonical,
+        'about' => ['@type' => 'Country', 'name' => $countryName],
+        'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => route('home')],
+        'inLanguage' => 'en',
+    ]);
+    $breadcrumbJsonLd = Seo::jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'MBBS Abroad', 'item' => route('mbbs.student')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => $canonical],
+        ],
+    ]);
 
     // ---- helpers ----------------------------------------------------------
     // Split a long body into readable paragraphs (explicit " | " first, else sentence pairs).
@@ -142,6 +170,15 @@
 
 @extends('layouts.app')
 
+@push('head')
+  <script type="application/ld+json">
+  {!! $webPageJsonLd !!}
+  </script>
+  <script type="application/ld+json">
+  {!! $breadcrumbJsonLd !!}
+  </script>
+@endpush
+
 @section('content')
 <main id="mbbs-main" class="mbc">
 
@@ -149,7 +186,7 @@
   <section class="mbc-hero" id="top">
     <div class="mbc-hero__bg" aria-hidden="true">
       @if($heroImage !== '')
-        <img class="mbc-hero__img" src="{{ $heroImage }}" alt="" loading="eager" fetchpriority="high">
+        <img class="mbc-hero__img" src="{{ $heroImage }}" alt="" loading="eager" fetchpriority="high" decoding="async">
       @endif
       <span class="mbc-hero__veil"></span>
       <span class="mbc-hero__glow"></span>
@@ -444,7 +481,7 @@
   <section class="mbc-cta">
     <div class="mbc-shell mbc-cta__panel reveal">
       @if($heroImage !== '')
-        <img class="mbc-cta__img" src="{{ $heroImage }}" alt="" aria-hidden="true" loading="lazy">
+        <img class="mbc-cta__img" src="{{ $heroImage }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
       @endif
       <span class="mbc-cta__orb mbc-cta__orb--a" aria-hidden="true"></span>
       <span class="mbc-cta__orb mbc-cta__orb--b" aria-hidden="true"></span>
