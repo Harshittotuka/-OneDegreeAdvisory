@@ -227,6 +227,9 @@
       <a class="dsh-act" href="{{ route('admin.about.live') }}">
         <span class="dsh-ico" style="--c:#9a6b00;--cb:#fdf3dd"><i data-lucide="layout-template"></i></span> About page
       </a>
+      <a class="dsh-act" href="{{ route('admin.pages.index') }}">
+        <span class="dsh-ico" style="--c:#7b2ff7;--cb:#f0e9ff"><i data-lucide="layout-panel-top"></i></span> Page Builder
+      </a>
       @endif
       <a class="dsh-act" href="{{ route('admin.notice-bar.index') }}">
         <span class="dsh-ico" style="--c:#28c76f;--cb:#e6f8ee"><i data-lucide="megaphone"></i></span> Notification bar

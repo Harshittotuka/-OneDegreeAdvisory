@@ -140,6 +140,7 @@
     // Super admin unlocks the (otherwise hidden) About-page editor.
     if ($isSuper) {
       $contentItems[] = ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.live', 'match' => 'admin.about'];
+      $contentItems[] = ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'];
     }
     $contentItems[] = ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'];
     // Country visibility is a super-admin-only tool.

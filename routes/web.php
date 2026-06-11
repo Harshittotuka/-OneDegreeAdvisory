@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
+use App\Http\Controllers\Admin\BriefPageCmsController;
+use App\Http\Controllers\BriefPageController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,13 +37,14 @@ Route::get('/services/student-services', [PageController::class, 'studentService
 
 Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study-abroad');
 
-Route::get('/europe', [PageController::class, 'europe'])->name('europe');
+// Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
+// original top-level URLs; new pages are served under /briefs/{slug}.
+Route::get('/europe', [BriefPageController::class, 'show'])->defaults('slug', 'europe')->name('europe');
 Route::redirect('/packages', '/europe');
-
-// Intelligence briefs — surfaced from the top notice bar, package-page styling.
-Route::get('/wednesday-briefings', [PageController::class, 'wednesdayBriefings'])->name('wednesday-briefings');
-Route::get('/medicine-and-beyond', [PageController::class, 'medicineAndBeyond'])->name('medicine-and-beyond');
-Route::get('/destination-new-zealand', [PageController::class, 'destinationNewZealand'])->name('destination-new-zealand');
+Route::get('/wednesday-briefings', [BriefPageController::class, 'show'])->defaults('slug', 'wednesday-briefings')->name('wednesday-briefings');
+Route::get('/medicine-and-beyond', [BriefPageController::class, 'show'])->defaults('slug', 'medicine-and-beyond')->name('medicine-and-beyond');
+Route::get('/destination-new-zealand', [BriefPageController::class, 'show'])->defaults('slug', 'destination-new-zealand')->name('destination-new-zealand');
+Route::get('/briefs/{slug}', [BriefPageController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('briefs.show');
 
 Route::get('/courses/undergraduate', [PageController::class, 'undergraduate'])->name('courses.ug');
 Route::get('/courses/postgraduate', [PageController::class, 'postgraduate'])->name('courses.pg');
@@ -101,6 +104,21 @@ Route::prefix('admin')->group(function () {
         Route::post('home-hero/import', [HomeHeroCmsController::class, 'importUrl'])->name('admin.home-hero.import');
         Route::post('home-hero/preview', [HomeHeroCmsController::class, 'preview'])->name('admin.home-hero.preview');
 
+        /* ── Brief Page Builder (super-admin) ── */
+        Route::get('pages', [BriefPageCmsController::class, 'index'])->name('admin.pages.index');
+        Route::post('pages', [BriefPageCmsController::class, 'storePage'])->name('admin.pages.store');
+        Route::get('pages/block', [BriefPageCmsController::class, 'block'])->name('admin.pages.block');
+        Route::get('pages/preset', [BriefPageCmsController::class, 'preset'])->name('admin.pages.preset');
+        Route::post('pages/render', [BriefPageCmsController::class, 'render'])->name('admin.pages.render');
+        Route::post('pages/upload', [BriefPageCmsController::class, 'upload'])->name('admin.pages.upload');
+        Route::post('pages/import', [BriefPageCmsController::class, 'importUrl'])->name('admin.pages.import');
+        Route::get('pages/{slug}/edit', [BriefPageCmsController::class, 'edit'])->where('slug', '[a-z0-9-]+')->name('admin.pages.edit');
+        Route::get('pages/{slug}/studio', [BriefPageCmsController::class, 'studio'])->where('slug', '[a-z0-9-]+')->name('admin.pages.studio');
+        Route::post('pages/{slug}', [BriefPageCmsController::class, 'save'])->where('slug', '[a-z0-9-]+')->name('admin.pages.save');
+        Route::post('pages/{slug}/duplicate', [BriefPageCmsController::class, 'duplicate'])->where('slug', '[a-z0-9-]+')->name('admin.pages.duplicate');
+        Route::post('pages/{slug}/visibility', [BriefPageCmsController::class, 'toggleVisibility'])->where('slug', '[a-z0-9-]+')->name('admin.pages.visibility');
+        Route::delete('pages/{slug}', [BriefPageCmsController::class, 'destroy'])->where('slug', '[a-z0-9-]+')->name('admin.pages.destroy');
+
         /* ── Notice-bar CMS (top blue nav) ── */
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
@@ -127,3 +145,7 @@ Route::prefix('admin')->group(function () {
         Route::get('mbbs-country-sync/workbook', [MbbsCountryDataSyncController::class, 'downloadWorkbook'])->name('admin.mbbs-country-sync.workbook');
     });
 });
+
+// CMS-built brief pages on custom URL paths — resolved last, after every real
+// route, so a page path can never shadow application routes.
+Route::fallback([BriefPageController::class, 'showByPath']);

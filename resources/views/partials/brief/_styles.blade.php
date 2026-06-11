@@ -700,11 +700,118 @@
   }
 
   /* ============================================================
+     GRID — rows & columns (page builder layout)
+     ============================================================ */
+  .odp-row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; align-items: stretch; margin-bottom: 8px; }
+  /* Full-bleed row (used by AI landing sections): breaks out of the centered
+     container and the page side-padding to span the entire viewport. */
+  .odp-row--full { width: 100vw; margin-left: calc(50% - 50vw); margin-bottom: 0; }
+  .odp-col { grid-column: span var(--span, 12); min-width: 0; display: flex; flex-direction: column; }
+  .odp-col > * { margin-bottom: 0; }
+  .odp-col > * + * { margin-top: 18px; }
+  /* A column that holds a card stretches the card to fill the row height. */
+  .odp-col > .odp-card { flex: 1; }
+  @media (max-width: 760px) { .odp-col { grid-column: span 12; } }
+
+  /* ── Single Card block ── */
+  .odp-card { display: flex; flex-direction: column; border: 1px solid var(--file-line); border-radius: 18px;
+    background: #fff; box-shadow: 0 10px 30px rgba(40, 33, 22, 0.07); overflow: hidden; }
+  .odp-card--tile { background: linear-gradient(135deg, var(--file-blue), #3a23b8); border-color: transparent; color: #fff; }
+  .odp-card--outline { background: transparent; box-shadow: none; }
+  .odp-card-img { aspect-ratio: 16 / 10; overflow: hidden; }
+  .odp-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .odp-card-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .odp-card-ic { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;
+    border-radius: 14px; background: rgba(240, 90, 40, 0.12); color: var(--file-orange); font-size: 24px; margin-bottom: 4px; }
+  .odp-card--tile .odp-card-ic { background: rgba(255, 255, 255, 0.16); color: #ffd9a8; }
+  .odp-card-ic i { width: 24px; height: 24px; }
+  .odp-card-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--file-orange); }
+  .odp-card--tile .odp-card-eyebrow { color: #ffd9a8; }
+  .odp-card-title { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--file-blue); line-height: 1.25; }
+  .odp-card--tile .odp-card-title { color: #fff; }
+  .odp-card-text { margin: 0; color: #5b5b6b; font-size: 0.95rem; line-height: 1.65; }
+  .odp-card--tile .odp-card-text { color: rgba(255, 255, 255, 0.82); }
+  .odp-card-btn { display: inline-flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 6px;
+    color: var(--file-orange); font-weight: 800; font-size: 0.9rem; text-decoration: none; }
+  .odp-card--tile .odp-card-btn { color: #ffd9a8; }
+  .odp-card-btn i { width: 16px; height: 16px; }
+
+  /* ── Text block ── */
+  .odp-text { color: #4a4a59; font-size: 1rem; line-height: 1.75; }
+  .odp-text--center { text-align: center; }
+  .odp-text--right { text-align: right; }
+  .odp-text--lg { font-size: 1.18rem; }
+  .odp-text--sm { font-size: 0.88rem; }
+  .odp-text :is(h1, h2, h3) { color: var(--file-blue); }
+  .odp-text a { color: var(--file-orange); }
+
+  /* ── Button block — restylable / reshapable / resizable CTA ──
+     Colours follow the block's accent vars: accent → --file-orange,
+     secondary → --file-blue, so the CMS colour pickers recolour it. */
+  .odp-btnblk { display: flex; }
+  .odp-btnblk--center { justify-content: center; }
+  .odp-btnblk--right { justify-content: flex-end; }
+
+  .odp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    padding: 14px 26px; font-family: "Poppins", sans-serif; font-size: 0.95rem; font-weight: 700;
+    line-height: 1; text-decoration: none; cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease; }
+  .odp-btn:hover { transform: translateY(-2px); }
+  .odp-btn i, .odp-btn svg { width: 18px; height: 18px; }
+
+  .odp-btn--sm { padding: 10px 17px; font-size: 0.82rem; }
+  .odp-btn--sm i, .odp-btn--sm svg { width: 15px; height: 15px; }
+  .odp-btn--lg { padding: 18px 36px; font-size: 1.08rem; }
+  .odp-btn--lg i, .odp-btn--lg svg { width: 21px; height: 21px; }
+
+  .odp-btn--shape-pill { border-radius: 999px; }
+  .odp-btn--shape-rounded { border-radius: 12px; }
+  .odp-btn--shape-square { border-radius: 0; }
+
+  .odp-btn--gradient { background: linear-gradient(135deg, var(--file-blue), var(--file-orange));
+    color: #fff; box-shadow: 0 14px 30px rgba(43, 31, 168, 0.25); }
+  .odp-btn--gradient:hover { box-shadow: 0 18px 38px rgba(43, 31, 168, 0.32); }
+  .odp-btn--solid { background: var(--file-orange); color: #fff; box-shadow: 0 12px 26px rgba(240, 90, 40, 0.28); }
+  .odp-btn--outline { background: #fff; border: 2px solid var(--file-orange); color: var(--file-orange); }
+  .odp-btn--outline:hover { background: var(--file-orange); color: #fff; }
+  .odp-btn--ghost { background: none; color: var(--file-blue); font-weight: 800; padding-left: 4px; padding-right: 4px; }
+  .odp-btn--ghost:hover { color: var(--file-orange); transform: none; text-decoration: underline; }
+
+  .odp-btn--block { width: 100%; }
+
+  /* ── Divider / spacer ── */
+  .odp-divider { height: 0; border-top: 1px solid var(--file-line); margin: 6px 0; }
+  .odp-divider--dashed { border-top-style: dashed; }
+  .odp-divider--dots { border-top-style: dotted; border-top-width: 2px; }
+  .odp-spacer { width: 100%; }
+
+  /* ── AI / embedded code block ── */
+  .odp-embed { width: 100%; }
+
+  /* ============================================================
      BRIEF CONTENT — shared by NZ / Medicine / Wednesday pages
      ============================================================ */
   .odp-section { margin-bottom: 40px; }
 
   .odp-surface-pad { padding: 26px 30px; border-radius: 22px; margin-bottom: 28px; }
+
+  /* Per-block background "surface" options (set by the CMS appearance controls) */
+  .odp-blk--tint {
+    padding: 24px 28px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #f3efff, #fff4ef);
+    border: 1px solid var(--file-line);
+  }
+  .odp-blk--gradient {
+    padding: 26px 30px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--file-blue), var(--file-orange));
+    color: #fff;
+  }
+  .odp-blk--gradient .odp-section-label { color: rgba(255, 255, 255, 0.85); }
+  .odp-blk--gradient .odp-section-label::before { background: #fff; }
+  .odp-blk--gradient .odp-block-title,
+  .odp-blk--gradient .odp-block-sub { color: #fff; }
 
   .odp-section-label {
     display: flex;

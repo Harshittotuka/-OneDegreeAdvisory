@@ -52,25 +52,8 @@ class PageController extends Controller
         return view('pages.study-abroad');
     }
 
-    public function europe(): View
-    {
-        return view('pages.europe');
-    }
-
-    public function wednesdayBriefings(): View
-    {
-        return view('pages.wednesday-briefings');
-    }
-
-    public function medicineAndBeyond(): View
-    {
-        return view('pages.medicine-and-beyond');
-    }
-
-    public function destinationNewZealand(): View
-    {
-        return view('pages.destination-new-zealand');
-    }
+    // The Europe + brief pages are now CMS-built and rendered by
+    // App\Http\Controllers\BriefPageController from App\Support\BriefPageStore.
 
     public function contact(): View
     {
