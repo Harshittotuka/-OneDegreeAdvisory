@@ -47,6 +47,8 @@
         </div>
       </section>
 
+      @include('partials.home.method-compass')
+
       <section class="audience-section" aria-labelledby="audience-title">
         <div class="container wide-container">
           <div class="section-lead split reveal">

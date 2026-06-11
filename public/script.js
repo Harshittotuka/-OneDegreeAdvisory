@@ -2197,3 +2197,56 @@ ready(() => {
 
 /* Color theme switcher removed — "Logo Colours" (cream) is now the only theme,
    hardcoded as data-color-theme="cream" on <html> in the layout. */
+
+/* The One Degree Method — interactive 4D compass on the home page. The four "D"
+   stages (cardinal points) and the two curved threads inside the ring all carry
+   a [data-odm-key]; selecting one highlights it and swaps the detail panel. */
+(function () {
+  const initMethodCompass = () => {
+    const root = document.querySelector("[data-odm]");
+    if (!root) return;
+
+    const triggers = Array.from(root.querySelectorAll("[data-odm-key]"));
+    const panels = Array.from(root.querySelectorAll("[data-odm-panel]"));
+    if (!triggers.length || !panels.length) return;
+
+    const activate = (key) => {
+      triggers.forEach((el) => {
+        const on = el.getAttribute("data-odm-key") === key;
+        el.classList.toggle("is-active", on);
+        if (el.tagName === "BUTTON" || el.getAttribute("role") === "button") {
+          el.setAttribute("aria-pressed", String(on));
+        }
+      });
+      panels.forEach((panel) => {
+        panel.classList.toggle("is-active", panel.getAttribute("data-odm-panel") === key);
+      });
+    };
+
+    triggers.forEach((el) => {
+      el.addEventListener("click", (event) => {
+        event.preventDefault();
+        activate(el.getAttribute("data-odm-key"));
+      });
+      // SVG <a role="button"> needs explicit keyboard activation; native
+      // <button> already fires click on Enter/Space, so only bind the anchors.
+      if (el.tagName !== "BUTTON") {
+        el.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+            event.preventDefault();
+            activate(el.getAttribute("data-odm-key"));
+          }
+        });
+      }
+    });
+
+    const defaultPanel = root.querySelector("[data-odm-default]") || panels[0];
+    activate(defaultPanel.getAttribute("data-odm-panel"));
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMethodCompass, { once: true });
+  } else {
+    initMethodCompass();
+  }
+})();

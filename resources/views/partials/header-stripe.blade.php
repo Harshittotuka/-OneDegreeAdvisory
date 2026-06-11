@@ -32,11 +32,29 @@
       <i data-lucide="menu"></i>
     </button>
 
+    {{-- Dim backdrop behind the mobile off-canvas drawer (desktop: hidden). --}}
+    <div class="stripe-nav-scrim" data-stripe-scrim aria-hidden="true"></div>
+
     <div class="stripe-nav-panel" data-stripe-panel>
+      {{-- Drawer header — only renders inside the mobile off-canvas drawer. --}}
+      <div class="stripe-drawer-head">
+        <a class="brand stripe-drawer-brand" href="{{ route('home') }}#top" aria-label="{{ config('site.name') }} home">
+          <img class="brand-mark" src="{{ asset('assets/Logo/mark.svg') }}" alt="" aria-hidden="true" width="104" height="36">
+          <span class="brand-wordmark">
+            <strong>One Degree</strong>
+            <small>Advisory</small>
+          </span>
+        </a>
+        <button class="stripe-drawer-close" type="button" aria-label="Close navigation" data-stripe-mobile-close>
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      {{-- Scrollable body of the drawer (desktop: display:contents — flows into the nav grid). --}}
+      <div class="stripe-nav-scroll" data-stripe-scroll>
       <div class="stripe-nav-menu" data-stripe-menu>
         <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'home']) href="{{ route('home') }}">Home</a>
         <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'about']) href="{{ route('about') }}">About</a>
-        <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'packages']) href="{{ route('packages') }}">Packages</a>
 
         <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'destinations'])
                 type="button" data-stripe-trigger="destinations" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-destinations">
@@ -260,11 +278,15 @@
           </div>
         </div>
       </div>
+      </div>{{-- /.stripe-nav-scroll --}}
 
-      <a class="nav-cta stripe-nav-cta" href="{{ route('contact') }}">
-        <i data-lucide="message-circle"></i>
-        <span>Contact</span>
-      </a>
+      {{-- Pinned footer band inside the mobile drawer (desktop: display:contents). --}}
+      <div class="stripe-drawer-foot">
+        <a class="nav-cta stripe-nav-cta" href="{{ route('contact') }}">
+          <i data-lucide="message-circle"></i>
+          <span>Contact</span>
+        </a>
+      </div>
     </div>
   </nav>
 </header>

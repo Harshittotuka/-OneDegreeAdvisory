@@ -35,7 +35,13 @@ Route::get('/services/student-services', [PageController::class, 'studentService
 
 Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study-abroad');
 
-Route::get('/packages', [PageController::class, 'packages'])->name('packages');
+Route::get('/europe', [PageController::class, 'europe'])->name('europe');
+Route::redirect('/packages', '/europe');
+
+// Intelligence briefs — surfaced from the top notice bar, package-page styling.
+Route::get('/wednesday-briefings', [PageController::class, 'wednesdayBriefings'])->name('wednesday-briefings');
+Route::get('/medicine-and-beyond', [PageController::class, 'medicineAndBeyond'])->name('medicine-and-beyond');
+Route::get('/destination-new-zealand', [PageController::class, 'destinationNewZealand'])->name('destination-new-zealand');
 
 Route::get('/courses/undergraduate', [PageController::class, 'undergraduate'])->name('courses.ug');
 Route::get('/courses/postgraduate', [PageController::class, 'postgraduate'])->name('courses.pg');

@@ -32,6 +32,8 @@
     const nav = document.querySelector("[data-stripe-nav]");
     const panel = document.querySelector("[data-stripe-panel]");
     const mobileToggle = document.querySelector("[data-stripe-mobile-toggle]");
+    const mobileClose = document.querySelector("[data-stripe-mobile-close]");
+    const scrim = document.querySelector("[data-stripe-scrim]");
     const flyout = document.querySelector("[data-stripe-flyout]");
     const bg = document.querySelector("[data-stripe-bg]");
     const arrow = document.querySelector("[data-stripe-arrow]");
@@ -47,8 +49,6 @@
       if (mobileToggle) {
         mobileToggle.setAttribute("aria-expanded", "false");
         mobileToggle.setAttribute("aria-label", "Open navigation");
-        mobileToggle.innerHTML = '<i data-lucide="menu"></i>';
-        refreshIcons();
       }
     }
 
@@ -232,8 +232,6 @@
       if (mobileToggle) {
         mobileToggle.setAttribute("aria-expanded", "true");
         mobileToggle.setAttribute("aria-label", "Close navigation");
-        mobileToggle.innerHTML = '<i data-lucide="x"></i>';
-        refreshIcons();
       }
     };
 
@@ -249,37 +247,41 @@
       }
     };
 
+    // A single click handler is the robust cross-device path: tapping a
+    // <button> fires `click` for both mouse and touch, and `touch-action:
+    // manipulation` (set in CSS) removes the legacy 300ms tap delay. The old
+    // click + touchend + pointerup trio double-fired on touch (open→close),
+    // which made the hamburger appear dead. The drawer has its own close button
+    // + scrim and the hamburger is hidden while open, so this only ever opens.
     if (mobileToggle) {
-      let lastTouchToggle = 0;
-
-      const toggleMobileDrawer = () => {
+      mobileToggle.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         if (header.classList.contains("stripe-nav-open")) closeMobileDrawer();
         else openMobileDrawer();
-      };
-
-      const toggleMobileDrawerFromTouch = (event) => {
-        if (event.cancelable) event.preventDefault();
-        event.stopPropagation();
-        if (Date.now() - lastTouchToggle < 500) return;
-        lastTouchToggle = Date.now();
-        toggleMobileDrawer();
-      };
-
-      mobileToggle.addEventListener("click", (event) => {
-        if (Date.now() - lastTouchToggle < 500) {
-          event.preventDefault();
-          return;
-        }
-        toggleMobileDrawer();
       });
+    }
 
-      mobileToggle.addEventListener("touchend", toggleMobileDrawerFromTouch, {
-        passive: false,
+    /* ---- dedicated close button + scrim (off-canvas drawer) --------------- */
+    if (mobileClose) {
+      mobileClose.addEventListener("click", (event) => {
+        event.preventDefault();
+        closeMobileDrawer();
       });
+    }
 
-      mobileToggle.addEventListener("pointerup", (event) => {
-        if (event.pointerType !== "touch") return;
-        toggleMobileDrawerFromTouch(event);
+    // The scrim lives inside [data-stripe-nav], so the document-level
+    // "click outside" dismisser never fires for it — close it explicitly.
+    if (scrim) {
+      scrim.addEventListener("click", closeMobileDrawer);
+    }
+
+    // Tapping any link inside the drawer (brand, plain links) closes it —
+    // covers same-page anchors that don't trigger a navigation. (No-op on
+    // desktop: closeMobileDrawer early-returns when the drawer isn't open.)
+    if (panel) {
+      panel.addEventListener("click", (event) => {
+        if (event.target.closest("a")) closeMobileDrawer();
       });
     }
 

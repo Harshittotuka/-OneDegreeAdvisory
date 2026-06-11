@@ -75,6 +75,7 @@
               @if ($notice['href'] !== '')
                 <a class="notice-marquee-item"
                    href="{{ $notice['href'] }}"
+                   target="_blank" rel="noopener"
                    title="{{ $notice['full'] }}"
                    @if ($copy > 0) tabindex="-1" @endif>
                   <span class="notice-marquee-dot" aria-hidden="true"></span>

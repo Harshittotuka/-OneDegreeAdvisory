@@ -52,9 +52,24 @@ class PageController extends Controller
         return view('pages.study-abroad');
     }
 
-    public function packages(): View
+    public function europe(): View
     {
-        return view('pages.packages');
+        return view('pages.europe');
+    }
+
+    public function wednesdayBriefings(): View
+    {
+        return view('pages.wednesday-briefings');
+    }
+
+    public function medicineAndBeyond(): View
+    {
+        return view('pages.medicine-and-beyond');
+    }
+
+    public function destinationNewZealand(): View
+    {
+        return view('pages.destination-new-zealand');
     }
 
     public function contact(): View

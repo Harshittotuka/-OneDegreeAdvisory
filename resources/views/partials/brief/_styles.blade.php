@@ -1,124 +1,8 @@
-@php
-    $pageTitle = 'Europe Advisory Packages | One Degree Advisory';
-    $pageDescription = 'Transparent study-abroad packages for public universities in Europe — admission strategy, applications, documentation, and visa support, with an Admission Guarantee track.';
-    $activeNav = 'packages';
-    $mainId = 'main';
-
-    $enrolLink = 'https://wa.me/' . config('site.contact.phone_e164');
-
-    $destinations = [
-        ['code' => 'de', 'name' => 'Germany'],
-        ['code' => 'fr', 'name' => 'France'],
-        ['code' => 'nl', 'name' => 'Netherlands'],
-        ['code' => 'it', 'name' => 'Italy'],
-        ['code' => 'pl', 'name' => 'Poland'],
-        ['code' => 'at', 'name' => 'Austria'],
-        ['code' => 'se', 'name' => 'Sweden'],
-        ['code' => 'lv', 'name' => 'Latvia'],
-        ['code' => 'lt', 'name' => 'Lithuania'],
-        ['code' => 'fi', 'name' => 'Finland'],
-        ['code' => null, 'name' => 'More Destinations'],
-    ];
-
-    $journey = [
-        [
-            'label' => 'Step 1',
-            'heading' => 'Admission Strategy & Shortlisting',
-            'items' => [
-                ['name' => 'Student Profile Analysis', 'desc' => 'Discuss your preferences, get expert guidance, answers to your questions, and a personalized study abroad roadmap.'],
-                ['name' => 'University Shortlisting', 'desc' => 'Our experts will provide a personalized list of universities best matched to your profile and career goals.'],
-                ['name' => 'University Finalization Session', 'desc' => 'Discuss your shortlisted universities and finalize the best options for your applications.'],
-            ],
-        ],
-        [
-            'label' => 'Step 2',
-            'heading' => 'Application, SOP & Documentation Support',
-            'items' => [
-                ['name' => 'SOP, LOR & Resume Building Support', 'desc' => 'Access premium templates and professional editing support to craft impactful SOPs, LORs, and resumes tailored to your profile.'],
-                ['name' => 'Application Submission Support', 'desc' => 'You’re nearly there — our expert team will take care of your application submission from here.'],
-            ],
-        ],
-        [
-            'label' => 'Step 3',
-            'heading' => 'Visa Application Filing & Interview Preparation',
-            'items' => [
-                ['name' => 'Visa Filing', 'desc' => 'Once your admission offer is received, a visa expert will review your documents.'],
-                ['name' => 'Visa Interview Preparation', 'desc' => 'Prepare for your interview with our expert visa counsellors.'],
-            ],
-        ],
-    ];
-
-    $vouchers = [
-        ['tier' => 'Explorer', 'icon' => '🌍', 'amount' => '₹2,500', 'variant' => 'explorer'],
-        ['tier' => 'Achiever', 'icon' => '🏆', 'amount' => '₹5,000', 'variant' => 'achiever-r', 'badge' => '⭐ Popular'],
-        ['tier' => 'Infinity', 'icon' => '♾️', 'amount' => '₹10,000', 'variant' => 'infinity'],
-    ];
-
-    $packages = [
-        [
-            'variant' => 'starter',
-            'name' => 'Explorer',
-            'badge' => 'Explorer',
-            'price' => '₹54,999 + GST',
-            'desc' => 'Perfect for students applying to one European country.',
-            'features' => [
-                'Profile Evaluation',
-                'University Shortlisting',
-                'Document Preparation Assistance',
-                'Country-specific Doc Guidance (APS, Blocked Account etc.)',
-                'Interview Assistance',
-                'Application Assistance',
-                'Visa Assistance',
-                'Pre-departure Guidance',
-                'Counsellor Support',
-                'IELTS Preparation Included',
-                'Education Loan Assistance',
-            ],
-        ],
-        [
-            'variant' => 'achiever',
-            'name' => 'Achiever',
-            'badge' => '⭐ Most Popular',
-            'price' => '₹69,999+ GST',
-            'desc' => 'Best for students targeting multiple European countries. (Access to 2 European Countries)',
-            'features' => [
-                'Everything in Explorer',
-                'Priority Counsellor Support',
-                'Maximize Your Chances with Multi-Country Admission Support.',
-            ],
-        ],
-        [
-            'variant' => 'elite',
-            'name' => 'Infinity',
-            'badge' => '♾️ Infinity',
-            'price' => '₹99,999 + GST',
-            'desc' => 'Admission Opportunities Across Europe, Centered on Your First-Choice Destination*',
-            'features' => [
-                ['html' => 'Everything in Achiever, Explore <strong>Up to 5 European Countries</strong>'],
-                'Priority Counsellor Support',
-                'Student–Alumni Interaction',
-            ],
-        ],
-    ];
-
-    $notIncluded = [
-        'IELTS / PTE / language exam fees.',
-        'University application fees (varies by country/university).',
-        'Visa fees (Schengen or country-specific).',
-        'APS certificate fee (Germany).',
-        'Blocked account deposit (Germany).',
-        'HRD apostille / document legalisation charges.',
-        'CIMEA evaluation fees (Italy).',
-        'DOV or equivalent authentication fees.',
-        'Any consulate or embassy service charges.',
-        'Infinity - Guaranteed admission opportunities with the flexibility to explore multiple European destinations while prioritizing your preferred study destination. *',
-        "For all Public University packages, the consultancy service fee is non-refundable after the student's enrollment has been completed.",
-        ['html' => '<strong>Additional expenses shall be borne by the student.</strong>'],
-    ];
-@endphp
-
-@extends('layouts.app')
-
+{{-- Shared "ODP file page" design system — used by the Europe packages page and
+     the three intelligence-brief pages (Wednesday Briefings, Medicine & Beyond,
+     Destination New Zealand). Purple #2B1FA8 / orange #F05A28, Poppins. The base
+     .odp-* classes were moved here verbatim from the old packages page; the
+     .odp-section/.odp-brief-* etc. block below is added for brief content. --}}
 @push('head')
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -815,6 +699,256 @@
     column-gap: 34px;
   }
 
+  /* ============================================================
+     BRIEF CONTENT — shared by NZ / Medicine / Wednesday pages
+     ============================================================ */
+  .odp-section { margin-bottom: 40px; }
+
+  .odp-surface-pad { padding: 26px 30px; border-radius: 22px; margin-bottom: 28px; }
+
+  .odp-section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 16px;
+    color: #8a86a8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+  }
+
+  .odp-section-label::before {
+    content: "";
+    width: 22px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--file-orange);
+  }
+
+  .odp-block-title {
+    margin: 0 0 18px;
+    color: var(--file-blue);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .odp-block-sub {
+    margin: -8px 0 18px;
+    color: #888;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Highlight cards */
+  .odp-brief-cards { display: grid; gap: 14px; }
+
+  .odp-brief-card {
+    position: relative;
+    padding: 18px 20px;
+    border: 1px solid var(--file-line);
+    border-left: 4px solid var(--file-orange);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fbf9ff, #fff6f1);
+  }
+
+  .odp-brief-card--medium { border-left-color: #f0b15a; }
+
+  .odp-brief-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .odp-brief-card h3 {
+    margin: 0;
+    color: var(--file-blue);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .odp-brief-badge {
+    flex: none;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    background: rgba(240, 90, 40, 0.14);
+    color: #b53d12;
+  }
+
+  .odp-brief-badge--medium { background: rgba(240, 177, 90, 0.22); color: #8a5a12; }
+
+  .odp-brief-card p { margin: 8px 0 0; color: #5b5b6b; font-size: 13.5px; line-height: 1.65; }
+
+  .odp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+  .odp-tag {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #efe9ff;
+    color: var(--file-blue);
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  /* 2-col split + info cards */
+  .odp-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 18px; }
+
+  .odp-info-card {
+    padding: 18px 20px;
+    border: 1px solid var(--file-line);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f8f5ff, #fff4ef);
+  }
+
+  .odp-info-card--warn { border-left: 4px solid var(--file-orange); background: #fff3ee; }
+  .odp-info-card--good { border-left: 4px solid #2faa6e; background: #f0faf4; }
+
+  .odp-info-card h3 { margin: 0 0 8px; color: var(--file-blue); font-size: 14px; font-weight: 700; }
+  .odp-info-card p { margin: 0; color: #5b5b6b; font-size: 13px; line-height: 1.65; }
+  .odp-info-card ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+  .odp-info-card li { color: #5b5b6b; font-size: 12.5px; line-height: 1.55; }
+
+  /* Gradient callout (action box) */
+  .odp-callout {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--file-blue), var(--file-orange));
+    color: #fff;
+  }
+
+  .odp-callout svg { width: 22px; height: 22px; margin-top: 2px; }
+  .odp-callout strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #ffe0b2;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .odp-callout p { margin: 0; font-size: 13px; line-height: 1.65; color: rgba(255, 255, 255, 0.95); }
+
+  /* Why-pitch gradient panel with two columns */
+  .odp-pitch {
+    padding: 24px 26px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--file-blue), var(--file-orange));
+    color: #fff;
+  }
+  .odp-pitch h2 { margin: 0 0 10px; font-size: 18px; font-weight: 700; line-height: 1.35; }
+  .odp-pitch > p { margin: 0 0 18px; font-size: 13px; line-height: 1.7; color: rgba(255, 255, 255, 0.92); }
+  .odp-pitch-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .odp-pitch-col h3 { margin: 0 0 8px; color: #ffe0b2; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; }
+  .odp-pitch-col p { margin: 0 0 5px; font-size: 12.5px; color: rgba(255, 255, 255, 0.92); line-height: 1.5; }
+
+  /* Table */
+  .odp-table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--file-line); }
+  .odp-table { width: 100%; border-collapse: collapse; min-width: 520px; }
+  .odp-table thead th {
+    background: linear-gradient(135deg, var(--file-blue), #5540d8);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-align: left;
+    padding: 11px 14px;
+  }
+  .odp-table tbody td { padding: 11px 14px; font-size: 12.5px; color: #555; border-bottom: 1px solid #eee; line-height: 1.5; }
+  .odp-table tbody tr:nth-child(even) { background: #f8f5ff; }
+  .odp-table tbody tr:last-child td { border-bottom: 0; }
+  .odp-table .odp-td-key { color: var(--file-blue); font-weight: 700; }
+  .odp-table .odp-td-good { color: #0f6e56; font-weight: 600; }
+  .odp-table .odp-td-warn { color: #b53d12; font-weight: 600; }
+
+  /* Numbered talking points */
+  .odp-talk { display: grid; gap: 14px; }
+  .odp-talk-item { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .odp-talk-num {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--file-blue), var(--file-orange));
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .odp-talk-item p { margin: 0; color: #444; font-size: 13.5px; line-height: 1.7; }
+
+  /* Timeline */
+  .odp-timeline { display: grid; }
+  .odp-tl-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--file-line); }
+  .odp-tl-row:last-child { border-bottom: 0; }
+  .odp-tl-date { color: var(--file-orange); font-weight: 800; font-size: 13px; }
+  .odp-tl-row p { margin: 0; color: #555; font-size: 13px; line-height: 1.55; }
+
+  /* Pathway-map cards / small country cards */
+  .odp-pathmap { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .odp-cc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+  .odp-cc {
+    padding: 18px 14px;
+    border-radius: 16px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--file-blue), #3a23b8);
+    color: #fff;
+  }
+  .odp-cc-emoji { font-size: 24px; line-height: 1; }
+  .odp-cc h3 { margin: 8px 0 4px; color: #ffd9a8; font-size: 13px; font-weight: 700; }
+  .odp-cc-price { margin: 0 0 6px; font-size: 11px; color: rgba(255, 255, 255, 0.6); }
+  .odp-cc p { margin: 0; font-size: 11px; line-height: 1.5; color: rgba(255, 255, 255, 0.78); }
+
+  /* Country headline banner (NZ) */
+  .odp-country-banner {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 18px 22px;
+    border-radius: 18px;
+    margin-bottom: 32px;
+    background: linear-gradient(135deg, var(--file-orange), #f4a15a);
+    color: #fff;
+  }
+  .odp-country-banner img { width: 120px; height: auto; border-radius: 8px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); }
+  .odp-cb-body { flex: 1; min-width: 240px; }
+  .odp-cb-kicker { margin: 0 0 4px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #fde8d0; }
+  .odp-country-banner h2 { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.4; }
+
+  /* Sources */
+  .odp-sources { display: grid; gap: 7px; }
+  .odp-sources a { color: var(--file-orange); font-size: 12px; text-decoration: underline; line-height: 1.5; }
+
+  /* Tip / quote */
+  .odp-tip { border-left: 4px solid var(--file-orange); padding: 4px 0 4px 16px; }
+  .odp-tip-kicker { margin: 0 0 6px; color: var(--file-blue); font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+  .odp-tip p { margin: 0 0 6px; color: #555; font-size: 13.5px; line-height: 1.65; }
+  .odp-tip p.is-quote { font-style: italic; }
+
+  /* CTA band */
+  .odp-cta-band {
+    margin-top: 8px;
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--file-blue), var(--file-orange));
+    color: #fff;
+  }
+  .odp-cta-band h2 { margin: 0 0 8px; font-size: 22px; font-weight: 700; }
+  .odp-cta-band p { margin: 0 auto 18px; max-width: 60ch; font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.9); }
+  .odp-cta-band .odp-web-btn-secondary { background: #fff; border-color: #fff; }
+
   @media (max-width: 768px) {
     .odp-file-page {
       padding: 0 14px 48px;
@@ -858,6 +992,8 @@
     .odp-plans {
       grid-template-columns: 1fr;
     }
+
+    .odp-surface-pad { padding: 22px 18px; }
 
     .odp-referral-cards {
       display: flex;
@@ -963,214 +1099,3 @@
   }
 </style>
 @endpush
-
-@section('content')
-<main id="main" class="odp-file-page">
-  <div class="odp-file-container">
-    <header class="odp-web-hero">
-      <div class="odp-web-hero-grid">
-        <div>
-          <span class="odp-web-eyebrow">Europe advisory packages</span>
-          <h1 class="odp-web-title">One degree closer to your dream university in Europe.</h1>
-          <p class="odp-web-copy">Transparent, expert-led packages for public universities across Europe — from admission strategy and documentation to visa filing and arrival.</p>
-          <div class="odp-web-actions">
-            <a class="odp-web-btn odp-web-btn-secondary" href="{{ route('contact') }}">
-              <i data-lucide="calendar-check" aria-hidden="true"></i>
-              <span>Book a consultation</span>
-            </a>
-          </div>
-        </div>
-
-        <aside class="odp-web-panel" aria-label="Package highlights">
-          <h2>Built for public university applications in Europe.</h2>
-          <ul class="odp-web-list">
-            <li><i data-lucide="map" aria-hidden="true"></i><span>Country-fit strategy before applications begin.</span></li>
-            <li><i data-lucide="file-check-2" aria-hidden="true"></i><span>SOP, LOR, resume, application and visa support.</span></li>
-            <li><i data-lucide="shield-check" aria-hidden="true"></i><span>Admission Guarantee track available with Infinity.</span></li>
-          </ul>
-        </aside>
-      </div>
-    </header>
-
-    <section class="odp-file-surface odp-dest-strip" aria-labelledby="odp-dest-title">
-      <h2 class="odp-dest-label" id="odp-dest-title">🌍 Top Study Destinations in Europe</h2>
-      <div class="odp-dest-flags">
-        @foreach ($destinations as $destination)
-          <div class="odp-dest-item">
-            <span class="odp-dest-flag">
-              @if (!empty($destination['code']))
-                <img src="https://flagcdn.com/{{ $destination['code'] }}.svg" alt="{{ $destination['name'] }} flag" width="36" height="27" loading="lazy">
-              @else
-                🌐
-              @endif
-            </span>
-            <span class="odp-dest-name">{{ $destination['name'] }}</span>
-          </div>
-        @endforeach
-      </div>
-    </section>
-
-    <section class="odp-file-surface odp-journey" aria-labelledby="odp-journey-title">
-      <h2 class="odp-journey-title" id="odp-journey-title">✈️ Start Your Study Abroad Journey with One Degree Advisory</h2>
-      <div class="odp-journey-steps">
-        @foreach ($journey as $index => $step)
-          <article class="odp-step">
-            <div class="odp-step-num">{{ $index + 1 }}</div>
-            <div class="odp-step-label">{{ $step['label'] }}</div>
-            <h3 class="odp-step-heading">{{ $step['heading'] }}</h3>
-            <ul class="odp-step-items">
-              @foreach ($step['items'] as $item)
-                <li>
-                  <div class="odp-si-name">{{ $item['name'] }}</div>
-                  <div class="odp-si-desc">{{ $item['desc'] }}</div>
-                </li>
-              @endforeach
-            </ul>
-          </article>
-        @endforeach
-
-        <article class="odp-final-step">
-          <div class="plane" aria-hidden="true">✈️</div>
-          <h3>Fly to Your Dream University!</h3>
-          <p>You’re ready to take off! The One Degree community is excited to welcome you to your dream college.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="odp-file-surface odp-referral" aria-labelledby="odp-referral-title">
-      <h2 class="odp-referral-title" id="odp-referral-title">🎁 Refer &amp; Earn — Student Vouchers</h2>
-      <p class="odp-referral-sub">Refer a friend and earn credits when they enrol. The more they grow, the more you earn!</p>
-      <div class="odp-referral-cards">
-        @foreach ($vouchers as $index => $voucher)
-          <article class="odp-ref-card {{ $voucher['variant'] }}" id="odp-ref-{{ $voucher['variant'] }}" data-ref-slide="{{ $index }}">
-            @isset($voucher['badge'])
-              <div class="odp-ref-badge">{{ $voucher['badge'] }}</div>
-            @endisset
-            <div class="odp-ref-icon" aria-hidden="true">{{ $voucher['icon'] }}</div>
-            <div class="odp-ref-plan">{{ $voucher['tier'] }}</div>
-            <div class="odp-ref-voucher">{{ $voucher['amount'] }}</div>
-            <div class="odp-ref-label">Credit per referral</div>
-          </article>
-        @endforeach
-      </div>
-      <div class="odp-ref-controls" aria-label="Voucher carousel controls">
-        @foreach ($vouchers as $index => $voucher)
-          <button class="odp-ref-control @if($index === 0) is-active @endif" type="button" data-ref-target="{{ $index }}" aria-label="Show {{ $voucher['tier'] }} voucher">
-            {{ $voucher['tier'] }}
-          </button>
-        @endforeach
-      </div>
-    </section>
-
-    <section aria-labelledby="odp-packages-title">
-      <div class="odp-packages-heading">
-        <h2 id="odp-packages-title">Europe Study Abroad Packages for Public University</h2>
-        <p>Choose the plan that fits your ambition</p>
-      </div>
-
-      <div class="odp-plans">
-        @foreach ($packages as $package)
-          <article class="odp-file-plan {{ $package['variant'] }}">
-            <div class="odp-highlight" aria-hidden="true"></div>
-            <div class="odp-badge">{{ $package['badge'] }}</div>
-            <h3 class="odp-plan-name">{{ $package['name'] }}</h3>
-            <div class="odp-plan-price">{{ $package['price'] }}</div>
-            <p class="odp-plan-desc">
-              @if (isset($package['descHtml']))
-                {!! $package['descHtml'] !!}
-              @else
-                {{ $package['desc'] }}
-              @endif
-            </p>
-            <ul class="odp-plan-list">
-              @foreach ($package['features'] as $feature)
-                <li>
-                  <span class="odp-check" aria-hidden="true">✓</span>
-                  <span>
-                    @if (is_array($feature))
-                      {!! $feature['html'] !!}
-                    @else
-                      {{ $feature }}
-                    @endif
-                  </span>
-                </li>
-              @endforeach
-            </ul>
-            <a class="odp-enrol" href="{{ $enrolLink }}" target="_blank" rel="noopener">Enrol Now &nbsp;→</a>
-          </article>
-        @endforeach
-      </div>
-    </section>
-
-    <section class="odp-file-disclaimer" aria-labelledby="odp-disclaimer-title">
-      <h2 id="odp-disclaimer-title">⚠️ Not Included — Paid Directly by Student</h2>
-      <ul class="odp-disclaimer-list">
-        @foreach ($notIncluded as $item)
-          <li>
-            <span class="odp-check" aria-hidden="true">•</span>
-            <span>
-              @if (is_array($item))
-                {!! $item['html'] !!}
-              @else
-                {{ $item }}
-              @endif
-            </span>
-          </li>
-        @endforeach
-      </ul>
-    </section>
-  </div>
-</main>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var carousel = document.querySelector('.odp-referral-cards');
-    var buttons = Array.prototype.slice.call(document.querySelectorAll('.odp-ref-control'));
-    var slides = Array.prototype.slice.call(document.querySelectorAll('[data-ref-slide]'));
-
-    if (!carousel || buttons.length === 0 || slides.length === 0) {
-      return;
-    }
-
-    function setActive(index) {
-      buttons.forEach(function (button, buttonIndex) {
-        button.classList.toggle('is-active', buttonIndex === index);
-      });
-    }
-
-    buttons.forEach(function (button) {
-      button.addEventListener('click', function () {
-        var index = Number(button.getAttribute('data-ref-target'));
-        var slide = slides[index];
-
-        if (!slide) {
-          return;
-        }
-
-        carousel.scrollTo({
-          left: slide.offsetLeft - carousel.offsetLeft - 20,
-          behavior: 'smooth'
-        });
-        setActive(index);
-      });
-    });
-
-    carousel.addEventListener('scroll', function () {
-      var center = carousel.scrollLeft + carousel.clientWidth / 2;
-      var activeIndex = 0;
-      var closest = Infinity;
-
-      slides.forEach(function (slide, index) {
-        var slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
-        var distance = Math.abs(center - slideCenter);
-
-        if (distance < closest) {
-          closest = distance;
-          activeIndex = index;
-        }
-      });
-
-      setActive(activeIndex);
-    }, { passive: true });
-  });
-</script>
-@endsection

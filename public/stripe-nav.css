@@ -56,6 +56,19 @@
   display: contents;
 }
 
+/* The scroll wrapper, drawer header and scrim exist only for the mobile
+   off-canvas drawer. On desktop the wrapper is transparent to the nav grid
+   (display: contents) and the chrome/scrim are removed entirely. */
+.stripe-nav-scroll,
+.stripe-drawer-foot {
+  display: contents;
+}
+
+.stripe-drawer-head,
+.stripe-nav-scrim {
+  display: none;
+}
+
 .stripe-nav-menu {
   display: flex;
   align-items: center;
@@ -523,11 +536,18 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
 }
 
 /* ============================================================================
-   Mobile (≤920px) — fall back to a slide-down drawer / inline accordion
+   Mobile (≤920px) — premium right-side, full-height off-canvas drawer
+   ----------------------------------------------------------------------------
+   The nav panel becomes a fixed drawer that slides in from the right edge at
+   full viewport height, over a blurred scrim. Layout inside the drawer:
+     • a header (brand + circular close button),
+     • a scrollable body (links + inline accordion sections),
+     • a pinned Contact CTA footer.
    ========================================================================== */
 @media (max-width: 920px) {
+  /* Lock the page behind the open drawer. */
   body.stripe-nav-open {
-    overflow-x: clip;
+    overflow: hidden;
   }
 
   .stripe-nav {
@@ -537,60 +557,262 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
     gap: 10px;
   }
 
-  /* The panel becomes the drawer; its children stack inside it */
-  .stripe-nav-panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 14px;
-    left: 14px;
-    display: grid;
-    gap: 8px;
-    max-height: calc(100svh - 124px);
-    overflow-y: auto;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 12px;
-    background: var(--theme-surface-solid, rgba(255, 255, 255, 0.98));
-    box-shadow: var(--shadow);
-    transform: translateY(-14px);
+  /* A backdrop-filter makes its element the containing block for every
+     position:fixed descendant — which would trap the drawer + scrim inside the
+     ~68px nav bar instead of the viewport. Drop the blur on mobile (in both the
+     resting and is-scrolled states) so the fixed drawer resolves against the
+     viewport. The themed nav background is ~0.9 opaque, so the blur is
+     imperceptible here anyway. */
+  .stripe-nav,
+  .stripe-site-header.is-scrolled .stripe-nav {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* ---- Dim + blur scrim ---------------------------------------------------- */
+  .stripe-nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(12, 9, 35, 0.46);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 180ms ease, transform 180ms ease;
+    transition: opacity 340ms ease, visibility 0s linear 340ms;
+  }
+
+  .stripe-nav-open .stripe-nav-scrim {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 340ms ease, visibility 0s;
+  }
+
+  /* ---- The drawer ---------------------------------------------------------- */
+  .stripe-nav-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
     z-index: 120;
+    display: flex;
+    flex-direction: column;
+    width: min(400px, 90vw);
+    height: 100dvh;
+    background: var(--theme-surface-solid, #ffffff);
+    border-left: 1px solid var(--theme-border, var(--line));
+    box-shadow: -28px 0 64px rgba(7, 8, 30, 0.30);
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+    overscroll-behavior: contain;
+    transition:
+      transform 440ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 440ms;
   }
 
   .stripe-nav-open .stripe-nav-panel {
-    transform: translateY(0);
-    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
     pointer-events: auto;
+    transition: transform 440ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
   }
 
+  /* The drawer carries its own close button, so retire the hamburger while the
+     drawer is open — it otherwise sits above the panel (z-index: 130 > 120) and
+     shows a duplicate "X". */
+  .stripe-nav-open .stripe-nav-toggle {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+  }
+
+  /* Make the hamburger a clearly-bounded button: on the cream nav a white
+     circle with a faint border reads as empty space, so taps on the circle
+     (but off the icon lines) feel like "clicking outside it". A firmer border,
+     soft shadow and larger glyph make the whole tap target obviously the
+     button. */
+  .stripe-nav-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--navy) 20%, transparent);
+    background: var(--theme-surface-solid, #fff);
+    color: var(--navy);
+    box-shadow: 0 4px 12px rgba(26, 0, 136, 0.10);
+    transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  }
+
+  .stripe-nav-toggle svg,
+  .stripe-nav-toggle i {
+    width: 23px;
+    height: 23px;
+    stroke-width: 2.4;
+  }
+
+  .stripe-nav-toggle:active {
+    transform: scale(0.92);
+    background: color-mix(in srgb, var(--navy) 6%, var(--theme-surface-solid));
+  }
+
+  /* ---- Drawer header (brand + close) --------------------------------------- */
+  .stripe-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex: 0 0 auto;
+    padding: 17px 18px 16px;
+    border-bottom: 1px solid var(--theme-border-soft, var(--line));
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--aqua) 34%, var(--theme-surface-solid)) 0%,
+        var(--theme-surface-solid) 100%);
+  }
+
+  .stripe-drawer-brand {
+    text-decoration: none;
+  }
+
+  .stripe-drawer-brand .brand-mark {
+    height: 34px;
+  }
+
+  .stripe-drawer-brand .brand-wordmark strong {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+  }
+
+  .stripe-drawer-brand .brand-wordmark small {
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .stripe-drawer-close {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--theme-border, var(--line));
+    border-radius: 50%;
+    background: var(--theme-surface-solid, #fff);
+    color: var(--navy);
+    cursor: pointer;
+    transition: background 200ms ease, color 200ms ease,
+      border-color 200ms ease, transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .stripe-drawer-close:hover,
+  .stripe-drawer-close:focus-visible {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #fff;
+    transform: rotate(90deg);
+    outline: none;
+  }
+
+  .stripe-drawer-close svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.2;
+  }
+
+  /* ---- Scrollable body ----------------------------------------------------- */
+  .stripe-nav-scroll {
+    display: block;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px 20px;
+  }
+
+  /* Full-width single-column list. Without an explicit track the grid auto-
+     sizes to content and the inherited justify-content:center floats the items
+     in the middle — set a 1fr track so every row fills the drawer. */
   .stripe-nav-menu {
     display: grid;
-    gap: 4px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
   }
 
+  /* Links + accordion triggers: full-width rows with comfortable tap height. */
   .stripe-nav-link {
+    position: relative;
     justify-content: space-between;
     width: 100%;
-    min-height: 48px;
-    border-radius: var(--radius);
-    padding: 0 12px;
+    min-height: 54px;
+    padding: 0 14px;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--navy);
+    transition: background 160ms ease, color 160ms ease;
   }
 
   .stripe-nav-link::after {
     display: none;
   }
 
-  .stripe-nav-cta {
-    display: inline-flex;
-    width: 100%;
+  /* A little air before the expandable categories. */
+  .stripe-nav-menu button.stripe-nav-trigger:first-of-type {
+    margin-top: 8px;
   }
 
-  /* Overlay collapses to an in-flow, full-width accordion panel */
+  /* Neutral wash on press / while a category is expanded. */
+  .stripe-nav-link:active,
+  .stripe-nav-link:hover,
+  .stripe-nav-trigger[aria-expanded="true"] {
+    background: color-mix(in srgb, var(--navy) 6%, transparent);
+  }
+
+  /* Current page / current section — soft coral pill + a left accent tab. */
+  .stripe-nav-link.is-active,
+  .stripe-nav-trigger.has-active {
+    background: color-mix(in srgb, var(--coral) 12%, transparent);
+    color: var(--navy);
+  }
+
+  .stripe-nav-link.is-active::before,
+  .stripe-nav-trigger.has-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 22px;
+    transform: translateY(-50%);
+    border-radius: 0 4px 4px 0;
+    background: var(--coral);
+  }
+
+  .stripe-nav-trigger .nav-trigger-chevron {
+    width: 18px;
+    height: 18px;
+    color: var(--muted);
+  }
+
+  .stripe-nav-trigger[aria-expanded="true"] .nav-trigger-chevron,
+  .stripe-nav-trigger.has-active .nav-trigger-chevron {
+    color: var(--teal-dark);
+  }
+
+  /* ---- Inline accordion (the shared overlay collapses in-flow) ------------- */
   .stripe-flyout {
     position: static;
     height: auto;
+    margin-top: 4px;
     opacity: 1;
     visibility: visible;
     transform: none;
@@ -608,7 +830,7 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
     height: auto !important;
     transform: none !important;
     border: 0;
-    border-radius: var(--radius);
+    border-radius: 0;
     box-shadow: none;
     background: transparent;
     overflow: visible;
@@ -634,14 +856,68 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
 
   .stripe-flyout-section.is-active {
     display: block;
+    animation: stripeDrawerReveal 320ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  @keyframes stripeDrawerReveal {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Section content sits in a soft inset card so it reads as the expanded
+     panel of the trigger above it. */
   .stripe-flyout .nav-dropdown-shell {
     grid-template-columns: 1fr;
-    border: 1px solid var(--line);
+    border: 1px solid var(--theme-border, var(--line));
+    border-radius: 14px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--aqua) 24%, var(--theme-surface-solid));
+  }
+
+  .stripe-flyout .nav-dropdown-main {
+    padding: 14px;
+    border-right: 0;
   }
 
   .stripe-flyout .nav-dropdown-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* ---- Pinned Contact CTA footer ------------------------------------------- */
+  .stripe-drawer-foot {
+    display: flex;
+    flex: 0 0 auto;
+    padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--theme-border-soft, var(--line));
+    background: var(--theme-surface-solid, #ffffff);
+  }
+
+  .stripe-nav-cta {
+    display: inline-flex;
+    width: 100%;
+    min-height: 52px;
+  }
+}
+
+/* Respect reduced-motion: the drawer/scrim appear without the slide/rotate. */
+@media (max-width: 920px) and (prefers-reduced-motion: reduce) {
+  .stripe-nav-panel,
+  .stripe-nav-open .stripe-nav-panel {
+    transition: visibility 0s;
+  }
+
+  .stripe-nav-scrim,
+  .stripe-nav-open .stripe-nav-scrim {
+    transition: visibility 0s, opacity 0s;
+  }
+
+  .stripe-flyout-section.is-active {
+    animation: none;
+  }
+
+  .stripe-drawer-close:hover,
+  .stripe-drawer-close:focus-visible {
+    transform: none;
   }
 }
