@@ -39,6 +39,42 @@ return [
            Country code first, no '+' / spaces / dashes. */
         'phone_e164' => '918233365888',
         'address' => 'A-16A, Van Vihar colony, Tonk Road, Jaipur, Rajasthan, 302018',
+        /* Structured form of the address above — used to emit a schema.org
+           PostalAddress in the Organization JSON-LD (richer than a plain string,
+           helps local / "study abroad consultant in Jaipur" relevance). */
+        'address_parts' => [
+            'street'      => 'A-16A, Van Vihar Colony, Tonk Road',
+            'locality'    => 'Jaipur',
+            'region'      => 'Rajasthan',
+            'postal_code' => '302018',
+            'country'     => 'IN',
+        ],
+    ],
+
+    /* Services offered — emitted as a schema.org OfferCatalog on the Organization
+       and mirrored by the visible cards on /study-abroad. Editing this list keeps
+       the structured data and the page in step. */
+    'services' => [
+        ['name' => 'Course & Career Mapping', 'description' => 'Match interests, marks, and career goals to the right country and degree programs abroad.'],
+        ['name' => 'University Shortlisting', 'description' => 'Ambitious, realistic, and secure university lists built on admissions fit, cost, and outcomes.'],
+        ['name' => 'Applications & Essays', 'description' => 'SOPs, personal statements, and recommendations shaped into one coherent application.'],
+        ['name' => 'Scholarship & Finance Planning', 'description' => 'Scholarships, assistantships, and education-loan readiness compared before you decide.'],
+        ['name' => 'Student Visa Counselling', 'description' => 'Documents, interview prep, and compliance for student visas to every major destination.'],
+        ['name' => 'Test Preparation', 'description' => 'IELTS, TOEFL, PTE, SAT, ACT, GRE, and GMAT preparation aligned to your application timeline.'],
+        ['name' => 'Pre & Post Departure Support', 'description' => 'Accommodation, banking, insurance, and the first 30 days of settling in abroad.'],
+    ],
+
+    /* Topical expertise — emitted as schema.org "knowsAbout". Signals to search
+       engines the subjects and destinations this site is authoritative on, which
+       supports "study abroad" and "study in <country>" style queries. */
+    'expertise' => [
+        'Study abroad', 'Overseas education', 'Study abroad consultancy',
+        'University admissions', 'Student visa', 'Scholarships',
+        'IELTS', 'TOEFL', 'SAT', 'GRE', 'GMAT', 'MBBS abroad',
+        'Study in USA', 'Study in UK', 'Study in Canada', 'Study in Australia',
+        'Study in Ireland', 'Study in Germany', 'Study in France', 'Study in New Zealand',
+        'Study in Italy', 'Study in Netherlands', 'Study in Finland', 'Study in Spain',
+        'Study in Dubai', 'Study in Europe',
     ],
 
     /* Where the public website forms deliver to, and which mailbox the team

@@ -1,11 +1,44 @@
 @php
-    $pageTitle = 'Study Abroad | One Degree Advisory';
-    $pageDescription = 'One connected advisory for your study-abroad journey — profile diagnostics, country fit, applications, scholarships, visas, and arrival support.';
+    use App\Support\Seo;
+
+    $pageTitle = 'Study Abroad Consultants | One Degree Advisory';
+    $pageDescription = 'Study abroad with One Degree Advisory — expert guidance on choosing universities, scholarships, and student visas for the USA, UK, Canada, Australia, Ireland, Germany and 15+ destinations.';
     $activeNav = 'services';
     $mainId = 'main';
+    $canonical = route('study-abroad');
+
+    $serviceJsonLd = Seo::jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'Service',
+        'serviceType' => 'Study abroad consultancy',
+        'name' => 'Study Abroad Advisory',
+        'description' => $pageDescription,
+        'url' => $canonical,
+        'provider' => ['@id' => url('/#organization')],
+        'areaServed' => 'Worldwide',
+        'audience' => ['@type' => 'EducationalAudience', 'educationalRole' => 'student'],
+    ]);
+
+    $breadcrumbJsonLd = Seo::jsonLd([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Study Abroad', 'item' => $canonical],
+        ],
+    ]);
 @endphp
 
 @extends('layouts.app')
+
+@push('head')
+  <script type="application/ld+json">
+  {!! $serviceJsonLd !!}
+  </script>
+  <script type="application/ld+json">
+  {!! $breadcrumbJsonLd !!}
+  </script>
+@endpush
 
 @section('content')
 <main id="main" class="va-about-page study-abroad-page">

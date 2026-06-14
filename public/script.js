@@ -1889,6 +1889,19 @@ ready(() => {
         suppressClick = false;
       }, true);
 
+      // Wheel / trackpad scrolling — let users scroll the row by hand. We only
+      // act on horizontal-intent scrolling (trackpad swipe, or Shift+wheel), so
+      // a normal vertical wheel still scrolls the page and is never trapped.
+      carousel.addEventListener("wheel", (event) => {
+        const horizontal = Math.abs(event.deltaX) > Math.abs(event.deltaY) || event.shiftKey;
+        if (!horizontal) return;
+        const delta = event.shiftKey && event.deltaX === 0 ? event.deltaY : event.deltaX;
+        if (!delta) return;
+        pauseAuto(1200);
+        moveTo(targetOffset + delta);
+        if (event.cancelable) event.preventDefault();
+      }, { passive: false });
+
       // Manual scroll buttons — step by one card (+ gap) with an eased glide.
       let manualTransitionTimer = null;
 

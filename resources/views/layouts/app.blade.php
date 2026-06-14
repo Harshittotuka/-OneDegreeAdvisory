@@ -18,6 +18,10 @@
       $metaDescription = \App\Support\Seo::description($pageDescription ?? null, config('site.description'), 170);
       $canonicalUrl = \App\Support\Seo::pageUrl($canonical ?? url()->current());
       $ogImageUrl = \App\Support\Seo::imageUrl($ogImage ?? null);
+      // Declare dimensions only for the default share image (assets/Logo/og-image.png,
+      // a known 1200x630). Per-page overrides (blog/country photos) vary in size, so
+      // we omit width/height for them rather than advertise wrong dimensions.
+      $ogImageIsDefault = trim((string) ($ogImage ?? '')) === '';
       $robotsValue = $robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
       $googleSiteVerification = trim((string) config('services.google.site_verification'));
       $googleTagId = app()->environment('production') && ! $cmsEdit ? trim((string) config('services.google.tag_id')) : '';
@@ -47,10 +51,16 @@
     <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:image" content="{{ $ogImageUrl }}">
     <meta property="og:image:alt" content="{{ $ogImageAlt ?? config('site.name') }}">
+    @if($ogImageIsDefault)
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    @endif
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $metaTitle }}">
     <meta name="twitter:description" content="{{ $metaDescription }}">
     <meta name="twitter:image" content="{{ $ogImageUrl }}">
+    <meta name="twitter:image:alt" content="{{ $ogImageAlt ?? config('site.name') }}">
 
     @stack('head')
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -140,10 +150,63 @@
     @endunless
 
     {{-- JSON is built in PHP so the literal context key is not read as a Blade directive. --}}
-    @php($orgJsonLd = \App\Support\Seo::jsonLd(['@context' => 'https://schema.org', '@graph' => [
-      ['@type' => 'EducationalOrganization', '@id' => url('/#organization'), 'name' => config('site.name'), 'url' => url('/'), 'logo' => ['@type' => 'ImageObject', 'url' => asset('assets/Logo/og-image.png')], 'description' => config('site.description'), 'email' => config('site.contact.email'), 'telephone' => config('site.contact.phone'), 'address' => config('site.contact.address'), 'areaServed' => 'Worldwide', 'sameAs' => array_values(array_filter(array_column(config('site.socials', []), 'href')))],
-      ['@type' => 'WebSite', '@id' => url('/#website'), 'url' => url('/'), 'name' => config('site.name'), 'description' => config('site.description'), 'publisher' => ['@id' => url('/#organization')], 'inLanguage' => 'en'],
-    ]]))
+    @php
+      $addr = config('site.contact.address_parts', []);
+      $postalAddress = array_filter([
+        '@type' => 'PostalAddress',
+        'streetAddress' => $addr['street'] ?? null,
+        'addressLocality' => $addr['locality'] ?? null,
+        'addressRegion' => $addr['region'] ?? null,
+        'postalCode' => $addr['postal_code'] ?? null,
+        'addressCountry' => $addr['country'] ?? null,
+      ]);
+
+      // Mirror config('site.services') into an OfferCatalog of Service offers.
+      $serviceOffers = array_values(array_map(fn (array $s) => [
+        '@type' => 'Offer',
+        'itemOffered' => array_filter([
+          '@type' => 'Service',
+          'name' => $s['name'] ?? '',
+          'description' => $s['description'] ?? null,
+          'provider' => ['@id' => url('/#organization')],
+        ]),
+      ], config('site.services', [])));
+
+      $orgNode = array_filter([
+        '@type' => 'EducationalOrganization',
+        '@id' => url('/#organization'),
+        'name' => config('site.name'),
+        'alternateName' => 'ODA',
+        'url' => url('/'),
+        'logo' => ['@type' => 'ImageObject', 'url' => asset('assets/Logo/og-image.png')],
+        'image' => asset('assets/Logo/og-image.png'),
+        'description' => config('site.description'),
+        'email' => config('site.contact.email'),
+        'telephone' => config('site.contact.phone'),
+        'address' => $postalAddress ?: config('site.contact.address'),
+        'areaServed' => 'Worldwide',
+        'knowsAbout' => array_values(config('site.expertise', [])),
+        'contactPoint' => [array_filter([
+          '@type' => 'ContactPoint',
+          'telephone' => config('site.contact.phone'),
+          'email' => config('site.contact.email'),
+          'contactType' => 'customer support',
+          'areaServed' => 'Worldwide',
+          'availableLanguage' => ['English', 'Hindi'],
+        ])],
+        'hasOfferCatalog' => $serviceOffers ? [
+          '@type' => 'OfferCatalog',
+          'name' => 'Education advisory services',
+          'itemListElement' => $serviceOffers,
+        ] : null,
+        'sameAs' => array_values(array_filter(array_column(config('site.socials', []), 'href'))),
+      ]);
+
+      $orgJsonLd = \App\Support\Seo::jsonLd(['@context' => 'https://schema.org', '@graph' => [
+        $orgNode,
+        ['@type' => 'WebSite', '@id' => url('/#website'), 'url' => url('/'), 'name' => config('site.name'), 'description' => config('site.description'), 'publisher' => ['@id' => url('/#organization')], 'inLanguage' => 'en'],
+      ]]);
+    @endphp
     <script type="application/ld+json">
       {!! $orgJsonLd !!}
     </script>

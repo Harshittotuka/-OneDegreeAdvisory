@@ -202,8 +202,8 @@ button {
 .notice-marquee-group {
   display: flex;
   align-items: center;
-  gap: 40px;
-  padding-right: 40px;
+  gap: 64px;
+  padding-right: 64px;
   flex: 0 0 auto;
 }
 
@@ -212,7 +212,8 @@ button {
   align-items: center;
   gap: 8px;
   min-height: 24px;
-  color: #f7fffb;
+  color: #ff5e32; /* One Degree orange (was white) */
+  font-weight: 500; /* not bold */
   text-decoration: none;
   border-bottom: 0;
   white-space: nowrap;
@@ -221,7 +222,7 @@ button {
 
 .notice-marquee-item:hover,
 .notice-marquee-item:focus-visible {
-  color: #ffffff;
+  color: #ff7a52;
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
@@ -233,7 +234,7 @@ button {
 }
 
 .notice-marquee-item--static:hover {
-  color: #f7fffb;
+  color: #ff5e32;
   text-decoration: none;
 }
 
@@ -5595,6 +5596,31 @@ html.oda-popup-open { overflow: hidden; }
   display: grid;
   grid-template-columns: minmax(300px, 1.4fr) repeat(3, minmax(160px, 0.6fr));
   gap: 42px;
+}
+
+/* Let columns shrink below their content width so the footer never pushes past
+   the page edge on laptop widths. */
+.footer-grid > * {
+  min-width: 0;
+}
+
+/* The email is the longest footer link and the "Connect" column is narrow
+   (the layout container caps at 1280px). Keep it on a single line and scale the
+   font down on laptop widths so it fits the column instead of wrapping/clipping.
+   On phones the footer goes 2-up with wider columns, so we let it wrap again. */
+.footer-email {
+  white-space: nowrap;
+  font-size: clamp(0.72rem, 1.02vw, 0.86rem);
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 600px) {
+  .footer-email {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 0.95rem;
+    letter-spacing: normal;
+  }
 }
 
 
@@ -24990,4 +25016,17 @@ html[data-color-theme] .whyus-card:hover .whyus-icon {
   .odm-point,
   .odm-thread-text,
   .odm-panel.is-active { transition: none; animation: none; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Justified body copy (client request — justified alignment across the site).
+   Applies to long-form paragraph text inside page content plus the footer
+   blurb. Headings, eyebrows, nav, buttons and stat figures are not <p> here so
+   they're untouched, and any component that sets its own text-align (centred
+   section intros, etc.) keeps it because that selector is more specific.
+   Single-line paragraphs are visually unaffected — only wrapped lines justify.
+   ────────────────────────────────────────────────────────────────────────── */
+main p,
+.footer-brand p {
+  text-align: justify;
 }

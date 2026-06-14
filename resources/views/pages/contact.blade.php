@@ -36,8 +36,8 @@
 
           <div class="contact-page-grid">
             <aside class="contact-info-panel reveal" aria-label="Contact details">
-              <h2>Contact us on</h2>
-              <p>Free consultation &middot; No obligation &middot; 30 minutes with a senior counsellor.</p>
+              <h2>Contact us</h2>
+              <p>Free consultation - 30 minutes with a senior counsellor.</p>
 
               <div class="contact-info-list">
                 <div class="contact-info-item">
@@ -74,7 +74,7 @@
 
               <div class="contact-response-card">
                 <strong>Average response time</strong>
-                <span>Under 4 hours</span>
+                <span>Within 4 hours</span>
                 <p>Business days &middot; IST timezone</p>
               </div>
 
