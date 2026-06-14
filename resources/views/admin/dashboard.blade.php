@@ -223,10 +223,10 @@
       <a class="dsh-act" href="{{ route('admin.home-hero.live') }}">
         <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="panel-top"></i></span> Home page
       </a>
-      @if(session('cms_super_admin'))
       <a class="dsh-act" href="{{ route('admin.pages.index') }}">
         <span class="dsh-ico" style="--c:#7b2ff7;--cb:#f0e9ff"><i data-lucide="layout-panel-top"></i></span> Page Builder
       </a>
+      @if(session('cms_super_admin'))
       <a class="dsh-act" href="{{ route('admin.about.live') }}">
         <span class="dsh-ico" style="--c:#9a6b00;--cb:#fdf3dd"><i data-lucide="layout-template"></i></span> About page
       </a>

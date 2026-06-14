@@ -109,7 +109,7 @@ Route::prefix('admin')->group(function () {
         Route::post('home-hero/import', [HomeHeroCmsController::class, 'importUrl'])->name('admin.home-hero.import');
         Route::post('home-hero/preview', [HomeHeroCmsController::class, 'preview'])->name('admin.home-hero.preview');
 
-        /* ── Brief Page Builder (super-admin) ── */
+        /* ── Brief Page Builder (all CMS admins; raw embed block stays super-admin only) ── */
         Route::get('pages', [BriefPageCmsController::class, 'index'])->name('admin.pages.index');
         Route::post('pages', [BriefPageCmsController::class, 'storePage'])->name('admin.pages.store');
         Route::get('pages/block', [BriefPageCmsController::class, 'block'])->name('admin.pages.block');
