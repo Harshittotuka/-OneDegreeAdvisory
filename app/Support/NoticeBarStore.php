@@ -75,6 +75,18 @@ class NoticeBarStore
         $speed = (int) ($data['speed'] ?? $defaults['speed']);
         $speed = max(5, min(120, $speed));
 
+        $textColor = strtolower((string) ($data['text_color'] ?? $defaults['text_color']));
+        if (! preg_match('/^#[0-9a-f]{6}$/', $textColor)) {
+            $textColor = $defaults['text_color'];
+        }
+
+        $fontStyle = (string) ($data['font_style'] ?? $defaults['font_style']);
+        if (! in_array($fontStyle, ['normal', 'italic'], true)) {
+            $fontStyle = 'normal';
+        }
+
+        $bold = (bool) ($data['bold'] ?? $defaults['bold']);
+
         $items = [];
         foreach ($data['items'] ?? [] as $item) {
             if (! is_array($item)) {
@@ -97,6 +109,9 @@ class NoticeBarStore
             'variant' => $variant,
             'word_count' => $wordCount,
             'speed' => $speed,
+            'text_color' => $textColor,
+            'font_style' => $fontStyle,
+            'bold' => $bold,
             'items' => $items,
         ];
     }
@@ -127,6 +142,9 @@ class NoticeBarStore
             'variant' => 'original',
             'word_count' => 5,
             'speed' => 14,
+            'text_color' => '#ff5e32',
+            'font_style' => 'normal',
+            'bold' => false,
             'items' => $items,
         ];
     }

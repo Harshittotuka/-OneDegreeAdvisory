@@ -136,12 +136,15 @@
 
     $contentItems = [
       ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
-      ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
     ];
+    // Page Builder sits directly below Home Page (super-admin only).
+    if ($isSuper) {
+      $contentItems[] = ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'];
+    }
+    $contentItems[] = ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'];
     // Super admin unlocks the (otherwise hidden) About-page editor.
     if ($isSuper) {
       $contentItems[] = ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.live', 'match' => 'admin.about'];
-      $contentItems[] = ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'];
     }
     $contentItems[] = ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'];
     $contentItems[] = ['label' => 'Unlinked Pages', 'icon' => 'unlink', 'route' => 'admin.unlinked-pages.index', 'match' => 'admin.unlinked-pages'];

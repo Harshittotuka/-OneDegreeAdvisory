@@ -33,7 +33,8 @@
 @section('content')
 <p class="nb-intro">
   Manage the scrolling blue bar at the very top of the site — its display style, how fast it
-  scrolls, how much of each item shows, and the announcement list itself.
+  scrolls, how much of each item shows, the text colour / style / weight, and the
+  announcement list itself.
 </p>
 
 <form method="POST" action="{{ route('admin.notice-bar.update') }}" id="nb-form">
@@ -64,6 +65,30 @@
         <label for="nb-speed">Scroll speed (seconds per loop)</label>
         <input id="nb-speed" type="number" name="speed" min="5" max="120" value="{{ $bar['speed'] ?? 14 }}">
         <p class="hint">Lower = faster. Default 14.</p>
+      </div>
+
+      <div class="field" style="margin:0;">
+        <label for="nb-color">Text colour</label>
+        <input id="nb-color" type="color" name="text_color" value="{{ $bar['text_color'] ?? '#ff5e32' }}"
+               style="width:100%; height:42px; padding:4px; border:1px solid var(--line); border-radius:8px; background:#fff; cursor:pointer;">
+        <p class="hint">Colour of the scrolling announcement text. Default brand orange.</p>
+      </div>
+
+      <div class="field" style="margin:0;">
+        <label for="nb-font-style">Font style</label>
+        <select id="nb-font-style" name="font_style">
+          <option value="normal" @selected(($bar['font_style'] ?? 'normal') === 'normal')>Normal</option>
+          <option value="italic" @selected(($bar['font_style'] ?? '') === 'italic')>Italic</option>
+        </select>
+        <p class="hint">Italic slants the announcement text.</p>
+      </div>
+
+      <div class="field" style="margin:0;">
+        <label for="nb-bold">Weight</label>
+        <label class="nb-vis" style="margin-top:8px;">
+          <input id="nb-bold" type="checkbox" name="bold" value="1" @checked(! empty($bar['bold']))> Bold text
+        </label>
+        <p class="hint">Off = normal weight.</p>
       </div>
     </div>
   </div>

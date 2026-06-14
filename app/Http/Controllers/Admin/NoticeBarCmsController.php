@@ -80,6 +80,9 @@ class NoticeBarCmsController extends Controller
             'variant' => 'required|in:original,minimal,compact',
             'word_count' => 'required|integer|min:0|max:50',
             'speed' => 'required|integer|min:5|max:120',
+            'text_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'font_style' => 'nullable|in:normal,italic',
+            'bold' => 'nullable|boolean',
             'items' => 'array',
             'items.*.text' => 'nullable|string|max:300',
             'items.*.href' => 'nullable|string|max:500',
@@ -105,6 +108,9 @@ class NoticeBarCmsController extends Controller
             'variant' => $request->input('variant'),
             'word_count' => (int) $request->input('word_count'),
             'speed' => (int) $request->input('speed'),
+            'text_color' => (string) $request->input('text_color', '#ff5e32'),
+            'font_style' => (string) $request->input('font_style', 'normal'),
+            'bold' => $request->boolean('bold'),
             'items' => $items,
         ]);
 

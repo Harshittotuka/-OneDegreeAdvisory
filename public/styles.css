@@ -212,8 +212,9 @@ button {
   align-items: center;
   gap: 8px;
   min-height: 24px;
-  color: #ff5e32; /* One Degree orange (was white) */
-  font-weight: 500; /* not bold */
+  color: var(--notice-text-color, #ff5e32); /* CMS-controlled (default brand orange) */
+  font-weight: var(--notice-font-weight, 500); /* CMS-controlled (bold toggle) */
+  font-style: var(--notice-font-style, normal); /* CMS-controlled */
   text-decoration: none;
   border-bottom: 0;
   white-space: nowrap;
@@ -222,7 +223,7 @@ button {
 
 .notice-marquee-item:hover,
 .notice-marquee-item:focus-visible {
-  color: #ff7a52;
+  color: color-mix(in srgb, var(--notice-text-color, #ff5e32) 78%, #ffffff);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
@@ -234,7 +235,7 @@ button {
 }
 
 .notice-marquee-item--static:hover {
-  color: #ff5e32;
+  color: var(--notice-text-color, #ff5e32);
   text-decoration: none;
 }
 

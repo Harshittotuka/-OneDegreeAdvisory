@@ -41,6 +41,11 @@
 
     $marqueeSpeed = (int) ($bar['speed'] ?? 14);
 
+    // Text appearance — editable in the CMS (/admin/notice-bar).
+    $marqueeColor  = (string) ($bar['text_color'] ?? '#ff5e32');
+    $marqueeStyle  = (($bar['font_style'] ?? 'normal') === 'italic') ? 'italic' : 'normal';
+    $marqueeWeight = ! empty($bar['bold']) ? '700' : '500';
+
     $waPhone = config('site.contact.phone');
     $waE164  = config('site.contact.phone_e164');
 @endphp
@@ -68,7 +73,7 @@
         $shift = '-' . rtrim(rtrim(number_format(100 / $copies, 4, '.', ''), '0'), '.') . '%';
     @endphp
     <div class="notice-marquee" data-notice-marquee>
-      <div class="notice-marquee-track" style="--marquee-shift: {{ $shift }}; --marquee-duration: {{ $marqueeSpeed }}s;">
+      <div class="notice-marquee-track" style="--marquee-shift: {{ $shift }}; --marquee-duration: {{ $marqueeSpeed }}s; --notice-text-color: {{ $marqueeColor }}; --notice-font-style: {{ $marqueeStyle }}; --notice-font-weight: {{ $marqueeWeight }};">
         @for ($copy = 0; $copy < $copies; $copy++)
           <div class="notice-marquee-group" @if ($copy > 0) aria-hidden="true" @endif>
             @foreach ($notices as $notice)
