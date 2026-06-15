@@ -1703,6 +1703,82 @@ button {
   animation: heroDrift 22s ease-in-out infinite alternate;
 }
 
+/* ── Hero background slideshow ───────────────────────────────────────────────
+   .hero-slides stacks N .hero-slide layers; only .is-active is shown. The
+   transition style is set by [data-hero-anim]; script.js toggles is-active on
+   a timer. A single image keeps the original gentle drift. */
+.hero-slides {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  transform: scale(1.08);
+  filter: brightness(1.18) saturate(1.08) contrast(1.02);
+  opacity: 0;
+  transition:
+    opacity var(--hero-dur, 1.2s) ease,
+    transform var(--hero-dur, 1.2s) ease,
+    filter var(--hero-dur, 1.2s) ease;
+  will-change: opacity, transform;
+}
+
+.hero-slide.is-active {
+  opacity: 1;
+}
+
+/* One image: no cross-fade, keep the original slow drift. */
+.hero-slides--single .hero-slide {
+  transition: none;
+}
+.hero-slides--single .hero-slide.is-active {
+  animation: heroDrift 22s ease-in-out infinite alternate;
+}
+
+/* Transition variants — the incoming/active slide settles to neutral. */
+.hero-slides[data-hero-anim="zoom"] .hero-slide {
+  transform: scale(1.22);
+}
+.hero-slides[data-hero-anim="zoom"] .hero-slide.is-active {
+  transform: scale(1.08);
+}
+.hero-slides[data-hero-anim="slide"] .hero-slide {
+  transform: translateX(8%) scale(1.08);
+}
+.hero-slides[data-hero-anim="slide"] .hero-slide.is-active {
+  transform: translateX(0) scale(1.08);
+}
+.hero-slides[data-hero-anim="vertical"] .hero-slide {
+  transform: translateY(8%) scale(1.08);
+}
+.hero-slides[data-hero-anim="vertical"] .hero-slide.is-active {
+  transform: translateY(0) scale(1.08);
+}
+.hero-slides[data-hero-anim="blur"] .hero-slide {
+  filter: brightness(1.18) saturate(1.08) contrast(1.02) blur(16px);
+}
+.hero-slides[data-hero-anim="blur"] .hero-slide.is-active {
+  filter: brightness(1.18) saturate(1.08) contrast(1.02) blur(0);
+}
+.hero-slides[data-hero-anim="kenburns"] .hero-slide.is-active {
+  animation: heroKenburns var(--hero-kb, 12s) ease-out both;
+}
+
+@keyframes heroKenburns {
+  from { transform: scale(1.08); }
+  to { transform: scale(1.22); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide { transition: none; animation: none !important; }
+}
+
 .hero-overlay {
   z-index: -1;
   background:

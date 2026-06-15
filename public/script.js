@@ -561,6 +561,23 @@ ready(() => {
     revealItems.forEach((item) => item.classList.add("is-visible"));
   }
 
+  // Hero background slideshow — cycle the stacked .hero-slide layers on a timer.
+  // The transition style is pure CSS (driven by [data-hero-anim]); here we only
+  // flip which layer is active. Honours reduced-motion (shows the first image).
+  document.querySelectorAll("[data-hero-slideshow]").forEach((stack) => {
+    if (document.body.classList.contains("cms-editing")) return; // editor previews its own way
+    const slides = Array.from(stack.querySelectorAll(".hero-slide"));
+    if (slides.length < 2) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const interval = Math.max(2, parseFloat(stack.dataset.heroInterval || "5")) * 1000;
+    let i = 0;
+    window.setInterval(() => {
+      slides[i].classList.remove("is-active");
+      i = (i + 1) % slides.length;
+      slides[i].classList.add("is-active");
+    }, interval);
+  });
+
   // Phone-only collapsible contact card: tap the blue strip to slide the
   // contact details over the form; the close button tucks it away again. The
   // collapsed/overlay styling is gated to ≤720px in CSS, so on desktop this

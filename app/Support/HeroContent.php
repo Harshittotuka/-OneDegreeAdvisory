@@ -25,6 +25,11 @@ class HeroContent
     public const TEXT_STYLE_MODES = ['default', 'solid', 'gradient'];
     public const TEXT_ANIMATIONS = ['theme', 'none', 'shimmer', 'pulse', 'lift'];
 
+    /** Background slideshow transition styles (default = fade in / fade out). */
+    public const SLIDE_ANIMATIONS = ['fade', 'slide', 'vertical', 'zoom', 'blur', 'kenburns'];
+    public const SLIDESHOW_DEFAULTS = ['animation' => 'fade', 'interval' => 5, 'duration' => 1.2];
+    public const MAX_SLIDES = 12;
+
     public const TEXT_STYLE_DEFAULTS = [
         'eyebrow' => [
             'mode' => 'default',
@@ -67,8 +72,19 @@ class HeroContent
         }
 
         $data = json_decode((string) file_get_contents($this->path), true);
+        if (! is_array($data)) {
+            return $this->defaults();
+        }
 
-        return is_array($data) ? array_merge($this->defaults(), $data) : $this->defaults();
+        $merged = array_merge($this->defaults(), $data);
+
+        // Records saved before the slideshow feature only carry a single
+        // `background`; seed `slides` from it so the hero keeps its image.
+        if (! isset($data['slides']) || ! is_array($data['slides']) || $data['slides'] === []) {
+            $merged['slides'] = $merged['background'] !== '' ? [$merged['background']] : [];
+        }
+
+        return $merged;
     }
 
     /** What the public page renders. (Kept separate so preview logic can swap it.) */
@@ -162,12 +178,43 @@ class HeroContent
             ? $rawBackground
             : $text($rawBackground, 1000);
 
+        // Slideshow images. Freshly-cropped slides arrive as data URLs (live
+        // preview); a real save converts them to file URLs first, so the cap holds.
+        $slides = [];
+        foreach (is_array($raw['slides'] ?? null) ? $raw['slides'] : [] as $s) {
+            $s = trim((string) $s);
+            if ($s === '') {
+                continue;
+            }
+            $slides[] = str_starts_with($s, 'data:image/') ? $s : $text($s, 1000);
+            if (count($slides) >= self::MAX_SLIDES) {
+                break;
+            }
+        }
+        if ($slides === [] && $background !== '') {
+            $slides = [$background];
+        }
+        // Keep the legacy single background in sync with the first slide.
+        $background = $slides[0] ?? $background;
+
+        $rawSs = is_array($raw['slideshow'] ?? null) ? $raw['slideshow'] : [];
+        $num = fn ($v, $min, $max, $def) => is_numeric($v) ? max($min, min($max, (float) $v)) : $def;
+        $slideshow = [
+            'animation' => in_array($rawSs['animation'] ?? '', self::SLIDE_ANIMATIONS, true)
+                ? $rawSs['animation']
+                : self::SLIDESHOW_DEFAULTS['animation'],
+            'interval' => $num($rawSs['interval'] ?? null, 2, 30, self::SLIDESHOW_DEFAULTS['interval']),
+            'duration' => $num($rawSs['duration'] ?? null, 0.2, 5, self::SLIDESHOW_DEFAULTS['duration']),
+        ];
+
         return [
             'eyebrow' => $text($raw['eyebrow'] ?? '', 120),
             'heading_pre' => $text($raw['heading_pre'] ?? '', 200),
             'heading_highlight' => $text($raw['heading_highlight'] ?? '', 200),
             'heading_post' => $text($raw['heading_post'] ?? '', 200),
             'background' => $background,
+            'slides' => $slides,
+            'slideshow' => $slideshow,
             'colors' => $colors,
             'styles' => $styles,
             'actions' => $actions,
@@ -183,6 +230,8 @@ class HeroContent
             'heading_highlight' => 'one degree',
             'heading_post' => 'away from the world.',
             'background' => 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2200&q=88',
+            'slides' => ['https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=2200&q=88'],
+            'slideshow' => self::SLIDESHOW_DEFAULTS,
             'colors' => ['eyebrow' => '', 'heading' => '', 'highlight' => ''],
             'styles' => self::TEXT_STYLE_DEFAULTS,
             'actions' => [

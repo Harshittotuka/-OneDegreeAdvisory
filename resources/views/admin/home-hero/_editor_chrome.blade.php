@@ -134,6 +134,72 @@
   .le-seg[data-style-animation] { flex-wrap: wrap; }
   .le-seg[data-style-animation] button { flex: 1 1 calc(33.333% - 6px); }
 
+  /* ── Slideshow manager modal ── */
+  .le-ss { position: fixed; inset: 0; z-index: 9600; background: rgba(8,18,33,.82); display: none; align-items: center; justify-content: center; padding: 24px; font-family: "Manrope", sans-serif; }
+  .le-ss.open { display: flex; }
+  .le-ss-card { width: 940px; max-width: 96vw; max-height: 92vh; display: flex; flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 40px 90px rgba(0,0,0,.5); }
+  .le-ss-head { display: flex; align-items: center; gap: 9px; padding: 14px 18px; font-weight: 800; color: #14253e; border-bottom: 1px solid #eef1f4; }
+  .le-ss-head i { width: 18px; height: 18px; color: var(--le-accent); }
+  .le-ss-head .le-sp { flex: 1; }
+  .le-ss-head button { border: 0; background: none; cursor: pointer; color: #6a7686; display: inline-flex; }
+  .le-ss-body { display: grid; grid-template-columns: 1fr 312px; min-height: 0; overflow: hidden; }
+  @media (max-width: 820px) { .le-ss-body { grid-template-columns: 1fr; } }
+  .le-ss-main { padding: 16px 18px; overflow-y: auto; }
+  .le-ss-side { padding: 16px 18px; border-left: 1px solid #eef1f4; background: #fafbfc; overflow-y: auto; }
+  @media (max-width: 820px) { .le-ss-side { border-left: 0; border-top: 1px solid #eef1f4; } }
+  .le-ss-section-title { display: flex; align-items: center; gap: 7px; font: 800 .82rem "Manrope", sans-serif; color: #14253e; margin: 2px 0 11px; }
+  .le-ss-section-title i { width: 15px; height: 15px; color: var(--le-accent); }
+  .le-ss-pill { background: #ebecff; color: #5256e0; font: 800 .7rem "Manrope", sans-serif; padding: 1px 8px; border-radius: 999px; }
+
+  .le-ss-preview { position: relative; isolation: isolate; aspect-ratio: 16 / 7; border-radius: 12px; overflow: hidden; background: #11202f; margin-bottom: 16px; }
+  .le-ss-preview .hero-slides { position: absolute; inset: 0; z-index: 0; }
+  .le-ss-preview-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; color: #8aa0c4; font: 700 .82rem "Manrope", sans-serif; }
+  .le-ss-preview-empty i { width: 17px; height: 17px; }
+  .le-ss-preview-tag { position: absolute; left: 10px; bottom: 10px; z-index: 2; background: rgba(8,18,33,.6); color: #fff; font: 700 .68rem "Manrope", sans-serif; padding: 3px 9px; border-radius: 999px; backdrop-filter: blur(4px); text-transform: capitalize; }
+
+  .le-ss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .le-ss-tile { position: relative; aspect-ratio: 16 / 10; border-radius: 10px; overflow: hidden; border: 1px solid #e5e8ee; background: #11202f center / cover no-repeat; cursor: grab; }
+  .le-ss-tile.dragging { opacity: .4; }
+  .le-ss-num { position: absolute; top: 6px; left: 6px; background: rgba(14,31,61,.85); color: #fff; font: 800 .68rem "Manrope", sans-serif; padding: 2px 7px; border-radius: 999px; }
+  .le-ss-tile-actions { position: absolute; top: 6px; right: 6px; display: flex; gap: 5px; opacity: 0; transition: opacity .12s; }
+  .le-ss-tile:hover .le-ss-tile-actions { opacity: 1; }
+  .le-ss-tile-actions button { width: 26px; height: 26px; border: 0; border-radius: 7px; cursor: pointer; background: rgba(14,31,61,.92); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+  .le-ss-tile-actions button:hover { background: var(--le-accent); }
+  .le-ss-tile-actions button.del:hover { background: #c0392b; }
+  .le-ss-tile-actions svg { width: 13px; height: 13px; }
+  .le-ss-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; aspect-ratio: 16 / 10;
+    border: 1.5px dashed #cfd8e0; border-radius: 10px; background: #fafbfc; color: #6a7686; cursor: pointer; font: 800 .78rem "Manrope", sans-serif; }
+  .le-ss-add:hover { border-color: var(--le-accent); color: var(--le-accent); background: #f4f5ff; }
+  .le-ss-add i { width: 20px; height: 20px; }
+  .le-ss-tip { color: #8a93a3; font: 600 .76rem "Manrope", sans-serif; margin: 12px 0 0; }
+
+  .le-ss-anim { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .le-ss-anim button { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; border: 1px solid #e5e8ee;
+    border-radius: 10px; background: #fff; padding: 9px 10px; cursor: pointer; text-align: left; font-family: "Manrope", sans-serif; }
+  .le-ss-anim button:hover { border-color: var(--le-accent); }
+  .le-ss-anim button .ti { display: flex; align-items: center; gap: 7px; font: 800 .8rem "Manrope", sans-serif; color: #14253e; }
+  .le-ss-anim button .ti i { width: 15px; height: 15px; color: var(--le-accent); }
+  .le-ss-anim button small { color: #8a93a3; font: 600 .68rem "Manrope", sans-serif; }
+  .le-ss-anim button.on { border-color: var(--le-accent); background: #f1f2ff; box-shadow: inset 0 0 0 1px var(--le-accent); }
+  .le-ss-anim .def { position: absolute; top: 8px; right: 8px; background: #ebecff; color: #5256e0; font: 800 .56rem "Manrope", sans-serif; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; }
+
+  .le-ss-range { margin-bottom: 14px; }
+  .le-ss-range label { display: flex; justify-content: space-between; align-items: center; font: 700 .8rem "Manrope", sans-serif; color: #6a7686; margin-bottom: 7px; }
+  .le-ss-range label b { color: var(--le-accent); font-size: .86rem; }
+  .le-ss-range input[type=range] { width: 100%; accent-color: var(--le-accent); cursor: pointer; }
+
+  .le-ss-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 13px 18px; border-top: 1px solid #eef1f4; }
+  .le-ss-foot-note { color: #8a93a3; font: 600 .8rem "Manrope", sans-serif; }
+  .le-ss-foot .le-sp { flex: 1; }
+  .le-ss-btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #e5e8ee; background: #fff; color: #14253e; border-radius: 9px; padding: 9px 13px; font: 700 .85rem "Manrope", sans-serif; cursor: pointer; }
+  .le-ss-btn:hover { border-color: var(--le-accent); color: var(--le-accent); }
+  .le-ss-btn i { width: 15px; height: 15px; }
+  .le-ss-foot .le-go { display: inline-flex; align-items: center; gap: 7px; border: 0; background: var(--le-accent); color: #fff; border-radius: 9px; padding: 10px 16px; font: 800 .88rem "Manrope", sans-serif; cursor: pointer; }
+  .le-ss-foot .le-go:hover { background: #5256e0; }
+  .le-ss-foot .le-go i { width: 16px; height: 16px; }
+  .le-ss-urlbar { display: flex; gap: 8px; width: 100%; }
+  .le-ss-urlbar input { flex: 1; box-sizing: border-box; padding: 9px 11px; border: 1px solid #e5e8ee; border-radius: 9px; font: 700 .85rem "Manrope", sans-serif; }
+
   /* ── Crop modal ── */
   .le-crop { position: fixed; inset: 0; z-index: 9800; background: rgba(8,18,33,.82); display: none; align-items: center; justify-content: center; padding: 24px; font-family: "Manrope", sans-serif; }
   .le-crop.open { display: flex; }
@@ -209,6 +275,41 @@
   </div>
 </div>
 
+<div class="le-ss" id="le-ss">
+  <div class="le-ss-card">
+    <div class="le-ss-head"><i data-lucide="images"></i> Hero background &amp; slideshow <span class="le-sp"></span><button type="button" id="le-ss-close" title="Close"><i data-lucide="x"></i></button></div>
+    <div class="le-ss-body">
+      <div class="le-ss-main">
+        <div class="le-ss-preview" id="le-ss-preview"></div>
+        <div class="le-ss-section-title"><i data-lucide="layout-grid"></i> Images <span class="le-ss-pill" id="le-ss-count">0</span></div>
+        <div class="le-ss-grid" id="le-ss-grid"></div>
+        <p class="le-ss-tip">Drag thumbnails to reorder. Add two or more images to start the slideshow.</p>
+      </div>
+      <aside class="le-ss-side">
+        <div class="le-ss-section-title"><i data-lucide="sparkles"></i> Animation</div>
+        <div class="le-ss-anim" id="le-ss-anim"></div>
+        <div class="le-ss-section-title"><i data-lucide="timer"></i> Timing</div>
+        <div class="le-ss-range">
+          <label>Each slide <b id="le-ss-ival">5s</b></label>
+          <input type="range" id="le-ss-interval" min="2" max="30" step="0.5" value="5">
+        </div>
+        <div class="le-ss-range">
+          <label>Transition <b id="le-ss-dur">1.2s</b></label>
+          <input type="range" id="le-ss-duration" min="0.2" max="5" step="0.1" value="1.2">
+        </div>
+      </aside>
+    </div>
+    <div class="le-ss-foot" id="le-ss-foot">
+      <span class="le-ss-foot-note" id="le-ss-note"></span>
+      <span class="le-sp"></span>
+      <input type="file" accept="image/*" id="le-ss-file" hidden>
+      <button type="button" class="le-ss-btn" id="le-ss-addurl"><i data-lucide="link"></i> Add by URL</button>
+      <button type="button" class="le-ss-btn" id="le-ss-upload"><i data-lucide="upload"></i> Upload image</button>
+      <button type="button" class="le-go" id="le-ss-done"><i data-lucide="check"></i> Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="le-ph" id="le-ph">
   <div class="le-ph-bar">
     <span><i data-lucide="smartphone"></i> Full home page · phone preview</span>
@@ -272,6 +373,18 @@
   }
   const heroStyles = {};
   STYLE_KEYS.forEach(key => { heroStyles[key] = normalizeTextStyle(key, rawHeroStyles[key]); });
+
+  // ── Background slideshow state ──
+  const SLIDE_ANIMATIONS = ['fade', 'slide', 'vertical', 'zoom', 'blur', 'kenburns'];
+  const SLIDESHOW_DEFAULTS = @json(\App\Support\HeroContent::SLIDESHOW_DEFAULTS);
+  let heroSlides = (Array.isArray(@json(array_values($hero['slides'] ?? []))) ? @json(array_values($hero['slides'] ?? [])) : []).filter(Boolean);
+  const rawSlideshow = @json($hero['slideshow'] ?? new \stdClass);
+  let heroSlideshow = {
+    animation: SLIDE_ANIMATIONS.includes(rawSlideshow && rawSlideshow.animation) ? rawSlideshow.animation : SLIDESHOW_DEFAULTS.animation,
+    interval: Number(rawSlideshow && rawSlideshow.interval) || SLIDESHOW_DEFAULTS.interval,
+    duration: Number(rawSlideshow && rawSlideshow.duration) || SLIDESHOW_DEFAULTS.duration,
+  };
+
   let dirty = false;
   const refreshIcons = () => { if (window.lucide) lucide.createIcons(); };
   const markDirty = () => { dirty = true; statusEl.textContent = '● Unsaved'; statusEl.style.color = '#ffd9a8'; };
@@ -307,6 +420,7 @@
   }
   decorate(root);
   refreshIcons();
+  renderSlides(); // reflect saved slides/animation in the live editor preview
 
   /* ── Serialization (DOM → hero data) ── */
   function readExtra(scope) {
@@ -370,6 +484,13 @@
       highlight: heroStyles.highlight.mode === 'solid' ? heroStyles.highlight.color : '',
     };
     d.actions = collectActions();
+    d.slides = heroSlides.slice();
+    d.slideshow = {
+      animation: heroSlideshow.animation,
+      interval: Number(heroSlideshow.interval) || SLIDESHOW_DEFAULTS.interval,
+      duration: Number(heroSlideshow.duration) || SLIDESHOW_DEFAULTS.duration,
+    };
+    d.background = heroSlides[0] || ''; // legacy single-image field tracks the first slide
     return d;
   };
 
@@ -682,9 +803,12 @@
   const cropEl = document.getElementById('le-crop');
   const cropImg = document.getElementById('le-crop-img');
   const cropBusy = document.getElementById('le-crop-busy');
-  let cropper = null, cropTarget = null;
+  let cropper = null, cropTarget = null, cropApply = null;
   const isLocalUrl = (u) => u.startsWith('blob:') || u.startsWith('data:') || u.startsWith('/') || u.startsWith(location.origin);
-  function openCropper(src) {
+  function openCropper(src, applyFn) {
+    // applyFn(dataUrl) handles the cropped result (e.g. add/replace a slide).
+    // Falls back to the legacy single-background setter when not provided.
+    cropApply = applyFn || null;
     // Remember the image element now — interacting with the crop modal can close
     // the popover (clearing popTarget), so the applied crop must use this instead.
     cropTarget = popTarget;
@@ -734,9 +858,162 @@
     let dataUrl;
     try { dataUrl = canvas.toDataURL('image/jpeg', 0.88); }
     catch (e) { toast('This remote image blocks cropping — upload the file instead.', true); return; }
-    if (cropTarget) setImage(cropTarget, dataUrl);
-    closeCrop(); closePop(); toast('Cropped — saved when you press Save');
+    closeCrop();
+    if (cropApply) { const fn = cropApply; cropApply = null; fn(dataUrl); } // re-opens the slideshow popover
+    else { if (cropTarget) setImage(cropTarget, dataUrl); closePop(); }
+    toast('Cropped — saved when you press Save');
   };
+
+  /* ── Background slideshow manager ── */
+  // Rebuild the live hero background layers from state (first slide active; the
+  // editor doesn't auto-cycle so editing stays calm — the Phone preview animates).
+  function renderSlides() {
+    const stack = root.querySelector('.hero-slides');
+    if (!stack) return;
+    stack.setAttribute('data-hero-anim', heroSlideshow.animation);
+    stack.classList.toggle('hero-slides--single', heroSlides.length <= 1);
+    stack.style.setProperty('--hero-dur', heroSlideshow.duration + 's');
+    stack.style.setProperty('--hero-kb', (Number(heroSlideshow.interval) + Number(heroSlideshow.duration)) + 's');
+    const list = heroSlides.length ? heroSlides : [''];
+    stack.innerHTML = list.map((u, i) =>
+      '<div class="hero-slide' + (i === 0 ? ' is-active' : '') + '"' +
+      (u ? ' style="background-image:url(\'' + String(u).replace(/'/g, "\\'") + '\')"' : '') + '></div>'
+    ).join('');
+  }
+  let dragIdx = null;
+  let previewTimer = null;
+  const ssModal = document.getElementById('le-ss');
+  const ssFile = document.getElementById('le-ss-file');
+  const ANIM_META = {
+    fade: ['contrast', 'Crossfade in / out'],
+    slide: ['move-horizontal', 'Slide sideways'],
+    vertical: ['move-vertical', 'Slide upward'],
+    zoom: ['zoom-in', 'Zoom in'],
+    blur: ['droplet', 'Blur dissolve'],
+    kenburns: ['scan-search', 'Slow zoom / pan'],
+  };
+
+  function openSlideshow() {
+    renderSlideGrid(); renderAnimCards(); syncRanges(); rebuildPreview(); updateNote();
+    ssModal.classList.add('open');
+    refreshIcons();
+  }
+  function closeSlideshow() { ssModal.classList.remove('open'); stopPreview(); renderSlides(); }
+
+  function afterSlidesChange() { renderSlideGrid(); rebuildPreview(); renderSlides(); updateNote(); markDirty(); }
+  function addSlide(url) {
+    url = String(url || '').trim();
+    if (!url) return;
+    if (heroSlides.length >= 12) { toast('Up to 12 images.', true); return; }
+    heroSlides.push(url); afterSlidesChange();
+  }
+  function replaceSlide(i, url) { url = String(url || '').trim(); if (!url) return; heroSlides[i] = url; afterSlidesChange(); }
+  function removeSlide(i) { heroSlides.splice(i, 1); afterSlidesChange(); }
+  function moveSlide(from, to) {
+    const [it] = heroSlides.splice(from, 1);
+    if (from < to) to--;
+    to = Math.max(0, Math.min(heroSlides.length, to));
+    heroSlides.splice(to, 0, it);
+    afterSlidesChange();
+  }
+  function updateNote() {
+    const n = document.getElementById('le-ss-note');
+    n.textContent = heroSlides.length >= 2 ? (heroSlides.length + ' images · slideshow on')
+      : (heroSlides.length === 1 ? '1 image · static background' : 'No images yet');
+  }
+
+  function renderSlideGrid() {
+    const grid = document.getElementById('le-ss-grid');
+    document.getElementById('le-ss-count').textContent = heroSlides.length;
+    grid.innerHTML = heroSlides.map((u, i) =>
+      '<div class="le-ss-tile" draggable="true" data-idx="' + i + '" style="background-image:url(\'' + String(u).replace(/'/g, "\\'") + '\')">' +
+        '<span class="le-ss-num">' + (i + 1) + '</span>' +
+        '<span class="le-ss-tile-actions">' +
+          '<button type="button" data-tile-crop="' + i + '" title="Crop"><i data-lucide="crop"></i></button>' +
+          '<button type="button" class="del" data-tile-del="' + i + '" title="Remove"><i data-lucide="x"></i></button>' +
+        '</span>' +
+      '</div>'
+    ).join('') + '<button type="button" class="le-ss-add" id="le-ss-addtile"><i data-lucide="image-plus"></i> Add image</button>';
+    refreshIcons();
+    grid.querySelector('#le-ss-addtile').onclick = () => ssFile.click();
+    grid.querySelectorAll('[data-tile-del]').forEach(b => b.onclick = () => removeSlide(+b.dataset.tileDel));
+    grid.querySelectorAll('[data-tile-crop]').forEach(b => b.onclick = () => { const i = +b.dataset.tileCrop; openCropper(heroSlides[i], (url) => replaceSlide(i, url)); });
+    grid.querySelectorAll('.le-ss-tile').forEach(tile => {
+      tile.addEventListener('dragstart', (e) => { dragIdx = +tile.dataset.idx; tile.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', ''); } catch (_) {} });
+      tile.addEventListener('dragend', () => { tile.classList.remove('dragging'); dragIdx = null; });
+      tile.addEventListener('dragover', (e) => e.preventDefault());
+      tile.addEventListener('drop', (e) => { e.preventDefault(); if (dragIdx === null) return; let to = +tile.dataset.idx; const r = tile.getBoundingClientRect(); if (e.clientX > r.left + r.width / 2) to++; moveSlide(dragIdx, to); });
+    });
+  }
+
+  function renderAnimCards() {
+    const wrap = document.getElementById('le-ss-anim');
+    wrap.innerHTML = SLIDE_ANIMATIONS.map(v => {
+      const meta = ANIM_META[v] || ['sparkles', ''];
+      const label = v === 'kenburns' ? 'Ken Burns' : v.charAt(0).toUpperCase() + v.slice(1);
+      return '<button type="button" data-anim="' + v + '"' + (v === heroSlideshow.animation ? ' class="on"' : '') + '>' +
+        (v === 'fade' ? '<span class="def">Default</span>' : '') +
+        '<span class="ti"><i data-lucide="' + meta[0] + '"></i> ' + label + '</span><small>' + meta[1] + '</small></button>';
+    }).join('');
+    refreshIcons();
+    wrap.querySelectorAll('[data-anim]').forEach(b => b.onclick = () => {
+      heroSlideshow.animation = b.dataset.anim;
+      wrap.querySelectorAll('[data-anim]').forEach(x => x.classList.toggle('on', x === b));
+      rebuildPreview(); renderSlides(); markDirty();
+    });
+  }
+
+  function syncRanges() {
+    const iv = document.getElementById('le-ss-interval'), du = document.getElementById('le-ss-duration');
+    iv.value = heroSlideshow.interval; du.value = heroSlideshow.duration;
+    document.getElementById('le-ss-ival').textContent = heroSlideshow.interval + 's';
+    document.getElementById('le-ss-dur').textContent = heroSlideshow.duration + 's';
+  }
+
+  function stopPreview() { if (previewTimer) { clearInterval(previewTimer); previewTimer = null; } }
+  function rebuildPreview() {
+    const prev = document.getElementById('le-ss-preview');
+    stopPreview();
+    if (!heroSlides.length) {
+      prev.innerHTML = '<div class="le-ss-preview-empty"><i data-lucide="image"></i> Add an image to preview</div>';
+      refreshIcons(); return;
+    }
+    const dur = heroSlideshow.duration, ival = heroSlideshow.interval;
+    const layers = heroSlides.map((u, i) => '<div class="hero-slide' + (i === 0 ? ' is-active' : '') + '" style="background-image:url(\'' + String(u).replace(/'/g, "\\'") + '\')"></div>').join('');
+    prev.innerHTML =
+      '<div class="hero-slides' + (heroSlides.length <= 1 ? ' hero-slides--single' : '') + '" data-hero-anim="' + heroSlideshow.animation + '" style="--hero-dur:' + dur + 's;--hero-kb:' + (Number(ival) + Number(dur)) + 's">' + layers + '</div>' +
+      '<span class="le-ss-preview-tag">' + (heroSlides.length > 1 ? heroSlideshow.animation + ' · ' + ival + 's' : 'single image') + '</span>';
+    const slides = [...prev.querySelectorAll('.hero-slide')];
+    if (slides.length > 1) {
+      let i = 0;
+      previewTimer = setInterval(() => { slides[i].classList.remove('is-active'); i = (i + 1) % slides.length; slides[i].classList.add('is-active'); }, Math.max(2, ival) * 1000);
+    }
+  }
+
+  /* Static slideshow-modal controls (bound once). */
+  document.getElementById('le-ss-close').onclick = closeSlideshow;
+  document.getElementById('le-ss-done').onclick = closeSlideshow;
+  ssModal.addEventListener('click', (e) => { if (e.target === ssModal) closeSlideshow(); });
+  document.getElementById('le-ss-upload').onclick = () => ssFile.click();
+  ssFile.onchange = (e) => { const f = e.target.files[0]; if (f) openCropper(URL.createObjectURL(f), addSlide); e.target.value = ''; };
+  document.getElementById('le-ss-addurl').onclick = () => {
+    const foot = document.getElementById('le-ss-foot');
+    if (foot.querySelector('.le-ss-urlbar')) return;
+    const bar = document.createElement('div');
+    bar.className = 'le-ss-urlbar';
+    bar.innerHTML = '<input type="text" id="le-ss-urlinput" placeholder="https://… image URL"><button type="button" class="le-go" id="le-ss-urladd"><i data-lucide="plus"></i> Add</button><button type="button" class="le-ss-btn" id="le-ss-urlcancel">Cancel</button>';
+    foot.insertBefore(bar, foot.firstChild);
+    refreshIcons();
+    const inp = bar.querySelector('#le-ss-urlinput'); inp.focus();
+    const go = () => { addSlide(inp.value); bar.remove(); };
+    bar.querySelector('#le-ss-urladd').onclick = go;
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    bar.querySelector('#le-ss-urlcancel').onclick = () => bar.remove();
+  };
+  const ssIv = document.getElementById('le-ss-interval'), ssDu = document.getElementById('le-ss-duration');
+  ssIv.addEventListener('input', () => { heroSlideshow.interval = parseFloat(ssIv.value); document.getElementById('le-ss-ival').textContent = heroSlideshow.interval + 's'; rebuildPreview(); renderSlides(); markDirty(); });
+  ssDu.addEventListener('input', () => { heroSlideshow.duration = parseFloat(ssDu.value); document.getElementById('le-ss-dur').textContent = heroSlideshow.duration + 's'; rebuildPreview(); renderSlides(); markDirty(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ssModal.classList.contains('open')) closeSlideshow(); });
 
   /* ── Clicks inside the hero ── */
   root.addEventListener('click', (e) => {
@@ -769,7 +1046,7 @@
       return;
     }
     const bgEdit = e.target.closest('[data-he-bg-edit]');
-    if (bgEdit) { e.preventDefault(); const media = root.querySelector('[data-ed-img]'); if (media) openImagePopover(media, bgEdit); return; }
+    if (bgEdit) { e.preventDefault(); openSlideshow(); return; }
     const styleOpen = e.target.closest('[data-he-style-open]');
     if (styleOpen) {
       e.preventDefault();

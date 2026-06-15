@@ -75,11 +75,33 @@
       ? '<button type="button" class="he-style-trigger he-style-trigger--'.e($key).'" data-he-style-open="'.e($key).'" title="Style '.$label.'" aria-label="Style '.$label.'" contenteditable="false"><i data-lucide="palette"></i><span class="he-style-trigger-swatch"></span></button>'
       : '';
 @endphp
+@php
+  // Background slideshow: one image renders statically (with the original slow
+  // drift); two or more cross-cycle via script.js using the chosen animation.
+  $slides = [];
+  foreach (($d['slides'] ?? []) as $s) { $s = trim((string) $s); if ($s !== '') { $slides[] = $s; } }
+  if (empty($slides) && $bg !== '') { $slides = [$bg]; }
+  $ss = is_array($d['slideshow'] ?? null) ? $d['slideshow'] : [];
+  $ssAnim = in_array($ss['animation'] ?? 'fade', HeroContent::SLIDE_ANIMATIONS, true) ? $ss['animation'] : 'fade';
+  $ssInterval = is_numeric($ss['interval'] ?? null) ? max(2, min(30, (float) $ss['interval'])) : HeroContent::SLIDESHOW_DEFAULTS['interval'];
+  $ssDuration = is_numeric($ss['duration'] ?? null) ? max(0.2, min(5, (float) $ss['duration'])) : HeroContent::SLIDESHOW_DEFAULTS['duration'];
+  $isShow = count($slides) > 1;
+@endphp
 <section class="hero" id="top" aria-label="One Degree Advisory">
-  <div class="hero-media" aria-hidden="true"@if($bg !== '') style="background-image: url('{{ $bg }}');"@endif{!! $im('background', $bg) !!}></div>
+  <div class="hero-slides{{ $isShow ? '' : ' hero-slides--single' }}" aria-hidden="true"
+       data-hero-anim="{{ $ssAnim }}"
+       style="--hero-dur: {{ $ssDuration }}s; --hero-kb: {{ $ssInterval + $ssDuration }}s;"
+       @if($isShow && ! $edit) data-hero-slideshow data-hero-interval="{{ $ssInterval }}" @endif
+       @if($edit) data-he-slides @endif>
+    @forelse($slides as $i => $url)
+      <div class="hero-slide{{ $i === 0 ? ' is-active' : '' }}" style="background-image: url('{{ $url }}');"></div>
+    @empty
+      <div class="hero-slide is-active"></div>
+    @endforelse
+  </div>
   <div class="hero-overlay" aria-hidden="true"></div>
   @if($edit)
-    <button type="button" class="he-bg-edit" data-he-bg-edit contenteditable="false"><i data-lucide="image"></i> Change background</button>
+    <button type="button" class="he-bg-edit" data-he-bg-edit contenteditable="false"><i data-lucide="images"></i> Background &amp; slideshow</button>
   @endif
 
   <div class="container hero-grid">
