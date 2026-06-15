@@ -17089,7 +17089,12 @@ html[data-color-theme] .cr-field-full {
 
 .dynamic-course-carousel.is-scroll-ready {
   cursor: grab;
-  overscroll-behavior: contain;
+  /* Contain only the horizontal axis (stops the carousel's left/right ends from
+     rubber-banding the page / triggering back-swipe). The row sets overflow:
+     hidden, which makes it a scroll container with no vertical range — using the
+     `contain` shorthand here also contained the vertical axis, which swallowed
+     the page's up/down scroll whenever the cursor was over a course card. */
+  overscroll-behavior-x: contain;
 }
 
 .dynamic-course-carousel.is-dragging {
@@ -17282,6 +17287,11 @@ html[data-color-theme] .cr-field-full {
 
   .dynamic-course-carousel {
     overflow-x: auto;
+    /* Pin the cross axis to hidden. Setting only overflow-x makes the browser
+       compute overflow-y to `auto`, turning the row into a vertical scroll
+       container; with overscroll-behavior: contain (from .is-scroll-ready) that
+       traps the page's up/down scroll whenever the cursor is over a course card. */
+    overflow-y: hidden;
     -webkit-mask-image: none;
     mask-image: none;
   }

@@ -431,8 +431,8 @@
       <div class="mbc-shell">
         <header class="mbc-band__head">
           <span class="mbc-eyebrow"><i data-lucide="target"></i> Eligibility</span>
-          <h2>NEET Score Requirements (2026&ndash;2027)</h2>
-          <p class="mbc-band__lead">The qualifying NEET marks Indian students need for MBBS in {{ $countryName }}, with the recent cut-off trend.</p>
+          <h2>NEET Score Requirements (2025)</h2>
+          <p class="mbc-band__lead">The qualifying NEET marks Indian students need for MBBS in {{ $countryName }}.</p>
         </header>
 
         <div class="mbc-neet">
@@ -447,31 +447,6 @@
               </article>
             @endforeach
           </div>
-
-          @if($neetTrend)
-            <figure class="mbc-trend">
-              <figcaption><i data-lucide="line-chart"></i> Historical NEET cut-off trend</figcaption>
-              <div class="mbc-trend__scroll">
-                <table>
-                  <thead>
-                    <tr><th>Year</th><th>General</th><th>Reserved</th><th>Trend</th></tr>
-                  </thead>
-                  <tbody>
-                    @foreach($neetTrend as $row)
-                      @php [$ic, $cls] = $trendIcon($row['trend'] ?? ''); @endphp
-                      <tr>
-                        <td class="mbc-trend__year">{{ $row['year'] }}</td>
-                        <td>{{ $row['general_marks'] }}</td>
-                        <td>{{ $row['reserved_marks'] }}</td>
-                        <td><span class="mbc-trend__dir {{ $cls }}"><i data-lucide="{{ $ic }}"></i> <span class="mbc-trend__word">{{ $row['trend'] ?: '—' }}</span></span></td>
-                      </tr>
-                    @endforeach
-                  </tbody>
-                </table>
-              </div>
-              <p class="mbc-trend__foot">* Based on official NMC qualifying minimums.</p>
-            </figure>
-          @endif
         </div>
       </div>
     </section>
