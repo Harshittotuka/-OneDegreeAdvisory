@@ -432,7 +432,7 @@
                   <span class="insight-card-tag">Featured</span>
                 </div>
                 <div class="insight-card-body">
-                  <span class="insight-card-meta">{{ $featureInsight['category'] }}@if(! empty($featureInsight['read_time'])) &middot; {{ $featureInsight['read_time'] }} min read@endif</span>
+                  <span class="insight-card-meta">{{ $featureInsight['category'] }}{{ empty($featureInsight['read_time']) ? '' : ' · '.$featureInsight['read_time'].' min read' }}</span>
                   <h3>{{ $featureInsight['title'] }}</h3>
                   @if(! empty($featureInsight['excerpt']))
                     <p>{{ $featureInsight['excerpt'] }}</p>
@@ -446,7 +446,7 @@
               <article class="insight-card reveal">
                 <div class="insight-card-media" style="background-image: url('{{ $insight['image'] }}');"></div>
                 <div class="insight-card-body">
-                  <span class="insight-card-meta">{{ $insight['category'] }}@if(! empty($insight['read_time'])) &middot; {{ $insight['read_time'] }} min@endif</span>
+                  <span class="insight-card-meta">{{ $insight['category'] }}{{ empty($insight['read_time']) ? '' : ' · '.$insight['read_time'].' min' }}</span>
                   <h3>{{ $insight['title'] }}</h3>
                   <a href="{{ \App\Support\BlogContent::url($insight) }}">Read the article <i data-lucide="arrow-right"></i></a>
                 </div>
