@@ -24668,7 +24668,8 @@ html[data-color-theme] :is(
   .adm-hero__badge-icon,
   .sserv-intro__badge-icon,
   .va-impact-icon,
-  .insight-card-more-icon
+  .insight-card-more-icon,
+  .study-abroad-page .pf-step-ico
 ) {
   border-radius: 14px;
   background: #e8f7f3;
@@ -24685,7 +24686,8 @@ html[data-color-theme] :is(
   .adm-hero__badge-icon,
   .sserv-intro__badge-icon,
   .va-impact-icon,
-  .insight-card-more-icon
+  .insight-card-more-icon,
+  .study-abroad-page .pf-step-ico
 ) :is(i, svg) {
   width: 22px !important;
   height: 22px !important;
@@ -24702,6 +24704,7 @@ html[data-color-theme] :is(
   .va-impact-card:hover .va-impact-icon,
   .adm-track:hover .adm-track__icon,
   .course-menu-card:hover .course-icon,
+  .study-abroad-page .pathfinder-step:hover .pf-step-ico,
   .study-abroad-page .signal:hover .signal-icon,
   .mbbs-v2-service-card:hover .mbbs-v2-service-icon,
   .mbbsx-career-card:hover .mbbsx-career-card__icon,

@@ -10,6 +10,7 @@ use App\Support\AboutContent;
 use App\Support\BlogContent;
 use App\Support\HeroContent;
 use App\Support\MbbsCountryContent;
+use App\Support\NewsletterStore;
 use App\Support\StudyLocationContent;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -188,6 +189,28 @@ class PageController extends Controller
      * submissions (consumed by the success/error popup), or a redirect-back
      * with a flash message for no-JS clients.
      */
+    /**
+     * Store an email from the blog newsletter sign-up forms ("Stay Current On
+     * College Admissions" and "Stay in the loop"). Duplicate addresses are
+     * ignored; the visitor sees the same friendly confirmation either way.
+     */
+    public function subscribeNewsletter(Request $request, NewsletterStore $subscribers): JsonResponse|RedirectResponse
+    {
+        $data = $request->validate([
+            'email'  => ['required', 'email', 'max:190'],
+            'source' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        $subscribers->add($data['email'], $data['source'] ?? 'Blog');
+
+        return $this->formResponse(
+            $request,
+            true,
+            "We'll send the next brief straight to your inbox.",
+            "You're on the list!"
+        );
+    }
+
     private function formResponse(Request $request, bool $ok, string $message, ?string $title = null): JsonResponse|RedirectResponse
     {
         $title ??= $ok ? 'Thank you!' : 'Something went wrong';
@@ -247,10 +270,16 @@ class PageController extends Controller
         ]);
     }
 
-    public function blogPost(string $slug, BlogContent $blog): View
+    public function blogPost(string $slug, BlogContent $blog): View|RedirectResponse
     {
         $post = $blog->forSlug($slug);
         abort_unless($post && (($post['visible'] ?? true) === true || session('cms_authenticated')), 404);
+
+        // A "redirect" post has no article of its own — send visitors to its target.
+        $link = trim((string) ($post['link_url'] ?? ''));
+        if ($link !== '') {
+            return redirect()->to($link);
+        }
 
         return view('pages.blog-post', [
             'post'    => $post,

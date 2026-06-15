@@ -80,8 +80,10 @@
       <h1 class="blog-post-title">{{ $post['title'] }}</h1>
       <p class="blog-post-meta">
         <time datetime="{{ $post['date'] }}">{{ $fmtDate($post['date']) }}</time>
-        <span aria-hidden="true">&middot;</span>
-        <span>{{ $post['read_time'] }} min read</span>
+        @if(! empty($post['read_time']))
+          <span aria-hidden="true">&middot;</span>
+          <span>{{ $post['read_time'] }} min read</span>
+        @endif
         <span aria-hidden="true">&middot;</span>
         <span>By {{ $post['author'] }}</span>
       </p>
@@ -175,7 +177,7 @@
         </div>
         <div class="blog-related-grid">
           @foreach($related as $rel)
-            <a class="blog-related-card reveal" href="{{ route('blog.post', $rel['slug']) }}">
+            <a class="blog-related-card reveal" href="{{ \App\Support\BlogContent::url($rel) }}">
               <div class="blog-related-media">
                 <img src="{{ Seo::imageUrl($rel['image'] ?? null) }}" alt="{{ $rel['alt'] ?? '' }}" loading="lazy" decoding="async">
               </div>
@@ -184,8 +186,10 @@
                 <h3>{{ $rel['title'] }}</h3>
                 <p class="blog-list-meta">
                   <time datetime="{{ $rel['date'] }}">{{ $fmtDate($rel['date']) }}</time>
-                  <span aria-hidden="true">&middot;</span>
-                  <span>{{ $rel['read_time'] }} min</span>
+                  @if(! empty($rel['read_time']))
+                    <span aria-hidden="true">&middot;</span>
+                    <span>{{ $rel['read_time'] }} min</span>
+                  @endif
                 </p>
               </div>
             </a>

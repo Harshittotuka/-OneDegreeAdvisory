@@ -139,6 +139,7 @@
       // Page Builder sits directly below Home Page — available to all CMS admins.
       ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'],
       ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
+      ['label' => 'Subscribers', 'icon' => 'mail', 'route' => 'admin.newsletter.index', 'match' => 'admin.newsletter'],
     ];
     // Super admin unlocks the (otherwise hidden) About-page editor.
     if ($isSuper) {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CountryDataSyncController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
+use App\Http\Controllers\Admin\NewsletterController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
@@ -27,6 +28,8 @@ Route::post('/careers', [PageController::class, 'submitCareer'])->name('careers.
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::permanentRedirect('/contact.html', '/contact');
 Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
+
+Route::post('/newsletter', [PageController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
@@ -127,6 +130,11 @@ Route::prefix('admin')->group(function () {
         /* ── Notice-bar CMS (top blue nav) ── */
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
+
+        /* ── Newsletter subscribers (collected from the blog signup forms) ── */
+        Route::get('newsletter', [NewsletterController::class, 'index'])->name('admin.newsletter.index');
+        Route::get('newsletter/export', [NewsletterController::class, 'export'])->name('admin.newsletter.export');
+        Route::post('newsletter/delete', [NewsletterController::class, 'destroy'])->name('admin.newsletter.destroy');
 
         Route::get('unlinked-pages', [UnlinkedPagesController::class, 'index'])->name('admin.unlinked-pages.index');
 

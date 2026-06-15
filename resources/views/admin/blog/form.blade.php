@@ -53,6 +53,9 @@
   .panel-hero { background: #fdf5ee; border-color: #f2dcc6; }
   .panel-hero .panel-head { color: var(--teal-dark); border-color: #f2dcc6; }
   .panel-hero .panel-head i { color: var(--teal); }
+  .panel-link { background: #f3f0fc; border-color: #ddd3f2; }
+  .panel-link .panel-head { color: #5a3aa8; border-color: #ddd3f2; }
+  .panel-link .panel-head i { color: #6c4fd6; }
   .img-preview { margin-top: 10px; max-width: 100%; border-radius: 9px; border: 1px solid var(--line); display: none; }
   .img-preview[src] { display: block; }
   .uploading { font-size: .8rem; color: var(--teal); margin-top: 6px; }
@@ -198,7 +201,7 @@
             <div class="field">
               <label for="read_time">Read (min)</label>
               <input type="number" id="read_time" name="read_time" min="1" max="120"
-                     value="{{ old('read_time', $post['read_time']) }}" placeholder="auto">
+                     value="{{ old('read_time', $post['read_time']) }}" placeholder="blank = hide">
             </div>
           </div>
           <div class="field">
@@ -217,6 +220,40 @@
             <input type="checkbox" name="show_cta" value="1" @checked(old('show_cta', $post['show_cta'] ?? true))>
             <span>Show the “book a call” CTA<br><span class="hint">Adds the “Toward the right shortlist… book a free strategy call” block at the end of the article. On by default.</span></span>
           </label>
+        </div>
+
+        <div class="panel panel-pad panel-link">
+          <h2 class="panel-head"><i data-lucide="corner-up-right"></i> Link / redirect</h2>
+          @php
+            // Effective current target: saved value on first render, or the
+            // resubmitted selection if validation just bounced the form back.
+            $lt = old('link_target');
+            $effectiveLink = $lt === null
+                ? ($post['link_url'] ?? '')
+                : ($lt === '__custom__' ? old('link_url_custom', '') : $lt);
+          @endphp
+          <div class="field">
+            <label for="link_target">When this card is clicked</label>
+            <select id="link_target" name="link_target">
+              <option value="">Open its own blog article</option>
+              @foreach($linkTargets as $group => $items)
+                @if(! empty($items))
+                  <optgroup label="{{ $group }}">
+                    @foreach($items as $t)
+                      <option value="{{ $t['url'] }}">{{ $t['label'] }} ({{ $t['url'] }})</option>
+                    @endforeach
+                  </optgroup>
+                @endif
+              @endforeach
+              <option value="__custom__">Custom URL…</option>
+            </select>
+            <div class="hint">Pick a page to turn this post into a redirect card, or keep “Open its own blog article” to write a normal post.</div>
+          </div>
+          <div class="field" id="link-custom-field" style="margin-bottom:0;display:none;">
+            <label for="link_url_custom">Custom URL</label>
+            <input type="text" id="link_url_custom" name="link_url_custom" placeholder="/your-page or https://example.com">
+            <div class="hint">Use a path like <code>/europe</code> for an internal page, or a full <code>https://…</code> link.</div>
+          </div>
         </div>
 
         <div class="panel panel-pad panel-hero">
@@ -525,6 +562,33 @@
       if (window.cmsToast) window.cmsToast(msg, 'error'); else alert(msg);
     }
   });
+})();
+</script>
+
+<script>
+// ── Link / redirect picker: choose an internal page or a custom URL ──
+(function () {
+  const select = document.getElementById('link_target');
+  if (!select) return;
+  const customField = document.getElementById('link-custom-field');
+  const customInput = document.getElementById('link_url_custom');
+  const stored = @json($effectiveLink);
+
+  const toggleCustom = () => {
+    customField.style.display = select.value === '__custom__' ? 'block' : 'none';
+  };
+
+  // Re-select the saved target when editing: match a known page, else treat as custom.
+  if (stored) {
+    if (Array.from(select.options).some(o => o.value === stored)) {
+      select.value = stored;
+    } else {
+      select.value = '__custom__';
+      customInput.value = stored;
+    }
+  }
+  toggleCustom();
+  select.addEventListener('change', toggleCustom);
 })();
 </script>
 @endpush

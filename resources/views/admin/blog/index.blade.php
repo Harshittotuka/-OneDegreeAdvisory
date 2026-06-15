@@ -170,6 +170,11 @@
               {{ ! empty($post['date']) ? \Illuminate\Support\Carbon::parse($post['date'])->format('M j, Y') : '—' }}
               @if(! empty($post['read_time'])) · {{ $post['read_time'] }} min @endif
             </p>
+            @if(! empty($post['link_url']))
+              <p class="post-meta" style="color:#6c4fd6;font-weight:700;margin-top:-6px;">
+                <i data-lucide="corner-up-right" style="width:13px;height:13px;vertical-align:-2px;"></i> Redirects to {{ $post['link_url'] }}
+              </p>
+            @endif
             @if(! empty($cats))
               <div class="post-cats">@foreach($cats as $c)<span class="post-cat">{{ $c }}</span>@endforeach</div>
             @endif

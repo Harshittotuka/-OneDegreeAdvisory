@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CmsAuth;
 use App\Support\BlogStore;
+use App\Support\BriefPageStore;
 use App\Support\Seo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 class BlogCmsController extends Controller
@@ -99,6 +101,7 @@ class BlogCmsController extends Controller
             'post' => $this->blankPost(),
             'mode' => 'create',
             'categories' => $this->categories(),
+            'linkTargets' => $this->linkTargets(),
         ]);
     }
 
@@ -127,6 +130,7 @@ class BlogCmsController extends Controller
             'post' => $post,
             'mode' => 'edit',
             'categories' => $this->categories(),
+            'linkTargets' => $this->linkTargets(),
         ]);
     }
 
@@ -266,6 +270,8 @@ class BlogCmsController extends Controller
             'image' => ['nullable', 'string', 'max:500'],
             'alt' => ['nullable', 'string', 'max:300'],
             'body' => ['nullable', 'string'],
+            'link_target' => ['nullable', 'string', 'max:500'],
+            'link_url_custom' => ['nullable', 'string', 'max:500'],
         ]);
     }
 
@@ -290,6 +296,15 @@ class BlogCmsController extends Controller
             $categories = ['One Degree'];
         }
 
+        // A non-empty link makes this post a "redirect" entry — its cards point at
+        // another page (existing route, page-builder page, or custom URL) and
+        // /blog/{slug} 302s there instead of rendering an article.
+        $linkUrl = $this->sanitizeLink(
+            ($data['link_target'] ?? '') === '__custom__'
+                ? (string) ($data['link_url_custom'] ?? '')
+                : (string) ($data['link_target'] ?? '')
+        );
+
         return [
             'slug' => $this->store->uniqueSlug($desiredSlug, $originalSlug),
             'title' => trim($data['title']),
@@ -298,7 +313,7 @@ class BlogCmsController extends Controller
             'categories' => $categories,
             'category' => $categories[0], // primary category, kept for the public templates
             'date' => $data['date'],
-            'read_time' => (int) ($data['read_time'] ?? 0) ?: $this->estimateReadTime($body, $excerpt),
+            'read_time' => isset($data['read_time']) ? (int) $data['read_time'] : null, // blank = hidden everywhere
             'author' => trim($data['author'] ?? '') ?: 'One Degree',
             'excerpt' => $excerpt,
             'image' => trim($data['image'] ?? '') ?: '/assets/heroes/uk.webp',
@@ -306,7 +321,78 @@ class BlogCmsController extends Controller
             'featured' => $featured,
             'visible' => $visible || $featured, // a featured post is always visible
             'show_cta' => $showCta, // show the "Book a free strategy call" block at the end
+            'link_url' => $linkUrl, // redirect target; '' = normal article
             'body' => $body,
+        ];
+    }
+
+    /**
+     * Normalize a redirect target. Absolute URLs, root-relative paths, anchors,
+     * and mailto/tel links are kept as-is; anything else becomes a root-relative
+     * path so an admin can type "europe" and get "/europe".
+     */
+    private function sanitizeLink(string $raw): string
+    {
+        $link = trim($raw);
+        if ($link === '') {
+            return '';
+        }
+
+        if (preg_match('~^(https?://|/|#|mailto:|tel:)~i', $link)) {
+            return $link;
+        }
+
+        return '/'.ltrim($link, '/');
+    }
+
+    /**
+     * Pages an admin can point a blog card at, grouped for the editor dropdown:
+     * the site's built-in pages plus every page-builder (brief) page. URLs are
+     * root-relative so they work across environments.
+     */
+    private function linkTargets(): array
+    {
+        $named = [
+            'home' => 'Home',
+            'about' => 'About',
+            'study-abroad' => 'Study Abroad',
+            'blog.index' => 'Blog',
+            'contact' => 'Contact',
+            'careers' => 'Careers',
+            'services.test-prep' => 'Services — Test Preparation',
+            'services.admissions-counselling' => 'Services — Admissions Counselling',
+            'services.student-services' => 'Services — Student Services',
+            'courses.ug' => 'Courses — Undergraduate',
+            'courses.pg' => 'Courses — Postgraduate',
+            'courses.llb' => 'Courses — LLB',
+            'courses.mba' => 'Courses — MBA',
+            'courses.doctoral' => 'Courses — Doctoral',
+            'mbbs.student' => 'MBBS — Student',
+        ];
+
+        $existing = [];
+        foreach ($named as $name => $label) {
+            if (Route::has($name)) {
+                $existing[] = ['url' => route($name, [], false), 'label' => $label];
+            }
+        }
+
+        $builder = [];
+        foreach (app(BriefPageStore::class)->all() as $page) {
+            $path = trim((string) ($page['path'] ?? ''));
+            if ($path === '') {
+                $path = '/briefs/'.($page['slug'] ?? '');
+            }
+            $label = (string) ($page['title'] ?? $page['slug'] ?? $path);
+            if (($page['visible'] ?? true) !== true) {
+                $label .= ' (hidden)';
+            }
+            $builder[] = ['url' => $path, 'label' => $label];
+        }
+
+        return [
+            'Existing pages' => $existing,
+            'Page builder pages' => $builder,
         ];
     }
 
@@ -384,19 +470,6 @@ class BlogCmsController extends Controller
         return $clean;
     }
 
-    private function estimateReadTime(array $body, string $excerpt): int
-    {
-        $words = str_word_count($excerpt);
-        foreach ($body as $block) {
-            $words += str_word_count(implode(' ', array_map(
-                fn ($v) => is_array($v) ? implode(' ', array_map(fn ($x) => is_array($x) ? implode(' ', $x) : (string) $x, $v)) : (string) $v,
-                $block
-            )));
-        }
-
-        return max(1, (int) ceil($words / 200));
-    }
-
     /** All distinct categories across posts, for autocomplete suggestions. */
     private function categories(): array
     {
@@ -430,6 +503,7 @@ class BlogCmsController extends Controller
             'featured' => false,
             'visible' => true,
             'show_cta' => true,
+            'link_url' => '',
             'body' => [],
         ];
     }

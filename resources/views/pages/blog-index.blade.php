@@ -1,5 +1,6 @@
 @php
     use App\Support\Seo;
+    use App\Support\BlogContent;
 
     $pageTitle       = $page > 1 ? 'Blog Page '.$page.' | '.config('site.name') : 'Blog | '.config('site.name');
     $pageDescription = $page > 1
@@ -27,7 +28,7 @@
         'blogPost' => array_values(array_map(fn (array $post): array => [
             '@type' => 'BlogPosting',
             'headline' => $post['title'] ?? '',
-            'url' => route('blog.post', $post['slug'] ?? ''),
+            'url' => BlogContent::url($post),
             'datePublished' => $post['date'] ?? null,
             'image' => Seo::imageUrl($post['image'] ?? null),
             'description' => Seo::description($post['meta_description'] ?? null, $post['excerpt'] ?? null),
@@ -67,7 +68,7 @@
     <div class="container blog-grid-container">
       @if($featured)
         <article class="blog-featured-post reveal">
-          <a class="blog-featured-media" href="{{ route('blog.post', $featured['slug']) }}" aria-label="Read: {{ $featured['title'] }}">
+          <a class="blog-featured-media" href="{{ BlogContent::url($featured) }}" aria-label="Read: {{ $featured['title'] }}">
             <img src="{{ Seo::imageUrl($featured['image'] ?? null) }}" alt="{{ $featured['alt'] ?? '' }}" loading="eager" fetchpriority="high" decoding="async">
           </a>
           <div class="blog-featured-copy">
@@ -77,12 +78,14 @@
               @endforeach
             </div>
             <h2>
-              <a href="{{ route('blog.post', $featured['slug']) }}">{{ $featured['title'] }}</a>
+              <a href="{{ BlogContent::url($featured) }}">{{ $featured['title'] }}</a>
             </h2>
             <p class="blog-list-meta">
               <time datetime="{{ $featured['date'] }}">{{ $fmtDate($featured['date']) }}</time>
-              <span aria-hidden="true">&middot;</span>
-              <span>{{ $featured['read_time'] }} min read</span>
+              @if(! empty($featured['read_time']))
+                <span aria-hidden="true">&middot;</span>
+                <span>{{ $featured['read_time'] }} min read</span>
+              @endif
             </p>
             @if(! empty($featured['excerpt']))
               <p>{{ $featured['excerpt'] }}</p>
@@ -97,9 +100,11 @@
             <aside class="blog-grid-signup reveal">
               <h2>Stay Current On<br> College Admissions</h2>
               <p>Sign up for our newsletter to stay updated with our blogs and helpful resources for college admissions.</p>
-              <form onsubmit="event.preventDefault();" aria-label="Blog newsletter signup">
+              <form action="{{ route('newsletter.subscribe') }}" method="POST" data-newsletter-form aria-label="Blog newsletter signup">
+                @csrf
+                <input type="hidden" name="source" value="Blog sidebar">
                 <label class="visually-hidden" for="blog-grid-email">Email address</label>
-                <input id="blog-grid-email" type="email" placeholder="Your Email" required>
+                <input id="blog-grid-email" type="email" name="email" placeholder="Your Email" required>
                 <button type="submit" aria-label="Sign up">
                   <i data-lucide="arrow-right"></i>
                 </button>
@@ -115,7 +120,7 @@
 
           @foreach($topPosts as $post)
             <article class="blog-grid-card reveal">
-              <a class="blog-grid-card-media" href="{{ route('blog.post', $post['slug']) }}" aria-label="Read: {{ $post['title'] }}">
+              <a class="blog-grid-card-media" href="{{ BlogContent::url($post) }}" aria-label="Read: {{ $post['title'] }}">
                 <img src="{{ Seo::imageUrl($post['image'] ?? null) }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy" decoding="async">
               </a>
               <div class="blog-grid-card-body">
@@ -125,7 +130,7 @@
                   @endforeach
                 </div>
                 <h2>
-                  <a href="{{ route('blog.post', $post['slug']) }}">{{ $post['title'] }}</a>
+                  <a href="{{ BlogContent::url($post) }}">{{ $post['title'] }}</a>
                 </h2>
                 @if(! empty($post['excerpt']))
                   <p>{{ $post['excerpt'] }}</p>
@@ -142,7 +147,7 @@
           <div class="blog-editorial-grid-page">
             @foreach($masonryPosts as $post)
               <article class="blog-grid-card reveal">
-                <a class="blog-grid-card-media" href="{{ route('blog.post', $post['slug']) }}" aria-label="Read: {{ $post['title'] }}">
+                <a class="blog-grid-card-media" href="{{ BlogContent::url($post) }}" aria-label="Read: {{ $post['title'] }}">
                   <img src="{{ Seo::imageUrl($post['image'] ?? null) }}" alt="{{ $post['alt'] ?? '' }}" loading="lazy" decoding="async">
                 </a>
                 <div class="blog-grid-card-body">
@@ -152,7 +157,7 @@
                   @endforeach
                 </div>
                   <h2>
-                    <a href="{{ route('blog.post', $post['slug']) }}">{{ $post['title'] }}</a>
+                    <a href="{{ BlogContent::url($post) }}">{{ $post['title'] }}</a>
                   </h2>
                   @if(! empty($post['excerpt']))
                     <p>{{ $post['excerpt'] }}</p>
@@ -200,7 +205,9 @@
         <h2>One thoughtful brief, every Friday.</h2>
         <p>Five-minute reads on what changed this cycle for the corridors we cover. No noise, no resends, easy to unsubscribe.</p>
       </div>
-      <form class="blog-newsletter-form" onsubmit="event.preventDefault();" aria-label="Newsletter signup">
+      <form class="blog-newsletter-form" action="{{ route('newsletter.subscribe') }}" method="POST" data-newsletter-form aria-label="Newsletter signup">
+        @csrf
+        <input type="hidden" name="source" value="Blog newsletter">
         <label class="visually-hidden" for="blog-newsletter-email">Email address</label>
         <input id="blog-newsletter-email" type="email" name="email" required placeholder="you@example.com">
         <button class="btn btn-primary" type="submit">

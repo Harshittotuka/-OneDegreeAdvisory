@@ -959,6 +959,9 @@ ready(() => {
 
   wireFormSubmit(consultForm);
   wireFormSubmit(document.querySelector("[data-career-form]"));
+  // Blog newsletter sign-ups ("Stay Current On…" + "Stay in the loop") — same
+  // AJAX flow + confirmation popup; the email is stored server-side.
+  document.querySelectorAll("[data-newsletter-form]").forEach(wireFormSubmit);
 
   // ── Resume drag-and-drop uploader (careers form) ──
   // The native file input is hidden; the styled zone opens it on click and

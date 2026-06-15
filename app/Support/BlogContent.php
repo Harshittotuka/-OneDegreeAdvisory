@@ -9,6 +9,24 @@ class BlogContent
         return app(BlogStore::class)->all();
     }
 
+    /**
+     * The destination URL for a post's cards. A post carrying a `link_url` is a
+     * "redirect" entry — its cards point at another page (an existing route, a
+     * page-builder page, or a custom URL) instead of its own /blog/{slug} article.
+     */
+    public static function url(array $post): string
+    {
+        $link = trim((string) ($post['link_url'] ?? ''));
+
+        return $link !== '' ? $link : route('blog.post', $post['slug'] ?? '');
+    }
+
+    /** Whether a post redirects elsewhere rather than rendering its own article. */
+    public static function isLink(array $post): bool
+    {
+        return trim((string) ($post['link_url'] ?? '')) !== '';
+    }
+
     /** Latest visible posts for the home "Insights" strip, featured post first. */
     public function homeInsights(int $limit = 4): array
     {
