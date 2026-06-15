@@ -464,8 +464,14 @@
       </section>
 
       <section class="contact-section" id="contact" aria-labelledby="contact-title">
-        <div class="container contact-grid">
-          <aside class="contact-card reveal">
+        <div class="container contact-grid" data-contact-collapsible>
+          <button type="button" class="contact-card-handle" aria-expanded="false" aria-controls="home-contact-card" aria-label="Show contact details">
+            <span>Contact us</span>
+          </button>
+          <aside class="contact-card reveal" id="home-contact-card">
+            <button type="button" class="contact-card-close" aria-label="Hide contact details">
+              <i data-lucide="x"></i>
+            </button>
             <span class="eyebrow">Contact us</span>
             <h2 id="contact-title">Get a premium profile review.</h2>
             <p>

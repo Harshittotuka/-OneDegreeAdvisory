@@ -10,6 +10,7 @@
       'Email' => $data['email'] ?? null,
       'Mobile' => $data['phone'] ?? null,
       'City' => $data['city'] ?? null,
+      'Resident country' => $data['residence'] ?? null,
       'Preferred destination' => $data['destination'] ?? null,
       'Academic level' => $data['level'] ?? null,
     ];

@@ -4026,7 +4026,7 @@ textarea:focus {
 .insights-title {
   max-width: 760px;
   margin: 0 0 8px;
-  color: var(--navy);
+  color: #161616;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: clamp(2.45rem, 5vw, 4rem);
   font-weight: 700;
@@ -4195,7 +4195,14 @@ textarea:focus {
 }
 
 .insight-card-feature .insight-card-media {
+  flex: 1 1 auto;
   height: 320px;
+}
+
+/* The feature card is stretched to span two rows; let the image absorb the
+   extra height and keep the text block compact (no dead gap above the link). */
+.insight-card-feature .insight-card-body {
+  flex: 0 0 auto;
 }
 
 .insight-card-feature .insight-card-body h3 {
@@ -4311,6 +4318,13 @@ textarea:focus {
 
 .contact-card p {
   color: rgba(255, 255, 255, 0.78);
+}
+
+/* The collapse strip + close button are phone-only; hidden (and removed from
+   the desktop grid) by default. Activated in the ≤720px block below. */
+.contact-card-handle,
+.contact-card-close {
+  display: none;
 }
 
 .contact-list {
@@ -4635,6 +4649,7 @@ html.oda-popup-open { overflow: hidden; }
   font-size: clamp(1.85rem, 3.2vw, 3.15rem);
   font-weight: 700;
   line-height: 1.04;
+  text-align: left;
 }
 
 .contact-page-kicker em {
@@ -6912,6 +6927,107 @@ html[data-color-theme] .site-socials .site-social {
   .footer-bottom {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+/* ── Tablet/phone collapsible contact card (home section) ───────────────────
+   Below the desktop side-by-side layout, the form becomes primary (with a blue
+   outline) and the blue card collapses to a tappable box attached to its RIGHT
+   edge. Tapping the box expands the card over the form (clip-path wipe). Kicks
+   in at ≤960px so the old stacked layout never shows. Scoped to
+   [data-contact-collapsible] so the contact PAGE form (which also uses
+   .contact-form-panel) is untouched. Placed after the .reveal rules so the
+   `.contact-card.reveal` selectors win on source order. */
+@media (max-width: 960px) {
+  [data-contact-collapsible] {
+    position: relative;
+    display: block;
+  }
+
+  [data-contact-collapsible] .contact-form-panel {
+    margin-right: 46px;
+    border: 2px solid #1a0088;
+    border-radius: var(--radius) 0 0 var(--radius);
+  }
+
+  [data-contact-collapsible] .contact-card-handle {
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    width: 46px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: #1a0088;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 200ms ease;
+  }
+
+  [data-contact-collapsible] .contact-card-handle span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  /* The blue card overlays the form; hidden until the box is tapped. The
+     `.reveal` qualifier lifts specificity above the scroll-reveal rule. */
+  [data-contact-collapsible] .contact-card.reveal {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    min-height: 0;
+    padding: 54px 24px 24px;
+    overflow-y: auto;
+    opacity: 0;
+    /* Collapsed: clipped to zero width at the right edge (where the box sits). */
+    clip-path: inset(0 0 0 100%);
+    pointer-events: none;
+    transition: clip-path 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease;
+  }
+
+  /* Open: the clip window grows right-to-left, so the card expands out of the
+     blue box and over the form. */
+  [data-contact-collapsible].is-card-open .contact-card.reveal {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    pointer-events: auto;
+  }
+
+  [data-contact-collapsible].is-card-open .contact-card-handle {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  [data-contact-collapsible] .contact-card-close {
+    display: flex;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 5;
+    width: 38px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  [data-contact-collapsible] .contact-card-close svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -22484,7 +22600,7 @@ html[data-color-theme="cream"] .contact-section {
 }
 
 .home-page .about-section {
-  padding: 92px 0;
+  padding: 92px 0 56px;
   background:
     linear-gradient(
       180deg,
@@ -22523,7 +22639,7 @@ html[data-color-theme="cream"] .contact-section {
 .home-page .about-media {
   grid-area: media;
   align-self: center;
-  min-height: 500px;
+  min-height: 430px;
 }
 
 .home-page .about-media img {
@@ -22532,7 +22648,7 @@ html[data-color-theme="cream"] .contact-section {
 }
 
 .home-page .insights-section {
-  padding: 96px 0;
+  padding: 56px 0 96px;
 }
 
 .home-page .contact-section {

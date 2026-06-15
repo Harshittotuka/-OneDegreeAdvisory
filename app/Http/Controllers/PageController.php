@@ -72,6 +72,7 @@ class PageController extends Controller
             'email'       => ['required', 'email', 'max:190'],
             'phone'       => ['required', 'string', 'max:40'],
             'city'        => ['nullable', 'string', 'max:120'],
+            'residence'   => ['nullable', 'string', 'max:120'],
             'destination' => ['nullable', 'string', 'max:120'],
             'level'       => ['required', 'string', 'max:120'],
             'message'     => ['nullable', 'string', 'max:5000'],

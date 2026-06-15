@@ -23,31 +23,36 @@
   </div>
 
   <div class="contact-form-row">
+    <label class="contact-field" for="{{ ($formId ?? 'contact').'-residence' }}">
+      <span>Resident country</span>
+      <input id="{{ ($formId ?? 'contact').'-residence' }}" name="residence" type="text" placeholder="e.g. India">
+    </label>
     <label class="contact-field" for="{{ ($formId ?? 'contact').'-destination' }}">
       <span>Preferred destination</span>
       <select id="{{ ($formId ?? 'contact').'-destination' }}" name="destination">
         <option>Not sure yet</option>
-        <option>United States</option>
-        <option>United Kingdom</option>
-        <option>Canada</option>
         <option>Australia</option>
+        <option>Canada</option>
         <option>Germany</option>
         <option>Singapore</option>
+        <option>United Kingdom</option>
+        <option>United States</option>
         <option>Multiple countries</option>
       </select>
     </label>
-    <label class="contact-field" for="{{ ($formId ?? 'contact').'-level' }}">
-      <span>Current academic level *</span>
-      <select id="{{ ($formId ?? 'contact').'-level' }}" name="level" required>
-        <option value="">Choose one...</option>
-        <option>Grade 9&ndash;10</option>
-        <option>Grade 11&ndash;12</option>
-        <option>Undergraduate (1&ndash;4 yr)</option>
-        <option>Graduate</option>
-        <option>Working professional</option>
-      </select>
-    </label>
   </div>
+
+  <label class="contact-field contact-field-full" for="{{ ($formId ?? 'contact').'-level' }}">
+    <span>Current academic level *</span>
+    <select id="{{ ($formId ?? 'contact').'-level' }}" name="level" required>
+      <option value="">Choose one...</option>
+      <option>Grade 9&ndash;10</option>
+      <option>Grade 11&ndash;12</option>
+      <option>Undergraduate (1&ndash;4 yr)</option>
+      <option>Graduate</option>
+      <option>Working professional</option>
+    </select>
+  </label>
 
   <label class="contact-field contact-field-full" for="{{ ($formId ?? 'contact').'-message' }}">
     <span>Tell us about your dream</span>

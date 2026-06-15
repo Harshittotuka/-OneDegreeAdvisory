@@ -561,6 +561,24 @@ ready(() => {
     revealItems.forEach((item) => item.classList.add("is-visible"));
   }
 
+  // Phone-only collapsible contact card: tap the blue strip to slide the
+  // contact details over the form; the close button tucks it away again. The
+  // collapsed/overlay styling is gated to ≤720px in CSS, so on desktop this
+  // toggles a class that has no visual effect.
+  document.querySelectorAll("[data-contact-collapsible]").forEach((wrap) => {
+    const handle = wrap.querySelector(".contact-card-handle");
+    const closeBtn = wrap.querySelector(".contact-card-close");
+    if (!handle) return;
+    const setOpen = (open) => {
+      wrap.classList.toggle("is-card-open", open);
+      handle.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    handle.addEventListener("click", () => setOpen(true));
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => setOpen(false));
+    }
+  });
+
   // Test-preparation expandable cards (accordion)
   const tpCards = Array.from(document.querySelectorAll("[data-tp-card]"));
   tpCards.forEach((card) => {
