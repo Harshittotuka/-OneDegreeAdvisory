@@ -4,6 +4,16 @@ return [
     'name' => 'One Degree Advisory',
     'tagline' => 'Global education strategy',
 
+    /* The one true public host for the production site. ONLY requests to this
+       host are allowed to be indexed; every other host (the nip.io UAT box, the
+       raw server IP, a hosting preview domain, or localhost) is treated as a
+       non-canonical mirror and served noindex + Disallow:/ so it can never
+       compete with the live site as duplicate content. This is deliberately a
+       fixed value rather than derived from APP_URL, because each environment
+       sets its own APP_URL (the test box's APP_URL is the nip.io host) and
+       would otherwise consider itself canonical. Override via CANONICAL_HOST. */
+    'canonical_host' => env('CANONICAL_HOST', 'onedegreeadvisory.com'),
+
     /* Password for the /admin blog CMS. Override via CMS_PASSWORD in .env. */
     'cms_password' => env('CMS_PASSWORD', 'onedegree'),
 

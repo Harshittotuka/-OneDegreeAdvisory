@@ -128,17 +128,21 @@ class Seo
     }
 
     /**
-     * True only when the current request is served from the canonical public
-     * host declared in APP_URL. Everything else (the nip.io UAT box, the raw
-     * IP, a hosting preview domain) is a non-canonical mirror that must be kept
-     * out of the index so it never competes with the live site. Outside an HTTP
-     * request (console, queue) we treat it as canonical so generated artifacts
-     * such as the sitemap keep their normal directives.
+     * True only when the current request is served from the one canonical
+     * public host (config('site.canonical_host'), e.g. onedegreeadvisory.com).
+     * Everything else — the nip.io UAT box, the raw server IP, a hosting
+     * preview domain, localhost — is a non-canonical mirror that must be kept
+     * out of the index so it never competes with the live site as duplicate
+     * content. Note this is keyed off a FIXED canonical host, not APP_URL,
+     * because each environment's APP_URL is its own host and would otherwise
+     * report itself as canonical. Outside an HTTP request (console, queue,
+     * sitemap render) we treat it as canonical so generated artifacts keep
+     * their normal directives.
      */
     public static function isCanonicalHost(): bool
     {
-        $canonical = parse_url((string) config('app.url'), PHP_URL_HOST);
-        if ($canonical === null) {
+        $canonical = trim((string) config('site.canonical_host'));
+        if ($canonical === '') {
             return true;
         }
 
@@ -147,7 +151,14 @@ class Seo
             return true;
         }
 
-        return strcasecmp($request->getHost(), $canonical) === 0;
+        // Accept the bare host and its www. variant as canonical; the www→non
+        // www redirect / forced root URL handles normalising which one shows.
+        $host = strtolower($request->getHost());
+        $canonical = strtolower($canonical);
+
+        return $host === $canonical
+            || $host === 'www.'.$canonical
+            || 'www.'.$host === $canonical;
     }
 
     private static function flattenText(array $value, array $skipKeys = []): string
