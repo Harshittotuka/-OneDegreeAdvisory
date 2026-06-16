@@ -5,6 +5,18 @@
 
     RewriteEngine On
 
+    # --- Keep non-canonical hosts out of search engines -----------------------
+    # The web server serves robots.txt straight from disk, so the Laravel route
+    # never runs and cannot host-gate it; we gate it here, at the server layer.
+    # Any host that is NOT the canonical production domain (the nip.io UAT box,
+    # the raw server IP, a hosting preview) is a duplicate mirror that must
+    # never be indexed: serve a disallow-all robots body and stamp a noindex
+    # X-Robots-Tag on every response. The live site (onedegreeadvisory.com /
+    # www) is excluded and behaves exactly as before.
+    RewriteCond %{HTTP_HOST} !^(www\.)?onedegreeadvisory\.com$ [NC]
+    RewriteRule ^robots\.txt$ robots-noindex.txt [L]
+    # --------------------------------------------------------------------------
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -50,6 +62,16 @@
 </IfModule>
 
 <IfModule mod_headers.c>
+    # Defense-in-depth noindex for non-canonical hosts (see top of file). Applied
+    # to every response on those hosts, covering non-HTML assets the meta tag
+    # can't. We set a marker env on NON-canonical hosts (negative match), then
+    # emit the header only when that marker is present — the classic env= form
+    # LiteSpeed honors without relying on expr support.
+    SetEnvIfNoCase Host "^(www\.)?onedegreeadvisory\.com$" IS_CANONICAL_HOST
+    SetEnvIfNoCase Host "." NONCANONICAL_HOST
+    SetEnvIfNoCase Host "^(www\.)?onedegreeadvisory\.com$" !NONCANONICAL_HOST
+    Header always set X-Robots-Tag "noindex, nofollow" env=NONCANONICAL_HOST
+
     <FilesMatch "\.(?:avif|webp|jpe?g|png|gif|svg|ico|woff2?|ttf)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
