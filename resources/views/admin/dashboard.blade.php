@@ -127,7 +127,7 @@
   }
   $conic = $stops ? 'conic-gradient('.implode(', ', $stops).')' : 'conic-gradient(#e9e9f0 0deg 360deg)';
 
-  $variantLabel = ['original' => 'Original', 'minimal' => 'Minimal', 'compact' => 'Compact'][$stats['notice_variant']] ?? ucfirst($stats['notice_variant']);
+  $variantLabel = ['left-socials' => 'Left socials', 'left-socials-cycle' => 'Left socials (fade)', 'no-socials' => 'No socials', 'static-notice' => 'Static notice'][$stats['notice_variant']] ?? ucfirst(str_replace('-', ' ', $stats['notice_variant']));
 @endphp
 
 <div class="dsh-grid">

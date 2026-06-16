@@ -22,6 +22,26 @@
   .nb-icon-btn.nb-del:hover { border-color: var(--danger); color: var(--danger); }
   .nb-icon-btn i { width: 16px; height: 16px; }
   .nb-actions { margin-top: 22px; display: flex; gap: 10px; }
+
+  /* Static-notification rich-text editor */
+  .nb-static-wrap { margin-top: 18px; padding-top: 18px; border-top: 1px dashed var(--line); }
+  .nb-static-wrap[hidden] { display: none; }
+  .nb-static-label { display: block; font-weight: 800; font-size: .85rem; margin-bottom: 8px; }
+  .nb-rt-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .nb-rt-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: #fff; border-radius: 8px;
+    padding: 7px 10px; font: 700 .82rem inherit; color: var(--ink); cursor: pointer; }
+  .nb-rt-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .nb-rt-btn i { width: 15px; height: 15px; }
+  .nb-rt-sep { width: 1px; height: 22px; background: var(--line); margin: 0 2px; }
+  /* Preview the real bar context: dark blue background, gold links. */
+  .nb-rt { min-height: 46px; border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; background: #0e2a44; color: #fff;
+    font-weight: 700; line-height: 1.5; outline: none; }
+  .nb-rt:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(102,108,255,.18); }
+  .nb-rt:empty::before { content: attr(data-ph); color: rgba(255,255,255,.5); font-weight: 600; }
+  .nb-rt a { color: #ffc21f; text-decoration: underline; text-underline-offset: 3px; }
+  .nb-link-pop { display: flex; gap: 8px; align-items: center; margin-top: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fafbfc; }
+  .nb-link-pop[hidden] { display: none; }
+  .nb-link-pop input { flex: 1; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
   @media (max-width: 720px) {
     .nb-grid { grid-template-columns: 1fr; }
     .nb-row { grid-template-columns: 1fr; }
@@ -49,10 +69,12 @@
       <div class="field" style="margin:0;">
         <label for="nb-variant">Top bar style</label>
         <select id="nb-variant" name="variant">
-          <option value="original" @selected(($bar['variant'] ?? 'original') === 'original')>Original — socials + WhatsApp number</option>
-          <option value="minimal"  @selected(($bar['variant'] ?? '') === 'minimal')>No socials — marquee only</option>
-          <option value="compact"  @selected(($bar['variant'] ?? '') === 'compact')>WhatsApp icon — compact</option>
+          <option value="left-socials"       @selected(($bar['variant'] ?? 'left-socials') === 'left-socials')>Left socials — all icons left + scrolling notices</option>
+          <option value="left-socials-cycle" @selected(($bar['variant'] ?? '') === 'left-socials-cycle')>Left socials, fade on phone — icons fade one-by-one on phones</option>
+          <option value="no-socials"         @selected(($bar['variant'] ?? '') === 'no-socials')>No socials — scrolling notices only</option>
+          <option value="static-notice"      @selected(($bar['variant'] ?? '') === 'static-notice')>Left socials + static notification</option>
         </select>
+        <p class="hint">All icon styles now keep WhatsApp on the left too. “Fade on phone” shows one icon at a time on small screens. “Static notification” shows one centered message with clickable words.</p>
       </div>
 
       <div class="field" style="margin:0;">
@@ -89,6 +111,27 @@
           <input id="nb-bold" type="checkbox" name="bold" value="1" @checked(! empty($bar['bold']))> Bold text
         </label>
         <p class="hint">Off = normal weight.</p>
+      </div>
+    </div>
+
+    {{-- Static notification editor — only used by the "Left socials + static notification" style. --}}
+    <div class="nb-static-wrap" id="nb-static-wrap" @if(($bar['variant'] ?? 'left-socials') !== 'static-notice') hidden @endif>
+      <label class="nb-static-label">Static notification text</label>
+      <div class="nb-rt-toolbar" role="toolbar" aria-label="Formatting">
+        <button type="button" class="nb-rt-btn" data-rt="bold" title="Bold"><i data-lucide="bold"></i></button>
+        <button type="button" class="nb-rt-btn" data-rt="italic" title="Italic"><i data-lucide="italic"></i></button>
+        <span class="nb-rt-sep"></span>
+        <button type="button" class="nb-rt-btn" data-rt="link" title="Link the selected words"><i data-lucide="link"></i> Add link</button>
+        <button type="button" class="nb-rt-btn" data-rt="unlink" title="Remove link"><i data-lucide="unlink"></i></button>
+      </div>
+      <div class="nb-rt" id="nb-static-editor" contenteditable="true" data-ph="Type your message… select words, then “Add link”.">{!! $bar['static_text'] ?? '' !!}</div>
+      <input type="hidden" name="static_text" id="nb-static-input" value="{{ $bar['static_text'] ?? '' }}">
+      <p class="hint">Shown centered in the bar. Select any word(s) and click <strong>Add link</strong> to make them clickable. Links, <strong>bold</strong> and <em>italic</em> are allowed.</p>
+
+      <div class="nb-link-pop" id="nb-link-pop" hidden>
+        <input type="text" id="nb-link-url" list="nb-link-options" placeholder="/contact, #insights or https://…" autocomplete="off">
+        <button type="button" class="btn btn-primary btn-sm" id="nb-link-apply">Apply link</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="nb-link-cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -176,6 +219,72 @@
     });
 
     refresh();
+  })();
+</script>
+
+<script>
+  // ── Static-notification editor: show for the static style, rich-text + links ──
+  (function () {
+    const variant = document.getElementById('nb-variant');
+    const wrap = document.getElementById('nb-static-wrap');
+    if (!variant || !wrap) return;
+    const editor = document.getElementById('nb-static-editor');
+    const hidden = document.getElementById('nb-static-input');
+    const form = document.getElementById('nb-form');
+    const pop = document.getElementById('nb-link-pop');
+    const urlInput = document.getElementById('nb-link-url');
+
+    const toggle = () => { wrap.hidden = variant.value !== 'static-notice'; };
+    variant.addEventListener('change', toggle);
+    toggle();
+
+    const sync = () => { hidden.value = editor.innerHTML.trim(); };
+    editor.addEventListener('input', sync);
+    sync();
+
+    // Remember the last selection inside the editor so toolbar clicks can use it.
+    let savedRange = null;
+    function saveRange() {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount && editor.contains(sel.anchorNode)) savedRange = sel.getRangeAt(0).cloneRange();
+    }
+    editor.addEventListener('keyup', saveRange);
+    editor.addEventListener('mouseup', saveRange);
+    function restore() {
+      editor.focus();
+      if (!savedRange) return;
+      const sel = window.getSelection();
+      sel.removeAllRanges(); sel.addRange(savedRange);
+    }
+    function cmd(name) { restore(); document.execCommand(name, false, null); sync(); saveRange(); }
+
+    // Keep the editor's selection when a toolbar button is pressed.
+    wrap.querySelectorAll('[data-rt]').forEach(btn => {
+      btn.addEventListener('mousedown', (e) => e.preventDefault());
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.rt;
+        if (action === 'bold' || action === 'italic' || action === 'unlink') { cmd(action); return; }
+        if (action === 'link') {
+          if (!savedRange || savedRange.collapsed) { alert('Select the word(s) you want to link first.'); return; }
+          pop.hidden = false; urlInput.value = ''; urlInput.focus();
+        }
+      });
+    });
+
+    document.getElementById('nb-link-apply').addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (!url) { pop.hidden = true; return; }
+      restore();
+      document.execCommand('createLink', false, url);
+      editor.querySelectorAll('a[href]').forEach(a => {
+        if (/^https?:\/\//i.test(a.getAttribute('href'))) { a.target = '_blank'; a.rel = 'noopener'; }
+      });
+      pop.hidden = true; sync(); saveRange();
+    });
+    document.getElementById('nb-link-cancel').addEventListener('click', () => { pop.hidden = true; });
+    urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('nb-link-apply').click(); } });
+
+    if (form) form.addEventListener('submit', sync);
   })();
 </script>
 @endpush

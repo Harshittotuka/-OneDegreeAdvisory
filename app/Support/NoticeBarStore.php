@@ -65,9 +65,19 @@ class NoticeBarStore
         $defaults = $this->defaults();
 
         $variant = (string) ($data['variant'] ?? $defaults['variant']);
-        if (! in_array($variant, ['original', 'minimal', 'compact'], true)) {
-            $variant = 'original';
+        // Map the legacy variants onto the redesigned set.
+        $variant = match ($variant) {
+            'original', 'compact' => 'left-socials',
+            'minimal' => 'no-socials',
+            default => $variant,
+        };
+        if (! in_array($variant, ['left-socials', 'no-socials', 'static-notice', 'left-socials-cycle'], true)) {
+            $variant = 'left-socials';
         }
+
+        // The centred static announcement (HTML, links allowed) for the
+        // "static-notice" style. Sanitised to a safe subset of tags.
+        $staticText = $this->sanitizeStaticHtml((string) ($data['static_text'] ?? $defaults['static_text']));
 
         $wordCount = (int) ($data['word_count'] ?? $defaults['word_count']);
         $wordCount = max(0, min(50, $wordCount));
@@ -112,8 +122,41 @@ class NoticeBarStore
             'text_color' => $textColor,
             'font_style' => $fontStyle,
             'bold' => $bold,
+            'static_text' => $staticText,
             'items' => $items,
         ];
+    }
+
+    /**
+     * Keep only basic formatting + links from the static-notice HTML, and force
+     * every link to a safe href (relative path, http(s), #anchor, mailto/tel).
+     */
+    private function sanitizeStaticHtml(string $raw): string
+    {
+        $html = trim($raw);
+        if ($html === '') {
+            return '';
+        }
+
+        // Drop <script>/<style> with their contents (strip_tags would leak the inner text).
+        $html = preg_replace('#<(script|style)\b[^>]*>.*?</\1>#is', '', $html) ?? '';
+        $html = strip_tags($html, '<a><strong><em><b><i><br>');
+
+        $html = preg_replace_callback('/<a\b[^>]*>/i', function (array $m): string {
+            if (preg_match('/href\s*=\s*("|\')(.*?)\1/i', $m[0], $h)) {
+                $href = trim(html_entity_decode($h[2]));
+                if (preg_match('~^(https?://|/|#|mailto:|tel:)~i', $href)) {
+                    $rel = preg_match('~^https?://~i', $href) ? ' target="_blank" rel="noopener"' : '';
+
+                    return '<a href="'.htmlspecialchars($href, ENT_QUOTES).'"'.$rel.'>';
+                }
+            }
+
+            // Unsafe or missing href → keep the words, drop the link.
+            return '<a>';
+        }, $html) ?? '';
+
+        return mb_substr($html, 0, 2000);
     }
 
     /** Seed data, derived from the legacy config('site.notices') list. */
@@ -139,12 +182,13 @@ class NoticeBarStore
         }
 
         return [
-            'variant' => 'original',
+            'variant' => 'left-socials',
             'word_count' => 5,
             'speed' => 14,
             'text_color' => '#ff5e32',
             'font_style' => 'normal',
             'bold' => false,
+            'static_text' => 'Admissions for the 2026 intake are now open. <a href="/contact">Book a free consultation</a>.',
             'items' => $items,
         ];
     }

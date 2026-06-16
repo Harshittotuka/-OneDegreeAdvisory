@@ -1,15 +1,15 @@
 @php
-    // Top blue notice bar — its display variant (original / minimal / compact) is
-    // managed in the CMS (/admin/notice-bar) and applied server-side here so
-    // there is no flash and no dependence on the old floating switcher.
-    $topbarVariant = app(\App\Support\NoticeBarStore::class)->get()['variant'] ?? 'original';
+    // Top blue notice bar — its display variant (left-socials / no-socials /
+    // static-notice) is managed in the CMS (/admin/notice-bar) and applied
+    // server-side here so there is no flash and no dependence on a JS switcher.
+    $topbarVariant = app(\App\Support\NoticeBarStore::class)->get()['variant'] ?? 'left-socials';
 
     // When a CMS live-editor renders a real page (e.g. the home-hero editor),
     // $cmsEdit injects the editor chrome and locks every non-edited section.
     $cmsEdit = $cmsEdit ?? false;
 @endphp
 <!doctype html>
-<html lang="en" data-color-theme="cream"@if($topbarVariant !== 'original') class="topbar-{{ $topbarVariant }}"@endif>
+<html lang="en" data-color-theme="cream" class="topbar-{{ $topbarVariant }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

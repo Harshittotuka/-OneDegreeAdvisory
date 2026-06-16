@@ -578,6 +578,32 @@ ready(() => {
     }, interval);
   });
 
+  // Notice-bar "Left socials, fade on phone" style: on phones the social icons
+  // share one slot and fade in/out one at a time. Pure class toggling; the fade
+  // is CSS. Honours reduced-motion (shows the first icon only).
+  if (document.documentElement.classList.contains("topbar-left-socials-cycle")) {
+    const ul = document.querySelector(".notice .site-socials--notice");
+    const items = ul ? Array.from(ul.children) : [];
+    if (items.length > 1 && window.matchMedia) {
+      const phone = window.matchMedia("(max-width: 460px)");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let timer = null, idx = 0;
+      const stop = () => { if (timer) { clearInterval(timer); timer = null; } items.forEach((li) => li.classList.remove("is-active")); };
+      const start = () => {
+        stop(); idx = 0; items[0].classList.add("is-active");
+        if (reduce.matches) return;
+        timer = window.setInterval(() => {
+          items[idx].classList.remove("is-active");
+          idx = (idx + 1) % items.length;
+          items[idx].classList.add("is-active");
+        }, 2600);
+      };
+      const apply = () => { if (phone.matches) start(); else stop(); };
+      apply();
+      phone.addEventListener("change", apply);
+    }
+  }
+
   // Phone-only collapsible contact card: tap the blue strip to slide the
   // contact details over the form; the close button tucks it away again. The
   // collapsed/overlay styling is gated to ≤720px in CSS, so on desktop this

@@ -23345,18 +23345,94 @@ html[data-color-theme] .study-abroad-page .pathfinder {
   }
 }
 
-/* minimal: keep only the scrolling marquee — and let it span the full width
-   (drop the reserved left social-icon zone + the marquee's side margins). */
-html.topbar-minimal .notice .site-socials,
-html.topbar-minimal .notice .notice-whatsapp,
-html.topbar-minimal .notice .notice-wa-icon { display: none; }
+/* ── Notice-bar display styles (CMS variant set on <html>) ─────────────────
+   left-socials   · socials left · marquee · WhatsApp right (socials on phone too)
+   no-socials     · no socials   · marquee · WhatsApp right
+   static-notice  · socials left · one centred static announcement · WhatsApp right */
 
-html.topbar-minimal .notice { padding-left: 16px; }
-html.topbar-minimal .notice .notice-marquee { margin: 0; }
+/* no-socials: drop the social icons; the marquee reclaims the full width. */
+html.topbar-no-socials .notice .site-socials--notice { display: none; }
+html.topbar-no-socials .notice { padding-left: 16px; }
+html.topbar-no-socials .notice .notice-marquee { margin-left: 0; }
 
-/* compact: WhatsApp becomes an icon beside the socials; right-side number removed */
-html.topbar-compact .notice .notice-whatsapp { display: none; }
-html.topbar-compact .notice .notice-wa-icon { display: inline-flex; }
+/* static-notice: one centred, non-scrolling announcement. */
+.notice-static {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 28px;
+}
+.notice-static-text {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--notice-text-color, #ff5e32);
+  font-weight: var(--notice-font-weight, 700);
+  font-style: var(--notice-font-style, normal);
+}
+.notice-static-text a {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 160ms ease;
+}
+.notice-static-text a:hover,
+.notice-static-text a:focus-visible {
+  color: color-mix(in srgb, var(--notice-text-color, #ff5e32) 72%, #ffffff);
+}
+
+/* Icon styles reserve a wider left zone for 4 icons (incl. WhatsApp on the left). */
+html.topbar-left-socials .notice,
+html.topbar-static-notice .notice,
+html.topbar-left-socials-cycle .notice { padding-left: 168px; }
+
+/* Every icon style keeps the social icons on phones too (the base layout hides
+   them under 460px). */
+@media (max-width: 460px) {
+  html.topbar-left-socials .notice .site-socials--notice,
+  html.topbar-static-notice .notice .site-socials--notice,
+  html.topbar-left-socials-cycle .notice .site-socials--notice { display: flex; }
+
+  /* Phone: tighten the icons so a row of four doesn't look spread out. */
+  .notice .site-socials--notice { gap: 3px; }
+  .notice .site-socials--notice .site-social { width: 26px; height: 26px; }
+  .notice .site-socials--notice .site-social svg { width: 18px; height: 18px; }
+
+  /* Four compact icons shown at once need a left zone sized to match. */
+  html.topbar-left-socials .notice,
+  html.topbar-static-notice .notice { padding-left: 126px; }
+  html.topbar-static-notice .notice-static { margin: 0 10px; }
+
+  /* "Fade" style: collapse the icons into one slot; script.js fades one in at a
+     time (only .is-active is shown). */
+  html.topbar-left-socials-cycle .notice { padding-left: 52px; }
+  html.topbar-left-socials-cycle .notice .site-socials--notice {
+    display: block;
+    width: 26px;
+    height: 26px;
+  }
+  html.topbar-left-socials-cycle .notice .site-socials--notice li {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    transition: opacity 0.55s ease;
+    pointer-events: none;
+  }
+  html.topbar-left-socials-cycle .notice .site-socials--notice li.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 460px) and (prefers-reduced-motion: reduce) {
+  html.topbar-left-socials-cycle .notice .site-socials--notice li { transition: none; }
+}
 
 /* ============================================================
    Study Abroad — one uniform page background (no banded section seams).

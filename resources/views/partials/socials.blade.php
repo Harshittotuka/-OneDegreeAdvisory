@@ -1,10 +1,11 @@
 @php
     $socials = config('site.socials', []);
     $variant = $variant ?? 'default';
+    $withWhatsapp = $withWhatsapp ?? false;
 
-    // The notice bar shows its own dedicated WhatsApp icon, so drop WhatsApp from
-    // the social list there to avoid a duplicate in the top blue bar.
-    if ($variant === 'notice') {
+    // In the notice bar WhatsApp is dropped by default (the bar shows its own
+    // WhatsApp control) — unless the caller keeps it, e.g. "all socials on left".
+    if ($variant === 'notice' && ! $withWhatsapp) {
         $socials = array_values(array_filter(
             $socials,
             fn ($social) => ($social['slug'] ?? '') !== 'whatsapp',

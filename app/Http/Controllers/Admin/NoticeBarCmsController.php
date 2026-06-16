@@ -77,12 +77,13 @@ class NoticeBarCmsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'variant' => 'required|in:original,minimal,compact',
+            'variant' => 'required|in:left-socials,no-socials,static-notice,left-socials-cycle',
             'word_count' => 'required|integer|min:0|max:50',
             'speed' => 'required|integer|min:5|max:120',
             'text_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'font_style' => 'nullable|in:normal,italic',
             'bold' => 'nullable|boolean',
+            'static_text' => 'nullable|string|max:5000',
             'items' => 'array',
             'items.*.text' => 'nullable|string|max:300',
             'items.*.href' => 'nullable|string|max:500',
@@ -111,6 +112,7 @@ class NoticeBarCmsController extends Controller
             'text_color' => (string) $request->input('text_color', '#ff5e32'),
             'font_style' => (string) $request->input('font_style', 'normal'),
             'bold' => $request->boolean('bold'),
+            'static_text' => (string) $request->input('static_text', ''),
             'items' => $items,
         ]);
 
