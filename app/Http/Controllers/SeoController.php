@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Support\BlogContent;
 use App\Support\BriefPageStore;
 use App\Support\MbbsCountryContent;
+use App\Support\Seo;
 use App\Support\StudyLocationContent;
 use Illuminate\Http\Response;
 
@@ -12,6 +13,15 @@ class SeoController extends Controller
 {
     public function robots(): Response
     {
+        // Only the canonical production host (onedegreeadvisory.com) is allowed
+        // to be crawled. Any other host — the nip.io UAT/test box, the raw IP,
+        // or a *.litespeed preview — gets a blanket disallow so Google never
+        // indexes a duplicate of the site that would compete with the real one.
+        if (! Seo::isCanonicalHost()) {
+            return response("User-agent: *\nDisallow: /\n", 200)
+                ->header('Content-Type', 'text/plain; charset=UTF-8');
+        }
+
         $content = file_get_contents(public_path('robots.txt')) ?: '';
 
         return response($content, 200)->header('Content-Type', 'text/plain; charset=UTF-8');

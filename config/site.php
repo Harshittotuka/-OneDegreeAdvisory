@@ -49,6 +49,19 @@ return [
             'postal_code' => '302018',
             'country'     => 'IN',
         ],
+        /* Approximate geo-coordinates of the Jaipur office (Van Vihar Colony,
+           Tonk Road). Emitted as schema.org "geo" on the LocalBusiness node so
+           Google can place the business on the map / in local results — a key
+           signal that this is a Jaipur education firm, distinct from the
+           similarly-named US financial advisor. Replace lat/lng with the exact
+           values from the Google Business Profile pin once it is verified. */
+        'geo' => [
+            'lat' => '26.8478',
+            'lng' => '75.8073',
+        ],
+        /* Link to the Google Maps place once the Business Profile exists. Set
+           via GOOGLE_MAPS_PLACE_URL in .env; emitted as schema.org "hasMap". */
+        'maps_url' => env('GOOGLE_MAPS_PLACE_URL'),
     ],
 
     /* Services offered — emitted as a schema.org OfferCatalog on the Organization

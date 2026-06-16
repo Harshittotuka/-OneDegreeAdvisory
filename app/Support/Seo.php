@@ -127,6 +127,29 @@ class Seo
         return (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
+    /**
+     * True only when the current request is served from the canonical public
+     * host declared in APP_URL. Everything else (the nip.io UAT box, the raw
+     * IP, a hosting preview domain) is a non-canonical mirror that must be kept
+     * out of the index so it never competes with the live site. Outside an HTTP
+     * request (console, queue) we treat it as canonical so generated artifacts
+     * such as the sitemap keep their normal directives.
+     */
+    public static function isCanonicalHost(): bool
+    {
+        $canonical = parse_url((string) config('app.url'), PHP_URL_HOST);
+        if ($canonical === null) {
+            return true;
+        }
+
+        $request = request();
+        if ($request === null) {
+            return true;
+        }
+
+        return strcasecmp($request->getHost(), $canonical) === 0;
+    }
+
     private static function flattenText(array $value, array $skipKeys = []): string
     {
         $parts = [];

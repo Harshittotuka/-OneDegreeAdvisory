@@ -3,5 +3,5 @@ Disallow: /admin/
 Disallow: /up
 Disallow: /preview/
 
-# Canonical host is www — keep the sitemap on the same host as <link rel="canonical">
-Sitemap: https://www.onedegreeadvisory.com/sitemap.xml
+# Canonical host is non-www (matches APP_URL and <link rel="canonical">).
+Sitemap: https://onedegreeadvisory.com/sitemap.xml

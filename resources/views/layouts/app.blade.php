@@ -22,7 +22,13 @@
       // a known 1200x630). Per-page overrides (blog/country photos) vary in size, so
       // we omit width/height for them rather than advertise wrong dimensions.
       $ogImageIsDefault = trim((string) ($ogImage ?? '')) === '';
-      $robotsValue = $robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+      // Any host that is not the canonical public domain (the nip.io UAT box,
+      // the raw IP, a *.litespeed preview) must never be indexed, or it would
+      // compete with the live site as duplicate content. The canonical host
+      // keeps its normal index directive (or a per-page $robots override).
+      $robotsValue = \App\Support\Seo::isCanonicalHost()
+        ? ($robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')
+        : 'noindex, nofollow';
       $googleSiteVerification = trim((string) config('services.google.site_verification'));
       $googleTagId = app()->environment('production') && ! $cmsEdit ? trim((string) config('services.google.tag_id')) : '';
       $googleTagManagerId = app()->environment('production') && ! $cmsEdit ? trim((string) config('services.google.tag_manager_id')) : '';
@@ -172,8 +178,20 @@
         ]),
       ], config('site.services', [])));
 
+      // Geo + map link for the Jaipur office. Present only when configured so
+      // we never advertise placeholder coordinates.
+      $geo = config('site.contact.geo', []);
+      $geoNode = (isset($geo['lat'], $geo['lng']) && $geo['lat'] !== '' && $geo['lng'] !== '')
+        ? ['@type' => 'GeoCoordinates', 'latitude' => (string) $geo['lat'], 'longitude' => (string) $geo['lng']]
+        : null;
+
       $orgNode = array_filter([
-        '@type' => 'EducationalOrganization',
+        // Dual-typed: an EducationalOrganization (what the business does) that is
+        // also a LocalBusiness (a physical office in Jaipur). The LocalBusiness
+        // facet — address + geo + map — is what lets Google treat this as a
+        // local entity in India, clearly distinct from the similarly-named US
+        // financial-advisory firm that otherwise dominates the brand query.
+        '@type' => ['EducationalOrganization', 'LocalBusiness'],
         '@id' => url('/#organization'),
         'name' => config('site.name'),
         'alternateName' => 'ODA',
@@ -184,6 +202,8 @@
         'email' => config('site.contact.email'),
         'telephone' => config('site.contact.phone'),
         'address' => $postalAddress ?: config('site.contact.address'),
+        'geo' => $geoNode,
+        'hasMap' => trim((string) config('site.contact.maps_url')) ?: null,
         'areaServed' => 'Worldwide',
         'knowsAbout' => array_values(config('site.expertise', [])),
         'contactPoint' => [array_filter([
@@ -204,7 +224,18 @@
 
       $orgJsonLd = \App\Support\Seo::jsonLd(['@context' => 'https://schema.org', '@graph' => [
         $orgNode,
-        ['@type' => 'WebSite', '@id' => url('/#website'), 'url' => url('/'), 'name' => config('site.name'), 'description' => config('site.description'), 'publisher' => ['@id' => url('/#organization')], 'inLanguage' => 'en'],
+        array_filter([
+          '@type' => 'WebSite',
+          '@id' => url('/#website'),
+          'url' => url('/'),
+          'name' => config('site.name'),
+          // Reinforces the site as a distinct named entity ("One Degree
+          // Advisory" / "ODA") for the brand query, separate from the US firm.
+          'alternateName' => 'ODA',
+          'description' => config('site.description'),
+          'publisher' => ['@id' => url('/#organization')],
+          'inLanguage' => 'en',
+        ]),
       ]]);
     @endphp
     <script type="application/ld+json">
