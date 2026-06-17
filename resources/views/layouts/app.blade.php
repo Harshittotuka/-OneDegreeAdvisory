@@ -100,11 +100,21 @@
         gtag('config', @json($googleTagId), {'send_page_view': true});
       </script>
     @endif
-    <link rel="stylesheet" href="{{ asset('styles.css') }}">
-    <link rel="stylesheet" href="{{ asset('stripe-nav.css') }}">
+    @php
+        // Cache-bust local CSS/JS by file mtime. These are served statically by
+        // LiteSpeed with long cache headers and the URLs carry no version, so an
+        // old copy would otherwise stick in browsers/proxies after a deploy
+        // (which is how a stale script.js can leave forms wired to nothing).
+        $assetVer = function (string $file) {
+            $path = public_path($file);
+            return is_file($path) ? asset($file).'?v='.filemtime($path) : asset($file);
+        };
+    @endphp
+    <link rel="stylesheet" href="{{ $assetVer('styles.css') }}">
+    <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
-    <script src="{{ asset('script.js') }}" defer></script>
-    <script src="{{ asset('stripe-nav.js') }}" defer></script>
+    <script src="{{ $assetVer('script.js') }}" defer></script>
+    <script src="{{ $assetVer('stripe-nav.js') }}" defer></script>
   </head>
   <body class="{{ trim(($bodyClass ?? '').($cmsEdit ? ' cms-editing' : '')) }}">
     @if($googleTagManagerId !== '')
@@ -141,6 +151,19 @@
         </div>
       </div>
     </div>
+
+    {{-- Server-rendered fallback for the consult/careers/newsletter forms: when
+         JS is stale or disabled the form does a normal POST and lands back here
+         with this flash, so submitting is never a silent no-op. With JS working,
+         the AJAX popup handles feedback and this never renders. --}}
+    @if(session()->has('form_status'))
+      <div role="status" aria-live="polite"
+           style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;max-width:min(92vw,520px);display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);font:500 15px/1.4 system-ui,sans-serif;color:#fff;background:{{ session('form_ok') ? '#1f9d57' : '#c0392b' }};">
+        <span>{{ session('form_status') }}</span>
+        <button type="button" onclick="this.parentElement.remove()" aria-label="Dismiss"
+                style="margin-left:auto;border:0;background:transparent;color:inherit;font-size:20px;line-height:1;cursor:pointer;">&times;</button>
+      </div>
+    @endif
 
     @yield('content')
 

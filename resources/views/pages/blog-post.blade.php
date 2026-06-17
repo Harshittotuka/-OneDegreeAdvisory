@@ -206,7 +206,9 @@
         <h2>One thoughtful brief, every Friday.</h2>
         <p>Five-minute reads on what changed this cycle for the corridors we cover. No noise, no resends, easy to unsubscribe.</p>
       </div>
-      <form class="blog-newsletter-form" onsubmit="event.preventDefault();" aria-label="Newsletter signup">
+      <form class="blog-newsletter-form" action="{{ route('newsletter.subscribe') }}" method="POST" data-newsletter-form aria-label="Newsletter signup">
+        @csrf
+        <input type="hidden" name="source" value="Blog newsletter">
         <label class="visually-hidden" for="blog-newsletter-email">Email address</label>
         <input id="blog-newsletter-email" type="email" name="email" required placeholder="you@example.com">
         <button class="btn btn-primary" type="submit">
