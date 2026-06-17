@@ -202,8 +202,10 @@ button {
 .notice-marquee-group {
   display: flex;
   align-items: center;
-  gap: 64px;
-  padding-right: 64px;
+  /* Inter-item distance is CMS-controlled (--notice-gap, set inline on the
+     track). The trailing padding mirrors it so the loop join stays invisible. */
+  gap: var(--notice-gap, 64px);
+  padding-right: var(--notice-gap, 64px);
   flex: 0 0 auto;
 }
 
@@ -24737,7 +24739,10 @@ html[data-color-theme] .study-abroad-page .solutions-section,
    soft rounded-square tile holding a 24px Lucide icon, with a
    scale + rotate hover.
 
-     recipe : background #e8f7f3 ; icon color var(--teal-dark)
+     recipe : background var(--aqua) ; icon color var(--teal-dark)
+              (var(--aqua) is the theme-aware soft tile used by the
+               reference home "signal" cards; under cream it is a pale
+               navy-tinted neutral, NOT the old hardcoded mint #e8f7f3)
      shape  : rounded square, radius 16px (compact 14px)
      icon   : 24px (compact 22px)
      hover  : scale(1.06) rotate(-3deg) + warm tile tint
@@ -24776,7 +24781,7 @@ html[data-color-theme] :is(
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: #e8f7f3;
+  background: var(--aqua);
   color: var(--teal-dark);
   border: 0;
   box-shadow: none;
@@ -24824,7 +24829,7 @@ html[data-color-theme] :is(
   .study-abroad-page .pf-step-ico
 ) {
   border-radius: 14px;
-  background: #e8f7f3;
+  background: var(--aqua);
   color: var(--teal-dark);
   border: 0;
   box-shadow: none;
@@ -25307,8 +25312,12 @@ html[data-color-theme] .whyus-card:hover .whyus-icon {
    they're untouched, and any component that sets its own text-align (centred
    section intros, etc.) keeps it because that selector is more specific.
    Single-line paragraphs are visually unaffected — only wrapped lines justify.
-   ────────────────────────────────────────────────────────────────────────── */
+   `main li` extends the same treatment to prose list items (e.g. the careers
+   "why join" points); single-line bullets stay visually unchanged. Numeric /
+   tabular values live in <dd> and are deliberately left out so figures keep
+   their own alignment. ────────────────────────────────────────────────────── */
 main p,
+main li,
 .footer-brand p {
   text-align: justify;
 }

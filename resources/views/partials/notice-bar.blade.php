@@ -40,6 +40,7 @@
         ->values();
 
     $marqueeSpeed = (int) ($bar['speed'] ?? 14);
+    $itemGap      = (int) ($bar['item_gap'] ?? 64);
 
     // Text appearance — editable in the CMS (/admin/notice-bar).
     $marqueeColor  = (string) ($bar['text_color'] ?? '#ff5e32');
@@ -79,7 +80,7 @@
         $shift = '-' . rtrim(rtrim(number_format(100 / $copies, 4, '.', ''), '0'), '.') . '%';
     @endphp
     <div class="notice-marquee" data-notice-marquee>
-      <div class="notice-marquee-track" style="--marquee-shift: {{ $shift }}; --marquee-duration: {{ $marqueeSpeed }}s; --notice-text-color: {{ $marqueeColor }}; --notice-font-style: {{ $marqueeStyle }}; --notice-font-weight: {{ $marqueeWeight }};">
+      <div class="notice-marquee-track" style="--marquee-shift: {{ $shift }}; --marquee-duration: {{ $marqueeSpeed }}s; --notice-gap: {{ $itemGap }}px; --notice-text-color: {{ $marqueeColor }}; --notice-font-style: {{ $marqueeStyle }}; --notice-font-weight: {{ $marqueeWeight }};">
         @for ($copy = 0; $copy < $copies; $copy++)
           <div class="notice-marquee-group" @if ($copy > 0) aria-hidden="true" @endif>
             @foreach ($notices as $notice)

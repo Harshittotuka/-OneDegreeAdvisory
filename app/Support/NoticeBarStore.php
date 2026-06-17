@@ -85,6 +85,11 @@ class NoticeBarStore
         $speed = (int) ($data['speed'] ?? $defaults['speed']);
         $speed = max(5, min(120, $speed));
 
+        // Distance (px) between scrolling items; the trailing padding mirrors it
+        // so the seamless-loop join stays invisible (see the partial/CSS).
+        $itemGap = (int) ($data['item_gap'] ?? $defaults['item_gap']);
+        $itemGap = max(8, min(240, $itemGap));
+
         $textColor = strtolower((string) ($data['text_color'] ?? $defaults['text_color']));
         if (! preg_match('/^#[0-9a-f]{6}$/', $textColor)) {
             $textColor = $defaults['text_color'];
@@ -119,6 +124,7 @@ class NoticeBarStore
             'variant' => $variant,
             'word_count' => $wordCount,
             'speed' => $speed,
+            'item_gap' => $itemGap,
             'text_color' => $textColor,
             'font_style' => $fontStyle,
             'bold' => $bold,
@@ -185,6 +191,7 @@ class NoticeBarStore
             'variant' => 'left-socials',
             'word_count' => 5,
             'speed' => 14,
+            'item_gap' => 64,
             'text_color' => '#ff5e32',
             'font_style' => 'normal',
             'bold' => false,

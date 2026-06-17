@@ -90,6 +90,12 @@
       </div>
 
       <div class="field" style="margin:0;">
+        <label for="nb-gap">Gap between items (px)</label>
+        <input id="nb-gap" type="number" name="item_gap" min="8" max="240" value="{{ $bar['item_gap'] ?? 64 }}">
+        <p class="hint">Distance between scrolling announcements. Higher = more spaced out. Default 64.</p>
+      </div>
+
+      <div class="field" style="margin:0;">
         <label for="nb-color">Text colour</label>
         <input id="nb-color" type="color" name="text_color" value="{{ $bar['text_color'] ?? '#ff5e32' }}"
                style="width:100%; height:42px; padding:4px; border:1px solid var(--line); border-radius:8px; background:#fff; cursor:pointer;">
