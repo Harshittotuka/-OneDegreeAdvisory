@@ -13493,7 +13493,7 @@ html[data-color-theme] .va-hero .btn-ghost:hover,
 /* ─────────────────── FINAL CTA ─────────────────── */
 .va-cta {
   position: relative;
-  padding: 110px 0 180px;
+  padding: 90px 0 90px;
   background:
     radial-gradient(circle at 12% 12%, rgba(13, 122, 120, 0.28), transparent 55%),
     radial-gradient(circle at 86% 86%, rgba(199, 146, 74, 0.18), transparent 55%),
