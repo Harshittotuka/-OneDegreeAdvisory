@@ -71,7 +71,7 @@
       return; // toggle still works; nothing else to wire up
     }
 
-    const ORDER = ["destinations", "courses", "services"];
+    const ORDER = ["destinations", "courses", "services", "new-tabs"];
     const sectionFor = (key) => sections.find((s) => s.dataset.stripeSection === key);
     const triggerFor = (key) => triggers.find((t) => t.dataset.stripeTrigger === key);
     const isDesktop = () => window.matchMedia("(min-width: 921px)").matches;

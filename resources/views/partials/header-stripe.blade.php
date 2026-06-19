@@ -60,6 +60,12 @@
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
 
+        <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'new-tabs'])
+                type="button" data-stripe-trigger="new-tabs" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-new-tabs">
+          <span>New Tabs</span>
+          <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
+        </button>
+
       </div>
 
       {{-- One shared overlay that morphs between the panels. --}}
@@ -165,6 +171,25 @@
                     <a class="course-menu-card" href="{{ route('contact') }}">
                       <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="microscope"></i></span>
                       <span class="course-menu-copy"><strong>Doctoral</strong><small>PhD and research</small></span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {{-- ============ New Tabs ============ --}}
+            <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-new-tabs" data-stripe-section="new-tabs" role="region" aria-label="New tabs">
+              <div class="nav-dropdown-shell">
+                <div class="nav-dropdown-main course-menu">
+                  <div class="nav-dropdown-topline course-menu-topline">
+                    <span class="nav-dropdown-badge">New</span>
+                    <span class="course-menu-count">1 tool</span>
+                  </div>
+
+                  <div class="course-menu-grid">
+                    <a class="course-menu-card" href="{{ route('profiler') }}">
+                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="compass"></i></span>
+                      <span class="course-menu-copy"><strong>Profiler</strong><small>Build your student profile</small></span>
                     </a>
                   </div>
                 </div>

@@ -45,6 +45,10 @@ Route::get('/services/student-services', [PageController::class, 'studentService
 
 Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study-abroad');
 
+// Student Profiler module (self-contained in app/Modules/StudentProfiler). One
+// invokable controller serves GET (wizard) and POST (session save / submit).
+Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentProfilerController::class)->name('profiler');
+
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
 Route::get('/europe', [BriefPageController::class, 'show'])->defaults('slug', 'europe')->name('europe');
