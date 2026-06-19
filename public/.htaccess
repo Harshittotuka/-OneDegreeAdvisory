@@ -5,6 +5,19 @@
 
     RewriteEngine On
 
+    # --- Canonical public origin ---------------------------------------------
+    # Search engines must see one version of every public URL. Keep preview and
+    # test hosts where they are, but permanently consolidate the live www and
+    # HTTP variants onto the HTTPS non-www origin used by canonical tags and the
+    # sitemap. Query strings are preserved automatically by mod_rewrite.
+    RewriteCond %{HTTP_HOST} ^www\.onedegreeadvisory\.com$ [NC]
+    RewriteRule ^ https://onedegreeadvisory.com%{REQUEST_URI} [R=301,L,NE]
+
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} ^onedegreeadvisory\.com$ [NC]
+    RewriteRule ^ https://onedegreeadvisory.com%{REQUEST_URI} [R=301,L,NE]
+    # --------------------------------------------------------------------------
+
     # --- Keep non-canonical hosts out of search engines -----------------------
     # The web server serves robots.txt straight from disk, so the Laravel route
     # never runs and cannot host-gate it; we gate it here, at the server layer.

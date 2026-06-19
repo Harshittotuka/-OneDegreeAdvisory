@@ -139,7 +139,7 @@ class SuperAdminCmsTest extends TestCase
             ->assertOk()
             ->assertSee('Unlinked Pages')
             ->assertSee('not linked from the updated primary navigation')
-            ->assertSee('/courses/postgraduate', false)
+            ->assertDontSee('/courses/postgraduate', false)
             ->assertSee('/services/test-preparation', false);
     }
 

@@ -19,11 +19,6 @@ class UnlinkedPagesController extends Controller
     private function staticPages(): array
     {
         return [
-            $this->page('Course pages', 'Postgraduate', 'courses.pg', 'Kept live; the updated Courses menu sends non-MBBS enquiries to Contact.'),
-            $this->page('Course pages', 'Undergraduate', 'courses.ug', 'Kept live; the updated Courses menu sends non-MBBS enquiries to Contact.'),
-            $this->page('Course pages', 'MBA', 'courses.mba', 'Kept live; the updated Courses menu sends non-MBBS enquiries to Contact.'),
-            $this->page('Course pages', 'Doctoral', 'courses.doctoral', 'Kept live; the updated Courses menu sends non-MBBS enquiries to Contact.'),
-            $this->page('Course pages', 'LLB', 'courses.llb', 'Kept live, but removed from the updated Courses menu.'),
             $this->page('Study-abroad pages', 'Study Abroad', 'study-abroad', 'No primary-nav item after the Services menu was removed.'),
             $this->page('Study-abroad pages', 'Test Preparation', 'services.test-prep', 'No primary-nav item after the Services menu was removed.'),
             $this->page('Study-abroad pages', 'Student Services', 'services.student-services', 'No primary-nav item after the Services menu was removed.'),

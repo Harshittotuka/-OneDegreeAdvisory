@@ -199,6 +199,10 @@
               <i data-lucide="compass"></i>
               <h3>Course and Career Mapping</h3>
               <p>Turn interests, marks, experience, and career goals into country and program options worth pursuing.</p>
+              <a class="service-card-cta" href="{{ route('services.admissions-counselling') }}">
+                <i data-lucide="map"></i>
+                <span>Admissions Counselling</span>
+              </a>
             </article>
             <article class="service-card reveal">
               <i data-lucide="building-2"></i>
@@ -228,6 +232,10 @@
               <i data-lucide="plane-takeoff"></i>
               <h3>Pre and Post Departure Support</h3>
               <p>Plan accommodation, packing, banking, insurance, campus arrival, and the first 30 days abroad.</p>
+              <a class="service-card-cta" href="{{ route('services.student-services') }}">
+                <i data-lucide="life-buoy"></i>
+                <span>Student Services</span>
+              </a>
             </article>
           </div>
         </div>

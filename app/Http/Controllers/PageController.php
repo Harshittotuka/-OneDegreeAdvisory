@@ -278,7 +278,7 @@ class PageController extends Controller
         // A "redirect" post has no article of its own — send visitors to its target.
         $link = trim((string) ($post['link_url'] ?? ''));
         if ($link !== '') {
-            return redirect()->to($link);
+            return redirect()->to($link, 301);
         }
 
         return view('pages.blog-post', [
