@@ -49,6 +49,11 @@ Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study
 // invokable controller serves GET (wizard) and POST (session save / submit).
 Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentProfilerController::class)->name('profiler');
 
+// Profile Evaluator module (self-contained in app/Modules/ProfileEvaluator) —
+// a native rebuild of the mim-essay "Evaluate My Profile" questionnaire. Same
+// invokable GET (wizard) / POST (session save / submit) shape as the profiler.
+Route::match(['get', 'post'], '/evaluate-my-profile', \App\Modules\ProfileEvaluator\ProfileEvaluatorController::class)->name('profile.evaluate');
+
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
 Route::get('/europe', [BriefPageController::class, 'show'])->defaults('slug', 'europe')->name('europe');

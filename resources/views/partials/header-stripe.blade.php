@@ -183,13 +183,17 @@
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">New</span>
-                    <span class="course-menu-count">1 tool</span>
+                    <span class="course-menu-count">2 tools</span>
                   </div>
 
                   <div class="course-menu-grid">
                     <a class="course-menu-card" href="{{ route('profiler') }}">
                       <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="compass"></i></span>
                       <span class="course-menu-copy"><strong>Profiler</strong><small>Build your student profile</small></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('profile.evaluate') }}">
+                      <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
+                      <span class="course-menu-copy"><strong>Evaluate My Profile</strong><small>Get a free profile evaluation</small></span>
                     </a>
                   </div>
                 </div>
