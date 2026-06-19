@@ -109,6 +109,18 @@
         }, reduce ? 50 : 680);
     }
 
+    /* ===================== BACK TO COURSE PICKER ===================== */
+    // "Select course" — return to the degree picker so the user can change their
+    // course. Answers are kept (re-picking the same course resumes them); the
+    // chosen degree is cleared so a refresh lands on the picker, not the wizard.
+    function backToEntry() {
+        state.degree = null;
+        state.section = 0;
+        renderEntry();
+        save("save");
+        window.scrollTo({ top: 0 });
+    }
+
     /* ===================== WIZARD SHELL ===================== */
     function renderWizard() {
         var d = cfg.degrees[state.degree];
@@ -121,11 +133,11 @@
                 E("div", { class: "sp-brand" }, [
                     E("span", { class: "sp-brand__mark", html: "1&deg;" }),
                     E("span", { class: "sp-brand__name", text: "ODA Profiler" }),
-                    E("span", { class: "sp-degchip", html: d.label + " &nbsp;&#128274;" })
+                    E("span", { class: "sp-degchip", text: d.label })
                 ]),
                 E("div", { class: "sp-topbar__right" }, [
                     E("span", { class: "sp-step-count", "data-sp-count": "" }),
-                    E("button", { class: "sp-exit", type: "button", text: "Save & exit", onclick: function () { window.location.href = "/"; } })
+                    E("button", { class: "sp-exit", type: "button", html: "&#8592;&nbsp; Select course", onclick: backToEntry })
                 ])
             ]),
             E("div", { class: "sp-body" }, [rail, main])
@@ -147,7 +159,7 @@
             li.addEventListener("click", function () { if (i < state.section) navigate(i); });
             rail.appendChild(li);
         });
-        rail.appendChild(E("p", { class: "sp-rail__note", text: "Sections unlock in order. You can’t skip ahead or change your degree once you begin." }));
+        rail.appendChild(E("p", { class: "sp-rail__note", text: "Sections unlock in order — you can’t skip ahead. Use “Select course” (top right) to change your degree anytime." }));
         updateRail();
     }
 
@@ -354,7 +366,7 @@
     // No score, no rating — a celebratory "we'll review & get back to you" popup.
     function showSuccess() {
         var confetti = E("div", { class: "sp-confetti" });
-        var colors = ["#ef5a2a", "#ff9a45", "#f0a93a", "#1f6fb2", "#0b2b43", "#c7924a"];
+        var colors = ["#ff5e32", "#ff8a5c", "#f7da82", "#1a0088", "#2a16a0", "#c7924a"];
         for (var i = 0; i < 18; i++) {
             confetti.appendChild(E("i", { style: "left:" + (Math.random() * 100).toFixed(1) + "%;background:" + colors[i % colors.length] + ";animation-delay:" + (Math.random() * .5).toFixed(2) + "s;transform:rotate(" + Math.floor(Math.random() * 360) + "deg)" }));
         }
