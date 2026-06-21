@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PaymentSectionOtpMail;
 use App\Support\BriefPageStore;
 use App\Support\BriefPresets;
 use App\Support\BriefSchema;
@@ -13,7 +14,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * The Brief Page Builder — a super-admin CMS for creating .odp-* "brief" pages
@@ -135,6 +138,17 @@ class BriefPageCmsController extends Controller
         $layout = $request->input('layout');
         if (! is_array($layout)) {
             return response()->json(['ok' => false, 'message' => 'Bad payload.'], 422);
+        }
+
+        // Security gate: a page containing a payment section can only be saved
+        // with a valid authorization OTP — proves the editor is allowed to
+        // publish a live payment gateway (see requestPaymentOtp/verifyPaymentOtp).
+        if ($this->layoutHasPayment($layout) && ! $this->paymentAuthValid()) {
+            return response()->json([
+                'ok' => false,
+                'need_payment_otp' => true,
+                'message' => 'Saving a payment section needs an authorization code.',
+            ], 403);
         }
 
         $page['title'] = mb_substr(trim((string) $request->input('title', $page['title'] ?? 'Untitled')), 0, 160) ?: 'Untitled';
@@ -269,6 +283,116 @@ class BriefPageCmsController extends Controller
         }
 
         return $out;
+    }
+
+    /* ──────────────── Payment-section authorization OTP ──────────────── */
+
+    /** Email a one-time code to the configured approver(s) before a payment section can be saved. */
+    public function requestPaymentOtp(Request $request): JsonResponse
+    {
+        $this->guard();
+
+        $cfg = (array) config('site.payment_section_otp');
+        $recipients = array_values(array_filter((array) ($cfg['recipients'] ?? [])));
+        if ($recipients === []) {
+            return response()->json(['ok' => false, 'message' => 'No authorization email is configured. Set PAYMENT_SECTION_OTP_EMAILS.'], 503);
+        }
+
+        $page = $request->filled('slug') ? $this->store->find((string) $request->input('slug')) : null;
+        $pageTitle = (string) ($page['title'] ?? trim((string) $request->input('title')) ?: 'New page');
+        $pagePath = (string) ($page['path'] ?? '—');
+
+        $ttl = max(3, min(30, (int) ($cfg['ttl_minutes'] ?? 10)));
+        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        session()->put('cms_payment_otp', [
+            'hash' => $this->paymentOtpHash($otp),
+            'expires' => now()->addMinutes($ttl)->timestamp,
+            'attempts' => 0,
+        ]);
+
+        try {
+            $mailer = ($cfg['mailer'] ?? null) ?: config('mail.default');
+            Mail::mailer($mailer)->to($recipients)->send(new PaymentSectionOtpMail($otp, $ttl, $pageTitle, $pagePath));
+        } catch (Throwable $e) {
+            report($e);
+            session()->forget('cms_payment_otp');
+
+            return response()->json(['ok' => false, 'message' => 'The authorization email could not be sent. Try again shortly.'], 503);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'expires_in' => $ttl * 60,
+            'message' => 'Authorization code sent to the payment approver.',
+        ]);
+    }
+
+    /** Verify the code; on success, authorize payment-section saves for a short window. */
+    public function verifyPaymentOtp(Request $request): JsonResponse
+    {
+        $this->guard();
+
+        $validated = $request->validate(['otp' => ['required', 'digits:6']]);
+
+        $cfg = (array) config('site.payment_section_otp');
+        $state = session('cms_payment_otp');
+        if (! is_array($state)) {
+            return response()->json(['ok' => false, 'message' => 'Request a new authorization code.'], 422);
+        }
+        if ((int) ($state['expires'] ?? 0) < now()->timestamp) {
+            session()->forget('cms_payment_otp');
+
+            return response()->json(['ok' => false, 'message' => 'The authorization code has expired. Request a new one.'], 422);
+        }
+        $maxAttempts = max(3, min(10, (int) ($cfg['max_attempts'] ?? 5)));
+        if ((int) ($state['attempts'] ?? 0) >= $maxAttempts) {
+            session()->forget('cms_payment_otp');
+
+            return response()->json(['ok' => false, 'message' => 'Too many incorrect codes. Request a new one.'], 429);
+        }
+
+        $state['attempts'] = (int) ($state['attempts'] ?? 0) + 1;
+        session()->put('cms_payment_otp', $state);
+
+        if (! hash_equals((string) ($state['hash'] ?? ''), $this->paymentOtpHash($validated['otp']))) {
+            return response()->json(['ok' => false, 'message' => 'The authorization code is incorrect.'], 422);
+        }
+
+        $window = max(1, min(120, (int) ($cfg['window_minutes'] ?? 10)));
+        session()->forget('cms_payment_otp');
+        session()->put('cms_payment_otp_ok_until', now()->addMinutes($window)->timestamp);
+
+        return response()->json(['ok' => true, 'message' => 'Authorized — you can save the payment section now.']);
+    }
+
+    /** True when the submitted grid contains at least one payment block. */
+    private function layoutHasPayment(array $rows): bool
+    {
+        foreach ($rows as $row) {
+            foreach ((is_array($row) ? ($row['cols'] ?? []) : []) as $col) {
+                foreach ((is_array($col) ? ($col['blocks'] ?? []) : []) as $block) {
+                    if (is_array($block) && ($block['type'] ?? '') === 'payment') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /** True while a recent OTP verification still authorizes payment-section saves. */
+    private function paymentAuthValid(): bool
+    {
+        $until = (int) session('cms_payment_otp_ok_until', 0);
+
+        return $until > 0 && $until >= now()->timestamp;
+    }
+
+    private function paymentOtpHash(string $otp): string
+    {
+        return hash_hmac('sha256', $otp, (string) config('app.key').'|payment-section-otp');
     }
 
     /* ───────────────────────── Page actions ───────────────────────── */

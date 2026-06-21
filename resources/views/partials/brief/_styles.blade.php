@@ -30,12 +30,12 @@
   }
 
   .odp-file-container {
-    max-width: 1300px;
+    max-width: 1240px;
     margin: 0 auto;
   }
 
   .odp-web-hero {
-    padding: clamp(72px, 8vw, 118px) 0 clamp(52px, 7vw, 86px);
+    padding: clamp(62px, 7vw, 96px) 0 clamp(46px, 6vw, 72px);
   }
 
   .odp-web-hero-grid {
@@ -90,6 +90,7 @@
     color: #666;
     font-size: 16px;
     line-height: 1.7;
+    text-align: left;
   }
 
   .odp-web-actions {
@@ -166,6 +167,7 @@
     align-items: center;
     color: #666;
     font-size: 0.94rem;
+    text-align: left;
   }
 
   .odp-web-list svg {
@@ -188,6 +190,7 @@
   .odp-dest-strip {
     margin-bottom: 36px;
     padding: 22px 28px;
+    border: 1px solid rgba(43, 31, 168, 0.08);
     border-radius: 20px;
     text-align: center;
   }
@@ -260,13 +263,12 @@
     overflow: hidden;
     margin-bottom: 48px;
     padding: 40px 36px;
+    border: 1px solid rgba(43, 31, 168, 0.08);
     border-radius: 28px;
   }
 
   .odp-journey {
-    width: min(calc(100vw - 24px), 1520px);
-    margin-left: 50%;
-    transform: translateX(-50%);
+    width: 100%;
   }
 
   .odp-journey::before,
@@ -313,10 +315,17 @@
   .odp-journey-steps {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 28px;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .odp-journey--balanced .odp-journey-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .odp-step {
+    display: flex;
+    flex-direction: column;
     padding: 24px;
     border: 1px solid var(--file-line);
     border-radius: 18px;
@@ -352,6 +361,7 @@
     font-size: 16px;
     font-weight: 700;
     line-height: 1.25;
+    text-align: left;
   }
 
   .odp-step-items,
@@ -378,12 +388,15 @@
     color: var(--file-blue);
     font-size: 13px;
     font-weight: 600;
+    text-align: left;
   }
 
   .odp-si-desc {
     margin-top: 2px;
     color: #888;
     font-size: 12px;
+    line-height: 1.6;
+    text-align: left;
   }
 
   .odp-final-step {
@@ -409,6 +422,26 @@
     margin: 0;
     font-size: 13px;
     opacity: 0.85;
+  }
+
+  .odp-journey--balanced .odp-final-step {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 58px minmax(220px, 0.8fr) minmax(0, 1.2fr);
+    gap: 20px;
+    align-items: center;
+    padding: 22px 28px;
+    text-align: left;
+  }
+
+  .odp-journey--balanced .odp-final-step .plane {
+    margin: 0;
+  }
+
+  .odp-journey--balanced .odp-final-step h3,
+  .odp-journey--balanced .odp-final-step p {
+    margin: 0;
+    text-align: left;
   }
 
   .odp-referral-cards {
@@ -512,18 +545,23 @@
     margin: 6px 0 0;
     color: #888;
     font-size: 15px;
+    text-align: center;
   }
 
   .odp-plans {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 30px;
+    gap: 22px;
+    align-items: stretch;
   }
 
   .odp-file-plan {
     position: relative;
+    display: flex;
     overflow: hidden;
-    padding: 35px;
+    min-height: 100%;
+    flex-direction: column;
+    padding: 32px;
     border: 2px solid transparent;
     border-radius: 28px;
     transition: transform 0.4s ease;
@@ -539,11 +577,11 @@
 
   .odp-file-plan.achiever {
     border-color: var(--file-orange);
-    transform: scale(1.03);
+    box-shadow: 0 18px 44px rgba(240, 90, 40, 0.14);
   }
 
   .odp-file-plan.achiever:hover {
-    transform: scale(1.03) translateY(-6px);
+    transform: translateY(-6px);
   }
 
   .odp-file-plan.elite {
@@ -605,9 +643,11 @@
     margin: 0 0 25px;
     color: #666;
     line-height: 1.6;
+    text-align: left;
   }
 
   .odp-plan-list {
+    flex: 1;
     margin-bottom: 24px;
   }
 
@@ -634,6 +674,7 @@
   .odp-enrol {
     display: block;
     width: 100%;
+    margin-top: auto;
     padding: 15px;
     border-radius: 16px;
     color: #fff;
@@ -688,6 +729,7 @@
     font-size: 13px;
     line-height: 1.5;
     break-inside: avoid;
+    text-align: left;
   }
 
   .odp-disclaimer-list li:last-child {
@@ -697,6 +739,12 @@
   .odp-disclaimer-list {
     columns: 2;
     column-gap: 34px;
+  }
+
+  @media (max-width: 980px) {
+    .odp-journey--balanced .odp-journey-steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   /* ============================================================
@@ -1056,6 +1104,352 @@
   .odp-cta-band p { margin: 0 auto 18px; max-width: 60ch; font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.9); }
   .odp-cta-band .odp-web-btn-secondary { background: #fff; border-color: #fff; }
 
+  /* ============================================================
+     SECURE PAYMENT — reusable Razorpay + admissions OTP block
+     ============================================================ */
+  .odp-payment {
+    scroll-margin-top: 96px;
+    display: grid;
+    grid-template-columns: minmax(0, 0.86fr) minmax(460px, 1.14fr);
+    gap: clamp(28px, 5vw, 66px);
+    align-items: center;
+    margin: 44px 0;
+    padding: clamp(30px, 5vw, 58px);
+    border: 1px solid rgba(43, 31, 168, 0.12);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 8% 10%, rgba(123, 47, 247, 0.09), transparent 32%),
+      radial-gradient(circle at 92% 88%, rgba(240, 90, 40, 0.1), transparent 30%),
+      #fff;
+    box-shadow: 0 22px 54px rgba(38, 28, 93, 0.1);
+  }
+
+  .odp-payment.odp-blk--tint {
+    background: linear-gradient(145deg, #f7f4ff, #fff5ef);
+  }
+
+  .odp-payment.odp-blk--gradient {
+    background: linear-gradient(135deg, var(--file-blue), #3f28bd 58%, var(--file-orange));
+  }
+
+  .odp-payment--centered {
+    grid-template-columns: 1fr;
+    max-width: 880px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .odp-payment--compact {
+    grid-template-columns: minmax(0, 0.72fr) minmax(420px, 1.28fr);
+    padding: 30px;
+  }
+
+  .odp-payment-copy {
+    min-width: 0;
+  }
+
+  .odp-payment-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 14px;
+    color: var(--file-orange);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .odp-payment-eyebrow::before {
+    content: "";
+    width: 24px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .odp-payment-copy h2 {
+    margin: 0;
+    color: var(--file-blue);
+    font-size: clamp(2rem, 4vw, 3.45rem);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.035em;
+    text-align: left;
+  }
+
+  .odp-payment-copy > p {
+    margin: 18px 0 0;
+    color: #626276;
+    font-size: 15px;
+    line-height: 1.75;
+    text-align: left;
+  }
+
+  .odp-payment--centered .odp-payment-copy h2,
+  .odp-payment--centered .odp-payment-copy > p {
+    max-width: 680px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .odp-payment-trust {
+    display: grid;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .odp-payment-trust span {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: #4e4d65;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .odp-payment-trust svg {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    padding: 7px;
+    border-radius: 10px;
+    background: rgba(240, 90, 40, 0.1);
+    color: var(--file-orange);
+  }
+
+  .odp-payment--centered .odp-payment-trust {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .odp-payment-card {
+    min-width: 0;
+    padding: clamp(20px, 3vw, 30px);
+    border: 1px solid rgba(43, 31, 168, 0.12);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 16px 36px rgba(28, 22, 72, 0.1);
+  }
+
+  .odp-payment-options {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .odp-payment-options legend {
+    margin-bottom: 11px;
+    color: #26213e;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .odp-payment-option-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 10px;
+  }
+
+  .odp-payment-option {
+    position: relative;
+    display: block;
+    min-width: 0;
+    cursor: pointer;
+  }
+
+  .odp-payment-option input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .odp-payment-option-body {
+    display: flex;
+    min-height: 132px;
+    flex-direction: column;
+    gap: 7px;
+    padding: 15px;
+    border: 1.5px solid #e7e2f7;
+    border-radius: 15px;
+    background: #faf9ff;
+    text-align: left;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background 160ms ease;
+  }
+
+  .odp-payment-option input:checked + .odp-payment-option-body {
+    border-color: var(--file-orange);
+    background: #fff7f2;
+    box-shadow: 0 10px 22px rgba(240, 90, 40, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .odp-payment-option input:focus-visible + .odp-payment-option-body {
+    outline: 3px solid rgba(43, 31, 168, 0.2);
+    outline-offset: 2px;
+  }
+
+  .odp-payment-option-top {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .odp-payment-option-top strong {
+    color: var(--file-blue);
+    font-size: 13px;
+  }
+
+  .odp-payment-option-top em {
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: var(--file-orange);
+    color: #fff;
+    font-size: 8px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .odp-payment-amount {
+    color: #1f1a38;
+    font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .odp-payment-option small {
+    margin-top: auto;
+    color: #747187;
+    font-size: 10px;
+    line-height: 1.45;
+  }
+
+  .odp-payment-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .odp-payment-fields label:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .odp-payment-fields label {
+    display: grid;
+    gap: 6px;
+    color: #4d4a62;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .odp-payment-fields input {
+    width: 100%;
+    min-height: 45px;
+    padding: 0 13px;
+    border: 1px solid #ded9ef;
+    border-radius: 11px;
+    background: #fff;
+    color: #211d36;
+    font: 500 14px/1.2 "Poppins", sans-serif;
+    outline: none;
+  }
+
+  .odp-payment-fields input:focus {
+    border-color: var(--file-blue);
+    box-shadow: 0 0 0 3px rgba(43, 31, 168, 0.1);
+  }
+
+  .odp-payment-action {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--file-blue), var(--file-orange));
+    color: #fff;
+    font: 800 13px/1 "Poppins", sans-serif;
+    cursor: pointer;
+    box-shadow: 0 13px 28px rgba(43, 31, 168, 0.2);
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+
+  .odp-payment-action {
+    width: 100%;
+    margin-top: 15px;
+  }
+
+  .odp-payment-action svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .odp-payment-action:hover {
+    transform: translateY(-2px);
+  }
+
+  .odp-payment-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.56;
+    transform: none;
+  }
+
+  .odp-payment-status {
+    min-height: 20px;
+    margin: 12px 0 0;
+    color: #66627a;
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .odp-payment-status.is-error { color: #b42318; }
+  .odp-payment-status.is-success { color: #087a55; }
+
+  .odp-payment-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 14px 0 0;
+    color: #777386;
+    font-size: 10px;
+    line-height: 1.55;
+    text-align: left;
+  }
+
+  .odp-payment-note svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    margin-top: 1px;
+    color: var(--file-orange);
+  }
+
+  .odp-payment-empty {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    padding: 28px;
+    color: #726e82;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .odp-payment-empty svg {
+    width: 28px;
+    height: 28px;
+    color: var(--file-orange);
+  }
+
   @media (max-width: 768px) {
     .odp-file-page {
       padding: 0 14px 48px;
@@ -1098,6 +1492,22 @@
     .odp-journey-steps,
     .odp-plans {
       grid-template-columns: 1fr;
+    }
+
+    .odp-journey--balanced .odp-journey-steps {
+      grid-template-columns: 1fr;
+    }
+
+    .odp-journey--balanced .odp-final-step {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 26px 22px;
+      text-align: center;
+    }
+
+    .odp-journey--balanced .odp-final-step h3,
+    .odp-journey--balanced .odp-final-step p {
+      text-align: center;
     }
 
     .odp-surface-pad { padding: 22px 18px; }
@@ -1174,6 +1584,38 @@
 
     .odp-dest-strip {
       padding: 20px 14px;
+    }
+
+    .odp-payment,
+    .odp-payment--compact {
+      grid-template-columns: 1fr;
+      gap: 26px;
+      margin: 32px 0;
+      padding: 24px 18px;
+      border-radius: 22px;
+    }
+
+    .odp-payment-copy h2,
+    .odp-payment-copy > p {
+      text-align: left;
+    }
+
+    .odp-payment--centered .odp-payment-trust,
+    .odp-payment-trust {
+      grid-template-columns: 1fr;
+    }
+
+    .odp-payment-card {
+      padding: 18px 14px;
+    }
+
+    .odp-payment-option-grid,
+    .odp-payment-fields {
+      grid-template-columns: 1fr;
+    }
+
+    .odp-payment-fields label:last-child {
+      grid-column: auto;
     }
   }
 

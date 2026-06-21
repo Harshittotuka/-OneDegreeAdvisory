@@ -37,6 +37,12 @@ Thumbs.db
 /storage/*.key
 /storage/pail
 
+# Local-only dev config — never deploy. The Linux server uses its system CA store
+# and MySQL; these exist only to make Windows + `php artisan serve` work locally.
+/storage/cacert.pem
+/storage/php-ini/
+/database/*.sqlite
+
 # CMS runtime data. These are edited per environment and should not be pushed.
 /storage/app/*.json
 /storage/app/*.xlsx

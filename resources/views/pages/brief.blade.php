@@ -43,7 +43,11 @@
 @section('content')
 <main id="main" class="odp-file-page">
   <div class="odp-file-container">
-    @include('partials.brief._render', ['layout' => $page['layout'] ?? null, 'sections' => $page['sections'] ?? []])
+    @include('partials.brief._render', [
+      'layout' => $page['layout'] ?? null,
+      'sections' => $page['sections'] ?? [],
+      'pageSlug' => $page['slug'] ?? '',
+    ])
   </div>
 </main>
 @endsection

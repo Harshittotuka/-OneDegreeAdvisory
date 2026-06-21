@@ -8,4 +8,11 @@
                 : ($sf === 'tint' ? 'odp-blk--tint'
                 : ($sf === 'gradient' ? 'odp-blk--gradient' : ''));
 @endphp
-@includeIf('partials.brief.blocks.'.$type, ['data' => $d, 'blkStyle' => $blkStyle, 'blkSurface' => $blkSurface])
+@includeIf('partials.brief.blocks.'.$type, [
+  'data' => $d,
+  'blkStyle' => $blkStyle,
+  'blkSurface' => $blkSurface,
+  'blockId' => 'cms-preview',
+  'pageSlug' => '',
+  'cmsPreview' => true,
+])

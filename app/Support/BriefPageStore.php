@@ -33,8 +33,17 @@ class BriefPageStore
         }
 
         $data = json_decode((string) file_get_contents($this->path), true);
+        if (! is_array($data)) {
+            return [];
+        }
 
-        return is_array($data) ? array_map([$this, 'normalize'], $data) : [];
+        $pages = array_map([$this, 'normalize'], $data);
+        [$pages, $changed] = $this->upgradeStoredPages($pages);
+        if ($changed) {
+            $this->writeAll($pages);
+        }
+
+        return $pages;
     }
 
     /** Ensure a page has a grid `layout`; legacy `sections` are wrapped one-per-row. */
@@ -54,6 +63,98 @@ class BriefPageStore
         $page['layout'] = $rows;
 
         return $page;
+    }
+
+    /**
+     * Add newly shipped CMS blocks once without overwriting later editor choices.
+     * The version marker remains even if an editor intentionally deletes the block.
+     */
+    private function upgradeStoredPages(array $pages): array
+    {
+        $changed = false;
+        foreach ($pages as &$page) {
+            if (($page['slug'] ?? '') !== 'europe') {
+                continue;
+            }
+
+            $paymentVersion = (int) ($page['content_versions']['razorpay_payment_block'] ?? 0);
+            if ($paymentVersion < 1) {
+                $hasPayment = false;
+                foreach (($page['layout'] ?? []) as $row) {
+                    foreach (($row['cols'] ?? []) as $column) {
+                        foreach (($column['blocks'] ?? []) as $block) {
+                            if (($block['type'] ?? '') === 'payment') {
+                                $hasPayment = true;
+                                break 3;
+                            }
+                        }
+                    }
+                }
+
+                if (! $hasPayment) {
+                    $paymentRow = [
+                        'id' => 'row-europe-payment',
+                        'width' => '',
+                        'cols' => [[
+                            'id' => 'col-europe-payment',
+                            'span' => 12,
+                            'blocks' => [BriefPageContent::europePaymentBlock()],
+                        ]],
+                    ];
+
+                    $insertAt = count($page['layout'] ?? []);
+                    foreach (($page['layout'] ?? []) as $index => $row) {
+                        foreach (($row['cols'] ?? []) as $column) {
+                            foreach (($column['blocks'] ?? []) as $block) {
+                                if (($block['type'] ?? '') === 'disclaimer') {
+                                    $insertAt = $index;
+                                    break 3;
+                                }
+                            }
+                        }
+                    }
+                    array_splice($page['layout'], $insertAt, 0, [$paymentRow]);
+                }
+
+                $page['content_versions']['razorpay_payment_block'] = 1;
+                $changed = true;
+            }
+
+            $pricingVersion = (int) ($page['content_versions']['razorpay_pricing_links'] ?? 0);
+            if ($pricingVersion < 2) {
+                foreach ($page['layout'] as &$row) {
+                    foreach ($row['cols'] as &$column) {
+                        foreach ($column['blocks'] as &$block) {
+                            if (($block['type'] ?? '') !== 'pricing') {
+                                continue;
+                            }
+
+                            $sharedHref = trim((string) ($block['data']['enrol_href'] ?? ''));
+                            if ($sharedHref === '' || str_contains(strtolower($sharedHref), 'wa.me/')) {
+                                $block['data']['enrol_href'] = '#europe-payment-option-0';
+                            }
+                            if (isset($block['data']['plans']) && is_array($block['data']['plans'])) {
+                                foreach ($block['data']['plans'] as $index => &$plan) {
+                                    $planHref = trim((string) ($plan['btn_href'] ?? ''));
+                                    if ($planHref === '' || str_contains(strtolower($planHref), 'wa.me/')) {
+                                        $plan['btn_href'] = '#europe-payment-option-'.$index;
+                                    }
+                                }
+                                unset($plan);
+                            }
+                            break 3;
+                        }
+                    }
+                }
+                unset($block, $column, $row);
+
+                $page['content_versions']['razorpay_pricing_links'] = 2;
+                $changed = true;
+            }
+        }
+        unset($page);
+
+        return [$pages, $changed];
     }
 
     /** Only pages flagged visible (for public routing). */

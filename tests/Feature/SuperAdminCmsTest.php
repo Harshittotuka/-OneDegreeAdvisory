@@ -57,7 +57,7 @@ class SuperAdminCmsTest extends TestCase
     public function test_super_admin_password_logs_in_and_unlocks_about(): void
     {
         $this->post('/admin/login', ['password' => config('site.super_admin_password')])
-            ->assertRedirect(route('admin.dashboard'));
+            ->assertRedirect(route('admin.portal'));
 
         $this->assertTrue(session('cms_authenticated'));
         $this->assertTrue(session('cms_super_admin'));
@@ -77,7 +77,7 @@ class SuperAdminCmsTest extends TestCase
     public function test_standard_password_logs_in_but_about_stays_locked(): void
     {
         $this->post('/admin/login', ['password' => config('site.cms_password')])
-            ->assertRedirect(route('admin.dashboard'));
+            ->assertRedirect(route('admin.portal'));
 
         $this->assertTrue(session('cms_authenticated'));
         $this->assertNotTrue(session('cms_super_admin'));

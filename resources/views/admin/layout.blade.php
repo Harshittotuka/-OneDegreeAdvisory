@@ -56,6 +56,10 @@
     .cms-nav-soon { margin-left: auto; font-size: .58rem; font-weight: 800; letter-spacing: .06em;
       background: #efeef5; color: #9b97a8; padding: 3px 8px; border-radius: 999px; }
     .cms-side-foot { padding: 14px 18px; border-top: 1px solid var(--sidebar-line); }
+    .cms-side-foot .cms-switch { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;
+      background: var(--teal-soft); color: var(--teal-dark); border: 1px solid #cdd0ff; border-radius: 9px;
+      padding: 11px; font-weight: 700; font-size: .86rem; transition: background .15s; }
+    .cms-side-foot .cms-switch:hover { background: #dfe1ff; }
     .cms-side-foot form { margin: 0; }
     .cms-side-foot button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
       background: #f6f5fb; color: var(--side-ink); border: 1px solid var(--sidebar-line); border-radius: 9px;
@@ -72,6 +76,13 @@
     .cms-topbar a.cms-viewsite { display: inline-flex; align-items: center; gap: 7px; color: var(--muted);
       font-weight: 700; font-size: .86rem; padding: 8px 12px; border-radius: 9px; transition: background .15s, color .15s; }
     .cms-topbar a.cms-viewsite:hover { color: var(--teal); background: var(--teal-soft); }
+    .cms-topbar .cms-refresh { display: inline-flex; align-items: center; gap: 7px; background: none; border: 0;
+      cursor: pointer; color: var(--muted); font-family: inherit; font-weight: 700; font-size: .86rem;
+      padding: 8px 12px; border-radius: 9px; transition: background .15s, color .15s; }
+    .cms-topbar .cms-refresh:hover { color: var(--teal); background: var(--teal-soft); }
+    .cms-topbar .cms-refresh i { transition: transform .5s ease; }
+    .cms-topbar .cms-refresh.spin i { animation: cmsSpin .6s linear infinite; }
+    @keyframes cmsSpin { to { transform: rotate(360deg); } }
     .cms-burger { display: none; background: none; border: 0; cursor: pointer; color: var(--ink); }
 
     .cms-wrap { max-width: 1180px; width: 100%; margin: 0 auto; padding: 24px 24px 90px; }
@@ -115,6 +126,52 @@
     .cms-toast i { width: 18px; height: 18px; color: var(--teal); flex-shrink: 0; }
     .cms-toast.error i { color: var(--danger); }
 
+    /* ── Admin portal: rich royal-orange theme ── */
+    body.portal-admin {
+      --teal: #f97316; --teal-dark: #c2410c; --teal-soft: #fff1e6;
+    }
+    body.portal-admin .cms-wrap a:not(.btn) { color: var(--teal-dark); }
+    body.portal-admin .btn-primary { color: #fff; box-shadow: 0 8px 18px rgba(249, 115, 22, .30); }
+    body.portal-admin .btn-primary:hover { background: var(--teal-dark); }
+    body.portal-admin .cms-side-brand .mark {
+      background: linear-gradient(135deg, #f97316, #fdba74);
+      box-shadow: 0 8px 20px rgba(249, 115, 22, .40);
+    }
+    body.portal-admin .cms-side-brand.is-super span { color: #c2410c; }
+    body.portal-admin .cms-nav-item.is-active {
+      background: linear-gradient(72deg, #ea580c 0%, #f97316 55%, #fb923c 100%);
+      box-shadow: 0 6px 16px rgba(234, 88, 12, .44);
+    }
+    body.portal-admin .cms-nav-item:not(.is-active):hover { background: #fff4ea; }
+    body.portal-admin .cms-side-foot .cms-switch { background: #fff1e6; color: #c2410c; border-color: #fed0a8; }
+    body.portal-admin .cms-side-foot .cms-switch:hover { background: #ffe3cb; }
+    body.portal-admin .cms-side-foot button:hover { background: #fff1e6; color: #c2410c; border-color: #fed0a8; }
+    body.portal-admin .cms-topbar a.cms-viewsite:hover { color: #c2410c; background: #fff1e6; }
+    body.portal-admin .cms-flash { border-color: #fed0a8; }
+    body.portal-admin input:focus, body.portal-admin textarea:focus, body.portal-admin select:focus {
+      border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, .16);
+    }
+    body.portal-admin .cms-toast { border-left-color: #f97316; }
+    body.portal-admin .cms-toast i { color: #f97316; }
+
+    /* Accent-bearing chrome eases between themes on switch / load. */
+    .cms-side-brand .mark, .cms-nav-item, .cms-side-foot .cms-switch, .btn-primary { transition:
+      background .35s ease, box-shadow .35s ease, color .2s ease, border-color .2s ease, transform .12s ease; }
+
+    /* ── Portal entrance animation (plays on open / switch) ── */
+    @keyframes cmsUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes cmsDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+    @keyframes cmsFade { from { opacity: 0; } to { opacity: 1; } }
+    .cms-side-brand { animation: cmsUp .45s ease both; }
+    .cms-nav { animation: cmsFade .5s .08s ease both; }
+    .cms-nav-item, .cms-nav-label { animation: cmsUp .42s ease both; }
+    .cms-topbar { animation: cmsDown .45s ease both; }
+    .cms-wrap { animation: cmsUp .5s .06s ease both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cms-side-brand, .cms-nav, .cms-nav-item, .cms-nav-label, .cms-topbar, .cms-wrap { animation: none !important; }
+    }
+
     @media (max-width: 880px) {
       .cms-shell { grid-template-columns: 1fr; }
       .cms-side { position: fixed; z-index: 60; width: var(--sidebar-w); transform: translateX(-100%);
@@ -129,11 +186,29 @@
   </style>
   @stack('head')
 </head>
-<body>
+<body class="{{ ($portal ?? 'cms') === 'admin' ? 'portal-admin' : '' }}">
   @php
     $current = \Illuminate\Support\Facades\Route::currentRouteName() ?? '';
     $isSuper = (bool) session('cms_super_admin');
+    $portal = $portal ?? 'cms';
 
+    if ($portal === 'admin') :
+      $brandSub = $isSuper ? 'Super Admin · Admin Portal' : 'Admin Portal';
+      $navGroups = [
+        ['label' => '', 'items' => [
+          ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.overview', 'match' => 'admin.overview'],
+        ]],
+        ['label' => 'Payments', 'items' => [
+          ['label' => 'Enrollments', 'icon' => 'users', 'route' => 'admin.enrollments.index', 'match' => 'admin.enrollments'],
+        ]],
+        ['label' => 'Coming soon', 'items' => [
+          ['label' => 'Refunds', 'icon' => 'undo-2', 'soon' => true],
+          ['label' => 'Reports', 'icon' => 'bar-chart-3', 'soon' => true],
+          ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],
+        ]],
+      ];
+    else :
+      $brandSub = $isSuper ? 'Super Admin · Content Studio' : 'Content Studio';
     $contentItems = [
       ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
       // Page Builder sits directly below Home Page — available to all CMS admins.
@@ -166,6 +241,7 @@
       ['label' => 'Content', 'items' => $contentItems],
       ['label' => 'Coming soon', 'items' => $comingSoon],
     ];
+    endif;
   @endphp
 
   <div class="cms-shell" id="cms-shell">
@@ -174,7 +250,7 @@
     <aside class="cms-side">
       <div class="cms-side-brand @if($isSuper) is-super @endif">
         <span class="mark"><img src="{{ asset('assets/Logo/mark.svg') }}" alt=""></span>
-        <b>{{ config('site.name') }}<span>{{ $isSuper ? 'Super Admin · Content Studio' : 'Content Studio' }}</span></b>
+        <b>{{ config('site.name') }}<span>{{ $brandSub }}</span></b>
       </div>
 
       <nav class="cms-nav">
@@ -197,6 +273,7 @@
       </nav>
 
       <div class="cms-side-foot">
+        <a class="cms-switch" href="{{ route('admin.portal') }}"><i data-lucide="grid-2x2" style="width:16px;height:16px;"></i> Switch portal</a>
         <form method="POST" action="{{ route('admin.logout') }}">
           @csrf
           <button type="submit"><i data-lucide="log-out" style="width:16px;height:16px;"></i> Log out</button>
@@ -209,6 +286,7 @@
         <button class="cms-burger" data-toggle aria-label="Menu"><i data-lucide="menu"></i></button>
         <h1>@yield('title', 'Dashboard')</h1>
         <div class="cms-topbar-spacer"></div>
+        <button type="button" class="cms-refresh" data-refresh title="Refresh this page"><i data-lucide="refresh-cw" style="width:16px;height:16px;"></i> Refresh</button>
         <a class="cms-viewsite" href="{{ route('home') }}" target="_blank"><i data-lucide="external-link" style="width:16px;height:16px;"></i> View site</a>
       </header>
 
@@ -233,6 +311,7 @@
       const shell = document.getElementById('cms-shell');
       document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => shell.classList.toggle('is-open')));
       document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => shell.classList.remove('is-open')));
+      document.querySelectorAll('[data-refresh]').forEach(b => b.addEventListener('click', () => { b.classList.add('spin'); location.reload(); }));
 
       // ── Toast popups (top-right) ──
       const toastWrap = document.getElementById('cms-toasts');

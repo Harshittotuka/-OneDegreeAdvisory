@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BlogCmsController;
 use App\Http\Controllers\Admin\CountryVisibilityController;
 use App\Http\Controllers\Admin\CountryDataSyncController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EnrollmentsController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NewsletterController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\BriefPageController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +32,17 @@ Route::permanentRedirect('/contact.html', '/contact');
 Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
 
 Route::post('/newsletter', [PageController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
+
+Route::prefix('payments')->name('payments.')->group(function (): void {
+    Route::post('/order', [PaymentController::class, 'createOrder'])
+        ->middleware('throttle:10,10')
+        ->name('order');
+    Route::post('/confirm', [PaymentController::class, 'confirm'])
+        ->middleware('throttle:10,10')
+        ->name('confirm');
+    Route::post('/razorpay/webhook', [PaymentController::class, 'webhook'])
+        ->name('webhook');
+});
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
@@ -77,8 +90,14 @@ Route::prefix('admin')->group(function () {
     Route::post('logout', [BlogCmsController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('cms.auth')->group(function () {
-        Route::get('/', fn () => redirect()->route('admin.dashboard'));
-        Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/', fn () => redirect()->route('admin.portal'));
+        // Portal picker shown after login: CMS (content) or Admin (enrollments).
+        Route::get('portal', fn () => view('admin.portal'))->name('admin.portal');
+        Route::get('cms', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+        // Admin portal — dashboard + enrollments / payments.
+        Route::get('panel', [EnrollmentsController::class, 'overview'])->name('admin.overview');
+        Route::get('enrollments', [EnrollmentsController::class, 'index'])->name('admin.enrollments.index');
 
         Route::get('blog', [BlogCmsController::class, 'index'])->name('admin.blog.index');
         Route::get('blog/create', [BlogCmsController::class, 'create'])->name('admin.blog.create');
@@ -115,6 +134,11 @@ Route::prefix('admin')->group(function () {
         /* ── Brief Page Builder (all CMS admins; raw embed block stays super-admin only) ── */
         Route::get('pages', [BriefPageCmsController::class, 'index'])->name('admin.pages.index');
         Route::post('pages', [BriefPageCmsController::class, 'storePage'])->name('admin.pages.store');
+        // Authorization OTP gate for saving a page that contains a payment section.
+        Route::post('pages/payment-otp/request', [BriefPageCmsController::class, 'requestPaymentOtp'])
+            ->middleware('throttle:5,10')->name('admin.pages.payment-otp.request');
+        Route::post('pages/payment-otp/verify', [BriefPageCmsController::class, 'verifyPaymentOtp'])
+            ->middleware('throttle:10,10')->name('admin.pages.payment-otp.verify');
         Route::get('pages/block', [BriefPageCmsController::class, 'block'])->name('admin.pages.block');
         Route::get('pages/preset', [BriefPageCmsController::class, 'preset'])->name('admin.pages.preset');
         Route::post('pages/render', [BriefPageCmsController::class, 'render'])->name('admin.pages.render');

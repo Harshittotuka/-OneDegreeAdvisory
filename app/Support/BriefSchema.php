@@ -234,6 +234,10 @@ class BriefSchema
                 'desc' => 'Numbered step cards, each with a list of sub-items, ending in a flourish.',
                 'fields' => [
                     ['key' => 'title', 'type' => 'textarea', 'label' => 'Section title'],
+                    ['key' => 'layout', 'type' => 'select', 'label' => 'Journey layout', 'options' => [
+                        'balanced' => 'Balanced steps + finish band',
+                        'cards' => 'Equal card grid',
+                    ]],
                     ['key' => 'steps', 'type' => 'repeater', 'label' => 'Steps', 'item' => 'Step', 'fields' => [
                         ['key' => 'label', 'type' => 'text', 'label' => 'Step label'],
                         ['key' => 'heading', 'type' => 'text', 'label' => 'Step heading'],
@@ -376,6 +380,30 @@ class BriefSchema
                 ],
             ],
 
+            'payment' => [
+                'label' => 'Secure payment',
+                'icon' => 'credit-card',
+                'desc' => 'Razorpay direct-checkout section with CMS-controlled, server-priced options.',
+                'fields' => [
+                    ['key' => 'eyebrow', 'type' => 'text', 'label' => 'Eyebrow'],
+                    ['key' => 'title', 'type' => 'textarea', 'label' => 'Heading'],
+                    ['key' => 'description', 'type' => 'textarea', 'label' => 'Description'],
+                    ['key' => 'layout', 'type' => 'select', 'label' => 'Layout', 'options' => [
+                        'split' => 'Split — copy + payment form',
+                        'centered' => 'Centered card',
+                        'compact' => 'Compact panel',
+                    ]],
+                    ['key' => 'options', 'type' => 'repeater', 'label' => 'Payment options', 'item' => 'Option', 'fields' => [
+                        ['key' => 'label', 'type' => 'text', 'label' => 'Option / plan name'],
+                        ['key' => 'amount', 'type' => 'text', 'label' => 'Amount charged (INR)'],
+                        ['key' => 'description', 'type' => 'textarea', 'label' => 'Short description'],
+                        ['key' => 'badge', 'type' => 'text', 'label' => 'Badge (optional)'],
+                    ]],
+                    ['key' => 'button_label', 'type' => 'text', 'label' => 'Pay button label'],
+                    ['key' => 'note', 'type' => 'textarea', 'label' => 'Payment note'],
+                ],
+            ],
+
             'divider' => [
                 'label' => 'Divider',
                 'icon' => 'minus',
@@ -406,7 +434,7 @@ class BriefSchema
 
         // Palette "Basics" — everything else is offered as a ready-made component
         // preset (BriefPresets) or generated via Build-with-AI.
-        $contentCats = ['button', 'divider', 'spacer', 'embed'];
+        $contentCats = ['button', 'payment', 'divider', 'spacer', 'embed'];
 
         // Append the shared appearance controls to every block + tag category.
         foreach ($types as $slug => &$def) {
