@@ -61,6 +61,7 @@
     };
   @endphp
 
+  <div data-refresh-zone>
   <div class="ad-head">
     <span class="meta"><i data-lucide="clock-3"></i> Updated {{ now()->format('d M Y, H:i') }}</span>
   </div>
@@ -135,5 +136,6 @@
         <a class="btn btn-primary btn-sm" href="{{ route('admin.enrollments.index') }}"><i data-lucide="list" style="width:15px;height:15px;"></i> View all enrollments</a>
       </div>
     </div>
+  </div>
   </div>
 @endsection

@@ -46,6 +46,7 @@
     };
   @endphp
 
+  <div data-refresh-zone>
   <div class="en-stats">
     <div class="en-stat"><div class="k"><i data-lucide="users"></i> Total enrollments</div><div class="v">{{ number_format($stats['total']) }}</div></div>
     <div class="en-stat"><div class="k"><i data-lucide="badge-check"></i> Paid</div><div class="v">{{ number_format($stats['paid']) }}</div></div>
@@ -106,5 +107,6 @@
         <p>No enrollments{{ ($q !== '' || $status !== '') ? ' match your filter' : ' yet' }}.</p>
       </div>
     @endif
+  </div>
   </div>
 @endsection

@@ -83,6 +83,8 @@
     .cms-topbar .cms-refresh i { transition: transform .5s ease; }
     .cms-topbar .cms-refresh.spin i { animation: cmsSpin .6s linear infinite; }
     @keyframes cmsSpin { to { transform: rotate(360deg); } }
+    [data-refresh-zone] { transition: opacity .2s ease; }
+    [data-refresh-zone].is-refreshing { opacity: .4; pointer-events: none; }
     .cms-burger { display: none; background: none; border: 0; cursor: pointer; color: var(--ink); }
 
     .cms-wrap { max-width: 1180px; width: 100%; margin: 0 auto; padding: 24px 24px 90px; }
@@ -311,7 +313,25 @@
       const shell = document.getElementById('cms-shell');
       document.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => shell.classList.toggle('is-open')));
       document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => shell.classList.remove('is-open')));
-      document.querySelectorAll('[data-refresh]').forEach(b => b.addEventListener('click', () => { b.classList.add('spin'); location.reload(); }));
+      // Refresh: swap just the marked content zone (smooth); fall back to full reload.
+      document.querySelectorAll('[data-refresh]').forEach(b => b.addEventListener('click', () => {
+        const zone = document.querySelector('[data-refresh-zone]');
+        b.classList.add('spin');
+        if (!zone) { location.reload(); return; }
+        b.disabled = true;
+        zone.classList.add('is-refreshing');
+        fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' })
+          .then(r => r.text())
+          .then(html => {
+            const fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-refresh-zone]');
+            if (!fresh) { location.reload(); return; }
+            zone.innerHTML = fresh.innerHTML;
+            if (window.lucide) lucide.createIcons();
+            zone.classList.remove('is-refreshing');
+          })
+          .catch(() => location.reload())
+          .finally(() => { b.classList.remove('spin'); b.disabled = false; });
+      }));
 
       // ── Toast popups (top-right) ──
       const toastWrap = document.getElementById('cms-toasts');
