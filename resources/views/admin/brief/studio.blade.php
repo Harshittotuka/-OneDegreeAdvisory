@@ -224,6 +224,16 @@
     .modal-body .btn{margin-top:9px}
     .ai-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
     .ai-note{color:var(--muted);font-size:.76rem}
+    /* Payment-section authorization modal */
+    .payotp-note{display:flex;gap:11px;align-items:flex-start;background:var(--vio-s);border:1px solid #e3dcff;border-radius:12px;padding:13px 14px;margin-bottom:14px}
+    .payotp-note i{width:20px;height:20px;flex:none;color:var(--vio-d);margin-top:1px}
+    .payotp-note p{margin:0;font-size:.9rem;line-height:1.55;color:#3a3550}
+    .payotp-note strong{color:#211d36}
+    .payotp-btn{width:100%;justify-content:center;margin-top:0}
+    .payotp-label{display:block;font-weight:800;font-size:.8rem;margin:16px 0 8px;color:#3a3550}
+    .payotp-input{width:100%;padding:13px 14px;border:1px solid #d8d4ea;border-radius:10px;font:800 22px/1 "Poppins",sans-serif;letter-spacing:.4em;text-align:center;color:#211d36;margin-bottom:12px}
+    .payotp-input:focus{outline:none;border-color:#7b2ff7;box-shadow:0 0 0 3px rgba(123,47,247,.14)}
+    .payotp-status{margin:6px 0 0;font-size:.82rem;font-weight:700;min-height:1.1em;text-align:center;color:var(--muted)}
     .crop-stage{padding:14px;background:#f4f0ff;overflow:auto}
     .crop-stage img{max-width:100%;display:block}
     .crop-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
@@ -366,16 +376,16 @@
       <button type="button" data-payotp-close><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
-      <p class="ai-step"><span>!</span> This page contains a <strong>payment section</strong>. To publish it, enter the one-time authorization code emailed to the payment approver.</p>
-      <button class="btn btn-primary" id="payotp-send"><i data-lucide="mail"></i> Email the authorization code</button>
+      <div class="payotp-note">
+        <i data-lucide="shield-alert"></i>
+        <p>This page contains a <strong>payment section</strong>. To publish it, enter the one-time authorization code emailed to the payment approver.</p>
+      </div>
+      <button class="btn btn-primary payotp-btn" id="payotp-send"><i data-lucide="mail"></i> Email the authorization code</button>
       <div id="payotp-wrap" hidden>
-        <p class="ai-step"><span>2</span> Enter the 6-digit code</p>
-        <input id="payotp-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code"
-               style="width:100%;padding:12px 14px;border:1px solid #d8d4ea;border-radius:10px;font:700 18px/1 'Poppins',sans-serif;letter-spacing:.2em;text-align:center;">
-        <div class="ai-foot">
-          <button class="btn btn-primary" id="payotp-verify"><i data-lucide="lock-open"></i> Verify &amp; Save</button>
-          <span class="ai-note" id="payotp-status"></span>
-        </div>
+        <label class="payotp-label" for="payotp-code">Enter the 6-digit code</label>
+        <input id="payotp-code" class="payotp-input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••">
+        <button class="btn btn-primary payotp-btn" id="payotp-verify"><i data-lucide="lock-open"></i> Verify &amp; Save</button>
+        <p class="payotp-status" id="payotp-status" aria-live="polite"></p>
       </div>
     </div>
   </div>
