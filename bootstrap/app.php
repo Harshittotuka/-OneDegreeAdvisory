@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->validateCsrfTokens(except: [
+            'payments/razorpay/webhook',
+        ]);
+
         $middleware->alias([
             'cms.auth' => \App\Http\Middleware\CmsAuth::class,
         ]);

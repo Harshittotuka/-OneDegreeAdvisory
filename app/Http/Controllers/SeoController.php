@@ -46,6 +46,14 @@ class SeoController extends Controller
                 continue;
             }
 
+            // Link-only entries have no article of their own: /blog/{slug}
+            // permanently redirects to another page. Redirecting URLs do not
+            // belong in a sitemap; the destination is emitted by its own page
+            // source (static route, brief page, country page, and so on).
+            if (BlogContent::isLink($post)) {
+                continue;
+            }
+
             $this->addUrl(
                 $urls,
                 route('blog.post', $post['slug']),

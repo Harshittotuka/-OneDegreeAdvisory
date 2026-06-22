@@ -41,4 +41,11 @@ return [
         'tag_manager_id' => env('GOOGLE_TAG_MANAGER_ID'),
     ],
 
+    'razorpay' => [
+        'key_id' => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+        'api_url' => env('RAZORPAY_API_URL', 'https://api.razorpay.com/v1'),
+    ],
+
 ];

@@ -1,8 +1,9 @@
 @php
     $blkStyle = $blkStyle ?? '';
     $steps = array_filter($data['steps'] ?? [], fn ($s) => trim($s['heading'] ?? '') !== '' || !empty($s['items']));
+    $layout = in_array(($data['layout'] ?? ''), ['balanced', 'cards'], true) ? $data['layout'] : 'balanced';
 @endphp
-<section class="odp-file-surface odp-journey" @if($blkStyle) style="{{ $blkStyle }}" @endif>
+<section class="odp-file-surface odp-journey odp-journey--{{ $layout }}" @if($blkStyle) style="{{ $blkStyle }}" @endif>
   @if(!empty($data['title']))<h2 class="odp-journey-title">{{ $data['title'] }}</h2>@endif
   <div class="odp-journey-steps">
     @foreach($steps as $index => $step)

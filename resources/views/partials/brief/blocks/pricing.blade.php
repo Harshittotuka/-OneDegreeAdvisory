@@ -24,7 +24,11 @@
           @endforeach
         </ul>
         {{-- Per-plan button; blank fields fall back to the shared enrol link. --}}
-        <a class="odp-enrol" href="{{ trim($p['btn_href'] ?? '') ?: $enrol }}" target="_blank" rel="noopener">{{ trim($p['btn_label'] ?? '') ?: 'Enrol Now' }} &nbsp;→</a>
+        @php
+          $planHref = trim($p['btn_href'] ?? '') ?: $enrol;
+          $externalPlanHref = str_starts_with($planHref, 'http://') || str_starts_with($planHref, 'https://');
+        @endphp
+        <a class="odp-enrol" href="{{ $planHref }}" @if($externalPlanHref) target="_blank" rel="noopener" @endif>{{ trim($p['btn_label'] ?? '') ?: 'Enrol Now' }} &nbsp;→</a>
       </article>
     @endforeach
   </div>

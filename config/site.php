@@ -28,6 +28,30 @@ return [
      */
     'about_cms_enabled' => env('ABOUT_CMS_ENABLED', false),
 
+    /* Authorization OTP for the Page Builder: saving a page that contains a
+       payment section requires a one-time code. The SAME code is emailed to
+       every recipient below; entering it correctly authorizes payment-section
+       saves for `window_minutes`. This is the gate that stops an unauthorized
+       admin from publishing a live payment gateway. Recipients are a
+       comma-separated list in PAYMENT_SECTION_OTP_EMAILS. */
+    /* Who gets the "payment received" notification (with full enrolment details)
+       when a checkout succeeds. Customer also gets a thank-you. Comma-separated. */
+    'payment_notify' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('PAYMENT_NOTIFY_EMAILS', 'Admissions@onedegreeadvisory.com,seemant@onedegree.com'))
+    ))),
+
+    'payment_section_otp' => [
+        'recipients' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('PAYMENT_SECTION_OTP_EMAILS', 'Admissions@onedegreeadvisory.com,harshittotuka1@gmail.com'))
+        ))),
+        'mailer' => env('PAYMENT_SECTION_OTP_MAILER', env('CONTACT_FORM_MAILER', 'contact_form')),
+        'ttl_minutes' => (int) env('PAYMENT_SECTION_OTP_TTL_MINUTES', 10),
+        'window_minutes' => (int) env('PAYMENT_SECTION_OTP_WINDOW_MINUTES', 10),
+        'max_attempts' => (int) env('PAYMENT_SECTION_OTP_MAX_ATTEMPTS', 5),
+    ],
+
     'notice' => 'Spring and Fall 2027 intake planning is open',
 
     /* Scrolling announcement marquee shown in the top blue notice bar.

@@ -148,7 +148,7 @@
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">Course pathways</span>
-                    <span class="course-menu-count">5 tracks</span>
+                    <span class="course-menu-count">6 tracks</span>
                   </div>
 
                   <div class="course-menu-grid">
@@ -156,21 +156,25 @@
                       <span class="course-icon course-icon--mbbs" aria-hidden="true"><i data-lucide="stethoscope"></i></span>
                       <span class="course-menu-copy"><strong>MBBS</strong><small>Medicine abroad</small></span>
                     </a>
-                    <a class="course-menu-card" href="{{ route('contact') }}">
+                    <a class="course-menu-card" href="{{ route('courses.pg') }}">
                       <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="award"></i></span>
                       <span class="course-menu-copy"><strong>Postgraduate</strong><small>Master's and PG</small></span>
                     </a>
-                    <a class="course-menu-card" href="{{ route('contact') }}">
+                    <a class="course-menu-card" href="{{ route('courses.ug') }}">
                       <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
                       <span class="course-menu-copy"><strong>Undergraduate</strong><small>Bachelor's degrees</small></span>
                     </a>
-                    <a class="course-menu-card" href="{{ route('contact') }}">
+                    <a class="course-menu-card" href="{{ route('courses.mba') }}">
                       <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="trending-up"></i></span>
                       <span class="course-menu-copy"><strong>MBA</strong><small>Business abroad</small></span>
                     </a>
-                    <a class="course-menu-card" href="{{ route('contact') }}">
+                    <a class="course-menu-card" href="{{ route('courses.doctoral') }}">
                       <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="microscope"></i></span>
                       <span class="course-menu-copy"><strong>Doctoral</strong><small>PhD and research</small></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('courses.llb') }}">
+                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="scale"></i></span>
+                      <span class="course-menu-copy"><strong>LLB</strong><small>Law programs abroad</small></span>
                     </a>
                   </div>
                 </div>

@@ -38,7 +38,7 @@ class BlogCmsController extends Controller
                 $request->session()->put('cms_super_admin', $role === 'super');
             }
 
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.portal');
         }
 
         return view('admin.login');
@@ -66,7 +66,7 @@ class BlogCmsController extends Controller
         $request->session()->put('cms_authenticated', true);
         $request->session()->put('cms_super_admin', $role === 'super');
 
-        $response = redirect()->route('admin.dashboard');
+        $response = redirect()->route('admin.portal');
 
         // "Keep me signed in" → 30-day encrypted, http-only persistent-login cookie.
         if ($request->boolean('remember')) {

@@ -224,6 +224,16 @@
     .modal-body .btn{margin-top:9px}
     .ai-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
     .ai-note{color:var(--muted);font-size:.76rem}
+    /* Payment-section authorization modal */
+    .payotp-note{display:flex;gap:11px;align-items:flex-start;background:var(--vio-s);border:1px solid #e3dcff;border-radius:12px;padding:13px 14px;margin-bottom:14px}
+    .payotp-note i{width:20px;height:20px;flex:none;color:var(--vio-d);margin-top:1px}
+    .payotp-note p{margin:0;font-size:.9rem;line-height:1.55;color:#3a3550}
+    .payotp-note strong{color:#211d36}
+    .payotp-btn{width:100%;justify-content:center;margin-top:0}
+    .payotp-label{display:block;font-weight:800;font-size:.8rem;margin:16px 0 8px;color:#3a3550}
+    .payotp-input{width:100%;padding:13px 14px;border:1px solid #d8d4ea;border-radius:10px;font:800 22px/1 "Poppins",sans-serif;letter-spacing:.4em;text-align:center;color:#211d36;margin-bottom:12px}
+    .payotp-input:focus{outline:none;border-color:#7b2ff7;box-shadow:0 0 0 3px rgba(123,47,247,.14)}
+    .payotp-status{margin:6px 0 0;font-size:.82rem;font-weight:700;min-height:1.1em;text-align:center;color:var(--muted)}
     .crop-stage{padding:14px;background:#f4f0ff;overflow:auto}
     .crop-stage img{max-width:100%;display:block}
     .crop-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
@@ -360,6 +370,27 @@
   </div>
 </div>
 
+<div class="modal" id="pay-otp-modal">
+  <div class="modal-card">
+    <div class="modal-head"><i data-lucide="shield-check"></i> <span>Authorize payment section</span>
+      <button type="button" data-payotp-close><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="payotp-note">
+        <i data-lucide="shield-alert"></i>
+        <p>This page contains a <strong>payment section</strong>. To publish it, enter the one-time authorization code emailed to the payment approver.</p>
+      </div>
+      <button class="btn btn-primary payotp-btn" id="payotp-send"><i data-lucide="mail"></i> Email the authorization code</button>
+      <div id="payotp-wrap" hidden>
+        <label class="payotp-label" for="payotp-code">Enter the 6-digit code</label>
+        <input id="payotp-code" class="payotp-input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••">
+        <button class="btn btn-primary payotp-btn" id="payotp-verify"><i data-lucide="lock-open"></i> Verify &amp; Save</button>
+        <p class="payotp-status" id="payotp-status" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 {{-- Crop modal (drawer image fields + embed images) --}}
 <div class="modal" id="crop-modal">
   <div class="modal-card">
@@ -390,6 +421,9 @@
   var PRESET=@json(route('admin.pages.preset'));
   var RENDER=@json(route('admin.pages.render'));
   var UPLOAD=@json(route('admin.pages.upload'));
+  var PAY_OTP_REQ=@json(route('admin.pages.payment-otp.request'));
+  var PAY_OTP_VERIFY=@json(route('admin.pages.payment-otp.verify'));
+  var PAGE_SLUG=@json($page['slug']);
   var TYPES=@json(collect($types)->map(fn($d)=>['label'=>$d['label'],'icon'=>$d['icon']??'square'])->all());
 
   var rowsEl=document.getElementById('st-rows');
@@ -472,17 +506,45 @@
   function specOf(it){
     return it.hasAttribute('data-preset') ? {preset:it.getAttribute('data-preset')} : {type:it.getAttribute('data-add-type')};
   }
-  function addBlock(colBlocks,spec,index,openIt,code){
+  function setScopedField(scope,key,value){
+    if(!scope||value==null) return;
+    var field=[].slice.call(scope.querySelectorAll('[data-field="'+key+'"]')).find(function(el){
+      return ownerScope(el)===scope;
+    });
+    if(!field) return;
+    var next=String(value);
+    if(field.tagName==='SELECT'&&!Array.from(field.options).some(function(option){return option.value===next;})) return;
+    field.value=next;
+    field.dispatchEvent(new Event('input',{bubbles:true}));
+    field.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function applyPaymentSpec(form,spec){
+    if(!form||form.dataset.type!=='payment'||!spec) return;
+    var fields=form.querySelector('.bp-fields');
+    ['eyebrow','title','description','layout','button_label','note','accent','accent2'].forEach(function(key){
+      setScopedField(fields,key,spec[key]);
+    });
+    var option=form.querySelector('.bp-rep[data-rep="options"] > .bp-rep-items > .bp-rep-item');
+    if(option){
+      setScopedField(option,'label',spec.plan||spec.label||'Payment');
+      setScopedField(option,'amount',spec.amount||'');
+      setScopedField(option,'description',spec.plan_description||'');
+      setScopedField(option,'badge',spec.badge||'');
+    }
+  }
+  function addBlock(colBlocks,spec,index,openIt,code,initialData){
     var url=spec.preset?PRESET+'?key='+encodeURIComponent(spec.preset):BLOCK+'?type='+encodeURIComponent(spec.type);
-    fetch(url,{headers:{Accept:'application/json'}}).then(function(r){return r.json();}).then(function(d){
+    return fetch(url,{headers:{Accept:'application/json'}}).then(function(r){return r.json();}).then(function(d){
       var tmp=document.createElement('div'); tmp.innerHTML=studioBlockHtml(d.id,d.type,d.node);
       var node=tmp.firstElementChild;
       if(index!=null&&colBlocks.children[index]) colBlocks.insertBefore(node,colBlocks.children[index]); else colBlocks.appendChild(node);
       var ftmp=document.createElement('div'); ftmp.innerHTML=d.form;
       var form=ftmp.firstElementChild; formsEl.appendChild(form);
       if(code){ var ta=form.querySelector('[data-field="html"]'); if(ta){ ta.value=code; node.querySelector('.st-block-node').innerHTML=code; } }
+      if(initialData){ applyPaymentSpec(form,initialData); renderBlock(d.id); }
       refresh(); dirtyMark();
       if(openIt){ node.scrollIntoView({behavior:'smooth',block:'center'}); if(d.type!=='embed') selectBlock(node); }
+      return node;
     });
   }
 
@@ -792,16 +854,32 @@
 
   /* ════════ Build with AI ════════ */
   var aiModal=document.getElementById('ai-modal');
-  var aiMode='page',aiRow=null;
-  function openAi(mode,row){
-    aiMode=mode==='row'?'row':'page'; aiRow=row||null;
-    document.getElementById('ai-title').textContent=aiMode==='row'?'Build with AI — this row':'Build with AI — whole page';
-    document.getElementById('ai-step1').textContent=aiMode==='row'
-      ? 'Describe this section and paste its content / data'
-      : 'Describe the whole page and paste your content / data';
+  var aiMode='page',aiRow=null,aiPaymentBlockId=null;
+  function openAi(mode,arg){
+    aiMode=mode==='row'?'row':(mode==='payment'?'payment':'page');
+    aiRow=(aiMode==='row')?(arg||null):null;
+    aiPaymentBlockId=(aiMode==='payment')?(arg||null):null;
+    document.getElementById('ai-title').textContent=
+      aiMode==='payment'?'Design payment section with AI'
+      :aiMode==='row'?'Build with AI — this row'
+      :'Build with AI — whole page';
+    document.getElementById('ai-step1').textContent=
+      aiMode==='payment'?'Describe your payment section — what they pay for, the plan name & amount in ₹, who it is for, and the benefits / trust points to highlight'
+      :aiMode==='row'?'Describe this section and paste its content / data'
+      :'Describe the whole page and paste your content / data';
+    if(aiMode==='payment'){ // fresh slate for a payment design
+      document.getElementById('ai-content').value='';
+      document.getElementById('ai-prompt-wrap').hidden=true;
+      document.getElementById('ai-code').value='';
+    }
     aiModal.classList.add('open'); refresh();
   }
   document.getElementById('tb-ai').addEventListener('click',function(){openAi('page');});
+  // Per-section button rendered inside a payment block's settings drawer.
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-paysec-ai]'); if(!b) return;
+    e.preventDefault(); openAi('payment',b.getAttribute('data-block'));
+  });
   document.querySelectorAll('[data-ai-close]').forEach(function(b){b.addEventListener('click',function(){aiModal.classList.remove('open');});});
   aiModal.addEventListener('click',function(e){ if(e.target===aiModal) aiModal.classList.remove('open'); });
 
@@ -824,23 +902,115 @@
     s=s.replace(/<!doctype[^>]*>/ig,'').replace(/<\/?(html|head|body)\b[^>]*>/ig,'').trim();
     return s;
   }
+  function extractPaymentSpec(s){
+    var source=s||'', match=source.match(/<!--\s*ODA_PAYMENT\s+(\{[\s\S]*?\})\s*-->/i);
+    if(!match) return {code:source,spec:null};
+    try{
+      return {code:source.replace(match[0],'').trim(),spec:JSON.parse(match[1])};
+    }catch(error){
+      return {code:source,spec:null,error:true};
+    }
+  }
   document.getElementById('ai-add').addEventListener('click',function(){
-    var code=cleanPastedCode(document.getElementById('ai-code').value);
-    if(!code){ toast('Paste the AI-generated code first',1); return; }
+    var extracted=extractPaymentSpec(document.getElementById('ai-code').value);
+    if(extracted.error){ toast('The AI payment settings could not be read. Ask the AI to regenerate the code.',1); return; }
+    var code=cleanPastedCode(extracted.code);
+    if(!code&&!extracted.spec){ toast('Paste the AI-generated code first',1); return; }
+
+    // Payment mode: configure THIS payment block from the marker, and drop the
+    // AI-designed copy in as an embed directly above it — no duplicate block.
+    if(aiMode==='payment'&&aiPaymentBlockId){
+      var target=document.querySelector('.st-block[data-id="'+aiPaymentBlockId+'"]');
+      if(target){
+        if(extracted.spec){ var pf=formFor(aiPaymentBlockId); if(pf){ applyPaymentSpec(pf,extracted.spec); renderBlock(aiPaymentBlockId); } }
+        var pwork=[];
+        if(code){
+          var pcol=target.parentElement; // .st-col-blocks
+          var pidx=Array.prototype.indexOf.call(pcol.children,target);
+          pwork.push(addBlock(pcol,{type:'embed'},pidx,false,code));
+        }
+        aiModal.classList.remove('open');
+        document.getElementById('ai-code').value='';
+        Promise.all(pwork).then(function(){
+          toast(extracted.spec?'Payment section designed — review and Save':'AI design added above the payment block — Save when ready');
+          selectBlock(target); dirtyMark();
+        }).catch(function(){ toast('Part of the AI design could not be added. Please try again.',1); });
+        return;
+      }
+      // target gone — fall through to the generic add below
+    }
+
     var col=null;
-    if(aiMode==='row'&&aiRow&&document.contains(aiRow)){
+    if(code&&aiMode==='row'&&aiRow&&document.contains(aiRow)){
       col=aiRow.querySelector('.st-col-blocks');
       // AI sections are designed full-bleed — widen the host row too.
       aiRow.dataset.width='full';
       var wbtn=aiRow.querySelector('[data-strow="width"]'); if(wbtn) wbtn.innerHTML='<i data-lucide="minimize-2"></i>';
     }
-    if(!col) col=createRow(true).querySelector('.st-col-blocks');
-    addBlock(col,{type:'embed'},null,true,code);
+    var work=[];
+    if(code){
+      if(!col) col=createRow(true).querySelector('.st-col-blocks');
+      work.push(addBlock(col,{type:'embed'},null,!extracted.spec,code));
+    }
+    if(extracted.spec){
+      var paymentCol=createRow(false).querySelector('.st-col-blocks');
+      work.push(addBlock(paymentCol,{type:'payment'},null,true,null,extracted.spec));
+    }
     aiModal.classList.remove('open');
     document.getElementById('ai-code').value='';
-    toast('AI section added — click any text on it to edit, then Save');
+    Promise.all(work).then(function(){
+      toast(extracted.spec?'AI design added with a secure, editable payment block':'AI section added — click any text on it to edit, then Save');
+    }).catch(function(){toast('Part of the AI design could not be added. Please try again.',1);});
   });
+  function buildPaymentPrompt(content){
+    var L=[
+      'You are a senior front-end engineer and product designer. Build ONE polished, production-quality PAYMENT SECTION for my website — premium copy and layout that builds trust and drives the visitor to pay. I will paste it straight into my page builder.',
+      '',
+      '────────── WHAT THIS SECTION IS FOR ──────────',
+      'Use this exact information — do not invent prices, names or links:',
+      (content||'(Describe what the visitor is paying for, the plan name and amount in ₹, who it is for, and the benefits / trust points to highlight.)'),
+      '',
+      '────────── OUTPUT RULES (STRICT) ──────────',
+      '1. Reply with RAW CODE ONLY. No markdown, no code fences, no commentary. First character must be "<".',
+      '2. Do NOT output <!doctype>, <html>, <head>, <body>, or any navbar/header/footer. My site wraps your code with its own header, navigation and footer automatically.',
+      '3. Emit exactly, in this order: one <link> (Poppins font), one <style>, one <section class="ai-sec"> (your designed copy/layout), then the ONE payment marker described below, then at most one <script>.',
+      '',
+      '────────── PAYMENT (THE MOST IMPORTANT RULE) ──────────',
+      '• Do NOT build any real payment UI: no payment form, no card / UPI / netbanking fields, no checkout or Razorpay JavaScript, no QR code, no payment links. Collect nothing and link to no payment page.',
+      '• Design ONLY the persuasive section AROUND the payment — headline, what is included, benefits, trust badges, FAQ, etc.',
+      '• Immediately AFTER your closing <\/section> (and before any <script>), append EXACTLY ONE HTML comment marker on its own line. My page builder replaces this marker with the REAL secure Razorpay payment block (amount priced on my server, payment signature-verified). Never imitate that block yourself.',
+      '<!-- ODA_PAYMENT {"eyebrow":"Secure payment","title":"Complete your payment","description":"Short supporting line","plan":"Plan name","amount":"9999","plan_description":"What this payment covers","badge":"Popular","layout":"split","button_label":"Pay securely","note":"Any tax / terms note","accent":"#F05A28","accent2":"#2B1FA8"} -->',
+      'Fill the marker with MY plan name and amount. amount = plain INR digits only (e.g. "9999"), no symbol or commas. layout = "split", "centered" or "compact". I can add more plan options afterwards in the builder.',
+      '',
+      '────────── CSS SCOPING (so it never breaks my page) ──────────',
+      '• Prefix EVERY selector with ".ai-sec" — e.g. ".ai-sec .grid{}", ".ai-sec h2{}". Never style html, body, *, :root, nav, footer or bare elements. Put CSS vars on ".ai-sec{ --x:… }", never :root. No @import.',
+      '',
+      '────────── DESIGN BAR (make it impressive) ──────────',
+      '• Modern, premium, generous whitespace, clear hierarchy, a strong headline and an obvious path to pay.',
+      '• Brand palette: indigo #2B1FA8, orange #F05A28, ink #181134 on light surfaces. Tasteful gradients, soft shadows, rounded corners (14–22px), inline-SVG icons, subtle hover + transition states.',
+      '• Type: "Poppins"; fluid sizes via clamp(); generous line-height.',
+      '',
+      '────────── RESPONSIVE (required) ──────────',
+      '• Mobile-first; must look great 320px → 1440px. Inner wrapper centered, max-width ~1200px, fluid padding. Every multi-column layout collapses to ONE column under 720px. img{max-width:100%}.',
+      '',
+      '────────── COPY THIS SHAPE EXACTLY ──────────',
+      '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">',
+      '<style>',
+      '  .ai-sec{font-family:"Poppins",sans-serif;color:#181134}',
+      '  .ai-sec .wrap{max-width:1200px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(16px,4vw,32px)}',
+      '  /* …every other rule ALSO prefixed with .ai-sec … */',
+      '  @media(max-width:720px){ .ai-sec [class*="grid"]{grid-template-columns:1fr} }',
+      '<\/style>',
+      '<section class="ai-sec">',
+      '  <div class="wrap"> … your designed payment section built from MY info … <\/div>',
+      '<\/section>',
+      '<!-- ODA_PAYMENT {…as above, with MY plan name & amount…} -->',
+      '<script>(function(){ /* optional, scoped to .ai-sec */ })();<\/script>'
+    ];
+    return L.join('\n');
+  }
   function buildAiPrompt(content,mode){
+    if(mode==='payment') return buildPaymentPrompt(content);
     var isPage=mode!=='row';
     var task=isPage
       ?'Build the COMPLETE BODY of a landing page — 3 to 6 distinct, polished sections (e.g. hero, features/cards, comparison or stats, testimonial, FAQ, closing call-to-action) chosen to fit my content. All sections live inside ONE wrapper.'
@@ -859,6 +1029,9 @@
       '1. Reply with RAW CODE ONLY. No markdown, no triple-backtick code fences, no language tag, no commentary. Your very first character must be "<" and your reply must END with "<\/script>" (or the closing wrapper tag if you add no JS).',
       '2. Do NOT output <!doctype>, <html>, <head>, <body>, or any navbar/site-header/site-footer. My site automatically wraps your code with its own header, navigation and footer'+(isPage?' — a page hero section is fine, a nav bar is not.':'.'),
       '3. Emit exactly, in this order: one <link> (Poppins font), one <style>, one '+(isPage?'<div class="ai-sec"> containing your <section>s':'<section class="ai-sec">')+', and at most one <script>.',
+      '4. PAYMENT SAFETY: If my content requests a price, fee, checkout, payment or Razorpay button, do NOT create a payment form, checkout JavaScript, QR code, payment link, or collect card/UPI details in your HTML. Design only the surrounding copy. Then append exactly one editable CMS marker after the closing wrapper (and before the optional script):',
+      '<!-- ODA_PAYMENT {"eyebrow":"Secure payment","title":"Complete your payment","description":"Your short supporting copy","plan":"Application fee","amount":"9999","plan_description":"What this payment covers","badge":"Popular","layout":"split","button_label":"Pay securely","note":"Any terms or tax note","accent":"#F05A28","accent2":"#2B1FA8"} -->',
+      'Use a plain INR amount such as "9999" with no currency symbol or commas. Use layout "split", "centered", or "compact". The page builder converts this marker into the real secure Razorpay block; never imitate that block yourself.',
       '',
       '────────── CSS SCOPING (so it never breaks my page) ──────────',
       '• Prefix EVERY selector with ".ai-sec" — e.g. ".ai-sec .grid{}", ".ai-sec h2{}". No exceptions.',
@@ -912,7 +1085,11 @@
     };
     document.getElementById('tb-status').textContent='Saving…';
     fetch(SAVE,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Content-Type':'application/json'},body:JSON.stringify(payload)})
-      .then(function(r){return r.json();}).then(function(d){
+      .then(function(r){return r.json().then(function(d){return {status:r.status,d:(d||{})};});})
+      .then(function(res){
+        var d=res.d;
+        if(d.need_payment_otp){ document.getElementById('tb-status').textContent=''; openPayOtp(); return; }
+        if(res.status<200||res.status>=300||d.ok===false){ document.getElementById('tb-status').textContent='Error'; toast(d.message||'Save failed',1); return; }
         isDirty=false;
         document.getElementById('tb-status').textContent='✓ Saved';
         toast(d.message||'Saved');
@@ -923,6 +1100,39 @@
         }
       }).catch(function(){ document.getElementById('tb-status').textContent='Error'; toast('Save failed',1); });
   }
+
+  /* ════════ payment-section authorization OTP ════════ */
+  var payModal=document.getElementById('pay-otp-modal');
+  function setPayStatus(msg,err){ var s=document.getElementById('payotp-status'); if(s){ s.textContent=msg||''; s.style.color=err?'#b42318':''; } }
+  function openPayOtp(){
+    document.getElementById('payotp-wrap').hidden=true;
+    document.getElementById('payotp-code').value='';
+    setPayStatus('');
+    payModal.classList.add('open'); refresh();
+  }
+  function closePayOtp(){ payModal.classList.remove('open'); }
+  document.querySelectorAll('[data-payotp-close]').forEach(function(b){b.addEventListener('click',closePayOtp);});
+  payModal.addEventListener('click',function(e){ if(e.target===payModal) closePayOtp(); });
+  document.getElementById('payotp-send').addEventListener('click',function(){
+    var btn=this; btn.disabled=true; setPayStatus('Sending…');
+    fetch(PAY_OTP_REQ,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Content-Type':'application/json'},body:JSON.stringify({slug:PAGE_SLUG,title:document.getElementById('bp-title').value})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok){ document.getElementById('payotp-wrap').hidden=false; document.getElementById('payotp-code').focus(); setPayStatus(d.message||'Code sent.'); }
+        else { setPayStatus(d.message||'Could not send the code.',1); }
+      }).catch(function(){ setPayStatus('Could not send the code.',1); }).finally(function(){ btn.disabled=false; });
+  });
+  document.getElementById('payotp-verify').addEventListener('click',function(){
+    var code=document.getElementById('payotp-code').value.trim();
+    if(!/^\d{6}$/.test(code)){ setPayStatus('Enter the 6-digit code.',1); return; }
+    var btn=this; btn.disabled=true; setPayStatus('Verifying…');
+    fetch(PAY_OTP_VERIFY,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Content-Type':'application/json'},body:JSON.stringify({otp:code})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.ok){ closePayOtp(); toast(d.message||'Authorized'); savePage(); }
+        else { setPayStatus(d.message||'Incorrect code.',1); }
+      }).catch(function(){ setPayStatus('Verification failed.',1); }).finally(function(){ btn.disabled=false; });
+  });
+  document.getElementById('payotp-code').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('payotp-verify').click(); } });
+
   document.getElementById('tb-save').addEventListener('click',savePage);
   document.addEventListener('keydown',function(e){
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){ e.preventDefault(); savePage(); }

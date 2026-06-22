@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\BlogContent;
 use App\Support\StudyLocationContent;
 use App\Support\MbbsCountryContent;
 use Tests\TestCase;
@@ -68,10 +69,66 @@ class SitePagesTest extends TestCase
             ->assertSee('<urlset', false)
             ->assertSee('<loc>'.url('/').'</loc>', false);
 
-        $this->get('/robots.txt')
+        $this->get('https://onedegreeadvisory.com/robots.txt')
             ->assertOk()
             ->assertSee('Disallow: /admin/')
             ->assertSee('Sitemap: https://onedegreeadvisory.com/sitemap.xml');
+    }
+
+    public function test_sitemap_excludes_redirect_only_blog_urls(): void
+    {
+        $this->mock(BlogContent::class, function ($mock): void {
+            $mock->shouldReceive('all')->once()->andReturn([
+                [
+                    'slug' => 'redirect-only-post',
+                    'visible' => true,
+                    'link_url' => '/europe',
+                ],
+                [
+                    'slug' => 'regular-article',
+                    'visible' => true,
+                    'date' => '2026-06-19',
+                ],
+            ]);
+        });
+
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertDontSee('<loc>'.route('blog.post', 'redirect-only-post').'</loc>', false)
+            ->assertSee('<loc>'.route('blog.post', 'regular-article').'</loc>', false)
+            ->assertSee('<loc>'.route('europe').'</loc>', false);
+    }
+
+    public function test_link_only_blog_entries_redirect_permanently(): void
+    {
+        $this->mock(BlogContent::class, function ($mock): void {
+            $mock->shouldReceive('forSlug')->with('redirect-only-post')->once()->andReturn([
+                'slug' => 'redirect-only-post',
+                'visible' => true,
+                'link_url' => '/europe',
+            ]);
+        });
+
+        $this->get('/blog/redirect-only-post')
+            ->assertStatus(301)
+            ->assertRedirect('/europe');
+    }
+
+    public function test_public_pages_link_to_course_and_service_landing_pages(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee(route('courses.ug'), false)
+            ->assertSee(route('courses.pg'), false)
+            ->assertSee(route('courses.llb'), false)
+            ->assertSee(route('courses.mba'), false)
+            ->assertSee(route('courses.doctoral'), false);
+
+        $this->get('/study-abroad')
+            ->assertOk()
+            ->assertSee(route('services.admissions-counselling'), false)
+            ->assertSee(route('services.student-services'), false)
+            ->assertSee(route('services.test-prep'), false);
     }
 
     public function test_admissions_counselling_page_is_live_and_listed_as_unlinked(): void

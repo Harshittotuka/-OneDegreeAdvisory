@@ -33,8 +33,6 @@ class BriefPageContent
     /* ───────────────────────── Europe ───────────────────────── */
     private function europe(): array
     {
-        $enrol = 'https://wa.me/'.config('site.contact.phone_e164');
-
         return [
             'slug' => 'europe',
             'path' => '/europe',
@@ -42,6 +40,10 @@ class BriefPageContent
             'page_title' => 'Europe Study Abroad Packages | One Degree Advisory',
             'meta_description' => 'Transparent study-abroad packages for public universities in Europe — admission strategy, applications, documentation, and visa support, with an Admission Guarantee track.',
             'visible' => true,
+            'content_versions' => [
+                'razorpay_payment_block' => 1,
+                'razorpay_pricing_links' => 2,
+            ],
             'sections' => [
                 $this->sec('hero', 'hero', [
                     'eyebrow' => 'Europe advisory packages',
@@ -75,6 +77,7 @@ class BriefPageContent
                 ]),
                 $this->sec('journey', 'journey', [
                     'title' => '✈️ Start Your Study Abroad Journey with One Degree Advisory',
+                    'layout' => 'balanced',
                     'steps' => [
                         ['label' => 'Step 1', 'heading' => 'Admission Strategy & Shortlisting', 'items' => [
                             ['name' => 'Student Profile Analysis', 'desc' => 'Discuss your preferences, get expert guidance, answers to your questions, and a personalized study abroad roadmap.'],
@@ -105,25 +108,26 @@ class BriefPageContent
                 $this->sec('packages', 'pricing', [
                     'heading' => 'Europe Study Abroad Packages for Public University',
                     'sub' => 'Choose the plan that fits your ambition',
-                    'enrol_href' => $enrol,
+                    'enrol_href' => '#europe-payment-option-0',
                     'plans' => [
-                        ['variant' => 'starter', 'name' => 'Explorer', 'badge' => 'Explorer', 'price' => '₹54,999 + GST', 'desc' => 'Perfect for students applying to one European country.', 'features' => $this->li([
+                        ['variant' => 'starter', 'name' => 'Explorer', 'badge' => 'Explorer', 'price' => '₹54,999 + GST', 'desc' => 'Perfect for students applying to one European country.', 'btn_href' => '#europe-payment-option-0', 'features' => $this->li([
                             'Profile Evaluation', 'University Shortlisting', 'Document Preparation Assistance',
                             'Country-specific Doc Guidance (APS, Blocked Account etc.)', 'Interview Assistance',
                             'Application Assistance', 'Visa Assistance', 'Pre-departure Guidance', 'Counsellor Support',
                             'IELTS Preparation Included', 'Education Loan Assistance',
                         ])],
-                        ['variant' => 'achiever', 'name' => 'Achiever', 'badge' => '⭐ Most Popular', 'price' => '₹69,999+ GST', 'desc' => 'Best for students targeting multiple European countries. (Access to 2 European Countries)', 'features' => $this->li([
+                        ['variant' => 'achiever', 'name' => 'Achiever', 'badge' => '⭐ Most Popular', 'price' => '₹69,999+ GST', 'desc' => 'Best for students targeting multiple European countries. (Access to 2 European Countries)', 'btn_href' => '#europe-payment-option-1', 'features' => $this->li([
                             'Everything in Explorer', 'Priority Counsellor Support',
                             'Maximize Your Chances with Multi-Country Admission Support.',
                         ])],
-                        ['variant' => 'elite', 'name' => 'Infinity', 'badge' => '♾️ Infinity', 'price' => '₹99,999 + GST', 'desc' => 'Admission Opportunities Across Europe, Centered on Your First-Choice Destination*', 'features' => [
+                        ['variant' => 'elite', 'name' => 'Infinity', 'badge' => '♾️ Infinity', 'price' => '₹99,999 + GST', 'desc' => 'Admission Opportunities Across Europe, Centered on Your First-Choice Destination*', 'btn_href' => '#europe-payment-option-2', 'features' => [
                             ['text' => 'Everything in Achiever, Explore <strong>Up to 5 European Countries</strong>'],
                             ['text' => 'Priority Counsellor Support'],
                             ['text' => 'Student–Alumni Interaction'],
                         ]],
                     ],
                 ]),
+                self::europePaymentBlock(),
                 $this->sec('disclaimer', 'disclaimer', [
                     'heading' => '⚠️ Not Included — Paid Directly by Student',
                     'items' => [
@@ -141,6 +145,32 @@ class BriefPageContent
                         ['text' => '<strong>Additional expenses shall be borne by the student.</strong>'],
                     ],
                 ]),
+            ],
+        ];
+    }
+
+    /** Default secure-payment section, also used for the one-time CMS data upgrade. */
+    public static function europePaymentBlock(): array
+    {
+        return [
+            'id' => 'europe-payment',
+            'type' => 'payment',
+            'visible' => true,
+            'data' => [
+                'eyebrow' => 'Secure online enrolment',
+                'title' => 'Choose your Europe advisory package.',
+                'description' => 'Select a plan, enter the student details, and request approval. Razorpay Checkout opens only after the admissions team confirms the request with a one-time code.',
+                'layout' => 'split',
+                'options' => [
+                    ['label' => 'Explorer', 'amount' => '54999', 'description' => 'One European country', 'badge' => 'Starter'],
+                    ['label' => 'Achiever', 'amount' => '69999', 'description' => 'Access to two European countries', 'badge' => 'Most popular'],
+                    ['label' => 'Infinity', 'amount' => '99999', 'description' => 'Explore up to five European countries', 'badge' => 'Premium'],
+                ],
+                'button_label' => 'Enrol & Pay',
+                'note' => 'Taxes or statutory charges are confirmed separately by admissions. Never share card, UPI PIN or banking credentials with anyone.',
+                'surface' => 'card',
+                'accent' => '#f05a28',
+                'accent2' => '#2b1fa8',
             ],
         ];
     }
