@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentReceiptTeamMail;
+use App\Mail\PaymentThankYouMail;
 use App\Models\PaymentAttempt;
 use App\Services\PaymentBlockResolver;
 use App\Services\RazorpayGateway;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -137,6 +140,9 @@ class PaymentController extends Controller
             'failure_reason' => null,
         ]);
 
+        // First (and only) transition to paid for this attempt — notify now.
+        $this->sendPaymentEmails($attempt->fresh());
+
         return $this->paymentSuccessResponse($attempt);
     }
 
@@ -147,6 +153,29 @@ class PaymentController extends Controller
             'message' => 'Payment verified successfully. Admissions will contact you with the next steps.',
             'payment_id' => $attempt->razorpay_payment_id,
         ]);
+    }
+
+    /**
+     * On a confirmed payment, notify the admissions team (with full details) and
+     * thank the customer. Sent synchronously (no queue). A mail failure is logged
+     * but never fails the payment — the money is already captured.
+     */
+    private function sendPaymentEmails(PaymentAttempt $attempt): void
+    {
+        try {
+            $mailer = config('site.forms.contact.mailer') ?: config('mail.default');
+
+            $team = array_values(array_filter((array) config('site.payment_notify')));
+            if ($team !== []) {
+                Mail::mailer($mailer)->to($team)->send(new PaymentReceiptTeamMail($attempt));
+            }
+
+            if ($attempt->customer_email) {
+                Mail::mailer($mailer)->to($attempt->customer_email)->send(new PaymentThankYouMail($attempt));
+            }
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     public function webhook(Request $request): JsonResponse
@@ -171,12 +200,17 @@ class PaymentController extends Controller
         if ($orderId !== '') {
             $attempt = PaymentAttempt::where('razorpay_order_id', $orderId)->first();
             if ($attempt && in_array($event, ['payment.captured', 'order.paid'], true)) {
+                $alreadyPaid = $attempt->status === 'paid';
                 $attempt->update([
                     'razorpay_payment_id' => $paymentId ?: $attempt->razorpay_payment_id,
                     'status' => 'paid',
                     'paid_at' => $attempt->paid_at ?: now(),
                     'failure_reason' => null,
                 ]);
+                // Only notify if confirm() didn't already send for this payment.
+                if (! $alreadyPaid) {
+                    $this->sendPaymentEmails($attempt->fresh());
+                }
             } elseif ($attempt && $event === 'payment.failed') {
                 $attempt->update([
                     'status' => 'payment_failed',

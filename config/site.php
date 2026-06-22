@@ -34,6 +34,13 @@ return [
        saves for `window_minutes`. This is the gate that stops an unauthorized
        admin from publishing a live payment gateway. Recipients are a
        comma-separated list in PAYMENT_SECTION_OTP_EMAILS. */
+    /* Who gets the "payment received" notification (with full enrolment details)
+       when a checkout succeeds. Customer also gets a thank-you. Comma-separated. */
+    'payment_notify' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('PAYMENT_NOTIFY_EMAILS', 'Admissions@onedegreeadvisory.com,seemant@onedegree.com'))
+    ))),
+
     'payment_section_otp' => [
         'recipients' => array_values(array_filter(array_map(
             'trim',
