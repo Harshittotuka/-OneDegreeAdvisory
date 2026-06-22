@@ -2,6 +2,7 @@
 
 namespace App\Modules\StudentProfiler;
 
+use App\Support\ProfileSubmissionStore;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -79,7 +80,20 @@ class StudentProfilerController
         $request->session()->put(self::S_SECTION, $section);
 
         if ($action === 'submit') {
+            // Record the completed profile once (guard against a re-POST after
+            // the session is already marked done). Stored as a human-readable
+            // snapshot for the admin panel — no scoring is performed.
+            $alreadyDone = (bool) $request->session()->get(self::S_DONE, false);
             $request->session()->put(self::S_DONE, true);
+
+            if (! $alreadyDone && $degree) {
+                (new ProfileSubmissionStore())->add(
+                    'profiler',
+                    'Student Profiler',
+                    $degree,
+                    ProfileSubmissionStore::snapshot($config['sections'][$degree] ?? [], $answers)
+                );
+            }
 
             // No scoring/rating — the profile is handed to the team for a
             // manual review. We just confirm receipt.

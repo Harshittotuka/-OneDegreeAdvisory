@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Tests\Concerns\PreservesProfileSubmissions;
 use Tests\TestCase;
 
 /**
@@ -12,6 +13,20 @@ use Tests\TestCase;
  */
 class ProfileEvaluatorTest extends TestCase
 {
+    use PreservesProfileSubmissions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->backupSubmissions();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->restoreSubmissions();
+        parent::tearDown();
+    }
+
     public function test_wizard_page_renders_with_config_and_assets(): void
     {
         $this->get('/evaluate-my-profile')

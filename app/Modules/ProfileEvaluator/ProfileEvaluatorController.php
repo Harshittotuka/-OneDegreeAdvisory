@@ -2,6 +2,7 @@
 
 namespace App\Modules\ProfileEvaluator;
 
+use App\Support\ProfileSubmissionStore;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,7 +77,20 @@ class ProfileEvaluatorController
         $request->session()->put(self::S_SECTION, $this->clampSection((int) $request->input('section', 0), $config));
 
         if ($action === 'submit') {
+            // Record the completed evaluation once (guard against a re-POST after
+            // the session is already marked done). Stored as a human-readable
+            // snapshot for the admin panel — no scoring is performed.
+            $alreadyDone = (bool) $request->session()->get(self::S_DONE, false);
             $request->session()->put(self::S_DONE, true);
+
+            if (! $alreadyDone) {
+                (new ProfileSubmissionStore())->add(
+                    'evaluator',
+                    'Profile Evaluator',
+                    null,
+                    ProfileSubmissionStore::snapshot($config['sections'] ?? [], $answers)
+                );
+            }
 
             // No scoring/rating — the profile is handed to the team for a
             // manual review. We just confirm receipt (same as the Profiler).

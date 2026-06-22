@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NewsletterController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
+use App\Http\Controllers\Admin\ProfileSubmissionsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\BriefPageController;
@@ -139,6 +140,13 @@ Route::prefix('admin')->group(function () {
         /* ── Notice-bar CMS (top blue nav) ── */
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
+
+        /* ── Profiler / Evaluator submissions (collected from /profiler and /evaluate-my-profile) ── */
+        Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index');
+        Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
+        Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');
+        Route::get('submissions/{id}', [ProfileSubmissionsController::class, 'show'])
+            ->where('id', '[A-Za-z0-9-]+')->name('admin.submissions.show');
 
         /* ── Newsletter subscribers (collected from the blog signup forms) ── */
         Route::get('newsletter', [NewsletterController::class, 'index'])->name('admin.newsletter.index');
