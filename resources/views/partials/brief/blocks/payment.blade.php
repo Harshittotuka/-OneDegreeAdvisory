@@ -169,8 +169,12 @@
                 order_id: checkout.order_id,
                 name: checkout.name,
                 description: checkout.description,
+                image: checkout.image,
                 prefill: checkout.prefill,
-                theme: { color: checkout.theme_color },
+                theme: {
+                  color: checkout.theme_color,
+                  backdrop_color: checkout.backdrop_color
+                },
                 handler: function (response) {
                   setStatus(root, 'Verifying payment…', '');
                   post(confirmUrl, {
@@ -188,6 +192,7 @@
                   });
                 },
                 modal: {
+                  confirm_close: true,
                   ondismiss: function () { setStatus(root, 'Checkout closed before payment. You can try again.', ''); }
                 }
               });
@@ -202,23 +207,50 @@
 
         var activeModal = null;
 
+        // Reveal: drop [hidden] (display:flex), force a reflow so the starting
+        // styles register, then add .is-open so the CSS transition actually runs.
+        function revealOverlay(overlay) {
+          if (overlay.odpHideTimer) { clearTimeout(overlay.odpHideTimer); overlay.odpHideTimer = null; }
+          overlay.removeAttribute('hidden');
+          void overlay.offsetWidth;
+          overlay.classList.add('is-open');
+        }
+
+        // Dismiss: play the close transition, then re-hide once it has finished.
+        function dismissOverlay(overlay) {
+          overlay.classList.remove('is-open');
+          if (overlay.odpHideTimer) clearTimeout(overlay.odpHideTimer);
+          overlay.odpHideTimer = setTimeout(function () {
+            overlay.setAttribute('hidden', '');
+            overlay.odpHideTimer = null;
+          }, 480);
+        }
+
         function closeModal() {
           if (!activeModal) return;
-          activeModal.setAttribute('hidden', '');
-          document.documentElement.classList.remove('odp-pay-modal-open');
+          var overlay = activeModal;
           activeModal = null;
+          dismissOverlay(overlay);
+          if (!resultOverlay || resultOverlay.hasAttribute('hidden')) {
+            document.documentElement.classList.remove('odp-pay-modal-open');
+          }
         }
 
         function openModal(payment) {
           var overlay = payment.odpModalOverlay;
           if (!overlay) return;
           if (activeModal && activeModal !== overlay) closeModal();
-          overlay.removeAttribute('hidden');
+          revealOverlay(overlay);
           document.documentElement.classList.add('odp-pay-modal-open');
           activeModal = overlay;
           overlay.scrollTop = 0;
+          // Focus after the open animation so it doesn't fight the transform.
           var field = payment.querySelector('.odp-payment-fields input');
-          if (field) { try { field.focus({ preventScroll: true }); } catch (e) { field.focus(); } }
+          if (field) {
+            setTimeout(function () {
+              try { field.focus({ preventScroll: true }); } catch (e) { field.focus(); }
+            }, 80);
+          }
         }
 
         // Success confirmation popup, shown instead of an inline status line.
@@ -249,12 +281,12 @@
           var idEl = resultOverlay.querySelector('.odp-pay-result__id');
           if (paymentId) { idEl.textContent = 'Payment ID: ' + paymentId; idEl.hidden = false; }
           else idEl.hidden = true;
-          resultOverlay.removeAttribute('hidden');
+          revealOverlay(resultOverlay);
           document.documentElement.classList.add('odp-pay-modal-open');
         }
 
         function hideResult() {
-          if (resultOverlay) resultOverlay.setAttribute('hidden', '');
+          if (resultOverlay) dismissOverlay(resultOverlay);
           if (!activeModal) document.documentElement.classList.remove('odp-pay-modal-open');
         }
 

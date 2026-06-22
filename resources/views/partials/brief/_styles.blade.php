@@ -1162,7 +1162,13 @@
     padding: clamp(14px, 4vw, 48px);
     overflow-y: auto;
     font-family: "Poppins", sans-serif;
+    /* Smooth open/close — the overlay fades while the shell eases up. */
+    opacity: 0;
+    transition: opacity 0.32s ease;
+    will-change: opacity;
   }
+
+  .odp-pay-modal.is-open { opacity: 1; }
 
   .odp-pay-modal[hidden] { display: none; }
 
@@ -1184,12 +1190,17 @@
     width: 100%;
     max-width: 1040px;
     margin: auto;
-    animation: odpPayModalIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+    transition:
+      transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.34s ease;
+    will-change: transform, opacity;
   }
 
-  @keyframes odpPayModalIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.985); }
-    to   { opacity: 1; transform: none; }
+  .odp-pay-modal.is-open .odp-pay-modal__shell {
+    opacity: 1;
+    transform: none;
   }
 
   .odp-pay-modal .odp-payment {
@@ -1233,7 +1244,17 @@
     background: #fff;
     text-align: center;
     box-shadow: 0 26px 64px rgba(38, 28, 93, 0.26);
-    animation: odpPayModalIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0;
+    transform: translateY(20px) scale(0.94);
+    transition:
+      transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.3s ease;
+    will-change: transform, opacity;
+  }
+
+  .odp-pay-result.is-open .odp-pay-result__card {
+    opacity: 1;
+    transform: none;
   }
 
   .odp-pay-result__badge {
@@ -1286,6 +1307,15 @@
   }
 
   .odp-pay-result__done:hover { background: #241a8d; transform: translateY(-1px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .odp-pay-modal,
+    .odp-pay-modal__shell,
+    .odp-pay-result__card {
+      transition-duration: 0.001ms;
+      transform: none;
+    }
+  }
 
   .odp-payment-copy {
     min-width: 0;

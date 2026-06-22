@@ -231,7 +231,10 @@ class PaymentController extends Controller
             'order_id' => $attempt->razorpay_order_id,
             'name' => config('site.name'),
             'description' => $attempt->item_name,
-            'theme_color' => $attempt->theme_color ?: '#F05A28',
+            'image' => asset('assets/Logo/favicon.png'),
+            'theme_color' => $attempt->theme_color ?: '#2B1FA8',
+            // Dark, brand-tinted backdrop behind the checkout for a more premium feel.
+            'backdrop_color' => '#160f33',
             'prefill' => [
                 'name' => $attempt->customer_name,
                 'email' => $attempt->customer_email,
