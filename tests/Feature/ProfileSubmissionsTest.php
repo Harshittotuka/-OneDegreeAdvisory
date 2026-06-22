@@ -152,26 +152,59 @@ class ProfileSubmissionsTest extends TestCase
 
         $admin = $this->withSession(['cms_authenticated' => true]);
 
-        $admin->get(route('admin.submissions.index'))
+        $admin->get(route('admin.submissions.profiler'))
             ->assertOk()
-            ->assertSee('Profiler submissions')
-            ->assertSee('Student Profiler')
-            ->assertSee('doctorate');
+            ->assertSee('Student Profiler submissions')
+            ->assertSee('doctorate')
+            // It now lives in the Admin portal (orange), not the CMS Content Studio.
+            ->assertSee('portal-admin', false)
+            ->assertSee('Admin Portal')
+            ->assertDontSee('Content Studio');
 
         $admin->get(route('admin.submissions.show', $id))
             ->assertOk()
             ->assertSee('Are you still involved in the same?')
             ->assertSee('Yes, Heavily');
 
+        // Deleting a profiler submission returns to the Student Profiler tab.
         $admin->post(route('admin.submissions.destroy'), ['id' => $id])
-            ->assertRedirect(route('admin.submissions.index'));
+            ->assertRedirect(route('admin.submissions.profiler'));
 
         $this->assertCount(0, $this->store()->all());
     }
 
+    public function test_each_tab_shows_only_its_own_source(): void
+    {
+        $this->store()->add('profiler', 'Student Profiler', 'masters', [
+            ['eyebrow' => 'Academics', 'title' => 'Academics', 'answers' => [
+                ['label' => 'Q', 'value' => ['PROFILER_ONLY_MARKER']],
+            ]],
+        ]);
+        $this->store()->add('evaluator', 'Profile Evaluator', null, [
+            ['eyebrow' => 'Academics', 'title' => 'Academics', 'answers' => [
+                ['label' => 'Q', 'value' => ['EVALUATOR_ONLY_MARKER']],
+            ]],
+        ]);
+
+        $admin = $this->withSession(['cms_authenticated' => true]);
+
+        // Bare /admin/submissions defaults to the Student Profiler tab.
+        $admin->get(route('admin.submissions.index'))->assertRedirect(route('admin.submissions.profiler'));
+
+        $admin->get(route('admin.submissions.profiler'))
+            ->assertOk()
+            ->assertSee('PROFILER_ONLY_MARKER')
+            ->assertDontSee('EVALUATOR_ONLY_MARKER');
+
+        $admin->get(route('admin.submissions.evaluator'))
+            ->assertOk()
+            ->assertSee('EVALUATOR_ONLY_MARKER')
+            ->assertDontSee('PROFILER_ONLY_MARKER');
+    }
+
     public function test_admin_submissions_require_authentication(): void
     {
-        $this->get(route('admin.submissions.index'))->assertRedirect(route('admin.login'));
+        $this->get(route('admin.submissions.profiler'))->assertRedirect(route('admin.login'));
     }
 
     public function test_admin_can_export_submissions_as_csv(): void

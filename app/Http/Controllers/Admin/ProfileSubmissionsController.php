@@ -20,21 +20,34 @@ class ProfileSubmissionsController extends Controller
     {
     }
 
-    public function index(Request $request): View
+    /** Bare /admin/submissions → default to the Student Profiler tab. */
+    public function index(): RedirectResponse
+    {
+        return redirect()->route('admin.submissions.profiler');
+    }
+
+    /** Student Profiler tab. */
+    public function profiler(): View
+    {
+        return $this->tab('profiler');
+    }
+
+    /** Profile Evaluator tab. */
+    public function evaluator(): View
+    {
+        return $this->tab('evaluator');
+    }
+
+    /** Render one source's submissions list. */
+    private function tab(string $source): View
     {
         $all = $this->store->all();
 
-        // Optional source filter: ?source=profiler|evaluator (anything else = all).
-        $source = (string) $request->query('source', '');
-        $rows = in_array($source, ['profiler', 'evaluator'], true)
-            ? array_values(array_filter($all, fn ($r) => ($r['source'] ?? '') === $source))
-            : $all;
-
         return view('admin.submissions.index', [
-            'submissions' => $rows,
+            'portal'      => 'admin',
             'source'      => $source,
+            'submissions' => array_values(array_filter($all, fn ($r) => ($r['source'] ?? '') === $source)),
             'counts'      => [
-                'all'       => count($all),
                 'profiler'  => count(array_filter($all, fn ($r) => ($r['source'] ?? '') === 'profiler')),
                 'evaluator' => count(array_filter($all, fn ($r) => ($r['source'] ?? '') === 'evaluator')),
             ],
@@ -45,26 +58,39 @@ class ProfileSubmissionsController extends Controller
     {
         $submission = $this->store->find($id);
         if ($submission === null) {
-            return redirect()->route('admin.submissions.index')->with('status', 'That submission no longer exists.');
+            return redirect()->route('admin.submissions.profiler')->with('status', 'That submission no longer exists.');
         }
 
-        return view('admin.submissions.show', ['submission' => $submission]);
+        return view('admin.submissions.show', ['portal' => 'admin', 'submission' => $submission]);
     }
 
     public function destroy(Request $request): RedirectResponse
     {
         $id = trim((string) $request->input('id', ''));
+
+        // Return to the tab the deleted submission belonged to.
+        $tab = 'admin.submissions.profiler';
         if ($id !== '') {
+            $found = $this->store->find($id);
+            if (($found['source'] ?? '') === 'evaluator') {
+                $tab = 'admin.submissions.evaluator';
+            }
             $this->store->delete($id);
         }
 
-        return redirect()->route('admin.submissions.index')->with('status', 'Submission removed.');
+        return redirect()->route($tab)->with('status', 'Submission removed.');
     }
 
-    /** Download every submission as a flat CSV (one row per answered question). */
-    public function export(): StreamedResponse
+    /**
+     * Download submissions as a flat CSV (one row per answered question).
+     * Scoped to ?source=profiler|evaluator when given, otherwise all.
+     */
+    public function export(Request $request): StreamedResponse
     {
-        $rows = $this->store->all();
+        $source = (string) $request->query('source', '');
+        $scoped = in_array($source, ['profiler', 'evaluator'], true);
+        $rows = $scoped ? $this->store->bySource($source) : $this->store->all();
+        $suffix = $scoped ? '-'.$source : '';
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -87,6 +113,6 @@ class ProfileSubmissionsController extends Controller
                 }
             }
             fclose($out);
-        }, 'profile-submissions-'.date('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
+        }, 'profile-submissions'.$suffix.'-'.date('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
     }
 }

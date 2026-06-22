@@ -23,14 +23,17 @@
 </style>
 @endpush
 
+@php
+  $isProfiler = ($submission['source'] ?? '') === 'profiler';
+  $backRoute  = $isProfiler ? 'admin.submissions.profiler' : 'admin.submissions.evaluator';
+@endphp
+
 @section('content')
   <div style="margin-bottom:18px;">
-    <a class="btn btn-ghost btn-sm" href="{{ route('admin.submissions.index') }}">
-      <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to submissions
+    <a class="btn btn-ghost btn-sm" href="{{ route($backRoute) }}">
+      <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to {{ $isProfiler ? 'Student Profiler' : 'Profile Evaluator' }}
     </a>
   </div>
-
-  @php $isProfiler = ($submission['source'] ?? '') === 'profiler'; @endphp
 
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
     <h1 style="margin:0;font-size:1.4rem;letter-spacing:-.01em;">{{ $submission['source_label'] ?? 'Submission' }}</h1>

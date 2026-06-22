@@ -63,6 +63,10 @@ Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study
 // invokable controller serves GET (wizard) and POST (session save / submit).
 Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentProfilerController::class)->name('profiler');
 
+// Student Profiler V2 (app/Modules/StudentProfilerV2) — the SAME profiler
+// questions, rendered in the Profile Evaluator design. Additive sibling of v1.
+Route::match(['get', 'post'], '/profiler-v2', \App\Modules\StudentProfilerV2\StudentProfilerV2Controller::class)->name('profiler.v2');
+
 // Profile Evaluator module (self-contained in app/Modules/ProfileEvaluator) —
 // a native rebuild of the mim-essay "Evaluate My Profile" questionnaire. Same
 // invokable GET (wizard) / POST (session save / submit) shape as the profiler.
@@ -167,8 +171,10 @@ Route::prefix('admin')->group(function () {
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
 
-        /* ── Profiler / Evaluator submissions (collected from /profiler and /evaluate-my-profile) ── */
-        Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index');
+        /* ── Profiler / Evaluator submissions — split into two tabs (from /profiler and /evaluate-my-profile) ── */
+        Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index'); // → Student Profiler tab
+        Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
+        Route::get('submissions/profile-evaluator', [ProfileSubmissionsController::class, 'evaluator'])->name('admin.submissions.evaluator');
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');
         Route::get('submissions/{id}', [ProfileSubmissionsController::class, 'show'])

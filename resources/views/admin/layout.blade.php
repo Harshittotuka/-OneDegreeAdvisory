@@ -207,6 +207,10 @@
         ['label' => 'Payments', 'items' => [
           ['label' => 'Enrollments', 'icon' => 'users', 'route' => 'admin.enrollments.index', 'match' => 'admin.enrollments'],
         ]],
+        ['label' => 'Leads', 'items' => [
+          ['label' => 'Student Profiler', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.profiler', 'match' => 'admin.submissions.profiler'],
+          ['label' => 'Profile Evaluator', 'icon' => 'clipboard-check', 'route' => 'admin.submissions.evaluator', 'match' => 'admin.submissions.evaluator'],
+        ]],
         ['label' => 'Coming soon', 'items' => [
           ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],
         ]],
@@ -218,7 +222,6 @@
       // Page Builder sits directly below Home Page — available to all CMS admins.
       ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'],
       ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
-      ['label' => 'Profiler Submissions', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.index', 'match' => 'admin.submissions'],
       ['label' => 'Subscribers', 'icon' => 'mail', 'route' => 'admin.newsletter.index', 'match' => 'admin.newsletter'],
     ];
     // Super admin unlocks the (otherwise hidden) About-page editor.
