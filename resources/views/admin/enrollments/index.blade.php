@@ -48,27 +48,13 @@
   .en-del i{width:15px; height:15px;}
   @media(max-width:880px){ .en-stats{grid-template-columns:repeat(2,1fr);} }
 
-  /* ── Mobile: turn each transaction row into a stacked card ── */
+  /* Mobile: keep the real table; it scrolls horizontally inside its wrapper,
+     with the search field full width and the Actions column pinned right. */
   @media(max-width:720px){
     .en-tools form{width:100%;}
     .en-tools input[type=text]{width:100%; flex:1 1 100%;}
     .en-count{margin-left:0;}
-
-    .en-table-wrap{overflow:visible; border:0; background:transparent; box-shadow:none; border-radius:0;}
-    table.en{display:block; min-width:0; width:100%; font-size:.9rem;}
-    table.en thead{display:none;}
-    table.en tbody{display:block;}
-    table.en tr{display:block; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:6px 16px 10px; margin-bottom:14px;}
-    table.en tr:hover td{background:transparent;}
-    table.en td{display:block; width:auto; padding:9px 0; border-bottom:1px solid var(--line); white-space:normal;}
-    table.en tr td:last-child{border-bottom:0;}
-    table.en td::before{content:attr(data-label); display:block; margin-bottom:4px;
-      font-size:.66rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);}
-    /* Un-stick the actions column on mobile and let it fill the card. */
-    table.en td.en-act-cell{position:static; box-shadow:none; background:transparent;}
-    .en-actions{display:flex; width:100%;}
-    .en-status{flex:1 1 auto; width:auto;}
+    .en-table-wrap{-webkit-overflow-scrolling:touch;}
   }
 </style>
 @endpush
