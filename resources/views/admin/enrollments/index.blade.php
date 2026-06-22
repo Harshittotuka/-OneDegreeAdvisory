@@ -47,6 +47,29 @@
   .en-del{width:36px; height:36px; padding:0; display:inline-grid; place-items:center; flex-shrink:0; border-radius:8px;}
   .en-del i{width:15px; height:15px;}
   @media(max-width:880px){ .en-stats{grid-template-columns:repeat(2,1fr);} }
+
+  /* ── Mobile: turn each transaction row into a stacked card ── */
+  @media(max-width:720px){
+    .en-tools form{width:100%;}
+    .en-tools input[type=text]{width:100%; flex:1 1 100%;}
+    .en-count{margin-left:0;}
+
+    .en-table-wrap{overflow:visible; border:0; background:transparent; box-shadow:none; border-radius:0;}
+    table.en{display:block; min-width:0; width:100%; font-size:.9rem;}
+    table.en thead{display:none;}
+    table.en tbody{display:block;}
+    table.en tr{display:block; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:6px 16px 10px; margin-bottom:14px;}
+    table.en tr:hover td{background:transparent;}
+    table.en td{display:block; width:auto; padding:9px 0; border-bottom:1px solid var(--line); white-space:normal;}
+    table.en tr td:last-child{border-bottom:0;}
+    table.en td::before{content:attr(data-label); display:block; margin-bottom:4px;
+      font-size:.66rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);}
+    /* Un-stick the actions column on mobile and let it fill the card. */
+    table.en td.en-act-cell{position:static; box-shadow:none; background:transparent;}
+    .en-actions{display:flex; width:100%;}
+    .en-status{flex:1 1 auto; width:auto;}
+  }
 </style>
 @endpush
 
@@ -101,19 +124,19 @@
           @foreach($attempts as $a)
             @php [$cls, $lbl] = $badge((string) $a->status); @endphp
             <tr>
-              <td style="white-space:nowrap;">{{ optional($a->created_at)->format('d M Y') }}<br><span class="en-mail">{{ optional($a->created_at)->format('H:i') }}</span></td>
-              <td><div class="en-name">{{ $a->customer_name }}</div><div class="en-mail">{{ $a->customer_email }}</div></td>
-              <td>{{ $a->customer_phone ?: '—' }}</td>
-              <td>{{ $a->item_name }}</td>
-              <td class="en-amt">{{ $fmt($a->amount) }}</td>
-              <td><span class="badge {{ $cls }}">{{ $lbl }}</span></td>
-              <td>{{ $a->page_slug }}</td>
-              <td>
+              <td data-label="Date" style="white-space:nowrap;">{{ optional($a->created_at)->format('d M Y') }}<br><span class="en-mail">{{ optional($a->created_at)->format('H:i') }}</span></td>
+              <td data-label="Customer"><div class="en-name">{{ $a->customer_name }}</div><div class="en-mail">{{ $a->customer_email }}</div></td>
+              <td data-label="Phone">{{ $a->customer_phone ?: '—' }}</td>
+              <td data-label="Plan">{{ $a->item_name }}</td>
+              <td data-label="Amount" class="en-amt">{{ $fmt($a->amount) }}</td>
+              <td data-label="Status"><span class="badge {{ $cls }}">{{ $lbl }}</span></td>
+              <td data-label="Page">{{ $a->page_slug }}</td>
+              <td data-label="Razorpay">
                 @if($a->razorpay_payment_id)<div class="en-id">{{ $a->razorpay_payment_id }}</div>@endif
                 @if($a->razorpay_order_id)<div class="en-id">{{ $a->razorpay_order_id }}</div>@endif
                 @if(! $a->razorpay_payment_id && ! $a->razorpay_order_id)—@endif
               </td>
-              <td class="en-act-cell">
+              <td data-label="Actions" class="en-act-cell">
                 @php
                   // Always show the current status as an option, even if it isn't normally editable.
                   $opts = $editable;
