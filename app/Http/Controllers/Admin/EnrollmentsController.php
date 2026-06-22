@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentAttempt;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Admin portal — Enrollments. A read-only view of everyone who has started or
@@ -15,6 +17,14 @@ use Illuminate\Http\Request;
 class EnrollmentsController extends Controller
 {
     private const FILTERABLE = ['paid', 'order_created', 'order_creating', 'payment_failed', 'order_failed'];
+
+    /** Statuses an admin may set manually from the transactions table. */
+    public const EDITABLE_STATUSES = [
+        'paid' => 'Paid',
+        'order_created' => 'Awaiting payment',
+        'payment_failed' => 'Payment failed',
+        'order_failed' => 'Order failed',
+    ];
 
     /** Admin portal landing — a payments/enrollments overview. */
     public function overview(): View
@@ -73,6 +83,7 @@ class EnrollmentsController extends Controller
             'attempts' => $attempts,
             'status' => $status,
             'q' => $q,
+            'editable' => self::EDITABLE_STATUSES,
             'stats' => [
                 'total' => PaymentAttempt::count(),
                 'paid' => PaymentAttempt::where('status', 'paid')->count(),
@@ -80,5 +91,29 @@ class EnrollmentsController extends Controller
                 'failed' => PaymentAttempt::whereIn('status', ['payment_failed', 'order_failed'])->count(),
             ],
         ]);
+    }
+
+    /** Manually set a transaction's status from the table. */
+    public function updateStatus(Request $request, PaymentAttempt $attempt): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'string', Rule::in(array_keys(self::EDITABLE_STATUSES))],
+        ]);
+
+        $attempt->status = $validated['status'];
+        if ($validated['status'] === 'paid' && $attempt->paid_at === null) {
+            $attempt->paid_at = now();
+        }
+        $attempt->save();
+
+        return back()->with('status', 'Status updated to "'.self::EDITABLE_STATUSES[$validated['status']].'".');
+    }
+
+    /** Permanently delete a transaction record. */
+    public function destroy(PaymentAttempt $attempt): RedirectResponse
+    {
+        $attempt->delete();
+
+        return back()->with('status', 'Transaction deleted.');
     }
 }

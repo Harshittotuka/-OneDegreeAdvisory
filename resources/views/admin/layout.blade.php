@@ -204,8 +204,6 @@
           ['label' => 'Enrollments', 'icon' => 'users', 'route' => 'admin.enrollments.index', 'match' => 'admin.enrollments'],
         ]],
         ['label' => 'Coming soon', 'items' => [
-          ['label' => 'Refunds', 'icon' => 'undo-2', 'soon' => true],
-          ['label' => 'Reports', 'icon' => 'bar-chart-3', 'soon' => true],
           ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],
         ]],
       ];

@@ -98,6 +98,8 @@ Route::prefix('admin')->group(function () {
         // Admin portal — dashboard + enrollments / payments.
         Route::get('panel', [EnrollmentsController::class, 'overview'])->name('admin.overview');
         Route::get('enrollments', [EnrollmentsController::class, 'index'])->name('admin.enrollments.index');
+        Route::patch('enrollments/{attempt}/status', [EnrollmentsController::class, 'updateStatus'])->name('admin.enrollments.status');
+        Route::delete('enrollments/{attempt}', [EnrollmentsController::class, 'destroy'])->name('admin.enrollments.destroy');
 
         Route::get('blog', [BlogCmsController::class, 'index'])->name('admin.blog.index');
         Route::get('blog/create', [BlogCmsController::class, 'create'])->name('admin.blog.create');

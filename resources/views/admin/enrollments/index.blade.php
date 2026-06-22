@@ -30,6 +30,10 @@
   .badge.wait{background:#fff5e6; color:#9a6b00;}
   .en-empty{padding:46px; text-align:center; color:var(--muted);}
   .en-empty i{width:34px; height:34px; color:var(--line);}
+  .en-actions{display:flex; gap:8px; align-items:center;}
+  .en-actions form{margin:0;}
+  .en-actions select{width:auto; padding:6px 9px; font-size:.8rem; border-radius:8px;}
+  .en-actions .btn-sm{padding:7px 9px;}
   @media(max-width:880px){ .en-stats{grid-template-columns:repeat(2,1fr);} }
 </style>
 @endpush
@@ -78,7 +82,7 @@
         <thead>
           <tr>
             <th>Date</th><th>Customer</th><th>Phone</th><th>Plan</th><th>Amount</th>
-            <th>Status</th><th>Page</th><th>Razorpay</th>
+            <th>Status</th><th>Page</th><th>Razorpay</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -96,6 +100,30 @@
                 @if($a->razorpay_payment_id)<div class="en-id">{{ $a->razorpay_payment_id }}</div>@endif
                 @if($a->razorpay_order_id)<div class="en-id">{{ $a->razorpay_order_id }}</div>@endif
                 @if(! $a->razorpay_payment_id && ! $a->razorpay_order_id)—@endif
+              </td>
+              <td>
+                @php
+                  // Always show the current status as an option, even if it isn't normally editable.
+                  $opts = $editable;
+                  if (! isset($opts[$a->status])) { $opts = [$a->status => ucfirst(str_replace('_', ' ', (string) $a->status))] + $opts; }
+                @endphp
+                <div class="en-actions">
+                  <form method="POST" action="{{ route('admin.enrollments.status', $a) }}">
+                    @csrf
+                    @method('PATCH')
+                    <select name="status" onchange="this.form.submit()" title="Change status">
+                      @foreach($opts as $val => $lbl2)
+                        <option value="{{ $val }}" @selected($a->status === $val)>{{ $lbl2 }}</option>
+                      @endforeach
+                    </select>
+                  </form>
+                  <form method="POST" action="{{ route('admin.enrollments.destroy', $a) }}"
+                        onsubmit="return confirm('Delete this transaction permanently? This cannot be undone.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-sm" title="Delete record"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                  </form>
+                </div>
               </td>
             </tr>
           @endforeach
