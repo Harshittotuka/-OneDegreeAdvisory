@@ -55,6 +55,11 @@
     .en-tools input[type=text]{width:100%; flex:1 1 100%;}
     .en-count{margin-left:0;}
     .en-table-wrap{-webkit-overflow-scrolling:touch;}
+    /* Compact the actions on small screens. */
+    .en-actions{gap:6px;}
+    .en-status{width:112px; height:32px; font-size:.74rem; padding:0 24px 0 9px; background-position:right 7px center;}
+    .en-del{width:32px; height:32px;}
+    .en-del i{width:14px; height:14px;}
   }
 </style>
 @endpush
