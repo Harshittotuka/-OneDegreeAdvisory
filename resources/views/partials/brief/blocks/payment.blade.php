@@ -180,7 +180,9 @@
                     razorpay_signature: response.razorpay_signature
                   }).then(function (result) {
                     payButton.disabled = true;
-                    setStatus(root, result.message + ' Payment ID: ' + result.payment_id, 'success');
+                    setStatus(root, '', '');
+                    closeModal();
+                    showResult(result.message, result.payment_id);
                   }).catch(function (error) {
                     setStatus(root, error.message, 'error');
                   });
@@ -198,30 +200,150 @@
           });
         }
 
+        var activeModal = null;
+
+        function closeModal() {
+          if (!activeModal) return;
+          activeModal.setAttribute('hidden', '');
+          document.documentElement.classList.remove('odp-pay-modal-open');
+          activeModal = null;
+        }
+
+        function openModal(payment) {
+          var overlay = payment.odpModalOverlay;
+          if (!overlay) return;
+          if (activeModal && activeModal !== overlay) closeModal();
+          overlay.removeAttribute('hidden');
+          document.documentElement.classList.add('odp-pay-modal-open');
+          activeModal = overlay;
+          overlay.scrollTop = 0;
+          var field = payment.querySelector('.odp-payment-fields input');
+          if (field) { try { field.focus({ preventScroll: true }); } catch (e) { field.focus(); } }
+        }
+
+        // Success confirmation popup, shown instead of an inline status line.
+        var resultOverlay = null;
+
+        function showResult(message, paymentId) {
+          if (!resultOverlay) {
+            resultOverlay = document.createElement('div');
+            resultOverlay.className = 'odp-pay-modal odp-pay-result';
+            resultOverlay.setAttribute('hidden', '');
+            resultOverlay.innerHTML =
+              '<div class="odp-pay-modal__scrim" data-pay-close></div>' +
+              '<div class="odp-pay-result__card" role="dialog" aria-modal="true" aria-live="polite">' +
+                '<div class="odp-pay-result__badge" aria-hidden="true">' +
+                  '<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' +
+                '</div>' +
+                '<h3>Payment successful</h3>' +
+                '<p class="odp-pay-result__msg"></p>' +
+                '<p class="odp-pay-result__id"></p>' +
+                '<button type="button" class="odp-pay-result__done" data-pay-close>Done</button>' +
+              '</div>';
+            document.body.appendChild(resultOverlay);
+            resultOverlay.addEventListener('click', function (event) {
+              if (event.target.closest('[data-pay-close]')) hideResult();
+            });
+          }
+          resultOverlay.querySelector('.odp-pay-result__msg').textContent = message || 'Payment verified successfully.';
+          var idEl = resultOverlay.querySelector('.odp-pay-result__id');
+          if (paymentId) { idEl.textContent = 'Payment ID: ' + paymentId; idEl.hidden = false; }
+          else idEl.hidden = true;
+          resultOverlay.removeAttribute('hidden');
+          document.documentElement.classList.add('odp-pay-modal-open');
+        }
+
+        function hideResult() {
+          if (resultOverlay) resultOverlay.setAttribute('hidden', '');
+          if (!activeModal) document.documentElement.classList.remove('odp-pay-modal-open');
+        }
+
+        // Turn an inline payment section into a popup, but ONLY when something on
+        // the page (e.g. a pricing "Enrol" button) links to one of its options.
+        // Otherwise the block stays inline exactly as before.
+        function setupModal(payment) {
+          var blockId = payment.dataset.blockId;
+          if (!blockId || !document.querySelector('a[href*="#' + blockId + '-option-"]')) return;
+
+          payment.dataset.payModal = '1';
+
+          var overlay = document.createElement('div');
+          overlay.className = 'odp-pay-modal';
+          overlay.setAttribute('hidden', '');
+
+          var scrim = document.createElement('div');
+          scrim.className = 'odp-pay-modal__scrim';
+          scrim.setAttribute('data-pay-close', '');
+
+          var shell = document.createElement('div');
+          shell.className = 'odp-pay-modal__shell';
+          shell.setAttribute('role', 'dialog');
+          shell.setAttribute('aria-modal', 'true');
+          shell.setAttribute('aria-label', 'Secure online enrolment');
+
+          var closeBtn = document.createElement('button');
+          closeBtn.type = 'button';
+          closeBtn.className = 'odp-pay-modal__close';
+          closeBtn.setAttribute('aria-label', 'Close');
+          closeBtn.setAttribute('data-pay-close', '');
+          closeBtn.innerHTML = '&times;';
+
+          if (payment.parentNode) payment.parentNode.removeChild(payment);
+          shell.appendChild(closeBtn);
+          shell.appendChild(payment);
+          overlay.appendChild(scrim);
+          overlay.appendChild(shell);
+          document.body.appendChild(overlay);
+          payment.odpModalOverlay = overlay;
+
+          overlay.addEventListener('click', function (event) {
+            if (event.target.closest('[data-pay-close]')) closeModal();
+          });
+        }
+
+        function findOption(hash) {
+          if (!hash || hash.charAt(0) !== '#') return null;
+          var target = document.getElementById(hash.slice(1));
+          return target && target.classList.contains('odp-payment-option') ? target : null;
+        }
+
+        function activateOption(target, smooth) {
+          var radio = target.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+          var payment = target.closest('[data-oda-payment]');
+          if (!payment) return;
+          if (payment.dataset.payModal === '1') openModal(payment);
+          else payment.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+        }
+
         function boot() {
           document.querySelectorAll('[data-oda-payment]').forEach(init);
-
-          function activatePaymentLink(hash, smooth) {
-            if (!hash || hash.charAt(0) !== '#') return false;
-            var target = document.getElementById(hash.slice(1));
-            if (!target || !target.classList.contains('odp-payment-option')) return false;
-            var radio = target.querySelector('input[type="radio"]');
-            var payment = target.closest('[data-oda-payment]');
-            if (radio) radio.checked = true;
-            if (payment) payment.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-            return true;
-          }
+          document.querySelectorAll('[data-oda-payment]').forEach(setupModal);
 
           document.addEventListener('click', function (event) {
             var link = event.target.closest('a[href^="#"]');
-            if (!link || !activatePaymentLink(link.getAttribute('href'), true)) return;
+            if (!link) return;
+            var target = findOption(link.getAttribute('href'));
+            if (!target) return;
             event.preventDefault();
-            window.history.replaceState(null, '', link.getAttribute('href'));
+            activateOption(target, true);
+          });
+          document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            if (resultOverlay && !resultOverlay.hasAttribute('hidden')) hideResult();
+            else closeModal();
           });
           window.addEventListener('hashchange', function () {
-            activatePaymentLink(window.location.hash, true);
+            var target = findOption(window.location.hash);
+            if (target) activateOption(target, true);
           });
-          activatePaymentLink(window.location.hash, false);
+          // On first load only honour a hash for inline blocks, so the page never
+          // pops a modal open unprompted.
+          var initial = findOption(window.location.hash);
+          if (initial) {
+            var payment = initial.closest('[data-oda-payment]');
+            if (payment && payment.dataset.payModal !== '1') activateOption(initial, false);
+          }
         }
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
         else boot();

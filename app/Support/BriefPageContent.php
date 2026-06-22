@@ -166,7 +166,7 @@ class BriefPageContent
                     ['label' => 'Achiever', 'amount' => '69999', 'description' => 'Access to two European countries', 'badge' => 'Most popular'],
                     ['label' => 'Infinity', 'amount' => '99999', 'description' => 'Explore up to five European countries', 'badge' => 'Premium'],
                 ],
-                'button_label' => 'Request payment approval',
+                'button_label' => 'Enrol & Pay',
                 'note' => 'Taxes or statutory charges are confirmed separately by admissions. Never share card, UPI PIN or banking credentials with anyone.',
                 'surface' => 'card',
                 'accent' => '#f05a28',

@@ -1144,6 +1144,149 @@
     padding: 30px;
   }
 
+  /* Enrolment popup — the payment section is reparented to <body> and shown as a
+     modal when a pricing CTA links to one of its options. Vars / box-sizing /
+     font are redeclared here so it renders correctly outside .odp-file-page. */
+  html.odp-pay-modal-open { overflow: hidden; }
+
+  .odp-pay-modal {
+    --file-blue: #2B1FA8;
+    --file-orange: #F05A28;
+    --file-line: #ede8ff;
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: clamp(14px, 4vw, 48px);
+    overflow-y: auto;
+    font-family: "Poppins", sans-serif;
+  }
+
+  .odp-pay-modal[hidden] { display: none; }
+
+  .odp-pay-modal *,
+  .odp-pay-modal *::before,
+  .odp-pay-modal *::after { box-sizing: border-box; }
+
+  .odp-pay-modal__scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 14, 60, 0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+
+  .odp-pay-modal__shell {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1040px;
+    margin: auto;
+    animation: odpPayModalIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes odpPayModalIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.985); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .odp-pay-modal .odp-payment {
+    margin: 0;
+    scroll-margin-top: 0;
+  }
+
+  .odp-pay-modal__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 5;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(43, 31, 168, 0.16);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--file-blue);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(38, 28, 93, 0.16);
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+
+  .odp-pay-modal__close:hover { background: #f4f1ff; transform: scale(1.05); }
+
+  /* Success confirmation popup (shown after payment is verified). */
+  .odp-pay-result { align-items: center; }
+
+  .odp-pay-result__card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    margin: auto;
+    padding: clamp(28px, 5vw, 40px) clamp(24px, 4vw, 36px);
+    border-radius: 24px;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 26px 64px rgba(38, 28, 93, 0.26);
+    animation: odpPayModalIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .odp-pay-result__badge {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 18px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: #fff;
+    background: linear-gradient(135deg, #12b76a, #039855);
+    box-shadow: 0 10px 26px rgba(5, 150, 105, 0.34);
+  }
+
+  .odp-pay-result__card h3 {
+    margin: 0 0 10px;
+    color: var(--file-blue);
+    font-size: clamp(20px, 3vw, 24px);
+    font-weight: 800;
+  }
+
+  .odp-pay-result__msg {
+    margin: 0 0 6px;
+    color: #4a4a5a;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .odp-pay-result__id {
+    margin: 0 0 22px;
+    color: #8a8aa0;
+    font-size: 13px;
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  .odp-pay-result__id[hidden] { display: none; }
+
+  .odp-pay-result__done {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 13px 36px;
+    background: var(--file-blue);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+
+  .odp-pay-result__done:hover { background: #241a8d; transform: translateY(-1px); }
+
   .odp-payment-copy {
     min-width: 0;
   }
