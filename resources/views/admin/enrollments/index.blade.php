@@ -30,10 +30,20 @@
   .badge.wait{background:#fff5e6; color:#9a6b00;}
   .en-empty{padding:46px; text-align:center; color:var(--muted);}
   .en-empty i{width:34px; height:34px; color:var(--line);}
-  .en-actions{display:flex; gap:8px; align-items:center;}
-  .en-actions form{margin:0;}
-  .en-actions select{width:auto; padding:6px 9px; font-size:.8rem; border-radius:8px;}
-  .en-actions .btn-sm{padding:7px 9px;}
+  table.en td.en-act-cell{vertical-align:middle;}
+  /* Keep the actions in view while the wide table scrolls horizontally. */
+  table.en th:last-child{position:sticky; right:0; background:var(--panel); z-index:1;}
+  table.en td.en-act-cell{position:sticky; right:0; background:var(--panel); box-shadow:-9px 0 12px -10px rgba(43,44,64,.22);}
+  table.en th:last-child{box-shadow:-9px 0 12px -10px rgba(43,44,64,.22);}
+  table.en tr:hover td.en-act-cell{background:#faf9ff;}
+  .en-actions{display:inline-flex; gap:8px; align-items:center;}
+  .en-actions form{margin:0; display:inline-flex;}
+  .en-status{width:150px; height:36px; padding:0 30px 0 11px; font-size:.8rem; font-weight:700; color:var(--ink);
+    border:1px solid var(--line); border-radius:8px; background:#fff; cursor:pointer; appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236e6b7b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 9px center;}
+  .en-del{width:36px; height:36px; padding:0; display:inline-grid; place-items:center; flex-shrink:0; border-radius:8px;}
+  .en-del i{width:15px; height:15px;}
   @media(max-width:880px){ .en-stats{grid-template-columns:repeat(2,1fr);} }
 </style>
 @endpush
@@ -101,7 +111,7 @@
                 @if($a->razorpay_order_id)<div class="en-id">{{ $a->razorpay_order_id }}</div>@endif
                 @if(! $a->razorpay_payment_id && ! $a->razorpay_order_id)—@endif
               </td>
-              <td>
+              <td class="en-act-cell">
                 @php
                   // Always show the current status as an option, even if it isn't normally editable.
                   $opts = $editable;
@@ -111,7 +121,7 @@
                   <form method="POST" action="{{ route('admin.enrollments.status', $a) }}">
                     @csrf
                     @method('PATCH')
-                    <select name="status" onchange="this.form.submit()" title="Change status">
+                    <select name="status" class="en-status" onchange="this.form.submit()" title="Change status">
                       @foreach($opts as $val => $lbl2)
                         <option value="{{ $val }}" @selected($a->status === $val)>{{ $lbl2 }}</option>
                       @endforeach
@@ -121,7 +131,7 @@
                         onsubmit="return confirm('Delete this transaction permanently? This cannot be undone.');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm" title="Delete record"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                    <button type="submit" class="btn btn-danger en-del" title="Delete record"><i data-lucide="trash-2"></i></button>
                   </form>
                 </div>
               </td>
