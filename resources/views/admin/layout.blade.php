@@ -180,7 +180,11 @@
         transition: transform .25s ease; box-shadow: 0 0 40px rgba(0,0,0,.25); }
       .cms-shell.is-open .cms-side { transform: translateX(0); }
       .cms-burger { display: inline-flex; }
-      .cms-topbar { margin: 12px 16px 0; }
+      .cms-topbar { margin: 12px 16px 0; gap: 8px; padding: 0 12px; }
+      /* Keep the topbar on one line: title truncates, actions go icon-only. */
+      .cms-topbar h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 1rem; }
+      .cms-topbar .cms-tb-label { display: none; }
+      .cms-topbar a.cms-viewsite, .cms-topbar .cms-refresh { padding: 8px; gap: 0; }
       .cms-wrap { padding: 20px 16px 80px; }
       .cms-scrim { display: none; position: fixed; inset: 0; background: rgba(8,20,26,.45); z-index: 50; }
       .cms-shell.is-open .cms-scrim { display: block; }
@@ -286,8 +290,8 @@
         <button class="cms-burger" data-toggle aria-label="Menu"><i data-lucide="menu"></i></button>
         <h1>@yield('title', 'Dashboard')</h1>
         <div class="cms-topbar-spacer"></div>
-        <button type="button" class="cms-refresh" data-refresh title="Refresh this page"><i data-lucide="refresh-cw" style="width:16px;height:16px;"></i> Refresh</button>
-        <a class="cms-viewsite" href="{{ route('home') }}" target="_blank"><i data-lucide="external-link" style="width:16px;height:16px;"></i> View site</a>
+        <button type="button" class="cms-refresh" data-refresh title="Refresh this page"><i data-lucide="refresh-cw" style="width:16px;height:16px;"></i> <span class="cms-tb-label">Refresh</span></button>
+        <a class="cms-viewsite" href="{{ route('home') }}" target="_blank" title="View site"><i data-lucide="external-link" style="width:16px;height:16px;"></i> <span class="cms-tb-label">View site</span></a>
       </header>
 
       <div class="cms-wrap">
