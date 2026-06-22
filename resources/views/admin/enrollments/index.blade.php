@@ -4,6 +4,8 @@
 
 @push('head')
 <style>
+  /* Transactions is a dense data table — let it use the full section width. */
+  .cms-wrap{max-width:none;}
   .en-stats{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-bottom:22px;}
   .en-stat{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 18px;}
   .en-stat .k{display:flex; align-items:center; gap:8px; color:var(--muted); font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em;}
