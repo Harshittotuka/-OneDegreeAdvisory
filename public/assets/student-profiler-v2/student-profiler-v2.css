@@ -234,7 +234,14 @@
 .p2-btn--primary { background: var(--indigo); color: #fff; display: inline-flex; align-items: center; gap: 8px; padding: 13px 32px; box-shadow: 0 8px 22px rgba(57, 73, 171, .28); }
 .p2-btn--primary:hover { transform: translateY(-2px); background: var(--indigo-deep); box-shadow: 0 14px 30px rgba(57, 73, 171, .36); }
 .p2-btn--white, .p2-btn--cta { background: var(--cta-grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid rgba(255,255,255,.5); box-shadow: 0 10px 26px rgba(185, 13, 42, .34); }
-.p2-btn--white:hover, .p2-btn--cta:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.p2-btn--white:hover, .p2-btn--cta:hover { transform: translateY(-3px); filter: brightness(1.06); }
+.p2-submit { position: relative; isolation: isolate; overflow: hidden; min-height: 50px; font-size: 16px; letter-spacing: .01em; animation: p2-submit-glow 2.8s ease-in-out infinite; }
+.p2-submit::before { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(110deg, transparent 24%, rgba(255,255,255,.08) 42%, rgba(255,255,255,.48) 52%, rgba(255,255,255,.08) 62%, transparent 76%); transform: translateX(-125%); animation: p2-submit-shine 3.4s ease-in-out infinite; }
+.p2-submit > span { position: relative; z-index: 1; }
+.p2-submit__arrow { display: inline-block; font-size: 20px; line-height: 1; transition: transform .22s ease; }
+.p2-submit:hover .p2-submit__arrow { transform: translateX(5px); }
+.p2-submit:focus-visible { outline: 3px solid #ffd24d; outline-offset: 3px; }
+.p2-submit:disabled { cursor: wait; animation: none; opacity: .82; }
 
 /* ===================== REVIEW ===================== */
 .p2-review { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: stretch; }
@@ -301,6 +308,8 @@
 @keyframes p2-tick { from { height: 0; opacity: 0; } to { height: 44px; opacity: 1; } }
 @keyframes p2-ring { 0% { transform: scale(.8); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes p2-confetti { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 0; transform: translateY(440px) rotate(640deg); } }
+@keyframes p2-submit-glow { 0%,100% { box-shadow: 0 10px 26px rgba(185,13,42,.34); } 50% { box-shadow: 0 16px 38px rgba(255,94,50,.52); } }
+@keyframes p2-submit-shine { 0%,58% { transform: translateX(-125%); } 82%,100% { transform: translateX(125%); } }
 
 /* Lead contact capture — white inputs on the indigo submit card (high contrast). */
 .p2-contact { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2px; }

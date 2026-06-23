@@ -395,7 +395,7 @@
                     E("div", { class: "sp-result__li", html: "&#9993;&#65039; &nbsp; We’ll reach out to you shortly" }),
                     E("div", { class: "sp-result__spacer" }),
                     contactCard(),
-                    E("button", { class: "sp-btn sp-btn--white", type: "button", html: "Submit my profile &nbsp;&rarr;", onclick: submit }),
+                    E("button", { class: "sp-btn sp-btn--white sp-submit", type: "button", html: "<span>Submit my profile</span><span class=\"sp-submit__arrow\" aria-hidden=\"true\">&rarr;</span>", onclick: submit }),
                     E("p", { class: "sp-result__note", text: "Free · No spam · We’ll be in touch" })
                 ])
             ]),

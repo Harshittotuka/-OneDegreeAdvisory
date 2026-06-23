@@ -416,7 +416,7 @@
                     E("div", { class: "pe-result__li", html: "&#9993;&#65039; &nbsp; We’ll reach out to you shortly" }),
                     E("div", { class: "pe-result__spacer" }),
                     contactCard(),
-                    E("button", { class: "pe-btn pe-btn--white", type: "button", html: "Evaluate my profile &nbsp;&rarr;", onclick: submit }),
+                    E("button", { class: "pe-btn pe-btn--white pe-submit", type: "button", html: "<span>Evaluate my profile</span><span class=\"pe-submit__arrow\" aria-hidden=\"true\">&rarr;</span>", onclick: submit }),
                     E("p", { class: "pe-result__note", text: "Free · No spam · We’ll be in touch" })
                 ])
             ]),
