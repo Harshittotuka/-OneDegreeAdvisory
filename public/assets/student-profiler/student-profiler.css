@@ -349,7 +349,7 @@
 .sp-contact { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2px; }
 .sp-contact__h { font-size: 13.5px; font-weight: 700; margin: 0 0 2px; color: #fff; }
 .sp-cfield { display: flex; flex-direction: column; gap: 5px; }
-.sp-cfield__lab { font-size: 12px; font-weight: 600; color: #fff; opacity: .92; }
+.sp-cfield__lab { font-size: 12.5px; font-weight: 700; color: #fff; letter-spacing: .01em; }
 .sp-cinput { width: 100%; padding: 11px 13px; border-radius: 9px; border: 1px solid rgba(247, 218, 130, .45);
     background: #fff; color: #1f2238; font-family: inherit; font-size: 14px;
     transition: border-color .15s, box-shadow .15s; }
