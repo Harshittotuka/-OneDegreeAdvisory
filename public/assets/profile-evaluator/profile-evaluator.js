@@ -26,7 +26,12 @@
     var state = {
         started: false,
         section: typeof S.section === "number" ? S.section : 0,
-        answers: S.answers && typeof S.answers === "object" ? S.answers : {}
+        // Always a plain object. PHP serialises an empty answers map as a JSON
+        // array ([]), which would arrive here as an Array — and JSON.stringify
+        // silently DROPS the string-keyed properties we set on an array, so
+        // answers would never persist. Coerce any array (only ever the empty
+        // case) to {} so set()/save() round-trip correctly.
+        answers: (S.answers && typeof S.answers === "object" && !Array.isArray(S.answers)) ? S.answers : {}
     };
 
     function sects() { return cfg.sections || []; }
