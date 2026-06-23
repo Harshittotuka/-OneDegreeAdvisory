@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\ProfileSubmissionStore;
+use App\Support\SimpleXlsx;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -125,5 +127,39 @@ class ProfileSubmissionsController extends Controller
             }
             fclose($out);
         }, 'profile-submissions'.$suffix.'-'.date('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * Download submissions as a real .xlsx — one row per submission, each
+     * distinct question becoming its own column (the same wide shape as the
+     * admin "Table" view). Scoped to ?source=profiler|evaluator when given.
+     */
+    public function exportExcel(Request $request): Response
+    {
+        $source = (string) $request->query('source', '');
+        $scoped = in_array($source, ['profiler', 'evaluator'], true);
+        $rows = $scoped ? $this->store->bySource($source) : $this->store->all();
+        $suffix = $scoped ? '-'.$source : '';
+
+        $tab = ProfileSubmissionStore::tabulate($rows);
+
+        $headers = array_merge(['Submitted at', 'Source', 'Name', 'Email', 'Phone', 'Degree'], $tab['questions']);
+        $data = [];
+        foreach ($tab['rows'] as $row) {
+            $line = [$row['submitted_at'], $row['source_label'], $row['name'], $row['email'], $row['phone'], $row['degree']];
+            foreach ($tab['questions'] as $q) {
+                $line[] = $row['answers'][$q] ?? '';
+            }
+            $data[] = $line;
+        }
+
+        $sheet = $source === 'evaluator' ? 'Profile Evaluator' : ($source === 'profiler' ? 'Student Profiler' : 'Submissions');
+        $xlsx = SimpleXlsx::build($headers, $data, $sheet);
+        $filename = 'profile-submissions'.$suffix.'-'.date('Y-m-d').'.xlsx';
+
+        return response($xlsx, 200, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
     }
 }

@@ -282,4 +282,44 @@ class ProfileSubmissionsTest extends TestCase
             ->assertSee('Karan Mehta')
             ->assertSee('+91 80000 00000');
     }
+
+    public function test_admin_table_view_renders_answers_as_columns(): void
+    {
+        $this->store()->add('evaluator', 'Profile Evaluator', null, [
+            ['eyebrow' => 'Academics', 'title' => 'Your academics', 'answers' => [
+                ['label' => 'What is your College CGPA or Percentage?', 'value' => ['Above 80% or 8 CGPA']],
+            ]],
+        ], ['name' => 'Tara Singh', 'email' => 'tara@example.com', 'phone' => '12345']);
+
+        $this->withSession(['cms_authenticated' => true])
+            ->get(route('admin.submissions.evaluator', ['view' => 'table']))
+            ->assertOk()
+            ->assertSee('subs-grid', false)                                  // flat grid rendered
+            ->assertSee('What is your College CGPA or Percentage?', false)    // question is a column header
+            ->assertSee('Above 80% or 8 CGPA')                               // answer in a cell
+            ->assertSee('Tara Singh');
+    }
+
+    public function test_admin_can_export_submissions_as_excel(): void
+    {
+        $this->store()->add('evaluator', 'Profile Evaluator', null, [
+            ['eyebrow' => 'Academics', 'title' => 'Your academics', 'answers' => [
+                ['label' => 'What is your College CGPA or Percentage?', 'value' => ['Above 80% or 8 CGPA']],
+            ]],
+        ], ['name' => 'Tara Singh', 'email' => 'tara@example.com', 'phone' => '12345']);
+
+        $res = $this->withSession(['cms_authenticated' => true])
+            ->get(route('admin.submissions.export-excel', ['source' => 'evaluator']))
+            ->assertOk();
+
+        $this->assertStringContainsString('spreadsheetml.sheet', (string) $res->headers->get('Content-Type'));
+        $this->assertStringContainsString('.xlsx', (string) $res->headers->get('Content-Disposition'));
+
+        $content = $res->getContent();
+        $this->assertStringStartsWith('PK', $content); // ZIP magic bytes (a real .xlsx)
+        // The package is a "stored" (uncompressed) zip, so the inline strings
+        // appear verbatim in the bytes — handy to assert the data made it in.
+        $this->assertStringContainsString('Tara Singh', $content);
+        $this->assertStringContainsString('What is your College CGPA or Percentage?', $content);
+    }
 }

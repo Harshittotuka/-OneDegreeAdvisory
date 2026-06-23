@@ -139,6 +139,55 @@ class ProfileSubmissionStore
         return $out;
     }
 
+    /**
+     * Flatten submissions into a wide table: one logical row per submission,
+     * with every distinct question label becoming a column (union across all
+     * given rows, in first-seen order). Used by the admin "Table" view and the
+     * Excel export so both show the same shape.
+     *
+     * @param  array  $rows  Raw submission records (from all()/bySource()).
+     * @return array{questions:array<int,string>, rows:array<int,array{
+     *     submitted_at:string, source_label:string, name:string, email:string,
+     *     phone:string, degree:string, answers:array<string,string>}>}
+     */
+    public static function tabulate(array $rows): array
+    {
+        $questions = [];
+        $seen = [];
+        $out = [];
+
+        foreach ($rows as $r) {
+            $meta = is_array($r['meta'] ?? null) ? $r['meta'] : [];
+            $answers = [];
+
+            foreach (($r['sections'] ?? []) as $sec) {
+                foreach (($sec['answers'] ?? []) as $a) {
+                    $label = (string) ($a['label'] ?? '');
+                    if ($label === '') {
+                        continue;
+                    }
+                    if (! isset($seen[$label])) {
+                        $seen[$label] = true;
+                        $questions[] = $label;
+                    }
+                    $answers[$label] = implode(', ', (array) ($a['value'] ?? []));
+                }
+            }
+
+            $out[] = [
+                'submitted_at' => (string) ($r['submitted_at'] ?? ''),
+                'source_label' => (string) ($r['source_label'] ?? ($r['source'] ?? '')),
+                'name'         => (string) ($meta['name'] ?? ''),
+                'email'        => (string) ($meta['email'] ?? ''),
+                'phone'        => (string) ($meta['phone'] ?? ''),
+                'degree'       => (string) ($r['degree'] ?? ''),
+                'answers'      => $answers,
+            ];
+        }
+
+        return ['questions' => $questions, 'rows' => $out];
+    }
+
     private function writeAll(array $rows): void
     {
         if (! is_dir(dirname($this->path))) {

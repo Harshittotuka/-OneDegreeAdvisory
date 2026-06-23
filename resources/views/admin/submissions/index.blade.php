@@ -61,6 +61,19 @@
   .qa-chip { display:inline-block; background:#f1f0f7; color:#454360; font-size:.82rem; font-weight:600;
     padding:4px 10px; border-radius:7px; }
   .qa-empty { color:var(--muted); font-size:.84rem; padding:10px 2px; }
+
+  /* Toolbar layout + view switcher (Cards / Table). */
+  .subs-toolbar { justify-content:space-between; align-items:center; gap:12px; }
+  .subs-viewswitch { display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+  .subs-viewswitch a { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; font-size:.82rem;
+    font-weight:700; color:var(--muted); background:#fff; }
+  .subs-viewswitch a + a { border-left:1px solid var(--line); }
+  .subs-viewswitch a.is-active { background:var(--teal-soft); color:var(--teal-dark); }
+  .subs-viewswitch a:hover:not(.is-active) { color:var(--teal); }
+
+  /* Flat data grid (Table view) — answers spread across columns. */
+  .subs-grid th, .subs-grid td { white-space:nowrap; max-width:300px; overflow:hidden; text-overflow:ellipsis; }
+  .subs-grid td { font-size:.84rem; color:var(--ink); vertical-align:top; }
 </style>
 @endpush
 
@@ -70,6 +83,7 @@
   $tabBlurb = $isProfilerTab
     ? 'Completed Student Profiler questionnaires (/profiler).'
     : 'Completed Profile Evaluator questionnaires (/evaluate-my-profile).';
+  $view = request('view') === 'table' ? 'table' : 'cards';
 @endphp
 
 @section('content')
@@ -79,9 +93,14 @@
       <p style="margin:3px 0 0;color:var(--muted);font-size:.85rem;">{{ $tabBlurb }}</p>
     </div>
     @if(count($submissions))
-      <a class="btn btn-primary" href="{{ route('admin.submissions.export', ['source' => $source]) }}">
-        <i data-lucide="download" style="width:16px;height:16px;"></i> Export CSV
-      </a>
+      <div style="display:flex;gap:8px;">
+        <a class="btn btn-ghost" href="{{ route('admin.submissions.export', ['source' => $source]) }}">
+          <i data-lucide="file-text" style="width:16px;height:16px;"></i> CSV
+        </a>
+        <a class="btn btn-primary" href="{{ route('admin.submissions.export-excel', ['source' => $source]) }}">
+          <i data-lucide="sheet" style="width:16px;height:16px;"></i> Export Excel
+        </a>
+      </div>
     @endif
   </div>
 
@@ -100,12 +119,50 @@
 
   @if(count($submissions))
     <div class="subs-toolbar">
-      <button type="button" class="subs-expand-all" data-expand-all aria-expanded="false">
-        <i data-lucide="chevrons-up-down" style="width:15px;height:15px;"></i>
-        <span data-expand-all-label>Expand all</span>
-      </button>
+      <div class="subs-viewswitch">
+        <a href="{{ request()->fullUrlWithQuery(['view' => 'cards']) }}" class="@if($view !== 'table') is-active @endif">
+          <i data-lucide="layout-list" style="width:14px;height:14px;"></i> Cards
+        </a>
+        <a href="{{ request()->fullUrlWithQuery(['view' => 'table']) }}" class="@if($view === 'table') is-active @endif">
+          <i data-lucide="table-2" style="width:14px;height:14px;"></i> Table
+        </a>
+      </div>
+      @if($view !== 'table')
+        <button type="button" class="subs-expand-all" data-expand-all aria-expanded="false">
+          <i data-lucide="chevrons-up-down" style="width:15px;height:15px;"></i>
+          <span data-expand-all-label>Expand all</span>
+        </button>
+      @endif
     </div>
 
+    @if($view === 'table')
+      @php $grid = \App\Support\ProfileSubmissionStore::tabulate($submissions); @endphp
+      <div class="panel" style="overflow-x:auto;">
+        <table class="subs-table subs-grid">
+          <thead>
+            <tr>
+              <th>Submitted</th><th>Source</th><th>Name</th><th>Email</th><th>Phone</th><th>Degree</th>
+              @foreach($grid['questions'] as $q)<th title="{{ $q }}">{{ $q }}</th>@endforeach
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($grid['rows'] as $row)
+              <tr>
+                <td style="white-space:nowrap;color:var(--muted);">{{ $row['submitted_at'] ? \Illuminate\Support\Carbon::parse($row['submitted_at'])->format('M j, Y · g:i A') : '—' }}</td>
+                <td>{{ $row['source_label'] }}</td>
+                <td title="{{ $row['name'] }}">{{ $row['name'] ?: '—' }}</td>
+                <td title="{{ $row['email'] }}">{{ $row['email'] ?: '—' }}</td>
+                <td>{{ $row['phone'] ?: '—' }}</td>
+                <td>{{ $row['degree'] ?: '—' }}</td>
+                @foreach($grid['questions'] as $q)
+                  <td title="{{ $row['answers'][$q] ?? '' }}">{{ $row['answers'][$q] ?? '' }}</td>
+                @endforeach
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    @else
     <div class="panel" style="overflow-x:auto;">
       <table class="subs-table">
         <thead>
@@ -217,6 +274,7 @@
         </tbody>
       </table>
     </div>
+    @endif
   @else
     <div class="panel panel-pad" style="text-align:center;color:var(--muted);padding:50px 20px;">
       No {{ $tabName }} submissions yet. They’ll appear here when visitors complete the

@@ -176,6 +176,7 @@ Route::prefix('admin')->group(function () {
         Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
         Route::get('submissions/profile-evaluator', [ProfileSubmissionsController::class, 'evaluator'])->name('admin.submissions.evaluator');
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
+        Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');
         Route::get('submissions/{id}', [ProfileSubmissionsController::class, 'show'])
             ->where('id', '[A-Za-z0-9-]+')->name('admin.submissions.show');
