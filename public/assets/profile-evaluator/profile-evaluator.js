@@ -348,13 +348,14 @@
     /* ---------- lead contact (name / email / phone) ---------- */
     function cfield(labelText, key, type, required) {
         var input = E("input", { class: "pe-cinput", type: type, value: (state.contact[key] || ""),
-            placeholder: labelText, autocomplete: key === "name" ? "name" : key, "aria-label": labelText });
+            placeholder: labelText, autocomplete: key === "name" ? "name" : key, required: required,
+            "aria-label": labelText, "aria-required": required ? "true" : "false", "aria-invalid": "false" });
         var field = E("label", { class: "pe-cfield" }, [
             E("span", { class: "pe-cfield__lab", text: labelText + (required ? " *" : " (optional)") }),
             input,
             E("span", { class: "pe-cfield__err", "data-cerr": key })
         ]);
-        input.addEventListener("input", function () { state.contact[key] = input.value; field.classList.remove("is-error"); });
+        input.addEventListener("input", function () { state.contact[key] = input.value; field.classList.remove("is-error"); input.setAttribute("aria-invalid", "false"); });
         input.addEventListener("blur", function () { save("save"); });
         return field;
     }
@@ -363,7 +364,7 @@
         return E("div", { class: "pe-contact" }, [
             cfield("Full name", "name", "text", true),
             cfield("Email", "email", "email", true),
-            cfield("Phone", "phone", "tel", false)
+            cfield("Phone", "phone", "tel", true)
         ]);
     }
 
@@ -371,17 +372,26 @@
         var span = stage.querySelector('[data-cerr="' + key + '"]');
         if (span) span.textContent = msg;
         var fld = span && span.parentNode;
-        if (fld) fld.classList.add("is-error");
+        if (fld) {
+            fld.classList.add("is-error");
+            var input = fld.querySelector(".pe-cinput");
+            if (input) input.setAttribute("aria-invalid", "true");
+        }
         return fld;
     }
 
-    // name + valid email required; phone optional. Returns false (and flags the
+    // Name, valid email, and phone are required. Returns false (and flags the
     // fields) when the lead details are incomplete.
     function validateContact() {
-        Array.prototype.forEach.call(stage.querySelectorAll(".pe-cfield"), function (f) { f.classList.remove("is-error"); });
+        Array.prototype.forEach.call(stage.querySelectorAll(".pe-cfield"), function (f) {
+            f.classList.remove("is-error");
+            var input = f.querySelector(".pe-cinput");
+            if (input) input.setAttribute("aria-invalid", "false");
+        });
         var bad = [];
         if (!(state.contact.name || "").trim()) bad.push(setCErr("name", "Please enter your name"));
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((state.contact.email || "").trim())) bad.push(setCErr("email", "Please enter a valid email"));
+        if (!(state.contact.phone || "").trim()) bad.push(setCErr("phone", "Please enter your phone number"));
         bad = bad.filter(Boolean);
         if (bad.length) { bad[0].scrollIntoView({ behavior: "smooth", block: "center" }); return false; }
         return true;
@@ -432,8 +442,12 @@
     function submit(e) {
         var btn = e && e.currentTarget;
         if (!validateContact()) return;
+        var originalHtml = btn ? btn.innerHTML : "";
         if (btn) { btn.disabled = true; btn.innerHTML = "Submitting…"; }
-        save("submit").then(function () { showSuccess(); });
+        save("submit").then(function () {
+            if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+            showSuccess();
+        });
     }
 
     // No score, no rating — a celebratory "we'll evaluate & get back to you" popup.

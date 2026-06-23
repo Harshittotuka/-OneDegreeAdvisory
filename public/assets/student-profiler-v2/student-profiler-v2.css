@@ -235,7 +235,7 @@
 .p2-btn--primary:hover { transform: translateY(-2px); background: var(--indigo-deep); box-shadow: 0 14px 30px rgba(57, 73, 171, .36); }
 .p2-btn--white, .p2-btn--cta { background: var(--cta-grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid rgba(255,255,255,.5); box-shadow: 0 10px 26px rgba(185, 13, 42, .34); }
 .p2-btn--white:hover, .p2-btn--cta:hover { transform: translateY(-3px); filter: brightness(1.06); }
-.p2-submit { position: relative; isolation: isolate; overflow: hidden; min-height: 50px; font-size: 16px; letter-spacing: .01em; animation: p2-submit-glow 2.8s ease-in-out infinite; }
+.p2-submit { position: relative; isolation: isolate; overflow: hidden; min-height: 50px; background: linear-gradient(135deg, #ff7a3d 0%, #ff3d5f 100%); font-size: 16px; letter-spacing: .01em; animation: p2-submit-glow 2.8s ease-in-out infinite; }
 .p2-submit::before { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(110deg, transparent 24%, rgba(255,255,255,.08) 42%, rgba(255,255,255,.48) 52%, rgba(255,255,255,.08) 62%, transparent 76%); transform: translateX(-125%); animation: p2-submit-shine 3.4s ease-in-out infinite; }
 .p2-submit > span { position: relative; z-index: 1; }
 .p2-submit__arrow { display: inline-block; font-size: 20px; line-height: 1; transition: transform .22s ease; }
@@ -308,7 +308,7 @@
 @keyframes p2-tick { from { height: 0; opacity: 0; } to { height: 44px; opacity: 1; } }
 @keyframes p2-ring { 0% { transform: scale(.8); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes p2-confetti { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 0; transform: translateY(440px) rotate(640deg); } }
-@keyframes p2-submit-glow { 0%,100% { box-shadow: 0 10px 26px rgba(185,13,42,.34); } 50% { box-shadow: 0 16px 38px rgba(255,94,50,.52); } }
+@keyframes p2-submit-glow { 0%,100% { box-shadow: 0 12px 28px rgba(255,61,95,.34); } 50% { box-shadow: 0 17px 40px rgba(255,122,61,.58); } }
 @keyframes p2-submit-shine { 0%,58% { transform: translateX(-125%); } 82%,100% { transform: translateX(125%); } }
 
 /* Lead contact capture — white inputs on the indigo submit card (high contrast). */
@@ -321,9 +321,11 @@
     transition: border-color .15s, box-shadow .15s; }
 .p2-cinput::placeholder { color: #9aa0b8; }
 .p2-cinput:focus { outline: none; border-color: #ffd24d; box-shadow: 0 0 0 3px rgba(255, 210, 77, .35); }
-.p2-cfield.is-error .p2-cinput { border-color: #e5484d; box-shadow: 0 0 0 3px rgba(229, 72, 77, .28); }
-.p2-cfield__err { display: none; font-size: 11.5px; color: #ffd0d0; font-weight: 600; }
+.p2-root .p2-cfield.is-error .p2-cfield__lab { color: #ffd3da; }
+.p2-root .p2-cfield.is-error .p2-cinput { border: 2px solid #ff5367; background: #fff3f5; box-shadow: 0 0 0 4px rgba(255, 83, 103, .28); animation: p2-contact-shake .28s ease; }
+.p2-cfield__err { display: none; font-size: 11.5px; color: #ffd3da; font-weight: 700; }
 .p2-cfield.is-error .p2-cfield__err { display: block; }
+@keyframes p2-contact-shake { 0%,100% { transform: translateX(0); } 35% { transform: translateX(-4px); } 70% { transform: translateX(4px); } }
 
 @media (prefers-reduced-motion: reduce) {
     .p2-root *, .p2-root *::before, .p2-root *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }

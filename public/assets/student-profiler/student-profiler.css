@@ -279,9 +279,9 @@
 .sp-btn--ghost[disabled] { opacity: .45; cursor: default; }
 .sp-btn--primary { background: var(--accent); color: #fff; box-shadow: var(--shadow-pop); display: inline-flex; align-items: center; gap: 8px; padding: 14px 30px; border-color: transparent; }
 .sp-btn--primary:hover { transform: translateY(-2px); background: var(--accent-dark); box-shadow: 0 22px 46px rgba(255, 94, 50, .4); }
-.sp-btn--white { background: #fff; color: var(--royal); display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 14px 30px rgba(8, 2, 40, .35); }
+.sp-btn--white { background: linear-gradient(135deg, #ff7a3d 0%, #ff3d5f 100%); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 14px 30px rgba(255, 61, 95, .34); }
 .sp-btn--white:hover { transform: translateY(-3px); box-shadow: 0 20px 42px rgba(8, 2, 40, .46); }
-.sp-submit { position: relative; isolation: isolate; overflow: hidden; min-height: 50px; border: 1px solid rgba(255,255,255,.86); font-size: 16px; letter-spacing: .01em; animation: sp-submit-glow 2.8s ease-in-out infinite; }
+.sp-submit { position: relative; isolation: isolate; overflow: hidden; min-height: 50px; border: 1px solid rgba(255,255,255,.72); font-size: 16px; letter-spacing: .01em; animation: sp-submit-glow 2.8s ease-in-out infinite; }
 .sp-submit::before { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(110deg, transparent 24%, rgba(247,218,130,.72) 46%, rgba(255,255,255,.94) 52%, transparent 72%); transform: translateX(-125%); animation: sp-submit-shine 3.4s ease-in-out infinite; }
 .sp-submit > span { position: relative; z-index: 1; }
 .sp-submit__arrow { display: inline-block; font-size: 20px; line-height: 1; transition: transform .22s ease; }
@@ -351,7 +351,7 @@
 @keyframes sp-tick { from { height: 0; opacity: 0; } to { height: 46px; opacity: 1; } }
 @keyframes sp-ring { 0% { transform: scale(.8); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes sp-confetti { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 0; transform: translateY(440px) rotate(640deg); } }
-@keyframes sp-submit-glow { 0%,100% { box-shadow: 0 14px 30px rgba(8,2,40,.35); } 50% { box-shadow: 0 18px 38px rgba(247,218,130,.42); } }
+@keyframes sp-submit-glow { 0%,100% { box-shadow: 0 14px 30px rgba(255,61,95,.34); } 50% { box-shadow: 0 18px 40px rgba(255,122,61,.58); } }
 @keyframes sp-submit-shine { 0%,58% { transform: translateX(-125%); } 82%,100% { transform: translateX(125%); } }
 
 /* Lead contact capture — white inputs on the royal submit card (high contrast). */
@@ -364,9 +364,11 @@
     transition: border-color .15s, box-shadow .15s; }
 .sp-cinput::placeholder { color: #9aa0b8; }
 .sp-cinput:focus { outline: none; border-color: #f7da82; box-shadow: 0 0 0 3px rgba(247, 218, 130, .4); }
-.sp-cfield.is-error .sp-cinput { border-color: #e5484d; box-shadow: 0 0 0 3px rgba(229, 72, 77, .28); }
-.sp-cfield__err { display: none; font-size: 11.5px; color: #ffe0b8; font-weight: 600; }
+.sp-root .sp-cfield.is-error .sp-cfield__lab { color: #ffd3da; }
+.sp-root .sp-cfield.is-error .sp-cinput { border: 2px solid #ff5367; background: #fff3f5; box-shadow: 0 0 0 4px rgba(255, 83, 103, .28); animation: sp-contact-shake .28s ease; }
+.sp-cfield__err { display: none; font-size: 11.5px; color: #ffd3da; font-weight: 700; }
 .sp-cfield.is-error .sp-cfield__err { display: block; }
+@keyframes sp-contact-shake { 0%,100% { transform: translateX(0); } 35% { transform: translateX(-4px); } 70% { transform: translateX(4px); } }
 
 @media (prefers-reduced-motion: reduce) {
     .sp-root *, .sp-root *::before, .sp-root *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
