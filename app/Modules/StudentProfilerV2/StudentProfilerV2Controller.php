@@ -28,6 +28,7 @@ class StudentProfilerV2Controller
     private const S_DEGREE  = 'profiler_v2.degree';
     private const S_SECTION = 'profiler_v2.section';
     private const S_DONE    = 'profiler_v2.submitted';
+    private const S_CONTACT = 'profiler_v2.contact';
 
     public function __construct()
     {
@@ -48,6 +49,7 @@ class StudentProfilerV2Controller
                 'degree'    => $this->validDegree($request->session()->get(self::S_DEGREE), $config),
                 'section'   => (int) $request->session()->get(self::S_SECTION, 0),
                 'answers'   => (array) $request->session()->get(self::S_ANSWERS, []),
+                'contact'   => (object) $request->session()->get(self::S_CONTACT, []),
                 'submitted' => (bool) $request->session()->get(self::S_DONE, false),
             ],
             'pageTitle'       => 'Student Profiler',
@@ -63,7 +65,7 @@ class StudentProfilerV2Controller
         $config = $this->config();
 
         if ($action === 'reset') {
-            $request->session()->forget([self::S_ANSWERS, self::S_DEGREE, self::S_SECTION, self::S_DONE]);
+            $request->session()->forget([self::S_ANSWERS, self::S_DEGREE, self::S_SECTION, self::S_DONE, self::S_CONTACT]);
 
             return response()->json(['ok' => true]);
         }
@@ -75,11 +77,13 @@ class StudentProfilerV2Controller
         if (! is_array($answers)) {
             $answers = [];
         }
+        $contact = $this->cleanContact($request->input('contact', []));
         $sectionCount = $degree ? count($config['sections'][$degree] ?? []) : 0;
         $section = max(0, min($section, $sectionCount));
 
         $request->session()->put(self::S_DEGREE, $degree);
         $request->session()->put(self::S_ANSWERS, $answers);
+        $request->session()->put(self::S_CONTACT, $contact);
         $request->session()->put(self::S_SECTION, $section);
 
         if ($action === 'submit') {
@@ -96,7 +100,8 @@ class StudentProfilerV2Controller
                     'profiler',
                     'Student Profiler V2',
                     $degree,
-                    ProfileSubmissionStore::snapshot($config['sections'][$degree] ?? [], $answers)
+                    ProfileSubmissionStore::snapshot($config['sections'][$degree] ?? [], $answers),
+                    $contact
                 );
             }
 
@@ -114,6 +119,24 @@ class StudentProfilerV2Controller
     private function validDegree($degree, array $config): ?string
     {
         return in_array($degree, $config['degreeOrder'], true) ? $degree : null;
+    }
+
+    /**
+     * Normalise the lead-contact payload to exactly name/email/phone strings.
+     * Stored in the submission's meta so the admin panel can follow up.
+     *
+     * @param  mixed  $contact
+     * @return array{name:string,email:string,phone:string}
+     */
+    private function cleanContact($contact): array
+    {
+        $contact = is_array($contact) ? $contact : [];
+
+        return [
+            'name'  => trim((string) ($contact['name'] ?? '')),
+            'email' => trim((string) ($contact['email'] ?? '')),
+            'phone' => trim((string) ($contact['phone'] ?? '')),
+        ];
     }
 
     /** @return array<string, mixed> */

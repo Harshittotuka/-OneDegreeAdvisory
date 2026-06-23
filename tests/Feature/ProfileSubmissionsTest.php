@@ -213,7 +213,7 @@ class ProfileSubmissionsTest extends TestCase
             ['eyebrow' => 'Academics', 'title' => 'Your academics', 'answers' => [
                 ['label' => 'What is your College CGPA or Percentage?', 'value' => ['Above 80% or 8 CGPA']],
             ]],
-        ]);
+        ], ['name' => 'Riya Sharma', 'email' => 'riya@example.com', 'phone' => '+91 99999 11111']);
 
         $response = $this->withSession(['cms_authenticated' => true])
             ->get(route('admin.submissions.export'))
@@ -222,9 +222,64 @@ class ProfileSubmissionsTest extends TestCase
         $csv = $response->streamedContent();
         // fputcsv quotes the "Submitted at" cell (it contains a space), so assert
         // the un-quoted tail of the header plus the data values.
-        $this->assertStringContainsString('Source,Degree,Section,Question,Answer', $csv);
+        $this->assertStringContainsString('Source,Name,Email,Phone,Degree,Section,Question,Answer', $csv);
         $this->assertStringContainsString('Submitted at', $csv);
         $this->assertStringContainsString('Profile Evaluator', $csv);
         $this->assertStringContainsString('Above 80% or 8 CGPA', $csv);
+        // Lead contact is exported alongside every answer row.
+        $this->assertStringContainsString('Riya Sharma', $csv);
+        $this->assertStringContainsString('riya@example.com', $csv);
+    }
+
+    public function test_submit_captures_lead_contact_into_meta(): void
+    {
+        $this->post('/evaluate-my-profile', [
+            'action'  => 'submit',
+            'section' => 6,
+            'answers' => ['q_cgpa' => 'Above 90% or 9 CGPA'],
+            'contact' => ['name' => 'Aman Verma', 'email' => 'aman@example.com', 'phone' => '+91 90000 12345'],
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $row = $this->store()->bySource('evaluator')[0];
+        $this->assertSame('Aman Verma', $row['meta']['name']);
+        $this->assertSame('aman@example.com', $row['meta']['email']);
+        $this->assertSame('+91 90000 12345', $row['meta']['phone']);
+    }
+
+    public function test_profiler_submit_captures_lead_contact_into_meta(): void
+    {
+        $this->post('/profiler', [
+            'action'  => 'submit',
+            'degree'  => 'masters',
+            'section' => 6,
+            'answers' => ['q_ec_level' => 'Just Participated'],
+            'contact' => ['name' => 'Neha Gupta', 'email' => 'neha@example.com', 'phone' => '9876543210'],
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $row = $this->store()->all()[0];
+        $this->assertSame('Neha Gupta', $row['meta']['name']);
+        $this->assertSame('neha@example.com', $row['meta']['email']);
+    }
+
+    public function test_admin_list_and_detail_show_lead_contact(): void
+    {
+        $this->store()->add('profiler', 'Student Profiler', 'masters', [
+            ['eyebrow' => 'Academics', 'title' => 'Academics', 'answers' => [
+                ['label' => 'Q', 'value' => ['A']],
+            ]],
+        ], ['name' => 'Karan Mehta', 'email' => 'karan@example.com', 'phone' => '+91 80000 00000']);
+
+        $admin = $this->withSession(['cms_authenticated' => true]);
+
+        $admin->get(route('admin.submissions.profiler'))
+            ->assertOk()
+            ->assertSee('Karan Mehta')
+            ->assertSee('karan@example.com');
+
+        $id = $this->store()->all()[0]['id'];
+        $admin->get(route('admin.submissions.show', $id))
+            ->assertOk()
+            ->assertSee('Karan Mehta')
+            ->assertSee('+91 80000 00000');
     }
 }

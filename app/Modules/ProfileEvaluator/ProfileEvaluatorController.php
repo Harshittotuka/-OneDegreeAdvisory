@@ -29,6 +29,7 @@ class ProfileEvaluatorController
     private const S_ANSWERS = 'evaluator.answers';
     private const S_SECTION = 'evaluator.section';
     private const S_DONE    = 'evaluator.submitted';
+    private const S_CONTACT = 'evaluator.contact';
 
     public function __construct()
     {
@@ -48,6 +49,7 @@ class ProfileEvaluatorController
             'state'  => [
                 'section'   => $this->clampSection((int) $request->session()->get(self::S_SECTION, 0), $config),
                 'answers'   => (array) $request->session()->get(self::S_ANSWERS, []),
+                'contact'   => (object) $request->session()->get(self::S_CONTACT, []),
                 'submitted' => (bool) $request->session()->get(self::S_DONE, false),
             ],
             'pageTitle'       => 'Evaluate My Profile',
@@ -63,7 +65,7 @@ class ProfileEvaluatorController
         $config = $this->config();
 
         if ($action === 'reset') {
-            $request->session()->forget([self::S_ANSWERS, self::S_SECTION, self::S_DONE]);
+            $request->session()->forget([self::S_ANSWERS, self::S_SECTION, self::S_DONE, self::S_CONTACT]);
 
             return response()->json(['ok' => true]);
         }
@@ -73,7 +75,10 @@ class ProfileEvaluatorController
             $answers = [];
         }
 
+        $contact = $this->cleanContact($request->input('contact', []));
+
         $request->session()->put(self::S_ANSWERS, $answers);
+        $request->session()->put(self::S_CONTACT, $contact);
         $request->session()->put(self::S_SECTION, $this->clampSection((int) $request->input('section', 0), $config));
 
         if ($action === 'submit') {
@@ -88,7 +93,8 @@ class ProfileEvaluatorController
                     'evaluator',
                     'Profile Evaluator',
                     null,
-                    ProfileSubmissionStore::snapshot($config['sections'] ?? [], $answers)
+                    ProfileSubmissionStore::snapshot($config['sections'] ?? [], $answers),
+                    $contact
                 );
             }
 
@@ -101,6 +107,24 @@ class ProfileEvaluatorController
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Normalise the lead-contact payload to exactly name/email/phone strings.
+     * Stored in the submission's meta so the admin panel can follow up.
+     *
+     * @param  mixed  $contact
+     * @return array{name:string,email:string,phone:string}
+     */
+    private function cleanContact($contact): array
+    {
+        $contact = is_array($contact) ? $contact : [];
+
+        return [
+            'name'  => trim((string) ($contact['name'] ?? '')),
+            'email' => trim((string) ($contact['email'] ?? '')),
+            'phone' => trim((string) ($contact['phone'] ?? '')),
+        ];
     }
 
     /** Clamp a requested section index into [0, sectionCount] (count == review step). */

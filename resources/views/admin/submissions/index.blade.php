@@ -29,6 +29,14 @@
     padding:3px 10px; border-radius:999px; text-transform:capitalize; }
   .subs-actions { display:flex; gap:6px; justify-content:flex-end; }
 
+  /* Lead / contact cells. */
+  .src-tag { display:inline-block; margin-top:6px; font-size:.64rem; font-weight:800; letter-spacing:.04em;
+    text-transform:uppercase; color:var(--muted); background:#f0eef5; border-radius:6px; padding:2px 7px; }
+  .lead-name { font-weight:700; color:var(--ink); }
+  .lead-contact { font-size:.84rem; line-height:1.5; }
+  .lead-contact a { color:var(--teal-dark); font-weight:600; word-break:break-word; }
+  .lead-muted { color:var(--muted); }
+
   /* Summary cell doubles as the expand toggle. */
   .sub-toggle { display:inline-flex; align-items:flex-start; gap:9px; background:none; border:0; cursor:pointer;
     font-family:inherit; font-size:.9rem; color:var(--ink); padding:0; text-align:left; }
@@ -103,6 +111,8 @@
         <thead>
           <tr>
             <th>Submitted</th>
+            <th>Name</th>
+            <th>Contact</th>
             <th>Degree</th>
             <th>Summary &amp; answers</th>
             <th style="width:1%;"></th>
@@ -123,11 +133,24 @@
                 }
               }
               $rid = $s['id'] ?? $loop->index;
+              $meta = is_array($s['meta'] ?? null) ? $s['meta'] : [];
+              $cName  = trim((string) ($meta['name'] ?? ''));
+              $cEmail = trim((string) ($meta['email'] ?? ''));
+              $cPhone = trim((string) ($meta['phone'] ?? ''));
             @endphp
             <tr class="subs-row">
               <td style="white-space:nowrap;color:var(--muted);">
                 {{ ! empty($s['submitted_at']) ? \Illuminate\Support\Carbon::parse($s['submitted_at'])->format('M j, Y') : '—' }}
                 <div style="font-size:.78rem;">{{ ! empty($s['submitted_at']) ? \Illuminate\Support\Carbon::parse($s['submitted_at'])->format('g:i A') : '' }}</div>
+                @if(! empty($s['source_label']))<div class="src-tag">{{ $s['source_label'] }}</div>@endif
+              </td>
+              <td>
+                @if($cName)<span class="lead-name">{{ $cName }}</span>@else<span class="lead-muted">—</span>@endif
+              </td>
+              <td class="lead-contact">
+                @if($cEmail)<a href="mailto:{{ $cEmail }}">{{ $cEmail }}</a>@endif
+                @if($cPhone)<div><a href="tel:{{ str_replace(' ', '', $cPhone) }}">{{ $cPhone }}</a></div>@endif
+                @if(! $cEmail && ! $cPhone)<span class="lead-muted">—</span>@endif
               </td>
               <td>
                 @if(! empty($s['degree']))<span class="deg-badge">{{ $s['degree'] }}</span>@else <span style="color:var(--muted);">—</span>@endif
@@ -158,7 +181,7 @@
               </td>
             </tr>
             <tr class="sub-detail" id="sub-detail-{{ $rid }}" hidden>
-              <td colspan="4">
+              <td colspan="6">
                 @if(count($secs))
                   @foreach($secs as $sec)
                     <div class="qa-sec">

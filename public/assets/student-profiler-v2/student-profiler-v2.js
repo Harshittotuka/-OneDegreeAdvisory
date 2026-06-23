@@ -31,7 +31,10 @@
         // silently DROPS the string-keyed properties we set on an array, so
         // answers would never persist. Coerce any array (only ever the empty
         // case) to {} so set()/save() round-trip correctly.
-        answers: (S.answers && typeof S.answers === "object" && !Array.isArray(S.answers)) ? S.answers : {}
+        answers: (S.answers && typeof S.answers === "object" && !Array.isArray(S.answers)) ? S.answers : {},
+        // Lead contact (name/email/phone), captured on the review screen. Same
+        // array-vs-object guard as answers so it round-trips through the session.
+        contact: (S.contact && typeof S.contact === "object" && !Array.isArray(S.contact)) ? S.contact : {}
     };
 
     // Degree-adaptive: the active section list depends on the chosen degree.
@@ -63,7 +66,7 @@
         return fetch(DATA.endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": DATA.csrf || "", "X-Requested-With": "XMLHttpRequest", Accept: "application/json" },
-            body: JSON.stringify({ action: action || "save", degree: state.degree, section: state.section, answers: state.answers })
+            body: JSON.stringify({ action: action || "save", degree: state.degree, section: state.section, answers: state.answers, contact: state.contact })
         }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
     }
 
@@ -354,6 +357,49 @@
         return [String(v)];
     }
 
+    /* ---------- lead contact (name / email / phone) ---------- */
+    function cfield(labelText, key, type, required) {
+        var input = E("input", { class: "p2-cinput", type: type, value: (state.contact[key] || ""),
+            placeholder: labelText, autocomplete: key === "name" ? "name" : key, "aria-label": labelText });
+        var field = E("label", { class: "p2-cfield" }, [
+            E("span", { class: "p2-cfield__lab", text: labelText + (required ? " *" : " (optional)") }),
+            input,
+            E("span", { class: "p2-cfield__err", "data-cerr": key })
+        ]);
+        input.addEventListener("input", function () { state.contact[key] = input.value; field.classList.remove("is-error"); });
+        input.addEventListener("blur", function () { save("save"); });
+        return field;
+    }
+
+    function contactCard() {
+        return E("div", { class: "p2-contact" }, [
+            E("p", { class: "p2-contact__h", text: "Where should we send your evaluation?" }),
+            cfield("Full name", "name", "text", true),
+            cfield("Email", "email", "email", true),
+            cfield("Phone", "phone", "tel", false)
+        ]);
+    }
+
+    function setCErr(key, msg) {
+        var span = stage.querySelector('[data-cerr="' + key + '"]');
+        if (span) span.textContent = msg;
+        var fld = span && span.parentNode;
+        if (fld) fld.classList.add("is-error");
+        return fld;
+    }
+
+    // name + valid email required; phone optional. Returns false (and flags the
+    // fields) when the lead details are incomplete.
+    function validateContact() {
+        Array.prototype.forEach.call(stage.querySelectorAll(".p2-cfield"), function (f) { f.classList.remove("is-error"); });
+        var bad = [];
+        if (!(state.contact.name || "").trim()) bad.push(setCErr("name", "Please enter your name"));
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((state.contact.email || "").trim())) bad.push(setCErr("email", "Please enter a valid email"));
+        bad = bad.filter(Boolean);
+        if (bad.length) { bad[0].scrollIntoView({ behavior: "smooth", block: "center" }); return false; }
+        return true;
+    }
+
     function renderReview() {
         var arr = sects();
         var rows = arr.map(function (s, i) {
@@ -382,6 +428,7 @@
                     E("div", { class: "p2-result__li", html: "&#127891; &nbsp; Best-fit schools & next steps" }),
                     E("div", { class: "p2-result__li", html: "&#9993;&#65039; &nbsp; We’ll reach out to you shortly" }),
                     E("div", { class: "p2-result__spacer" }),
+                    contactCard(),
                     E("button", { class: "p2-btn p2-btn--white", type: "button", html: "Evaluate my profile &nbsp;&rarr;", onclick: submit }),
                     E("p", { class: "p2-result__note", text: "Free · No spam · We’ll be in touch" })
                 ])
@@ -397,6 +444,7 @@
     /* ===================== SUBMIT + SUCCESS POPUP ===================== */
     function submit(e) {
         var btn = e && e.currentTarget;
+        if (!validateContact()) return;
         if (btn) { btn.disabled = true; btn.innerHTML = "Submitting…"; }
         save("submit").then(function () { showSuccess(); });
     }

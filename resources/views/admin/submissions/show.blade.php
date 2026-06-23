@@ -20,6 +20,14 @@
   .qa .a { display:flex; flex-wrap:wrap; gap:6px; }
   .qa .chip { display:inline-block; background:#f1f0f7; color:#454360; font-size:.84rem; font-weight:600;
     padding:5px 11px; border-radius:8px; }
+
+  .sub-contact { padding:16px 20px; margin-bottom:18px; }
+  .sub-contact h2 { margin:0 0 12px; font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--teal-dark); }
+  .sub-contact__grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; }
+  .sub-contact__grid > div { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .sub-contact__grid span { font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .sub-contact__grid b, .sub-contact__grid a { font-weight:700; word-break:break-word; }
+  @media (max-width:640px){ .sub-contact__grid { grid-template-columns:1fr; } }
 </style>
 @endpush
 
@@ -55,6 +63,23 @@
       {{ ! empty($submission['submitted_at']) ? \Illuminate\Support\Carbon::parse($submission['submitted_at'])->format('M j, Y · g:i A') : '—' }}
     </span>
   </div>
+
+  @php
+    $meta   = is_array($submission['meta'] ?? null) ? $submission['meta'] : [];
+    $cName  = trim((string) ($meta['name'] ?? ''));
+    $cEmail = trim((string) ($meta['email'] ?? ''));
+    $cPhone = trim((string) ($meta['phone'] ?? ''));
+  @endphp
+  @if($cName || $cEmail || $cPhone)
+    <div class="panel sub-contact">
+      <h2>Contact</h2>
+      <div class="sub-contact__grid">
+        <div><span>Name</span>@if($cName)<b>{{ $cName }}</b>@else<b style="color:var(--muted);">—</b>@endif</div>
+        <div><span>Email</span>@if($cEmail)<a href="mailto:{{ $cEmail }}">{{ $cEmail }}</a>@else<b style="color:var(--muted);">—</b>@endif</div>
+        <div><span>Phone</span>@if($cPhone)<a href="tel:{{ str_replace(' ', '', $cPhone) }}">{{ $cPhone }}</a>@else<b style="color:var(--muted);">—</b>@endif</div>
+      </div>
+    </div>
+  @endif
 
   @php $sections = $submission['sections'] ?? []; @endphp
   @if(count($sections))

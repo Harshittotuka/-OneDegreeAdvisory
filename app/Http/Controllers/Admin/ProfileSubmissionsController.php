@@ -94,22 +94,33 @@ class ProfileSubmissionsController extends Controller
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Submitted at', 'Source', 'Degree', 'Section', 'Question', 'Answer']);
+            fputcsv($out, ['Submitted at', 'Source', 'Name', 'Email', 'Phone', 'Degree', 'Section', 'Question', 'Answer']);
             foreach ($rows as $r) {
-                $when   = $r['submitted_at'] ?? '';
-                $src    = $r['source_label'] ?? ($r['source'] ?? '');
-                $degree = $r['degree'] ?? '';
+                $meta = is_array($r['meta'] ?? null) ? $r['meta'] : [];
+                $lead = [
+                    $r['submitted_at'] ?? '',
+                    $r['source_label'] ?? ($r['source'] ?? ''),
+                    $meta['name'] ?? '',
+                    $meta['email'] ?? '',
+                    $meta['phone'] ?? '',
+                    $r['degree'] ?? '',
+                ];
+
+                $wrote = false;
                 foreach (($r['sections'] ?? []) as $sec) {
                     foreach (($sec['answers'] ?? []) as $a) {
-                        fputcsv($out, [
-                            $when,
-                            $src,
-                            $degree,
+                        fputcsv($out, array_merge($lead, [
                             $sec['eyebrow'] ?? '',
                             $a['label'] ?? '',
                             implode(', ', (array) ($a['value'] ?? [])),
-                        ]);
+                        ]));
+                        $wrote = true;
                     }
+                }
+
+                // A lead with no recorded answers still belongs in the export.
+                if (! $wrote) {
+                    fputcsv($out, array_merge($lead, ['', '', '']));
                 }
             }
             fclose($out);
