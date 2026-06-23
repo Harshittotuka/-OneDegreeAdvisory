@@ -306,7 +306,7 @@
 .p2-contact { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2px; }
 .p2-contact__h { font-size: 13.5px; font-weight: 700; margin: 0 0 2px; color: #fff; }
 .p2-cfield { display: flex; flex-direction: column; gap: 5px; }
-.p2-cfield__lab { font-size: 12.5px; font-weight: 700; color: #fff; letter-spacing: .01em; }
+.p2-cfield__lab { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .01em; }
 .p2-cinput { width: 100%; padding: 11px 13px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .4);
     background: #fff; color: #1f2238; font-family: inherit; font-size: 14px;
     transition: border-color .15s, box-shadow .15s; }

@@ -373,7 +373,6 @@
 
     function contactCard() {
         return E("div", { class: "p2-contact" }, [
-            E("p", { class: "p2-contact__h", text: "Where should we send your evaluation?" }),
             cfield("Full name", "name", "text", true),
             cfield("Email", "email", "email", true),
             cfield("Phone", "phone", "tel", false)

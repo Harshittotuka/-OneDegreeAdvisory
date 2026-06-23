@@ -340,7 +340,6 @@
 
     function contactCard() {
         return E("div", { class: "sp-contact" }, [
-            E("p", { class: "sp-contact__h", text: "Where should we send your report?" }),
             cfield("Full name", "name", "text", true),
             cfield("Email", "email", "email", true),
             cfield("Phone", "phone", "tel", false)
