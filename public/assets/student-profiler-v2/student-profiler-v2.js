@@ -300,6 +300,7 @@
                 }));
                 return wrap(f, i, opts);
             }
+            case "engscore": return wrap(f, i, renderEng(f));
             case "text": case "email": case "tel": default: {
                 var input = E("input", { type: (f.type === "text" ? "text" : f.type), placeholder: f.placeholder || "", value: get(f.key) || "" });
                 input.addEventListener("input", function () { set(f.key, input.value); clearErr(f.key); });
@@ -309,6 +310,102 @@
                 return wrap(f, i, ctl);
             }
         }
+    }
+
+    /* ---------- English sub-scores widget (test type + L/R/W/S) ---------- */
+    // v2-only field type. The stored value is an array of strings — the chosen
+    // test plus "<Skill>: <score>" per filled skill — so it round-trips through
+    // the session and renders as chips in review/admin with no extra handling.
+    var ENG_TESTS = [
+        { code: "IELTS", icon: "📘", max: "9",  step: "0.5", scale: "/ 9" },
+        { code: "TOEFL", icon: "📗", max: "30", step: "1",   scale: "/ 30" },
+        { code: "PTE",   icon: "📙", max: "90", step: "1",   scale: "/ 90" }
+    ];
+    var ENG_COMPS = [
+        { code: "L", label: "Listening", icon: "👂" },
+        { code: "R", label: "Reading",   icon: "📖" },
+        { code: "W", label: "Writing",   icon: "✍️" },
+        { code: "S", label: "Speaking",  icon: "🗣️" }
+    ];
+
+    function engParse(v) {
+        var out = { test: "", scores: {} };
+        if (Array.isArray(v)) v.forEach(function (s) {
+            var str = String(s), ix = str.indexOf(":");
+            if (ix === -1) out.test = str.trim();
+            else out.scores[str.slice(0, ix).trim()] = str.slice(ix + 1).trim();
+        });
+        return out;
+    }
+    function engSerialize(test, scores, comps) {
+        var arr = [];
+        if (test) arr.push(test);
+        comps.forEach(function (c) {
+            var val = (scores[c.label] || "").trim();
+            if (val !== "") arr.push(c.label + ": " + val);
+        });
+        return arr;
+    }
+
+    function renderEng(f) {
+        var tests = f.tests || ENG_TESTS;
+        var comps = f.components || ENG_COMPS;
+        var data = engParse(get(f.key));
+        var cur = { test: data.test, scores: data.scores };
+        var scaleEls = {}, inputEls = {};
+
+        function activeTest() {
+            for (var i = 0; i < tests.length; i++) if (tests[i].code === cur.test) return tests[i];
+            return null;
+        }
+        function applyScale() {
+            var t = activeTest();
+            comps.forEach(function (c) {
+                var span = scaleEls[c.code], inp = inputEls[c.code];
+                if (t) { span.textContent = t.scale; inp.setAttribute("max", t.max); inp.setAttribute("step", t.step); }
+                else { span.textContent = ""; inp.removeAttribute("max"); }
+                span.classList.remove("is-pop"); void span.offsetWidth; span.classList.add("is-pop");
+            });
+        }
+        function commit() { set(f.key, engSerialize(cur.test, cur.scores, comps)); clearErr(f.key); }
+
+        var grid;
+        var testBtns = tests.map(function (t, ci) {
+            var btn = E("button", { type: "button", class: "p2-eng__test" + (cur.test === t.code ? " is-sel" : ""), style: "--c:" + ci,
+                "aria-pressed": cur.test === t.code ? "true" : "false",
+                onclick: function () {
+                    cur.test = t.code;
+                    testRow.querySelectorAll(".p2-eng__test").forEach(function (b) { b.classList.remove("is-sel"); b.setAttribute("aria-pressed", "false"); });
+                    btn.classList.add("is-sel"); btn.setAttribute("aria-pressed", "true");
+                    grid.classList.add("is-live");
+                    applyScale(); commit();
+                } }, [
+                E("span", { class: "p2-eng__testicon", text: t.icon }),
+                E("span", { text: t.code })
+            ]);
+            return btn;
+        });
+        var testRow = E("div", { class: "p2-eng__tests", role: "group", "aria-label": "Test type" }, testBtns);
+
+        var cells = comps.map(function (c, ci) {
+            var inp = E("input", { class: "p2-eng__in", type: "text", inputmode: "decimal", value: cur.scores[c.label] || "",
+                "aria-label": c.label + " score", placeholder: "—" });
+            inputEls[c.code] = inp;
+            var scale = E("span", { class: "p2-eng__scale" });
+            scaleEls[c.code] = scale;
+            inp.addEventListener("input", function () { cur.scores[c.label] = inp.value; commit(); });
+            return E("label", { class: "p2-eng__cell", style: "--c:" + ci }, [
+                E("span", { class: "p2-eng__cellhead" }, [
+                    E("i", { class: "p2-eng__cellicon", text: c.icon }),
+                    E("span", { text: c.label })
+                ]),
+                E("div", { class: "p2-eng__inwrap" }, [inp, scale])
+            ]);
+        });
+        grid = E("div", { class: "p2-eng__grid" + (cur.test ? " is-live" : "") }, cells);
+
+        applyScale();
+        return E("div", { class: "p2-eng" }, [testRow, grid]);
     }
 
     /* ---------- validation + navigation ---------- */

@@ -174,6 +174,31 @@ foreach ($config['sections'] as $degree => &$sections) {
             continue;
         }
         foreach ($section['fields'] as &$field) {
+            // v2-only upgrade: the single free-text "Individual score in IELTS /
+            // ToEFL / PTE (Listening, Reading, Writing, Speaking)" box becomes a
+            // compact, animated widget — a test-type picker (IELTS/TOEFL/PTE) plus
+            // four per-skill inputs. It keeps the SAME key + label as v1 (so the
+            // admin snapshot/table stay aligned); only the input type changes. The
+            // stored answer is an array of strings like ["IELTS","Listening: 7.5",…],
+            // which the generic snapshot/review code already renders as chips.
+            $fl0 = mb_strtolower($field['label'] ?? '');
+            if (($field['type'] ?? '') === 'text' && str_contains($fl0, 'individual score')) {
+                $field['type'] = 'engscore';
+                $field['help'] = 'Pick your test, then enter each section score.';
+                $field['tests'] = [
+                    ['code' => 'IELTS', 'icon' => '📘', 'max' => '9',  'step' => '0.5', 'scale' => '/ 9'],
+                    ['code' => 'TOEFL', 'icon' => '📗', 'max' => '30', 'step' => '1',   'scale' => '/ 30'],
+                    ['code' => 'PTE',   'icon' => '📙', 'max' => '90', 'step' => '1',   'scale' => '/ 90'],
+                ];
+                $field['components'] = [
+                    ['code' => 'L', 'label' => 'Listening', 'icon' => '👂'],
+                    ['code' => 'R', 'label' => 'Reading',   'icon' => '📖'],
+                    ['code' => 'W', 'label' => 'Writing',   'icon' => '✍️'],
+                    ['code' => 'S', 'label' => 'Speaking',  'icon' => '🗣️'],
+                ];
+                continue;
+            }
+
             if (! in_array($field['type'] ?? '', ['radio', 'chips'], true)) {
                 continue;
             }
