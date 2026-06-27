@@ -219,7 +219,10 @@
         var i = state.section;
         var sec = arr[i];
         var last = i === arr.length - 1;
-        var fieldEls = (sec.fields || []).map(function (f, k) { return renderField(f, k); });
+        // Skip fields flagged hidden (e.g. the standalone "Overall …" box that
+        // the engscore widget has absorbed) — they stay in the config for the
+        // data model but are never rendered.
+        var fieldEls = (sec.fields || []).filter(function (f) { return !f.hidden; }).map(function (f, k) { return renderField(f, k); });
 
         var newMain = E("div", { class: "p2-main", "data-p2-main": "" }, [
             E("p", { class: "p2-sec-eyebrow", text: "Section " + (i + 1) + " of " + arr.length + " · " + sec.eyebrow }),
@@ -317,9 +320,9 @@
     // test plus "<Skill>: <score>" per filled skill — so it round-trips through
     // the session and renders as chips in review/admin with no extra handling.
     var ENG_TESTS = [
-        { code: "IELTS", icon: "📘", max: "9",  step: "0.5", scale: "/ 9" },
-        { code: "TOEFL", icon: "📗", max: "30", step: "1",   scale: "/ 30" },
-        { code: "PTE",   icon: "📙", max: "90", step: "1",   scale: "/ 90" }
+        { code: "IELTS", icon: "📘", scale: "/ 9",  max: "9",  step: "0.5", oScale: "/ 9",   oMax: "9",   oStep: "0.5" },
+        { code: "TOEFL", icon: "📗", scale: "/ 30", max: "30", step: "1",   oScale: "/ 120", oMax: "120", oStep: "1" },
+        { code: "PTE",   icon: "📙", scale: "/ 90", max: "90", step: "1",   oScale: "/ 90",  oMax: "90",  oStep: "1" }
     ];
     var ENG_COMPS = [
         { code: "L", label: "Listening", icon: "👂" },
@@ -337,19 +340,24 @@
         });
         return out;
     }
-    function engSerialize(test, scores, comps) {
+    // "Overall" (when present) is serialised first, then each filled skill.
+    function engSerialize(test, scores, comps, hasOverall) {
         var arr = [];
         if (test) arr.push(test);
+        if (hasOverall) { var o = (scores.Overall || "").trim(); if (o !== "") arr.push("Overall: " + o); }
         comps.forEach(function (c) {
             var val = (scores[c.label] || "").trim();
             if (val !== "") arr.push(c.label + ": " + val);
         });
         return arr;
     }
+    // True when the stored answer already has a non-empty overall score.
+    function engHasOverall(f) { return (engParse(get(f.key)).scores.Overall || "").trim() !== ""; }
 
     function renderEng(f) {
         var tests = f.tests || ENG_TESTS;
         var comps = f.components || ENG_COMPS;
+        var hasOverall = f.overall !== false;
         var data = engParse(get(f.key));
         var cur = { test: data.test, scores: data.scores };
         var scaleEls = {}, inputEls = {};
@@ -358,16 +366,36 @@
             for (var i = 0; i < tests.length; i++) if (tests[i].code === cur.test) return tests[i];
             return null;
         }
+        function tune(code, scale, max, step) {
+            var span = scaleEls[code], inp = inputEls[code];
+            if (!span || !inp) return;
+            if (activeTest()) { span.textContent = scale; inp.setAttribute("max", max); inp.setAttribute("step", step); }
+            else { span.textContent = ""; inp.removeAttribute("max"); }
+            span.classList.remove("is-pop"); void span.offsetWidth; span.classList.add("is-pop");
+        }
         function applyScale() {
             var t = activeTest();
-            comps.forEach(function (c) {
-                var span = scaleEls[c.code], inp = inputEls[c.code];
-                if (t) { span.textContent = t.scale; inp.setAttribute("max", t.max); inp.setAttribute("step", t.step); }
-                else { span.textContent = ""; inp.removeAttribute("max"); }
-                span.classList.remove("is-pop"); void span.offsetWidth; span.classList.add("is-pop");
-            });
+            if (hasOverall) tune("__overall", t && t.oScale, t && t.oMax, t && t.oStep);
+            comps.forEach(function (c) { tune(c.code, t && t.scale, t && t.max, t && t.step); });
         }
-        function commit() { set(f.key, engSerialize(cur.test, cur.scores, comps)); clearErr(f.key); }
+        function commit() { set(f.key, engSerialize(cur.test, cur.scores, comps, hasOverall)); clearErr(f.key); }
+
+        // Build one labelled score input (Overall or a skill).
+        function cell(code, label, icon, extraClass) {
+            var inp = E("input", { class: "p2-eng__in", type: "text", inputmode: "decimal", value: cur.scores[label] || "",
+                "aria-label": label + " score", placeholder: "—" });
+            inputEls[code] = inp;
+            var scale = E("span", { class: "p2-eng__scale" });
+            scaleEls[code] = scale;
+            inp.addEventListener("input", function () { cur.scores[label] = inp.value; commit(); });
+            return E("label", { class: "p2-eng__cell" + (extraClass ? " " + extraClass : "") }, [
+                E("span", { class: "p2-eng__cellhead" }, [
+                    E("i", { class: "p2-eng__cellicon", text: icon }),
+                    E("span", { text: label })
+                ]),
+                E("div", { class: "p2-eng__inwrap" }, [inp, scale])
+            ]);
+        }
 
         var grid;
         var testBtns = tests.map(function (t, ci) {
@@ -378,6 +406,7 @@
                     testRow.querySelectorAll(".p2-eng__test").forEach(function (b) { b.classList.remove("is-sel"); b.setAttribute("aria-pressed", "false"); });
                     btn.classList.add("is-sel"); btn.setAttribute("aria-pressed", "true");
                     grid.classList.add("is-live");
+                    if (overallEl) overallEl.classList.add("is-live");
                     applyScale(); commit();
                 } }, [
                 E("span", { class: "p2-eng__testicon", text: t.icon }),
@@ -387,25 +416,13 @@
         });
         var testRow = E("div", { class: "p2-eng__tests", role: "group", "aria-label": "Test type" }, testBtns);
 
-        var cells = comps.map(function (c, ci) {
-            var inp = E("input", { class: "p2-eng__in", type: "text", inputmode: "decimal", value: cur.scores[c.label] || "",
-                "aria-label": c.label + " score", placeholder: "—" });
-            inputEls[c.code] = inp;
-            var scale = E("span", { class: "p2-eng__scale" });
-            scaleEls[c.code] = scale;
-            inp.addEventListener("input", function () { cur.scores[c.label] = inp.value; commit(); });
-            return E("label", { class: "p2-eng__cell", style: "--c:" + ci }, [
-                E("span", { class: "p2-eng__cellhead" }, [
-                    E("i", { class: "p2-eng__cellicon", text: c.icon }),
-                    E("span", { text: c.label })
-                ]),
-                E("div", { class: "p2-eng__inwrap" }, [inp, scale])
-            ]);
-        });
-        grid = E("div", { class: "p2-eng__grid" + (cur.test ? " is-live" : "") }, cells);
+        var overallEl = hasOverall ? cell("__overall", "Overall", "⭐", "p2-eng__cell--overall" + (cur.test ? " is-live" : "")) : null;
+
+        grid = E("div", { class: "p2-eng__grid" + (cur.test ? " is-live" : "") },
+            comps.map(function (c) { return cell(c.code, c.label, c.icon); }));
 
         applyScale();
-        return E("div", { class: "p2-eng" }, [testRow, grid]);
+        return E("div", { class: "p2-eng" }, [testRow, overallEl, grid]);
     }
 
     /* ---------- validation + navigation ---------- */
@@ -416,7 +433,12 @@
     function validateSection(sec) {
         var ok = true, first = null;
         (sec.fields || []).forEach(function (f) {
-            if (f.required && isEmpty(get(f.key))) {
+            if (f.hidden) return;
+            // engscore: a mandatory section requires the OVERALL score to be filled.
+            var bad = (f.type === "engscore" && f.overallRequired)
+                ? !engHasOverall(f)
+                : (f.required && isEmpty(get(f.key)));
+            if (bad) {
                 ok = false;
                 var el = stage.querySelector('.p2-field[data-key="' + cssEsc(f.key) + '"]');
                 if (el) { el.classList.add("is-error"); if (!first) first = el; }

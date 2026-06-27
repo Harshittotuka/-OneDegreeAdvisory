@@ -173,22 +173,51 @@ foreach ($config['sections'] as $degree => &$sections) {
         if (empty($section['fields']) || ! is_array($section['fields'])) {
             continue;
         }
+        // Does this section carry a standalone "Overall … Score" TEXT field? If
+        // so, the engscore widget absorbs it so all English scores live in ONE
+        // unified, per-test block — and the standalone field is hidden. Capture
+        // whether it was mandatory so the widget can enforce the overall score.
+        $overallRequired = false;
+        foreach (($section['fields'] ?? []) as $f) {
+            if (($f['type'] ?? '') === 'text' && str_contains(mb_strtolower($f['label'] ?? ''), 'overall')) {
+                if (! empty($f['required'])) {
+                    $overallRequired = true;
+                }
+            }
+        }
+
         foreach ($section['fields'] as &$field) {
+            $fl0 = mb_strtolower($field['label'] ?? '');
+
+            // Hide the standalone "Overall … Score" text field — the engscore
+            // widget below renders the overall input itself (its requiredness is
+            // carried over to the widget). Kept in $config but flagged hidden so
+            // the JS skips it; nothing is rendered or validated twice.
+            if (($field['type'] ?? '') === 'text' && str_contains($fl0, 'overall')) {
+                $field['hidden']   = true;
+                $field['required'] = false;
+                continue;
+            }
+
             // v2-only upgrade: the single free-text "Individual score in IELTS /
             // ToEFL / PTE (Listening, Reading, Writing, Speaking)" box becomes a
             // compact, animated widget — a test-type picker (IELTS/TOEFL/PTE) plus
-            // four per-skill inputs. It keeps the SAME key + label as v1 (so the
-            // admin snapshot/table stay aligned); only the input type changes. The
-            // stored answer is an array of strings like ["IELTS","Listening: 7.5",…],
-            // which the generic snapshot/review code already renders as chips.
-            $fl0 = mb_strtolower($field['label'] ?? '');
+            // an overall input and four per-skill inputs, each scale (overall &
+            // per-skill) adapting to the chosen test. It keeps the SAME key + label
+            // as v1; only the input type changes. The stored answer is an array of
+            // strings like ["IELTS","Overall: 7.5","Listening: 7",…], which the
+            // generic snapshot/review code already renders as chips.
             if (($field['type'] ?? '') === 'text' && str_contains($fl0, 'individual score')) {
                 $field['type'] = 'engscore';
-                $field['help'] = 'Pick your test, then enter each section score.';
+                $field['help'] = 'Pick your test, then enter your overall and section scores.';
+                $field['overall'] = true;
+                $field['overallRequired'] = $overallRequired;
+                // Each test carries TWO scales: per-skill (scale/max/step) and the
+                // overall total (oScale/oMax/oStep) — TOEFL's overall is /120.
                 $field['tests'] = [
-                    ['code' => 'IELTS', 'icon' => '📘', 'max' => '9',  'step' => '0.5', 'scale' => '/ 9'],
-                    ['code' => 'TOEFL', 'icon' => '📗', 'max' => '30', 'step' => '1',   'scale' => '/ 30'],
-                    ['code' => 'PTE',   'icon' => '📙', 'max' => '90', 'step' => '1',   'scale' => '/ 90'],
+                    ['code' => 'IELTS', 'icon' => '📘', 'scale' => '/ 9',  'max' => '9',  'step' => '0.5', 'oScale' => '/ 9',   'oMax' => '9',   'oStep' => '0.5'],
+                    ['code' => 'TOEFL', 'icon' => '📗', 'scale' => '/ 30', 'max' => '30', 'step' => '1',   'oScale' => '/ 120', 'oMax' => '120', 'oStep' => '1'],
+                    ['code' => 'PTE',   'icon' => '📙', 'scale' => '/ 90', 'max' => '90', 'step' => '1',   'oScale' => '/ 90',  'oMax' => '90',  'oStep' => '1'],
                 ];
                 $field['components'] = [
                     ['code' => 'L', 'label' => 'Listening', 'icon' => '👂'],
