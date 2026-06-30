@@ -63,10 +63,6 @@ Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study
 // invokable controller serves GET (wizard) and POST (session save / submit).
 Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentProfilerController::class)->name('profiler');
 
-// Student Profiler V2 (app/Modules/StudentProfilerV2) — the SAME profiler
-// questions, rendered in the Profile Evaluator design. Additive sibling of v1.
-Route::match(['get', 'post'], '/profiler-v2', \App\Modules\StudentProfilerV2\StudentProfilerV2Controller::class)->name('profiler.v2');
-
 // Profile Evaluator module (self-contained in app/Modules/ProfileEvaluator) —
 // a native rebuild of the mim-essay "Evaluate My Profile" questionnaire. Same
 // invokable GET (wizard) / POST (session save / submit) shape as the profiler.
@@ -178,6 +174,8 @@ Route::prefix('admin')->group(function () {
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
         Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');
+        Route::get('submissions/{id}/download', [ProfileSubmissionsController::class, 'download'])
+            ->where('id', '[A-Za-z0-9-]+')->name('admin.submissions.download');
         Route::get('submissions/{id}', [ProfileSubmissionsController::class, 'show'])
             ->where('id', '[A-Za-z0-9-]+')->name('admin.submissions.show');
 

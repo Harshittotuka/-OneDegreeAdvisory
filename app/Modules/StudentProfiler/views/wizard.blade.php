@@ -19,6 +19,8 @@
 @endphp
 
 @push('head')
+    {{-- Roboto + Poppins — the type lockup the form design uses. --}}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ $spAsset('assets/student-profiler/student-profiler.css') }}">
     <script>
         window.__PROFILER__ = {
@@ -37,8 +39,8 @@
         <div class="sp-noscript">
             <h1>Student Profiler</h1>
             <p>This interactive profiler needs JavaScript enabled. It asks about your degree level,
-               academics, test scores, study preferences and budget, then gives you a tailored profile
-               report and a best-fit university shortlist.</p>
+               academics, test scores, study preferences and budget, then hands your profile to our
+               advisors for a personal review.</p>
             <p><a href="{{ route('contact') }}">Talk to an advisor instead →</a></p>
         </div>
     </noscript>

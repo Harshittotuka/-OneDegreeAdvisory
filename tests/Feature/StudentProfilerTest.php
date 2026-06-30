@@ -2,13 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Support\ProfileSubmissionStore;
 use Tests\Concerns\PreservesProfileSubmissions;
 use Tests\TestCase;
 
 /**
  * Covers the isolated Student Profiler module: the wizard renders with its
- * config + assets, the session-only save/submit/reset endpoint behaves, and a
- * bad degree is rejected. Nothing here touches the DB or any existing feature.
+ * config + assets, the endpoint behaves, and a completed profile is recorded on
+ * submit. Progress is NOT cached — nothing is persisted to the session while
+ * filling in the wizard — so the save/reset actions are no-ops.
  */
 class StudentProfilerTest extends TestCase
 {
@@ -17,13 +19,23 @@ class StudentProfilerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Start every test from a clean slate, then restore the real file after.
         $this->backupSubmissions();
+        $path = storage_path('app/profile-submissions.json');
+        if (is_file($path)) {
+            @unlink($path);
+        }
     }
 
     protected function tearDown(): void
     {
         $this->restoreSubmissions();
         parent::tearDown();
+    }
+
+    private function store(): ProfileSubmissionStore
+    {
+        return new ProfileSubmissionStore();
     }
 
     public function test_wizard_page_renders_with_config_and_assets(): void
@@ -36,56 +48,69 @@ class StudentProfilerTest extends TestCase
             ->assertSee('"degreeOrder"', false);
     }
 
-    public function test_save_persists_degree_and_answers_to_session(): void
+    public function test_save_action_does_not_persist_or_record(): void
     {
+        // Progress is not cached: a 'save' writes nothing to the session and
+        // records no submission — only 'submit' does.
         $this->post('/profiler', [
             'action'  => 'save',
             'degree'  => 'masters',
             'section' => 2,
-            'answers' => ['score' => '8.4', 'destinations' => ['USA', 'Canada']],
+            'answers' => ['q_ec_level' => 'Just Participated'],
         ])->assertOk()->assertJson(['ok' => true]);
 
-        $this->assertSame('masters', session('profiler.degree'));
-        $this->assertSame(2, session('profiler.section'));
-        $this->assertSame('8.4', session('profiler.answers')['score']);
-    }
-
-    public function test_invalid_degree_is_rejected(): void
-    {
-        $this->post('/profiler', ['action' => 'save', 'degree' => 'hacker', 'section' => 1])
-            ->assertOk()->assertJson(['ok' => true]);
-
         $this->assertNull(session('profiler.degree'));
+        $this->assertNull(session('profiler.answers'));
+        $this->assertCount(0, $this->store()->all());
     }
 
-    public function test_submit_marks_submitted_without_any_rating(): void
+    public function test_wizard_always_starts_fresh(): void
+    {
+        // Any pre-existing session state is ignored — the view is always fresh.
+        $this->withSession(['profiler.degree' => 'doctorate', 'profiler.section' => 1])
+            ->get('/profiler')
+            ->assertOk()
+            ->assertSee('"degree":null', false)
+            ->assertDontSee('"degree":"doctorate"', false);
+    }
+
+    public function test_submit_records_without_any_rating(): void
     {
         $res = $this->post('/profiler', [
             'action'  => 'submit',
             'degree'  => 'masters',
-            'section' => 5,
-            'answers' => ['q_abc' => 'something'],
+            'section' => 6,
+            'answers' => ['q_ec_level' => 'Just Participated'],
         ])->assertOk()->assertJson(['ok' => true]);
 
         // Scoring is removed entirely — no score/band/shortlist must be returned.
         $this->assertNull($res->json('report'));
-        $this->assertNull($res->json('report.score'));
         $this->assertArrayNotHasKey('score', (array) $res->json());
-        $this->assertTrue(session('profiler.submitted'));
+
+        // The completed profile is recorded once.
+        $rows = $this->store()->all();
+        $this->assertCount(1, $rows);
+        $this->assertSame('profiler', $rows[0]['source']);
+        $this->assertSame('masters', $rows[0]['degree']);
     }
 
-    public function test_reset_clears_session(): void
+    public function test_submit_with_invalid_degree_records_nothing(): void
     {
-        $this->withSession(['profiler.degree' => 'masters', 'profiler.section' => 3])
-            ->post('/profiler', ['action' => 'reset'])
+        $this->post('/profiler', [
+            'action'  => 'submit',
+            'degree'  => 'hacker',
+            'section' => 1,
+            'answers' => ['x' => 'y'],
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $this->assertCount(0, $this->store()->all());
+    }
+
+    public function test_reset_action_returns_ok(): void
+    {
+        $this->post('/profiler', ['action' => 'reset'])
             ->assertOk()->assertJson(['ok' => true]);
-    }
 
-    public function test_restored_session_is_passed_to_view_state(): void
-    {
-        $this->withSession(['profiler.degree' => 'doctorate', 'profiler.section' => 1])
-            ->get('/profiler')
-            ->assertOk()
-            ->assertSee('"degree":"doctorate"', false);
+        $this->assertCount(0, $this->store()->all());
     }
 }

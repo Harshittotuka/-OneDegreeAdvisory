@@ -45,14 +45,19 @@
 
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
     <h1 style="margin:0;font-size:1.4rem;letter-spacing:-.01em;">{{ $submission['source_label'] ?? 'Submission' }}</h1>
-    <form method="POST" action="{{ route('admin.submissions.destroy') }}"
-          onsubmit="return confirm('Delete this submission permanently?');">
-      @csrf
-      <input type="hidden" name="id" value="{{ $submission['id'] ?? '' }}">
-      <button class="btn btn-danger btn-sm" type="submit">
-        <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Delete
-      </button>
-    </form>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <a class="btn btn-ghost btn-sm" href="{{ route('admin.submissions.download', $submission['id'] ?? '') }}">
+        <i data-lucide="download" style="width:14px;height:14px;"></i> Download
+      </a>
+      <form method="POST" action="{{ route('admin.submissions.destroy') }}"
+            onsubmit="return confirm('Delete this submission permanently?');">
+        @csrf
+        <input type="hidden" name="id" value="{{ $submission['id'] ?? '' }}">
+        <button class="btn btn-danger btn-sm" type="submit">
+          <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Delete
+        </button>
+      </form>
+    </div>
   </div>
 
   <div class="sub-meta">

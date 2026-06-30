@@ -130,16 +130,18 @@ class ProfileSubmissionsTest extends TestCase
         $this->assertContains('What is your College CGPA or Percentage?', $labels);
     }
 
-    public function test_submitting_twice_in_one_session_records_only_once(): void
+    public function test_progress_is_not_cached_each_submit_records(): void
     {
+        // Progress is no longer cached or de-duplicated server-side (the submit
+        // button is disabled client-side to prevent accidental double clicks),
+        // so each submit POST records its own row.
         $payload = ['action' => 'submit', 'degree' => 'bachelors', 'section' => 6, 'answers' => ['q_ec_level' => 'Just Participated']];
 
         $session = $this->withSession([]);
         $session->post('/profiler', $payload)->assertOk();
-        // A re-POST (e.g. double click / refresh) in the same session must not duplicate.
         $session->post('/profiler', $payload)->assertOk();
 
-        $this->assertCount(1, $this->store()->all());
+        $this->assertCount(2, $this->store()->all());
     }
 
     public function test_admin_can_list_view_and_delete_submissions(): void
@@ -321,5 +323,34 @@ class ProfileSubmissionsTest extends TestCase
         // appear verbatim in the bytes — handy to assert the data made it in.
         $this->assertStringContainsString('Tara Singh', $content);
         $this->assertStringContainsString('What is your College CGPA or Percentage?', $content);
+    }
+
+    public function test_admin_can_download_a_submission_as_doc(): void
+    {
+        $id = $this->store()->add('profiler', 'Student Profiler', 'masters', [
+            ['eyebrow' => 'Academics', 'title' => 'Your academics', 'answers' => [
+                ['label' => 'Your Board in 12th Class', 'value' => ['CBSE Board']],
+            ]],
+        ], ['name' => 'Asha Rao', 'email' => 'asha@example.com', 'phone' => '999']);
+
+        $res = $this->withSession(['cms_authenticated' => true])
+            ->get(route('admin.submissions.download', $id))
+            ->assertOk();
+
+        $this->assertStringContainsString('application/msword', (string) $res->headers->get('Content-Type'));
+        $this->assertStringContainsString('.doc', (string) $res->headers->get('Content-Disposition'));
+
+        $content = $res->getContent();
+        // The doc mirrors the on-screen cards: section, question label, answer chip, contact.
+        $this->assertStringContainsString('Your academics', $content);
+        $this->assertStringContainsString('Your Board in 12th Class', $content);
+        $this->assertStringContainsString('CBSE Board', $content);
+        $this->assertStringContainsString('Asha Rao', $content);
+    }
+
+    public function test_submission_download_requires_authentication(): void
+    {
+        $id = $this->store()->add('profiler', 'Student Profiler', 'masters', []);
+        $this->get(route('admin.submissions.download', $id))->assertRedirect(route('admin.login'));
     }
 }

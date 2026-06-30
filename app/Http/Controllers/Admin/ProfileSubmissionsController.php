@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -64,6 +65,32 @@ class ProfileSubmissionsController extends Controller
         }
 
         return view('admin.submissions.show', ['portal' => 'admin', 'submission' => $submission]);
+    }
+
+    /**
+     * Download a single submission as a Word .doc whose layout mirrors the
+     * on-screen Q&A cards (badges, contact block, per-section answer chips).
+     * It is HTML-based, so Word / Google Docs open it and can save it as PDF.
+     */
+    public function download(string $id): Response|RedirectResponse
+    {
+        $submission = $this->store->find($id);
+        if ($submission === null) {
+            return redirect()->route('admin.submissions.profiler')->with('status', 'That submission no longer exists.');
+        }
+
+        $html = view('admin.submissions.doc', ['submission' => $submission])->render();
+
+        $meta = is_array($submission['meta'] ?? null) ? $submission['meta'] : [];
+        $name = trim((string) ($meta['name'] ?? ''));
+        $base = Str::slug(($submission['source_label'] ?? 'profile').($name !== '' ? ' '.$name : '')) ?: 'profile-submission';
+        $date = ! empty($submission['submitted_at']) ? date('Y-m-d', strtotime((string) $submission['submitted_at'])) : date('Y-m-d');
+        $filename = $base.'-'.$date.'.doc';
+
+        return response($html, 200, [
+            'Content-Type'        => 'application/msword; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
     }
 
     public function destroy(Request $request): RedirectResponse

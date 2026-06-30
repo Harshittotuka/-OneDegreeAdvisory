@@ -9,7 +9,10 @@
    field animations, a locked progress rail, review and submit. Questions and
    options are verbatim from mim-essay. There is NO scoring: on submit the
    profile is handed to the team for a manual review (same ending as the
-   Student Profiler). Answers autosave to the PHP session via /evaluate-my-profile.
+   Student Profiler).
+
+   NOTE: progress is NOT cached. Nothing is persisted to the server as you go —
+   the wizard always starts fresh; only the final submit records the profile.
    ========================================================================== */
 (function () {
     "use strict";
@@ -112,7 +115,6 @@
             renderWizard();
             reveal.classList.add("is-out");
             setTimeout(function () { reveal.remove(); }, reduce ? 0 : 400);
-            save("save");
         }, reduce ? 50 : 680);
     }
 
@@ -123,7 +125,6 @@
         state.section = 0;
         state.answers = {};
         renderEntry();
-        save("reset");
         window.scrollTo({ top: 0 });
     }
 
@@ -215,7 +216,7 @@
             sec.subtitle ? E("p", { class: "pe-sec-sub", text: sec.subtitle }) : null,
             E("div", { class: "pe-fields" }, fieldEls),
             E("div", { class: "pe-foot" }, [
-                E("span", { class: "pe-save" }, [E("i", {}), "Progress saved automatically"]),
+                E("span", { class: "pe-save" }),
                 E("div", { class: "pe-nav" }, [
                     E("button", { class: "pe-btn pe-btn--ghost", type: "button", disabled: i === 0 ? "" : false, html: "&larr; Back", onclick: function () { if (i > 0) navigate(i - 1); } }),
                     E("button", { class: "pe-btn pe-btn--primary", type: "button", html: (last ? "Review" : "Continue") + " &nbsp;&rarr;", onclick: function () { onContinue(i); } })
@@ -331,7 +332,6 @@
             state.section = target;
             if (target >= reviewIndex()) renderReview(); else renderSectionInto();
             updateRail();
-            save("save");
             window.scrollTo({ top: 0, behavior: "smooth" });
         }, reduce ? 0 : 170);
     }
@@ -356,7 +356,6 @@
             E("span", { class: "pe-cfield__err", "data-cerr": key })
         ]);
         input.addEventListener("input", function () { state.contact[key] = input.value; field.classList.remove("is-error"); input.setAttribute("aria-invalid", "false"); });
-        input.addEventListener("blur", function () { save("save"); });
         return field;
     }
 
@@ -431,7 +430,7 @@
                 ])
             ]),
             E("div", { class: "pe-foot" }, [
-                E("span", { class: "pe-save" }, [E("i", {}), "Progress saved automatically"]),
+                E("span", { class: "pe-save" }),
                 E("div", { class: "pe-nav" }, [E("button", { class: "pe-btn pe-btn--ghost", type: "button", html: "&larr; Back", onclick: function () { navigate(arr.length - 1); } })])
             ])
         ]);
@@ -475,6 +474,6 @@
     }
 
     /* ===================== BOOT ===================== */
-    var resuming = state.section > 0 || Object.keys(state.answers).length > 0;
-    if (resuming) { state.started = true; renderWizard(); } else renderEntry();
+    // Progress is not cached, so always begin at the hero / first step.
+    renderEntry();
 })();

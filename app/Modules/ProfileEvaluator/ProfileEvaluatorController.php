@@ -14,23 +14,19 @@ use Illuminate\Support\Facades\View;
  * animated wizard design as the Student Profiler.
  *
  * Fully self-contained: standalone controller (does not extend the app base
- * Controller), its own view / assets / data, session-only persistence. Nothing
- * here writes to the database or touches any existing feature, so the module
- * can be added or removed without side effects.
+ * Controller), its own view / assets / data. Nothing here writes to the
+ * database besides the file-backed submission store.
  *
- * Like the Student Profiler, it is NOT scored: on submit the profile is handed
- * to the team for a manual review and we just confirm receipt.
+ * Progress is NOT cached: nothing is persisted to the session while filling in
+ * the wizard, and the page always renders fresh. Like the Student Profiler it
+ * is NOT scored: on submit the profile is recorded and handed to the team for
+ * a manual review and we just confirm receipt.
  *
- *   GET  /evaluate-my-profile  → renders the wizard (answers restored from session)
- *   POST /evaluate-my-profile  → JSON endpoint: action = save | submit | reset
+ *   GET  /evaluate-my-profile  → renders the wizard (always a fresh start)
+ *   POST /evaluate-my-profile  → JSON endpoint: action = submit records; save/reset are no-ops
  */
 class ProfileEvaluatorController
 {
-    private const S_ANSWERS = 'evaluator.answers';
-    private const S_SECTION = 'evaluator.section';
-    private const S_DONE    = 'evaluator.submitted';
-    private const S_CONTACT = 'evaluator.contact';
-
     public function __construct()
     {
         View::addNamespace('profile-evaluator', __DIR__ . '/views');
@@ -42,15 +38,14 @@ class ProfileEvaluatorController
             return $this->handle($request);
         }
 
-        $config = $this->config();
-
         return View::make('profile-evaluator::wizard', [
-            'config' => $config,
+            'config' => $this->config(),
             'state'  => [
-                'section'   => $this->clampSection((int) $request->session()->get(self::S_SECTION, 0), $config),
-                'answers'   => (array) $request->session()->get(self::S_ANSWERS, []),
-                'contact'   => (object) $request->session()->get(self::S_CONTACT, []),
-                'submitted' => (bool) $request->session()->get(self::S_DONE, false),
+                // Progress is not cached — the wizard always starts fresh.
+                'section'   => 0,
+                'answers'   => [],
+                'contact'   => (object) [],
+                'submitted' => false,
             ],
             'pageTitle'       => 'Evaluate My Profile',
             'pageDescription' => 'The most comprehensive profile evaluation tool. Answer a few quick questions across academics, extracurriculars, work experience, test scores and your target degree — our advisors will personally review your profile and get back to you.',
@@ -62,11 +57,10 @@ class ProfileEvaluatorController
     private function handle(Request $request): JsonResponse
     {
         $action = (string) $request->input('action', 'save');
-        $config = $this->config();
 
-        if ($action === 'reset') {
-            $request->session()->forget([self::S_ANSWERS, self::S_SECTION, self::S_DONE, self::S_CONTACT]);
-
+        // No caching: 'save' / 'reset' are accepted (so the client never errors)
+        // but persist nothing. Only 'submit' does any work.
+        if ($action !== 'submit') {
             return response()->json(['ok' => true]);
         }
 
@@ -74,39 +68,24 @@ class ProfileEvaluatorController
         if (! is_array($answers)) {
             $answers = [];
         }
-
         $contact = $this->cleanContact($request->input('contact', []));
 
-        $request->session()->put(self::S_ANSWERS, $answers);
-        $request->session()->put(self::S_CONTACT, $contact);
-        $request->session()->put(self::S_SECTION, $this->clampSection((int) $request->input('section', 0), $config));
+        // Record the completed evaluation as a human-readable snapshot for the
+        // admin panel — no scoring is performed.
+        (new ProfileSubmissionStore())->add(
+            'evaluator',
+            'Profile Evaluator',
+            null,
+            ProfileSubmissionStore::snapshot($this->config()['sections'] ?? [], $answers),
+            $contact
+        );
 
-        if ($action === 'submit') {
-            // Record the completed evaluation once (guard against a re-POST after
-            // the session is already marked done). Stored as a human-readable
-            // snapshot for the admin panel — no scoring is performed.
-            $alreadyDone = (bool) $request->session()->get(self::S_DONE, false);
-            $request->session()->put(self::S_DONE, true);
-
-            if (! $alreadyDone) {
-                (new ProfileSubmissionStore())->add(
-                    'evaluator',
-                    'Profile Evaluator',
-                    null,
-                    ProfileSubmissionStore::snapshot($config['sections'] ?? [], $answers),
-                    $contact
-                );
-            }
-
-            // No scoring/rating — the profile is handed to the team for a
-            // manual review. We just confirm receipt (same as the Profiler).
-            return response()->json([
-                'ok'      => true,
-                'message' => 'Thanks! Our team will get back to you with a detailed evaluation of your profile.',
-            ]);
-        }
-
-        return response()->json(['ok' => true]);
+        // No scoring/rating — the profile is handed to the team for a manual
+        // review. We just confirm receipt (same as the Profiler).
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Thanks! Our team will get back to you with a detailed evaluation of your profile.',
+        ]);
     }
 
     /**
@@ -125,14 +104,6 @@ class ProfileEvaluatorController
             'email' => trim((string) ($contact['email'] ?? '')),
             'phone' => trim((string) ($contact['phone'] ?? '')),
         ];
-    }
-
-    /** Clamp a requested section index into [0, sectionCount] (count == review step). */
-    private function clampSection(int $section, array $config): int
-    {
-        $count = count($config['sections'] ?? []);
-
-        return max(0, min($section, $count));
     }
 
     /** @return array<string, mixed> */

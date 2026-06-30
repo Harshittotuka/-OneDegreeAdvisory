@@ -37,7 +37,7 @@
                     "type": "text",
                     "key": "q_e4da3b7f",
                     "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
-                    "placeholder": "Type your answer",
+                    "placeholder": "e.g. Physics Chemistry Maths",
                     "required": true
                 },
                 {
@@ -329,7 +329,7 @@
                     "type": "text",
                     "key": "q_98f13708",
                     "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
-                    "placeholder": "Type your answer",
+                    "placeholder": "e.g. Physics Chemistry Maths",
                     "required": true
                 },
                 {
@@ -669,7 +669,7 @@
                     "type": "text",
                     "key": "q_d67d8ab4",
                     "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
-                    "placeholder": "Type your answer",
+                    "placeholder": "e.g. Physics Chemistry Maths",
                     "required": true
                 },
                 {
