@@ -162,6 +162,12 @@
   color: var(--teal-dark);
 }
 
+.stripe-nav-trigger .nav-trigger-ai {
+  width: 15px;
+  height: 15px;
+  color: var(--coral, #ff5e32);
+}
+
 .stripe-nav-trigger .nav-trigger-chevron {
   width: 14px;
   height: 14px;

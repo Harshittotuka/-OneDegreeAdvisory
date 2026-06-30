@@ -62,7 +62,8 @@
 
         <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'new-tabs'])
                 type="button" data-stripe-trigger="new-tabs" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-new-tabs">
-          <span>New Tabs</span>
+          <i class="nav-trigger-ai" data-lucide="sparkles" aria-hidden="true"></i>
+          <span>Student Profiler</span>
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
 
@@ -181,8 +182,8 @@
               </div>
             </div>
 
-            {{-- ============ New Tabs ============ --}}
-            <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-new-tabs" data-stripe-section="new-tabs" role="region" aria-label="New tabs">
+            {{-- ============ Student Profiler ============ --}}
+            <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-new-tabs" data-stripe-section="new-tabs" role="region" aria-label="Student Profiler">
               <div class="nav-dropdown-shell">
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
@@ -192,12 +193,12 @@
 
                   <div class="course-menu-grid">
                     <a class="course-menu-card" href="{{ route('profiler') }}">
-                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="compass"></i></span>
-                      <span class="course-menu-copy"><strong>Profiler</strong><small>Build your student profile</small></span>
+                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="user-plus"></i></span>
+                      <span class="course-menu-copy"><strong>Build My Profile</strong><small>Map academics, scores &amp; goals</small></span>
                     </a>
                     <a class="course-menu-card" href="{{ route('profile.evaluate') }}">
                       <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
-                      <span class="course-menu-copy"><strong>Evaluate My Profile</strong><small>Get a free profile evaluation</small></span>
+                      <span class="course-menu-copy"><strong>Evaluate My Profile</strong><small>Get a free expert review</small></span>
                     </a>
                   </div>
                 </div>
