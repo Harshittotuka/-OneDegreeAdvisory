@@ -1041,9 +1041,12 @@ button {
 
 .nav-dropdown-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Columns + gap are CMS-editable for the Destinations menu (--dest-cols /
+     --dest-gap, set inline on the dropdown section). Fall back to the 3-col /
+     5px baseline anywhere the vars are not provided. */
+  grid-template-columns: repeat(var(--dest-cols, 3), minmax(0, 1fr));
   min-width: 0;
-  gap: 5px;
+  gap: var(--dest-gap, 5px);
 }
 
 .nav-dropdown-grid--stack {

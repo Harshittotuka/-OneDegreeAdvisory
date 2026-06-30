@@ -6,6 +6,7 @@
 @php
     $destinations = app(\App\Support\StudyLocationContent::class)->destinations();
     $mbbsCountries = app(\App\Support\MbbsCountryContent::class)->countries();
+    $destLayout = app(\App\Support\DestinationsLayoutStore::class)->get();
 @endphp
 
 <header class="stripe-site-header" data-stripe-header>
@@ -76,7 +77,11 @@
           <div class="stripe-flyout-viewport" data-stripe-viewport>
 
             {{-- ============ Destinations ============ --}}
-            <div class="stripe-flyout-section" id="stripe-sec-destinations" data-stripe-section="destinations" role="region" aria-label="Study destinations">
+            {{-- Grid layout (columns / gap / panel width) is CMS-editable — see
+                 /admin/destinations-layout. Values feed the CSS custom properties
+                 consumed by .nav-dropdown-grid and the section width. --}}
+            <div class="stripe-flyout-section" id="stripe-sec-destinations" data-stripe-section="destinations" role="region" aria-label="Study destinations"
+                 style="--dest-cols: {{ $destLayout['columns'] }}; --dest-gap: {{ $destLayout['gap'] }}px; --dest-width: {{ $destLayout['width'] }}px;">
               <div class="nav-dropdown-shell">
                 <div class="nav-dropdown-main">
                   <div class="nav-dropdown-topline">

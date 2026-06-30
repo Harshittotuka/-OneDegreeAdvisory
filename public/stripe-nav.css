@@ -272,7 +272,9 @@
 
 /* Designed widths — identical to the classic .nav-dropdown* widths */
 .stripe-flyout-section[data-stripe-section="destinations"] {
-  width: min(940px, calc(100vw - 32px));
+  /* --dest-width is CMS-editable (set inline on this section); the morph in
+     stripe-nav.js reads the resulting offsetWidth, so the overlay adapts. */
+  width: min(var(--dest-width, 940px), calc(100vw - 32px));
 }
 
 .stripe-flyout-section[data-stripe-section="courses"] {

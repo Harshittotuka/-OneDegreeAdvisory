@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AboutCmsController;
 use App\Http\Controllers\Admin\BlogCmsController;
 use App\Http\Controllers\Admin\CountryVisibilityController;
 use App\Http\Controllers\Admin\CountryDataSyncController;
+use App\Http\Controllers\Admin\DestinationsLayoutController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollmentsController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
@@ -166,6 +167,11 @@ Route::prefix('admin')->group(function () {
         /* ── Notice-bar CMS (top blue nav) ── */
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
+
+        /* ── Destinations mega-menu layout (nav dropdown grid) ── */
+        Route::get('destinations-layout', [DestinationsLayoutController::class, 'edit'])->name('admin.destinations-layout.index');
+        Route::post('destinations-layout', [DestinationsLayoutController::class, 'update'])->name('admin.destinations-layout.update');
+        Route::post('destinations-layout/reset', [DestinationsLayoutController::class, 'reset'])->name('admin.destinations-layout.reset');
 
         /* ── Profiler / Evaluator submissions — split into two tabs (from /profiler and /evaluate-my-profile) ── */
         Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index'); // → Student Profiler tab
