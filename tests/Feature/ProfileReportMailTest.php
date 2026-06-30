@@ -48,12 +48,17 @@ class ProfileReportMailTest extends TestCase
         Mail::assertSent(ProfileReportTeamMail::class, function (ProfileReportTeamMail $mail) {
             return $mail->hasTo(config('site.forms.profiler.to'))
                 && $mail->data['sourceLabel'] === 'Student Profiler'
-                && $mail->data['degreeLabel'] === 'Master’s';
+                && $mail->data['degreeLabel'] === 'Master’s'
+                && $mail->pdf !== null
+                && $mail->hasAttachment(
+                    \Illuminate\Mail\Mailables\Attachment::fromData(fn () => $mail->pdf, $mail->pdfName)->withMime('application/pdf')
+                );
         });
 
         Mail::assertSent(ProfileReportThankYouMail::class, function (ProfileReportThankYouMail $mail) {
             return $mail->hasTo('alex@example.com')
-                && $mail->data['name'] === 'Alex Student';
+                && $mail->data['name'] === 'Alex Student'
+                && $mail->pdf !== null;
         });
     }
 

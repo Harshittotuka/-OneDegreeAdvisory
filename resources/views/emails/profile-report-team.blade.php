@@ -1,6 +1,6 @@
 @extends('emails.layout', [
   'eyebrow' => 'New profile submission',
-  'preheader' => 'A new '.$data['sourceLabel'].' submission has arrived'.($data['name'] ? ' from '.$data['name'] : '').'.',
+  'preheader' => 'A new '.$data['sourceLabel'].' submission has arrived'.($data['name'] ? ' from '.$data['name'] : '').'. Report attached.',
 ])
 
 @section('content')
@@ -12,10 +12,10 @@
 
   <p style="margin:0 0 22px;font-size:15px;line-height:1.7;color:#435563;">
     A visitor completed the <strong>{{ $data['sourceLabel'] }}</strong>@if(!empty($data['degreeLabel'])) for a <strong>{{ $data['degreeLabel'] }}</strong>@endif.
-    Their full responses and an initial analysis are below.
+    The full profile report — key facts, an initial strengths/areas read, and all responses — is attached as a PDF.
   </p>
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border:1px solid #d9e3e8;border-radius:8px;border-collapse:separate;overflow:hidden;font-size:14px;line-height:1.55;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;border:1px solid #d9e3e8;border-radius:8px;border-collapse:separate;overflow:hidden;font-size:14px;line-height:1.55;">
     <tr>
       <td style="width:42%;padding:12px 14px;background:#f7fafb;border-bottom:1px solid #e5edf1;color:#60717d;font-weight:700;">Name</td>
       <td style="padding:12px 14px;border-bottom:1px solid #e5edf1;color:#102a43;font-weight:700;">{{ $data['name'] ?: '—' }}</td>
@@ -30,12 +30,20 @@
     </tr>
   </table>
 
-  @include('emails.partials.profile-report', ['data' => $data])
+  @if($pdf === null)
+    <p style="margin:0 0 18px;padding:12px 14px;background:#fdf1f1;border:1px solid #f3cccc;border-radius:8px;font-size:13px;line-height:1.6;color:#9b2c2c;">
+      The report PDF could not be generated for this submission — please open the admin submissions panel to view the full responses.
+    </p>
+  @else
+    <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#5f6f7a;">
+      📎 Attachment: <strong style="color:#102a43;">{{ $pdfName }}</strong>
+    </p>
+  @endif
 
   {{-- Quick-reply button for the team's inbox. Suppressed only in the PDF
        review export ($pdfMode), where a mailto link is not useful. --}}
   @if(empty($pdfMode) && filter_var($data['email'] ?? '', FILTER_VALIDATE_EMAIL))
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:4px;">
       <tr>
         <td style="background:#0f7a78;border-radius:6px;">
           <a href="mailto:{{ $data['email'] }}" style="display:inline-block;padding:12px 18px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">Reply to {{ $data['name'] ?: $data['email'] }}</a>

@@ -23,11 +23,21 @@ class ProfileReportNotifier
     {
         $mailer = config('site.forms.profiler.mailer');
 
+        // Render the formatted report PDF once and attach it to both emails.
+        // Best-effort: if it fails the mails still go out (without the file).
+        $pdf     = null;
+        $pdfName = ProfileReportPdf::filename($data);
+        try {
+            $pdf = ProfileReportPdf::render($data);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         // 1) Team notification — always.
         try {
             Mail::mailer($mailer)
                 ->to(config('site.forms.profiler.to'))
-                ->send(new ProfileReportTeamMail($data));
+                ->send(new ProfileReportTeamMail($data, $pdf, $pdfName));
         } catch (\Throwable $e) {
             report($e);
         }
@@ -37,7 +47,7 @@ class ProfileReportNotifier
             try {
                 Mail::mailer($mailer)
                     ->to($data['email'])
-                    ->send(new ProfileReportThankYouMail($data));
+                    ->send(new ProfileReportThankYouMail($data, $pdf, $pdfName));
             } catch (\Throwable $e) {
                 report($e);
             }
