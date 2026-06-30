@@ -2,6 +2,8 @@
 
 namespace App\Modules\ProfileEvaluator;
 
+use App\Support\ProfileReportBuilder;
+use App\Support\ProfileReportNotifier;
 use App\Support\ProfileSubmissionStore;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
@@ -72,13 +74,25 @@ class ProfileEvaluatorController
 
         // Record the completed evaluation as a human-readable snapshot for the
         // admin panel — no scoring is performed.
+        $sections = ProfileSubmissionStore::snapshot($this->config()['sections'] ?? [], $answers);
+
         (new ProfileSubmissionStore())->add(
             'evaluator',
             'Profile Evaluator',
             null,
-            ProfileSubmissionStore::snapshot($this->config()['sections'] ?? [], $answers),
+            $sections,
             $contact
         );
+
+        // Email a profile report to the team + a thank-you to the student
+        // (direct SMTP, no queue). Best-effort: never blocks the response.
+        ProfileReportNotifier::notify(ProfileReportBuilder::build(
+            'evaluator',
+            'Profile Evaluator',
+            null,
+            $sections,
+            $contact
+        ));
 
         // No scoring/rating — the profile is handed to the team for a manual
         // review. We just confirm receipt (same as the Profiler).

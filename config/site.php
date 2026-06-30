@@ -128,7 +128,11 @@ return [
        notification + applicant confirmation are sent from. Override per-env
        in .env so the addresses are not hard-coded.
          - contact: enquiry form on the Contact + Home pages
-         - careers: application form on the Careers page */
+         - careers: application form on the Careers page
+         - profiler: Student Profiler (/profiler) + Profile Evaluator
+           (/evaluate-my-profile) — on submit a team notification and an
+           applicant thank-you (each carrying the generated profile report)
+           are sent from this mailbox. */
     'forms' => [
         'contact' => [
             'mailer'    => env('CONTACT_FORM_MAILER'),
@@ -141,6 +145,12 @@ return [
             'to'        => env('CAREERS_FORM_TO', 'Smita@onedegreeadvisory.com'),
             'from'      => env('CAREERS_FORM_FROM', 'Smita@onedegreeadvisory.com'),
             'from_name' => env('CAREERS_FORM_FROM_NAME', 'One Degree Advisory · Careers'),
+        ],
+        'profiler' => [
+            'mailer'    => env('PROFILER_FORM_MAILER', env('CONTACT_FORM_MAILER')),
+            'to'        => env('PROFILER_FORM_TO', 'Admissions@onedegreeadvisory.com'),
+            'from'      => env('PROFILER_FORM_FROM', 'Admissions@onedegreeadvisory.com'),
+            'from_name' => env('PROFILER_FORM_FROM_NAME', 'One Degree Advisory'),
         ],
     ],
 

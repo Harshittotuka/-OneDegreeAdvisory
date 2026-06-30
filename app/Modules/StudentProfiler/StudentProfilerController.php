@@ -2,6 +2,8 @@
 
 namespace App\Modules\StudentProfiler;
 
+use App\Support\ProfileReportBuilder;
+use App\Support\ProfileReportNotifier;
 use App\Support\ProfileSubmissionStore;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
@@ -74,13 +76,25 @@ class StudentProfilerController
         // Record the completed profile as a human-readable snapshot for the
         // admin panel — no scoring is performed.
         if ($degree) {
+            $sections = ProfileSubmissionStore::snapshot($config['sections'][$degree] ?? [], $answers);
+
             (new ProfileSubmissionStore())->add(
                 'profiler',
                 'Student Profiler',
                 $degree,
-                ProfileSubmissionStore::snapshot($config['sections'][$degree] ?? [], $answers),
+                $sections,
                 $contact
             );
+
+            // Email a profile report to the team + a thank-you to the student
+            // (direct SMTP, no queue). Best-effort: never blocks the response.
+            ProfileReportNotifier::notify(ProfileReportBuilder::build(
+                'profiler',
+                'Student Profiler',
+                $config['degrees'][$degree]['label'] ?? null,
+                $sections,
+                $contact
+            ));
         }
 
         // No scoring/rating — the profile is handed to the team for a manual
