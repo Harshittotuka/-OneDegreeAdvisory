@@ -79,6 +79,42 @@ class ProfileReportMailTest extends TestCase
             $mail->hasTo('priya@example.com'));
     }
 
+    public function test_evaluator_report_reads_its_own_questions(): void
+    {
+        // The evaluator's questions are worded differently from the profiler's.
+        // The report must read THEM correctly: real destination (not the
+        // university-rank question), recognise the GMAT, and never raise an
+        // English-test gap (the evaluator does not ask about English).
+        Mail::fake();
+
+        $this->post('/evaluate-my-profile', [
+            'action'  => 'submit',
+            'answers' => [
+                'q_cgpa'             => 'Above 80% or 8 CGPA',
+                'q_uni_rank'         => 'Between 10-25',
+                'q_work_years'       => '2-4 years',
+                'q_test_type'        => 'GMAT',
+                'q_test_score'       => '720',
+                'q_target_degree'    => ['MBA', 'Masters in Finance'],
+                'q_target_countries' => ['USA', 'Ireland + UK'],
+            ],
+            'contact' => ['name' => 'Neha Kapoor', 'email' => 'neha@example.com', 'phone' => '+91 90000 00000'],
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        Mail::assertSent(ProfileReportTeamMail::class, function (ProfileReportTeamMail $mail) {
+            $d = $mail->data;
+
+            return $d['highlights']['Preferred destination'] === 'USA, Ireland + UK'
+                && $d['highlights']['Admission test'] === 'GMAT'
+                // No "destination" came from the university-rank question.
+                && ! str_contains(strtolower($d['highlights']['Preferred destination']), 'between')
+                // GMAT recognised as a strength.
+                && (bool) array_filter($d['strengths'], fn ($s) => str_contains($s, 'admission test'))
+                // The evaluator never asks about English, so no English gap.
+                && ! array_filter($d['improvements'], fn ($s) => str_contains($s, 'English'));
+        });
+    }
+
     public function test_no_thank_you_without_a_valid_email(): void
     {
         Mail::fake();
