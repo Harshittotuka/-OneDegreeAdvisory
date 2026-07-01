@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Internal notification sent to the admissions team when a visitor completes the
- * Student Profiler or Profile Evaluator. Carries the generated profile report
+ * Student Profiler. Carries the generated profile report
  * (key facts, rule-based analysis, full Q&A). Reply-To is the student when an
  * email was provided, so the team can respond in one click.
  */

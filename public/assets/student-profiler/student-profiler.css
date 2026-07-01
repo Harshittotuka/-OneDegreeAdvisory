@@ -91,34 +91,83 @@
     margin: 0 auto 16px; max-width: 18ch; letter-spacing: -.01em; color: #181134;
     animation: sp-rise .5s .04s both;
 }
-.sp-entry__sub { font-size: clamp(1rem, 1.8vw, 1.16rem); line-height: 1.6; color: var(--ink2); max-width: 58ch; margin: 0 auto clamp(26px, 4vw, 38px); animation: sp-rise .5s .08s both; }
+.sp-entry__sub { font-size: clamp(1rem, 1.8vw, 1.16rem); line-height: 1.6; color: var(--ink2); max-width: none; margin: 0 auto clamp(26px, 4vw, 38px); text-align: center; text-wrap: balance; animation: sp-rise .5s .08s both; }
 
-/* ---- degree picker cards (the profiler's first step, in the evaluator look) ---- */
-.sp-cards { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; margin-bottom: clamp(22px, 3vw, 30px); }
+/* ---- degree picker cards (the profiler's first step, in the evaluator look) ----
+   All degrees (High School · Bachelor's · Master's · Doctorate) share ONE row:
+   the cards flex to equal widths so they never wrap. On small screens the row
+   turns into a swipe carousel (see the media query below). */
+.sp-cards { display: flex; flex-wrap: nowrap; gap: 18px; justify-content: center; margin-bottom: clamp(22px, 3vw, 30px); }
 .sp-card {
-    width: 312px; max-width: 100%; text-align: left; cursor: pointer; position: relative;
+    flex: 1 1 0; min-width: 0; width: auto; max-width: 320px; text-align: left; cursor: pointer; position: relative;
     background: var(--paper); border: 1.5px solid var(--line2); border-radius: var(--radius-lg);
     padding: 28px 26px 26px; box-shadow: var(--shadow-soft); color: var(--ink); overflow: hidden;
-    transition: transform .35s cubic-bezier(.2,.9,.25,1), box-shadow .35s, border-color .25s, background .25s;
-    animation: sp-rise .6s both; animation-delay: calc(var(--i, 0) * .1s + .14s); will-change: transform;
+    transition: transform .45s cubic-bezier(.22, .61, .36, 1), box-shadow .4s ease, border-color .25s, background .25s;
+    /* `backwards` (not `both`): the intro rise plays, but its `transform: none`
+       end-state is NOT pinned afterwards — otherwise it would override the
+       :hover lift below (a filled animation value wins over a normal rule). */
+    animation: sp-rise .6s backwards; animation-delay: calc(var(--i, 0) * .1s + .14s); will-change: transform;
 }
-.sp-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--indigo); opacity: 0; transition: opacity .3s; }
-.sp-card:hover { transform: translateY(-8px); border-color: var(--indigo); background: #faf8f3; box-shadow: var(--shadow-card); }
-.sp-card:hover::before { opacity: 1; }
+.sp-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: linear-gradient(90deg, var(--indigo), var(--red1)); opacity: 0; transition: opacity .3s; }
+/* Soft radial glow that fades in on hover for a little depth. */
+.sp-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 80% at 50% -10%, rgba(26, 0, 136, .06), transparent 60%); opacity: 0; transition: opacity .35s; }
+.sp-card:hover { transform: translateY(-18px); border-color: var(--indigo); background: #fdfcfa; box-shadow: var(--shadow-card); }
+.sp-card:hover::before, .sp-card:hover::after { opacity: 1; }
 .sp-card:focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; }
 .sp-card[data-featured="1"] { border-color: var(--indigo); box-shadow: 0 0 0 1px var(--indigo) inset, var(--shadow-card); }
 .sp-card[data-featured="1"]::before { opacity: 1; }
-.sp-card__badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #fff; background: var(--indigo); padding: 6px 13px; border-radius: var(--radius-pill); margin-bottom: 16px; box-shadow: 0 6px 16px rgba(26, 0, 136, .3); }
-.sp-card__chip { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; font-family: "Poppins", sans-serif; font-size: 26px; font-weight: 700; color: #fff; background: var(--indigo); box-shadow: 0 10px 24px rgba(26, 0, 136, .32); margin-bottom: 18px; transition: transform .4s; }
-.sp-card:hover .sp-card__chip { transform: scale(1.08) rotate(-4deg); }
-.sp-card__title { display: block; font-family: "Poppins", "Roboto", sans-serif; font-size: 25px; font-weight: 600; color: #181134; margin: 0 0 4px; }
-.sp-card__tag { font-size: 14.5px; font-weight: 500; color: var(--muted); margin: 0 0 18px; }
+.sp-card__badge { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #fff; background: var(--indigo); padding: 6px 13px; border-radius: var(--radius-pill); margin-bottom: 16px; box-shadow: 0 6px 16px rgba(26, 0, 136, .3); }
+.sp-card__chip { position: relative; z-index: 1; width: 58px; height: 58px; border-radius: 17px; display: grid; place-items: center; font-family: "Poppins", sans-serif; font-size: 26px; font-weight: 700; color: #fff; background: linear-gradient(140deg, #2a12b0 0%, var(--indigo) 45%, var(--indigo-deep) 100%); box-shadow: 0 12px 26px rgba(26, 0, 136, .34); margin-bottom: 18px; transition: transform .4s cubic-bezier(.22,.61,.36,1), box-shadow .4s ease; }
+.sp-card:hover .sp-card__chip { transform: scale(1.14); box-shadow: 0 16px 30px rgba(26, 0, 136, .4); }
+.sp-card__title { display: block; font-family: "Poppins", "Roboto", sans-serif; font-size: 25px; font-weight: 600; color: #181134; margin: 0 0 4px; position: relative; z-index: 1; }
+.sp-card__tag { font-size: 14.5px; font-weight: 500; color: var(--muted); margin: 0 0 18px; position: relative; z-index: 1; }
 .sp-card__rule { height: 1px; background: var(--line); margin: 0 0 14px; }
-.sp-card__ex { font-size: 13px; font-weight: 500; color: var(--muted2); margin: 0 0 18px; }
-.sp-card__cta { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14.5px; font-weight: 700; color: #fff; padding: 13px; border-radius: var(--radius); background: var(--indigo); box-shadow: 0 8px 22px rgba(26, 0, 136, .28); transition: gap .25s, background .2s; }
-.sp-card:hover .sp-card__cta { gap: 12px; background: var(--indigo-deep); }
+.sp-card__ex { font-size: 13px; font-weight: 500; color: var(--muted2); margin: 0 0 18px; position: relative; z-index: 1; }
+.sp-card__cta { position: relative; z-index: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14.5px; font-weight: 700; color: #fff; padding: 13px; border-radius: var(--radius); background: var(--cta-grad); box-shadow: 0 8px 22px rgba(216, 67, 29, .32); transition: gap .25s, box-shadow .25s, transform .2s; }
+.sp-card:hover .sp-card__cta { gap: 12px; box-shadow: 0 12px 26px rgba(216, 67, 29, .42); }
+/* A light "shine" that sweeps across the CTA when the card is hovered. */
+.sp-card__cta::after { content: ""; position: absolute; top: 0; left: -60%; width: 45%; height: 100%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.55) 50%, transparent 100%);
+    transform: skewX(-20deg); pointer-events: none; }
+.sp-card:hover .sp-card__cta::after { animation: sp-shine .7s ease-out .05s; }
 
-.sp-entry__note { margin: 4px auto 0; font-size: 13px; font-weight: 500; color: var(--muted); animation: sp-rise .5s .2s both; }
+/* The card springs UP on hover (bouncy translate via the transition easing on
+   .sp-card); the CTA catches a one-off shine sweep. The initials chip stays
+   upright — no rotation. */
+@keyframes sp-shine { 0% { left: -60%; } 100% { left: 130%; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .sp-card, .sp-card:hover, .sp-card:hover .sp-card__chip { transform: none; }
+    .sp-card:hover .sp-card__cta::after { animation: none; }
+}
+
+.sp-entry__note { margin: 4px auto 0; text-align: center; font-size: 13px; font-weight: 500; color: var(--muted); animation: sp-rise .5s .2s both; }
+
+/* Small screens: the single row becomes a horizontal swipe carousel. Cards keep
+   their real width and snap into place; the next one peeks in to signal "swipe".
+   Vertical padding leaves room for the hover-lift + shadow so overflow-x doesn't
+   clip them, and the scrollbar is hidden for a clean carousel look. */
+@media (max-width: 820px) {
+    .sp-cards {
+        flex-wrap: nowrap; justify-content: flex-start;
+        overflow-x: auto; overflow-y: hidden;
+        /* `proximity` (not `mandatory`): mandatory snapping traps on the
+           second-to-last card because the last card's centre snap point sits
+           beyond the max scroll — so Doctorate was unreachable. proximity still
+           snaps but never blocks a full scroll to the end. */
+        scroll-snap-type: x proximity; scroll-padding-inline: 16px;
+        gap: 14px; padding: 8px 16px 16px; margin-bottom: clamp(18px, 3vw, 26px);
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .sp-cards::-webkit-scrollbar { display: none; }
+    /* Trailing spacer: gives the last card room to scroll into / near the centre
+       instead of being pinned against the right edge. */
+    .sp-cards::after { content: ""; flex: 0 0 clamp(24px, 12%, 64px); }
+    .sp-card {
+        flex: 0 0 auto; width: min(78%, 300px); max-width: 300px;
+        scroll-snap-align: center;
+    }
+}
 
 /* ===================== EXPAND REVEAL ===================== */
 .sp-reveal {

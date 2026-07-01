@@ -7,10 +7,10 @@ use Tests\Concerns\PreservesProfileSubmissions;
 use Tests\TestCase;
 
 /**
- * Covers the questionnaire-submission pipeline that now backs both the Student
- * Profiler and the Profile Evaluator: the new Extracurriculars & differentiators
- * section is present for every degree, a completed questionnaire is recorded as
- * a readable snapshot, and the admin panel can list / view / delete / export them.
+ * Covers the Student Profiler submission pipeline: the Extracurriculars &
+ * differentiators section is present for every degree, a completed
+ * questionnaire is recorded as a readable snapshot, and the admin panel can
+ * list / view / delete / export them.
  */
 class ProfileSubmissionsTest extends TestCase
 {
@@ -42,7 +42,7 @@ class ProfileSubmissionsTest extends TestCase
     {
         $config = require base_path('app/Modules/StudentProfiler/questionnaire.php');
 
-        foreach (['bachelors', 'masters', 'doctorate'] as $degree) {
+        foreach (['highschool', 'bachelors', 'masters', 'doctorate'] as $degree) {
             $sections = $config['sections'][$degree];
             $keys = array_column($sections, 'key');
 
@@ -108,26 +108,33 @@ class ProfileSubmissionsTest extends TestCase
         $this->assertSame(['Successful Entrepreneurial Venture'], $flat['Which of these differentiators apply to you?']);
     }
 
-    public function test_evaluator_submit_records_a_submission(): void
+    public function test_highschool_degree_mirrors_bachelors_questions(): void
     {
-        $this->post('/evaluate-my-profile', [
+        $config = require base_path('app/Modules/StudentProfiler/questionnaire.php');
+
+        // High School is offered as its own level, using the Bachelor's question set.
+        $this->assertContains('highschool', $config['degreeOrder']);
+        $this->assertSame('High School', $config['degrees']['highschool']['label']);
+        $this->assertSame(
+            $config['sections']['bachelors'],
+            $config['sections']['highschool'],
+            'High School questions should mirror the Bachelor\'s set'
+        );
+    }
+
+    public function test_highschool_submit_records_a_readable_snapshot(): void
+    {
+        $this->post('/profiler', [
             'action'  => 'submit',
+            'degree'  => 'highschool',
             'section' => 6,
-            'answers' => [
-                'q_cgpa'       => 'Above 90% or 9 CGPA',
-                'q_ec_engaged' => ['Associations / Clubs'],
-            ],
+            'answers' => ['q_ec_level' => 'Held Leadership positions'],
         ])->assertOk()->assertJson(['ok' => true]);
 
-        $rows = $this->store()->bySource('evaluator');
+        $rows = $this->store()->all();
         $this->assertCount(1, $rows);
-        $this->assertNull($rows[0]['degree']);
-
-        $labels = [];
-        foreach ($rows[0]['sections'] as $sec) {
-            $labels = array_merge($labels, array_column($sec['answers'], 'label'));
-        }
-        $this->assertContains('What is your College CGPA or Percentage?', $labels);
+        $this->assertSame('profiler', $rows[0]['source']);
+        $this->assertSame('highschool', $rows[0]['degree']);
     }
 
     public function test_progress_is_not_cached_each_submit_records(): void
@@ -175,13 +182,14 @@ class ProfileSubmissionsTest extends TestCase
         $this->assertCount(0, $this->store()->all());
     }
 
-    public function test_each_tab_shows_only_its_own_source(): void
+    public function test_submissions_list_shows_only_profiler_source(): void
     {
         $this->store()->add('profiler', 'Student Profiler', 'masters', [
             ['eyebrow' => 'Academics', 'title' => 'Academics', 'answers' => [
                 ['label' => 'Q', 'value' => ['PROFILER_ONLY_MARKER']],
             ]],
         ]);
+        // A stray record from the (now removed) evaluator must never surface.
         $this->store()->add('evaluator', 'Profile Evaluator', null, [
             ['eyebrow' => 'Academics', 'title' => 'Academics', 'answers' => [
                 ['label' => 'Q', 'value' => ['EVALUATOR_ONLY_MARKER']],
@@ -190,18 +198,13 @@ class ProfileSubmissionsTest extends TestCase
 
         $admin = $this->withSession(['cms_authenticated' => true]);
 
-        // Bare /admin/submissions defaults to the Student Profiler tab.
+        // Bare /admin/submissions defaults to the Student Profiler list.
         $admin->get(route('admin.submissions.index'))->assertRedirect(route('admin.submissions.profiler'));
 
         $admin->get(route('admin.submissions.profiler'))
             ->assertOk()
             ->assertSee('PROFILER_ONLY_MARKER')
             ->assertDontSee('EVALUATOR_ONLY_MARKER');
-
-        $admin->get(route('admin.submissions.evaluator'))
-            ->assertOk()
-            ->assertSee('EVALUATOR_ONLY_MARKER')
-            ->assertDontSee('PROFILER_ONLY_MARKER');
     }
 
     public function test_admin_submissions_require_authentication(): void
@@ -211,9 +214,9 @@ class ProfileSubmissionsTest extends TestCase
 
     public function test_admin_can_export_submissions_as_csv(): void
     {
-        $this->store()->add('evaluator', 'Profile Evaluator', null, [
+        $this->store()->add('profiler', 'Student Profiler', 'masters', [
             ['eyebrow' => 'Academics', 'title' => 'Your academics', 'answers' => [
-                ['label' => 'What is your College CGPA or Percentage?', 'value' => ['Above 80% or 8 CGPA']],
+                ['label' => 'Your Board in 12th Class', 'value' => ['CBSE Board']],
             ]],
         ], ['name' => 'Riya Sharma', 'email' => 'riya@example.com', 'phone' => '+91 99999 11111']);
 
@@ -226,26 +229,11 @@ class ProfileSubmissionsTest extends TestCase
         // the un-quoted tail of the header plus the data values.
         $this->assertStringContainsString('Source,Name,Email,Phone,Degree,Section,Question,Answer', $csv);
         $this->assertStringContainsString('Submitted at', $csv);
-        $this->assertStringContainsString('Profile Evaluator', $csv);
-        $this->assertStringContainsString('Above 80% or 8 CGPA', $csv);
+        $this->assertStringContainsString('Student Profiler', $csv);
+        $this->assertStringContainsString('CBSE Board', $csv);
         // Lead contact is exported alongside every answer row.
         $this->assertStringContainsString('Riya Sharma', $csv);
         $this->assertStringContainsString('riya@example.com', $csv);
-    }
-
-    public function test_submit_captures_lead_contact_into_meta(): void
-    {
-        $this->post('/evaluate-my-profile', [
-            'action'  => 'submit',
-            'section' => 6,
-            'answers' => ['q_cgpa' => 'Above 90% or 9 CGPA'],
-            'contact' => ['name' => 'Aman Verma', 'email' => 'aman@example.com', 'phone' => '+91 90000 12345'],
-        ])->assertOk()->assertJson(['ok' => true]);
-
-        $row = $this->store()->bySource('evaluator')[0];
-        $this->assertSame('Aman Verma', $row['meta']['name']);
-        $this->assertSame('aman@example.com', $row['meta']['email']);
-        $this->assertSame('+91 90000 12345', $row['meta']['phone']);
     }
 
     public function test_profiler_submit_captures_lead_contact_into_meta(): void
@@ -287,31 +275,31 @@ class ProfileSubmissionsTest extends TestCase
 
     public function test_admin_table_view_renders_answers_as_columns(): void
     {
-        $this->store()->add('evaluator', 'Profile Evaluator', null, [
+        $this->store()->add('profiler', 'Student Profiler', 'masters', [
             ['eyebrow' => 'Academics', 'title' => 'Your academics', 'answers' => [
-                ['label' => 'What is your College CGPA or Percentage?', 'value' => ['Above 80% or 8 CGPA']],
+                ['label' => 'Your Board in 12th Class', 'value' => ['CBSE Board']],
             ]],
         ], ['name' => 'Tara Singh', 'email' => 'tara@example.com', 'phone' => '12345']);
 
         $this->withSession(['cms_authenticated' => true])
-            ->get(route('admin.submissions.evaluator', ['view' => 'table']))
+            ->get(route('admin.submissions.profiler', ['view' => 'table']))
             ->assertOk()
-            ->assertSee('subs-grid', false)                                  // flat grid rendered
-            ->assertSee('What is your College CGPA or Percentage?', false)    // question is a column header
-            ->assertSee('Above 80% or 8 CGPA')                               // answer in a cell
+            ->assertSee('subs-grid', false)                     // flat grid rendered
+            ->assertSee('Your Board in 12th Class', false)       // question is a column header
+            ->assertSee('CBSE Board')                            // answer in a cell
             ->assertSee('Tara Singh');
     }
 
     public function test_admin_can_export_submissions_as_excel(): void
     {
-        $this->store()->add('evaluator', 'Profile Evaluator', null, [
+        $this->store()->add('profiler', 'Student Profiler', 'masters', [
             ['eyebrow' => 'Academics', 'title' => 'Your academics', 'answers' => [
-                ['label' => 'What is your College CGPA or Percentage?', 'value' => ['Above 80% or 8 CGPA']],
+                ['label' => 'Your Board in 12th Class', 'value' => ['CBSE Board']],
             ]],
         ], ['name' => 'Tara Singh', 'email' => 'tara@example.com', 'phone' => '12345']);
 
         $res = $this->withSession(['cms_authenticated' => true])
-            ->get(route('admin.submissions.export-excel', ['source' => 'evaluator']))
+            ->get(route('admin.submissions.export-excel', ['source' => 'profiler']))
             ->assertOk();
 
         $this->assertStringContainsString('spreadsheetml.sheet', (string) $res->headers->get('Content-Type'));
@@ -322,7 +310,7 @@ class ProfileSubmissionsTest extends TestCase
         // The package is a "stored" (uncompressed) zip, so the inline strings
         // appear verbatim in the bytes — handy to assert the data made it in.
         $this->assertStringContainsString('Tara Singh', $content);
-        $this->assertStringContainsString('What is your College CGPA or Percentage?', $content);
+        $this->assertStringContainsString('Your Board in 12th Class', $content);
     }
 
     public function test_admin_can_download_a_submission_as_doc(): void

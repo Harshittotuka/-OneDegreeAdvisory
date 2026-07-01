@@ -31,15 +31,10 @@
 </style>
 @endpush
 
-@php
-  $isProfiler = ($submission['source'] ?? '') === 'profiler';
-  $backRoute  = $isProfiler ? 'admin.submissions.profiler' : 'admin.submissions.evaluator';
-@endphp
-
 @section('content')
   <div style="margin-bottom:18px;">
-    <a class="btn btn-ghost btn-sm" href="{{ route($backRoute) }}">
-      <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to {{ $isProfiler ? 'Student Profiler' : 'Profile Evaluator' }}
+    <a class="btn btn-ghost btn-sm" href="{{ route('admin.submissions.profiler') }}">
+      <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to Student Profiler
     </a>
   </div>
 
@@ -61,7 +56,7 @@
   </div>
 
   <div class="sub-meta">
-    <span class="src-badge {{ $isProfiler ? 'src-profiler' : 'src-evaluator' }}">{{ $submission['source_label'] ?? ($submission['source'] ?? '—') }}</span>
+    <span class="src-badge src-profiler">{{ $submission['source_label'] ?? ($submission['source'] ?? '—') }}</span>
     @if(! empty($submission['degree']))<span class="deg-badge">{{ $submission['degree'] }}</span>@endif
     <span class="sub-when">
       <i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;"></i>

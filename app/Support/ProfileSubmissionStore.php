@@ -5,8 +5,8 @@ namespace App\Support;
 use Illuminate\Support\Str;
 
 /**
- * File-backed store for completed questionnaire submissions from BOTH the
- * Student Profiler (/profiler) and the Profile Evaluator (/evaluate-my-profile).
+ * File-backed store for completed questionnaire submissions from the Student
+ * Profiler (/profiler).
  *
  * Like the rest of the CMS data, submissions live in a single editable JSON file
  * (storage/app/profile-submissions.json) so they can be collected and reviewed

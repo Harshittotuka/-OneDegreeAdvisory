@@ -209,7 +209,6 @@
         ]],
         ['label' => 'Leads', 'items' => [
           ['label' => 'Student Profiler', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.profiler', 'match' => 'admin.submissions.profiler'],
-          ['label' => 'Profile Evaluator', 'icon' => 'clipboard-check', 'route' => 'admin.submissions.evaluator', 'match' => 'admin.submissions.evaluator'],
         ]],
         ['label' => 'Coming soon', 'items' => [
           ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],

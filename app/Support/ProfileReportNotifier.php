@@ -7,7 +7,7 @@ use App\Mail\ProfileReportThankYouMail;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * Sends the two emails fired when a profiler/evaluator submission completes:
+ * Sends the two emails fired when a Student Profiler submission completes:
  *   1. team notification → admissions mailbox (config site.forms.profiler.to)
  *   2. thank-you         → the student (only when a valid email was provided)
  *

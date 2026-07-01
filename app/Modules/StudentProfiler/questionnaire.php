@@ -43,8 +43,9 @@
 $sections = json_decode((string) file_get_contents(__DIR__ . '/questions.json'), true) ?: [];
 
 $config = [
-    'degreeOrder' => ['bachelors', 'masters', 'doctorate'],
+    'degreeOrder' => ['highschool', 'bachelors', 'masters', 'doctorate'],
     'degrees' => [
+        'highschool' => ['label' => 'High School', 'initial' => 'H', 'tag' => 'Class 9–12 student', 'examples' => 'Grade 9 · 10 · 11 · 12', 'accent' => 'green', 'featured' => false],
         'bachelors' => ['label' => 'Bachelor’s', 'initial' => 'B', 'tag' => 'Undergraduate degree', 'examples' => 'BS · BA · BBA · BEng', 'accent' => 'blue', 'featured' => false],
         'masters'   => ['label' => 'Master’s', 'initial' => 'M', 'tag' => 'Postgraduate degree', 'examples' => 'MS · MBA · MA · MEng', 'accent' => 'orange', 'featured' => true],
         'doctorate' => ['label' => 'Doctorate', 'initial' => 'D', 'tag' => 'PhD & research degree', 'examples' => 'PhD · DBA · EdD', 'accent' => 'gold', 'featured' => false],

@@ -13,9 +13,9 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Admin viewer for the questionnaire submissions collected from both the
- * Student Profiler (/profiler) and the Profile Evaluator (/evaluate-my-profile).
- * Read-only review plus delete and CSV export — backed by ProfileSubmissionStore.
+ * Admin viewer for the questionnaire submissions collected from the Student
+ * Profiler (/profiler). Read-only review plus delete and CSV/Excel export —
+ * backed by ProfileSubmissionStore.
  */
 class ProfileSubmissionsController extends Controller
 {
@@ -23,37 +23,21 @@ class ProfileSubmissionsController extends Controller
     {
     }
 
-    /** Bare /admin/submissions → default to the Student Profiler tab. */
+    /** Bare /admin/submissions → the Student Profiler list. */
     public function index(): RedirectResponse
     {
         return redirect()->route('admin.submissions.profiler');
     }
 
-    /** Student Profiler tab. */
+    /** Student Profiler submissions list. */
     public function profiler(): View
-    {
-        return $this->tab('profiler');
-    }
-
-    /** Profile Evaluator tab. */
-    public function evaluator(): View
-    {
-        return $this->tab('evaluator');
-    }
-
-    /** Render one source's submissions list. */
-    private function tab(string $source): View
     {
         $all = $this->store->all();
 
         return view('admin.submissions.index', [
             'portal'      => 'admin',
-            'source'      => $source,
-            'submissions' => array_values(array_filter($all, fn ($r) => ($r['source'] ?? '') === $source)),
-            'counts'      => [
-                'profiler'  => count(array_filter($all, fn ($r) => ($r['source'] ?? '') === 'profiler')),
-                'evaluator' => count(array_filter($all, fn ($r) => ($r['source'] ?? '') === 'evaluator')),
-            ],
+            'source'      => 'profiler',
+            'submissions' => array_values(array_filter($all, fn ($r) => ($r['source'] ?? '') === 'profiler')),
         ]);
     }
 
@@ -97,29 +81,21 @@ class ProfileSubmissionsController extends Controller
     {
         $id = trim((string) $request->input('id', ''));
 
-        // Return to the tab the deleted submission belonged to.
-        $tab = 'admin.submissions.profiler';
         if ($id !== '') {
-            $found = $this->store->find($id);
-            if (($found['source'] ?? '') === 'evaluator') {
-                $tab = 'admin.submissions.evaluator';
-            }
             $this->store->delete($id);
         }
 
-        return redirect()->route($tab)->with('status', 'Submission removed.');
+        return redirect()->route('admin.submissions.profiler')->with('status', 'Submission removed.');
     }
 
     /**
-     * Download submissions as a flat CSV (one row per answered question).
-     * Scoped to ?source=profiler|evaluator when given, otherwise all.
+     * Download the Student Profiler submissions as a flat CSV (one row per
+     * answered question).
      */
     public function export(Request $request): StreamedResponse
     {
-        $source = (string) $request->query('source', '');
-        $scoped = in_array($source, ['profiler', 'evaluator'], true);
-        $rows = $scoped ? $this->store->bySource($source) : $this->store->all();
-        $suffix = $scoped ? '-'.$source : '';
+        $rows = $this->store->bySource('profiler');
+        $suffix = '-profiler';
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -157,16 +133,13 @@ class ProfileSubmissionsController extends Controller
     }
 
     /**
-     * Download submissions as a real .xlsx — one row per submission, each
-     * distinct question becoming its own column (the same wide shape as the
-     * admin "Table" view). Scoped to ?source=profiler|evaluator when given.
+     * Download the Student Profiler submissions as a real .xlsx — one row per
+     * submission, each distinct question becoming its own column (the same wide
+     * shape as the admin "Table" view).
      */
     public function exportExcel(Request $request): Response
     {
-        $source = (string) $request->query('source', '');
-        $scoped = in_array($source, ['profiler', 'evaluator'], true);
-        $rows = $scoped ? $this->store->bySource($source) : $this->store->all();
-        $suffix = $scoped ? '-'.$source : '';
+        $rows = $this->store->bySource('profiler');
 
         $tab = ProfileSubmissionStore::tabulate($rows);
 
@@ -180,9 +153,8 @@ class ProfileSubmissionsController extends Controller
             $data[] = $line;
         }
 
-        $sheet = $source === 'evaluator' ? 'Profile Evaluator' : ($source === 'profiler' ? 'Student Profiler' : 'Submissions');
-        $xlsx = SimpleXlsx::build($headers, $data, $sheet);
-        $filename = 'profile-submissions'.$suffix.'-'.date('Y-m-d').'.xlsx';
+        $xlsx = SimpleXlsx::build($headers, $data, 'Student Profiler');
+        $filename = 'profile-submissions-profiler-'.date('Y-m-d').'.xlsx';
 
         return response($xlsx, 200, [
             'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

@@ -3,14 +3,14 @@
 namespace App\Support;
 
 /**
- * Turns a completed profiler/evaluator submission (the human-readable snapshot
+ * Turns a completed Student Profiler submission (the human-readable snapshot
  * produced by ProfileSubmissionStore::snapshot()) into a single $data array
  * that both the team-notification and applicant thank-you emails render.
  *
- * The Student Profiler and Profile Evaluator are intentionally NOT scored — so
- * the "analysis" here is honest and rule-based: it surfaces the key facts the
- * student gave us (destinations, intake, budget, tests, experience) and turns
- * gaps into plain next-step guidance. No score, band, or shortlist is invented.
+ * The Student Profiler is intentionally NOT scored — so the "analysis" here is
+ * honest and rule-based: it surfaces the key facts the student gave us
+ * (destinations, intake, budget, tests, experience) and turns gaps into plain
+ * next-step guidance. No score, band, or shortlist is invented.
  */
 class ProfileReportBuilder
 {

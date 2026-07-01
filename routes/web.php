@@ -64,11 +64,6 @@ Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study
 // invokable controller serves GET (wizard) and POST (session save / submit).
 Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentProfilerController::class)->name('profiler');
 
-// Profile Evaluator module (self-contained in app/Modules/ProfileEvaluator) —
-// a native rebuild of the mim-essay "Evaluate My Profile" questionnaire. Same
-// invokable GET (wizard) / POST (session save / submit) shape as the profiler.
-Route::match(['get', 'post'], '/evaluate-my-profile', \App\Modules\ProfileEvaluator\ProfileEvaluatorController::class)->name('profile.evaluate');
-
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
 Route::get('/europe', [BriefPageController::class, 'show'])->defaults('slug', 'europe')->name('europe');
@@ -173,10 +168,9 @@ Route::prefix('admin')->group(function () {
         Route::post('destinations-layout', [DestinationsLayoutController::class, 'update'])->name('admin.destinations-layout.update');
         Route::post('destinations-layout/reset', [DestinationsLayoutController::class, 'reset'])->name('admin.destinations-layout.reset');
 
-        /* ── Profiler / Evaluator submissions — split into two tabs (from /profiler and /evaluate-my-profile) ── */
+        /* ── Student Profiler submissions (from /profiler) ── */
         Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index'); // → Student Profiler tab
         Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
-        Route::get('submissions/profile-evaluator', [ProfileSubmissionsController::class, 'evaluator'])->name('admin.submissions.evaluator');
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
         Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');

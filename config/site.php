@@ -129,10 +129,9 @@ return [
        in .env so the addresses are not hard-coded.
          - contact: enquiry form on the Contact + Home pages
          - careers: application form on the Careers page
-         - profiler: Student Profiler (/profiler) + Profile Evaluator
-           (/evaluate-my-profile) — on submit a team notification and an
-           applicant thank-you (each carrying the generated profile report)
-           are sent from this mailbox. */
+         - profiler: Student Profiler (/profiler) — on submit a team
+           notification and an applicant thank-you (each carrying the generated
+           profile report) are sent from this mailbox. */
     'forms' => [
         'contact' => [
             'mailer'    => env('CONTACT_FORM_MAILER'),

@@ -64,7 +64,7 @@
         <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'new-tabs'])
                 type="button" data-stripe-trigger="new-tabs" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-new-tabs">
           <i class="nav-trigger-ai" data-lucide="sparkles" aria-hidden="true"></i>
-          <span>Student Profiler</span>
+          <span>Student Hub</span>
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
 
@@ -187,8 +187,8 @@
               </div>
             </div>
 
-            {{-- ============ Student Profiler ============ --}}
-            <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-new-tabs" data-stripe-section="new-tabs" role="region" aria-label="Student Profiler">
+            {{-- ============ Student Hub ============ --}}
+            <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-new-tabs" data-stripe-section="new-tabs" role="region" aria-label="Student Hub">
               <div class="nav-dropdown-shell">
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
@@ -201,9 +201,9 @@
                       <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="user-plus"></i></span>
                       <span class="course-menu-copy"><strong>Build My Profile</strong><small>Map academics, scores &amp; goals</small></span>
                     </a>
-                    <a class="course-menu-card" href="{{ route('profile.evaluate') }}">
-                      <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
-                      <span class="course-menu-copy"><strong>Evaluate My Profile</strong><small>Get a free expert review</small></span>
+                    <a class="course-menu-card" href="{{ route('services.test-prep') }}">
+                      <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="book-open-check"></i></span>
+                      <span class="course-menu-copy"><strong>Test Preparation</strong><small>IELTS, TOEFL, SAT, GRE &amp; GMAT prep</small></span>
                     </a>
                   </div>
                 </div>

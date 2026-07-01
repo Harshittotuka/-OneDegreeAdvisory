@@ -9,9 +9,9 @@ use Tests\Concerns\PreservesProfileSubmissions;
 use Tests\TestCase;
 
 /**
- * On submit, both the Student Profiler (/profiler) and the Profile Evaluator
- * (/evaluate-my-profile) send a team notification + an applicant thank-you,
- * each carrying the generated profile report. Direct SMTP, no queue.
+ * On submit, the Student Profiler (/profiler) sends a team notification + an
+ * applicant thank-you, each carrying the generated profile report. Direct
+ * SMTP, no queue.
  */
 class ProfileReportMailTest extends TestCase
 {
@@ -59,59 +59,6 @@ class ProfileReportMailTest extends TestCase
             return $mail->hasTo('alex@example.com')
                 && $mail->data['name'] === 'Alex Student'
                 && $mail->pdf !== null;
-        });
-    }
-
-    public function test_evaluator_submit_sends_team_and_student_emails(): void
-    {
-        Mail::fake();
-
-        $this->post('/evaluate-my-profile', [
-            'action'  => 'submit',
-            'answers' => ['anything' => 'value'],
-            'contact' => ['name' => 'Priya', 'email' => 'priya@example.com', 'phone' => '+91 91111 11111'],
-        ])->assertOk()->assertJson(['ok' => true]);
-
-        Mail::assertSent(ProfileReportTeamMail::class, fn (ProfileReportTeamMail $mail) =>
-            $mail->hasTo(config('site.forms.profiler.to')) && $mail->data['sourceLabel'] === 'Profile Evaluator');
-
-        Mail::assertSent(ProfileReportThankYouMail::class, fn (ProfileReportThankYouMail $mail) =>
-            $mail->hasTo('priya@example.com'));
-    }
-
-    public function test_evaluator_report_reads_its_own_questions(): void
-    {
-        // The evaluator's questions are worded differently from the profiler's.
-        // The report must read THEM correctly: real destination (not the
-        // university-rank question), recognise the GMAT, and never raise an
-        // English-test gap (the evaluator does not ask about English).
-        Mail::fake();
-
-        $this->post('/evaluate-my-profile', [
-            'action'  => 'submit',
-            'answers' => [
-                'q_cgpa'             => 'Above 80% or 8 CGPA',
-                'q_uni_rank'         => 'Between 10-25',
-                'q_work_years'       => '2-4 years',
-                'q_test_type'        => 'GMAT',
-                'q_test_score'       => '720',
-                'q_target_degree'    => ['MBA', 'Masters in Finance'],
-                'q_target_countries' => ['USA', 'Ireland + UK'],
-            ],
-            'contact' => ['name' => 'Neha Kapoor', 'email' => 'neha@example.com', 'phone' => '+91 90000 00000'],
-        ])->assertOk()->assertJson(['ok' => true]);
-
-        Mail::assertSent(ProfileReportTeamMail::class, function (ProfileReportTeamMail $mail) {
-            $d = $mail->data;
-
-            return $d['highlights']['Preferred destination'] === 'USA, Ireland + UK'
-                && $d['highlights']['Admission test'] === 'GMAT'
-                // No "destination" came from the university-rank question.
-                && ! str_contains(strtolower($d['highlights']['Preferred destination']), 'between')
-                // GMAT recognised as a strength.
-                && (bool) array_filter($d['strengths'], fn ($s) => str_contains($s, 'admission test'))
-                // The evaluator never asks about English, so no English gap.
-                && ! array_filter($d['improvements'], fn ($s) => str_contains($s, 'English'));
         });
     }
 

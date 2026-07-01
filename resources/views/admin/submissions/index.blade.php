@@ -78,11 +78,8 @@
 @endpush
 
 @php
-  $isProfilerTab = $source === 'profiler';
-  $tabName  = $isProfilerTab ? 'Student Profiler' : 'Profile Evaluator';
-  $tabBlurb = $isProfilerTab
-    ? 'Completed Student Profiler questionnaires (/profiler).'
-    : 'Completed Profile Evaluator questionnaires (/evaluate-my-profile).';
+  $tabName  = 'Student Profiler';
+  $tabBlurb = 'Completed Student Profiler questionnaires (/profiler).';
   $view = request('view') === 'table' ? 'table' : 'cards';
 @endphp
 
@@ -107,15 +104,6 @@
   @if(session('status'))
     <div class="panel panel-pad" style="margin-bottom:16px;padding:13px 16px;color:var(--teal-dark);font-weight:600;">{{ session('status') }}</div>
   @endif
-
-  <div class="subs-tabs">
-    <a class="subs-tab @if($source === 'profiler') is-active @endif" href="{{ route('admin.submissions.profiler') }}">
-      Student Profiler <span class="pill">{{ $counts['profiler'] }}</span>
-    </a>
-    <a class="subs-tab @if($source === 'evaluator') is-active @endif" href="{{ route('admin.submissions.evaluator') }}">
-      Profile Evaluator <span class="pill">{{ $counts['evaluator'] }}</span>
-    </a>
-  </div>
 
   @if(count($submissions))
     <div class="subs-toolbar">
@@ -278,7 +266,7 @@
   @else
     <div class="panel panel-pad" style="text-align:center;color:var(--muted);padding:50px 20px;">
       No {{ $tabName }} submissions yet. They’ll appear here when visitors complete the
-      <a href="{{ $isProfilerTab ? route('profiler') : route('profile.evaluate') }}" target="_blank">{{ $tabName }}</a>.
+      <a href="{{ route('profiler') }}" target="_blank">{{ $tabName }}</a>.
     </div>
   @endif
 @endsection

@@ -120,6 +120,9 @@
         requestAnimationFrame(function () { requestAnimationFrame(function () { reveal.classList.add("is-on"); }); });
         setTimeout(function () {
             renderWizard();
+            // Land on the first question at the very top — the full-screen reveal
+            // still covers the page here, so the jump is invisible to the user.
+            window.scrollTo({ top: 0 });
             reveal.classList.add("is-out");
             setTimeout(function () { reveal.remove(); }, reduce ? 0 : 400);
         }, reduce ? 50 : 680);

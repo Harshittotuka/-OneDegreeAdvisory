@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Confirmation / thank-you email sent back to the student who completed the
- * Student Profiler or Profile Evaluator. Includes a copy of their profile
+ * Student Profiler. Includes a copy of their profile
  * report (key facts, rule-based analysis, full Q&A). Sent from the admissions
  * mailbox.
  */
