@@ -168,7 +168,8 @@
         if (!rail) return;
         rail.innerHTML = "";
         // Top horizontal stepper (desktop/tablet).
-        var steps = E("div", { class: "sp-steps" }, sects().map(function (s, i) {
+        var stepTotal = Math.max(sects().length, 1);
+        var steps = E("div", { class: "sp-steps", style: "--sp-step-count:" + stepTotal }, sects().map(function (s, i) {
             var li = E("div", { class: "sp-stepli", "data-step": i }, [
                 E("span", { class: "sp-stepdot", "data-dot": i }),
                 E("div", { class: "sp-steptxt" }, [E("b", { text: s.eyebrow }), E("span", { "data-status": i })])
@@ -178,7 +179,14 @@
         }));
         // Compact progress bar (mobile) — mirrors the stepper state.
         var progress = E("div", { class: "sp-progress" }, [
-            E("div", { class: "sp-progress__txt" }, [E("span", { "data-sp-ptext": "" }), E("b", { "data-sp-ppct": "" })]),
+            E("div", { class: "sp-progress__head" }, [
+                E("button", { class: "sp-progress__back", type: "button", "aria-label": "Go back to previous step",
+                    onclick: function () {
+                        var total = sects().length;
+                        if (state.section > 0 && total > 0) navigate(Math.min(state.section, total) - 1);
+                    } }, [E("span", { html: "&#8592;", "aria-hidden": "true" })]),
+                E("div", { class: "sp-progress__txt" }, [E("span", { "data-sp-ptext": "" }), E("b", { "data-sp-ppct": "" })])
+            ]),
             E("div", { class: "sp-progress__bar" }, [E("div", { class: "sp-progress__fill", "data-sp-pfill": "" })])
         ]);
         rail.appendChild(steps);
@@ -191,6 +199,11 @@
         var atReview = state.section >= total;
         var count = stage.querySelector("[data-sp-count]");
         if (count) count.textContent = atReview ? "Review" : "Step " + (state.section + 1) + " of " + total;
+        var stepsEl = stage.querySelector(".sp-steps");
+        if (stepsEl) {
+            var railRatio = total > 1 ? ((atReview ? total - 1 : state.section) / (total - 1)) : 0;
+            stepsEl.style.setProperty("--sp-rail-ratio", Math.max(0, Math.min(1, railRatio)).toFixed(4));
+        }
         sects().forEach(function (s, i) {
             var li = stage.querySelector('.sp-stepli[data-step="' + i + '"]');
             var dot = stage.querySelector('[data-dot="' + i + '"]');
@@ -204,13 +217,15 @@
             if (st) st.textContent = done ? "Completed" : (active ? "In progress" : "Locked");
         });
         // mobile progress bar
-        var pct = Math.round((atReview ? total : state.section) / total * 100);
+        var pct = Math.round((atReview ? total : state.section + 1) / total * 100);
         var ptext = stage.querySelector("[data-sp-ptext]");
         var ppct = stage.querySelector("[data-sp-ppct]");
         var pfill = stage.querySelector("[data-sp-pfill]");
+        var pback = stage.querySelector(".sp-progress__back");
         if (ptext) ptext.textContent = atReview ? "Review your answers" : ("Step " + (state.section + 1) + " of " + total + " · " + sects()[state.section].eyebrow);
         if (ppct) ppct.textContent = pct + "%";
         if (pfill) pfill.setAttribute("style", "width:" + pct + "%");
+        if (pback) pback.disabled = state.section <= 0;
     }
 
     /* ===================== SECTION RENDER ===================== */
