@@ -11,10 +11,10 @@
                     "key": "q_c4ca4238",
                     "label": "Preferred Intake",
                     "options": [
-                        "SEP 26",
-                        "JULY 26",
-                        "JAN 27",
-                        "MAR 27",
+                        "Aug - Oct 26",
+                        "Jan - Mar 27",
+                        "Aug - Oct 27",
+                        "Year-Round 27",
                         "Later"
                     ]
                 }
@@ -303,10 +303,10 @@
                     "key": "q_c4ca4238",
                     "label": "Preferred Intake",
                     "options": [
-                        "SEP 26",
-                        "JULY 26",
-                        "JAN 27",
-                        "MAR 27",
+                        "Aug - Oct 26",
+                        "Jan - Mar 27",
+                        "Aug - Oct 27",
+                        "Year-Round 27",
                         "Later"
                     ]
                 }
@@ -595,10 +595,10 @@
                     "key": "q_c74d97b0",
                     "label": "Preferred Intake",
                     "options": [
-                        "SEP 26",
-                        "JULY 26",
-                        "JAN 27",
-                        "MAR 27",
+                        "Aug - Oct 26",
+                        "Jan - Mar 27",
+                        "Aug - Oct 27",
+                        "Year-Round 27",
                         "Later"
                     ]
                 }
@@ -670,6 +670,17 @@
                     "key": "q_37693cfc",
                     "label": "Your overall % or CGPA in Bachelors. If pursuing then expected % or CGPA",
                     "placeholder": "e.g. 88"
+                },
+                {
+                    "type": "radio",
+                    "key": "q_ug_rank",
+                    "label": "What would you say was the rank of your Under Grad university in your country?",
+                    "options": [
+                        "Top 10",
+                        "Between 10-25",
+                        "Between 25-50",
+                        "Below 50"
+                    ]
                 },
                 {
                     "type": "text",
@@ -772,6 +783,19 @@
                         "Multiple Industry Certifications (CFA, Six Sigma)",
                         "Publications, Awards, Patents to name",
                         "Major Projects Undertaken - 7 Figure impact, double-digit improvements"
+                    ]
+                },
+                {
+                    "type": "chips",
+                    "key": "q_achievements",
+                    "label": "Do you have any other notable achievements? (You can choose multiple)",
+                    "help": "Select all that apply.",
+                    "options": [
+                        "I have received an award / scholarship",
+                        "I have engaged in Academic Projects",
+                        "Research Papers",
+                        "Top 10 rank holder",
+                        "Unconventional background (medicine, law etc)"
                     ]
                 }
             ]
@@ -927,10 +951,10 @@
                     "key": "q_1c383cd3",
                     "label": "Preferred Intake",
                     "options": [
-                        "SEP 26",
-                        "JULY 26",
-                        "JAN 27",
-                        "MAR 26",
+                        "Aug - Oct 26",
+                        "Jan - Mar 27",
+                        "Aug - Oct 27",
+                        "Year-Round 27",
                         "Later"
                     ]
                 },
@@ -1037,6 +1061,17 @@
                     "key": "q_a1d0c6e8",
                     "label": "Your Score in Bachelors (% or CGPA). If pursuing then expected score",
                     "placeholder": "e.g. 88"
+                },
+                {
+                    "type": "radio",
+                    "key": "q_ug_rank",
+                    "label": "What would you say was the rank of your Under Grad university in your country?",
+                    "options": [
+                        "Top 10",
+                        "Between 10-25",
+                        "Between 25-50",
+                        "Below 50"
+                    ]
                 },
                 {
                     "type": "radio",
@@ -1213,6 +1248,19 @@
                         "Multiple Industry Certifications (CFA, Six Sigma)",
                         "Publications, Awards, Patents to name",
                         "Major Projects Undertaken - 7 Figure impact, double-digit improvements"
+                    ]
+                },
+                {
+                    "type": "chips",
+                    "key": "q_achievements",
+                    "label": "Do you have any other notable achievements? (You can choose multiple)",
+                    "help": "Select all that apply.",
+                    "options": [
+                        "I have received an award / scholarship",
+                        "I have engaged in Academic Projects",
+                        "Research Papers",
+                        "Top 10 rank holder",
+                        "Unconventional background (medicine, law etc)"
                     ]
                 }
             ]

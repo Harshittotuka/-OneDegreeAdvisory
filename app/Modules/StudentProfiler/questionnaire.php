@@ -90,6 +90,12 @@ $iconFor = function (string $fieldLabel, string $opt): string {
         'Multiple Industry Certifications (CFA, Six Sigma)'                      => '📜',
         'Publications, Awards, Patents to name'                                  => '🏅',
         'Major Projects Undertaken - 7 Figure impact, double-digit improvements' => '📈',
+        // Notable achievements (masters & doctorate)
+        'I have received an award / scholarship'         => '🏆',
+        'I have engaged in Academic Projects'            => '📚',
+        'Research Papers'                                => '🔬',
+        'Top 10 rank holder'                             => '🥇',
+        'Unconventional background (medicine, law etc)'  => '⚖️',
         // Countries (landmark/symbol — never regional flags, which break on Windows)
         'USA'             => '🗽',
         'UK'              => '🎡',
@@ -116,14 +122,27 @@ $iconFor = function (string $fieldLabel, string $opt): string {
     // 2) Resolve by the question's theme (detected from its label). These are all
     //    written so each option in the question gets a DISTINCT icon.
     if (str_contains($fl, 'intake')) {
-        // By month/season so SEP / JULY / JAN / MAR each differ.
+        // Intake windows (Aug–Oct 26 / Jan–Mar 27 / Aug–Oct 27 / Year-Round 27 /
+        // Later) — each a DISTINCT icon; the two Aug–Oct windows differ by year.
+        if (str_contains($ol, 'year'))  return '🔁';
+        if (str_contains($ol, 'later')) return '🗓️';
+        if (str_contains($ol, 'jan'))   return '❄️';
+        if (str_contains($ol, 'aug'))   return str_contains($ol, '27') ? '🍂' : '☀️';
+        // Fallback: map by leading month name (keeps any month-only labels working).
         $m = substr($ol, 0, 3);
         static $months = [
             'jan' => '❄️', 'feb' => '⛄', 'mar' => '🌸', 'apr' => '🌷',
             'may' => '🌼', 'jun' => '🌤️', 'jul' => '🌞', 'aug' => '☀️',
             'sep' => '🍁', 'oct' => '🍂', 'nov' => '🌫️', 'dec' => '🎄',
         ];
-        return $months[$m] ?? '🗓️'; // "Later" / anything else
+        return $months[$m] ?? '🗓️'; // anything else
+    }
+    if (str_contains($fl, 'rank of your')) {
+        // Under-grad university rank tiers (best → lower), each distinct.
+        if (str_contains($ol, 'top 10')) return '🥇';
+        if (str_contains($ol, '10-25'))  return '🥈';
+        if (str_contains($ol, '25-50'))  return '🥉';
+        return '🎯'; // "Below 50"
     }
     if (str_contains($fl, 'visa')) {
         return $ol === 'no' ? '✅' : '⚠️';

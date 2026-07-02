@@ -56,12 +56,14 @@ class ProfileSubmissionsTest extends TestCase
                 "extracurricular is not placed right after '$afterKey' for $degree"
             );
 
-            // The four MIM-derived fields are present.
+            // The four MIM-derived fields are present; masters & doctorate
+            // additionally carry the "notable achievements" multi-select.
             $ec = $sections[array_search('extracurricular', $keys, true)];
-            $this->assertSame(
-                ['q_ec_engaged', 'q_ec_level', 'q_ec_current', 'q_differentiators'],
-                array_column($ec['fields'], 'key')
-            );
+            $expected = ['q_ec_engaged', 'q_ec_level', 'q_ec_current', 'q_differentiators'];
+            if (in_array($degree, ['masters', 'doctorate'], true)) {
+                $expected[] = 'q_achievements';
+            }
+            $this->assertSame($expected, array_column($ec['fields'], 'key'));
         }
     }
 

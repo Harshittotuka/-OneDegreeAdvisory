@@ -242,7 +242,7 @@
 @keyframes sp-shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 
 /* ---- option icon-cards (mim-essay style: colourful icon on top, label below) ---- */
-.sp-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 156px)); gap: 12px; justify-content: center; }
+.sp-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 190px)); gap: 12px; justify-content: center; }
 .sp-opt {
     position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
     width: 100%; min-height: 94px; text-align: center; cursor: pointer;
