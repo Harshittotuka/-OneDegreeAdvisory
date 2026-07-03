@@ -237,8 +237,12 @@
         var last = i === arr.length - 1;
         // Skip fields flagged hidden (e.g. the standalone "Overall …" box that
         // the engscore widget has absorbed) — they stay in the config for the
-        // data model but are never rendered.
-        var fieldEls = (sec.fields || []).filter(function (f) { return !f.hidden; }).map(function (f, k) { return renderField(f, k); });
+        // data model but are never rendered. Also skip fields whose `showIf`
+        // condition isn't met yet (degree-adaptive, e.g. per-class results
+        // revealed by the chosen current class).
+        var fieldEls = (sec.fields || [])
+            .filter(function (f) { return !f.hidden && fieldVisible(f); })
+            .map(function (f, k) { return renderField(f, k); });
 
         var newMain = E("div", { class: "sp-main", "data-sp-main": "" }, [
             E("p", { class: "sp-sec-eyebrow", text: "Section " + (i + 1) + " of " + arr.length + " · " + sec.eyebrow }),
@@ -265,9 +269,53 @@
     function get(key) { return state.answers[key]; }
     function set(key, val) { state.answers[key] = val; }
 
+    // Conditional fields: a field may carry `showIf: { key, in: [...values] }`.
+    // It's only rendered/validated when the referenced answer is one of `in`.
+    // (Also accepts `equals` for a single value.) A field with no showIf always
+    // shows. Any radio change re-renders the current section so gated fields
+    // appear/disappear live.
+    function fieldVisible(f) {
+        var c = f.showIf;
+        if (!c || !c.key) return true;
+        var v = get(c.key);
+        if (Array.isArray(c.in)) return c.in.indexOf(v) > -1;
+        if ("equals" in c) return v === c.equals;
+        return true;
+    }
+    // True when any field in the CURRENT section has a showIf that references
+    // `key` — i.e. changing `key` should re-render the section.
+    function sectionGatesOn(key) {
+        var sec = sects()[state.section];
+        return !!(sec && (sec.fields || []).some(function (f) {
+            return f.showIf && f.showIf.key === key;
+        }));
+    }
+    // Drop stored answers for any field in the current section that is now
+    // hidden by its showIf — keeps review clean when a gating choice changes.
+    function pruneHidden() {
+        var sec = sects()[state.section];
+        if (!sec) return;
+        (sec.fields || []).forEach(function (f) {
+            if (f.showIf && !fieldVisible(f) && f.key in state.answers) {
+                delete state.answers[f.key];
+            }
+        });
+    }
+
+    // Labels may contain a `{class}` token that resolves to the student's
+    // chosen current class (High School card). A field declares which answer to
+    // pull from via `labelClassFrom` (an answer key); until that answer is set,
+    // the token falls back to "your current class" so the label still reads.
+    function resolveLabel(f) {
+        var label = f.label || "";
+        if (label.indexOf("{class}") === -1) return label;
+        var cls = (f.labelClassFrom && get(f.labelClassFrom)) || "";
+        return label.replace(/\{class\}/g, cls || "your current class");
+    }
+
     function wrap(f, idx, control) {
         return E("div", { class: "sp-field", "data-key": f.key, style: "--i:" + idx }, [
-            E("label", { class: "sp-field__label", text: f.label }),
+            E("label", { class: "sp-field__label", text: resolveLabel(f) }),
             control,
             f.help ? E("p", { class: "sp-field__help", text: f.help }) : null
         ]);
@@ -300,6 +348,11 @@
                         opts.querySelectorAll(".sp-opt").forEach(function (b) { b.classList.remove("is-sel"); });
                         opt.classList.add("is-sel");
                         clearErr(f.key);
+                        // If other fields in this section are gated on this
+                        // radio (showIf), drop any answers that just became
+                        // hidden (so they don't linger in review), then
+                        // re-render so gated fields appear/disappear.
+                        if (sectionGatesOn(f.key)) { pruneHidden(); renderSectionInto(); }
                     }, ci);
                     return opt;
                 }));
@@ -494,7 +547,7 @@
     function validateSection(sec) {
         var ok = true, first = null;
         (sec.fields || []).forEach(function (f) {
-            if (f.hidden) return;
+            if (f.hidden || !fieldVisible(f)) return;
             // engscore: a mandatory section requires the OVERALL score to be filled.
             var bad = (f.type === "engscore" && f.overallRequired)
                 ? !engHasOverall(f)

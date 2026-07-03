@@ -24,33 +24,126 @@
             "key": "academic",
             "eyebrow": "Academic background",
             "title": "Your academic background",
-            "subtitle": "Tell us about your Class 12 / school record.",
+            "subtitle": "Tell us your current class — we’ll ask for your completed results and your expected result.",
             "fields": [
                 {
-                    "type": "text",
-                    "key": "q_a87ff679",
-                    "label": "Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)",
-                    "placeholder": "e.g. 88",
+                    "type": "radio",
+                    "key": "q_hs_current_class",
+                    "label": "Which class are you currently in?",
+                    "options": [
+                        "Class 9",
+                        "Class 10",
+                        "Class 11",
+                        "Class 12"
+                    ],
                     "required": true
                 },
                 {
                     "type": "text",
                     "key": "q_e4da3b7f",
-                    "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
+                    "label": "Subject combinations in {class} or IBDP(* Mandatory)",
                     "placeholder": "e.g. Physics Chemistry Maths",
-                    "required": true
+                    "required": true,
+                    "labelClassFrom": "q_hs_current_class"
                 },
                 {
                     "type": "radio",
                     "key": "q_1679091c",
-                    "label": "Your Board in 12th Class",
+                    "label": "Your board in {class}",
                     "options": [
                         "CBSE Board",
                         "ICSE Board",
                         "IB Board",
                         "State Board",
                         "Other Board"
-                    ]
+                    ],
+                    "labelClassFrom": "q_hs_current_class"
+                },
+                {
+                    "type": "text",
+                    "key": "q_hs_result_c9_actual",
+                    "label": "Class 9 result (%) — actual",
+                    "placeholder": "e.g. 88",
+                    "required": true,
+                    "showIf": {
+                        "key": "q_hs_current_class",
+                        "in": [
+                            "Class 10",
+                            "Class 11",
+                            "Class 12"
+                        ]
+                    }
+                },
+                {
+                    "type": "text",
+                    "key": "q_hs_result_c9_expected",
+                    "label": "Class 9 result (%) — expected",
+                    "placeholder": "e.g. 90",
+                    "required": true,
+                    "showIf": {
+                        "key": "q_hs_current_class",
+                        "equals": "Class 9"
+                    }
+                },
+                {
+                    "type": "text",
+                    "key": "q_hs_result_c10_actual",
+                    "label": "Class 10 result (%) — actual",
+                    "placeholder": "e.g. 88",
+                    "required": true,
+                    "showIf": {
+                        "key": "q_hs_current_class",
+                        "in": [
+                            "Class 11",
+                            "Class 12"
+                        ]
+                    }
+                },
+                {
+                    "type": "text",
+                    "key": "q_hs_result_c10_expected",
+                    "label": "Class 10 result (%) — expected",
+                    "placeholder": "e.g. 90",
+                    "required": true,
+                    "showIf": {
+                        "key": "q_hs_current_class",
+                        "equals": "Class 10"
+                    }
+                },
+                {
+                    "type": "text",
+                    "key": "q_hs_result_c11_actual",
+                    "label": "Class 11 result (%) — actual",
+                    "placeholder": "e.g. 88",
+                    "required": true,
+                    "showIf": {
+                        "key": "q_hs_current_class",
+                        "in": [
+                            "Class 12"
+                        ]
+                    }
+                },
+                {
+                    "type": "text",
+                    "key": "q_hs_result_c11_expected",
+                    "label": "Class 11 result (%) — expected",
+                    "placeholder": "e.g. 90",
+                    "required": true,
+                    "showIf": {
+                        "key": "q_hs_current_class",
+                        "equals": "Class 11"
+                    }
+                },
+                {
+                    "type": "text",
+                    "key": "q_hs_result_c12_expected",
+                    "label": "Class 12 result (%) — expected",
+                    "placeholder": "e.g. 90",
+                    "required": true,
+                    "showIf": {
+                        "key": "q_hs_current_class",
+                        "equals": "Class 12"
+                    }
                 },
                 {
                     "type": "radio",
@@ -61,32 +154,6 @@
                         "32 - 38 points",
                         "39 - 45",
                         "N/A"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_45c48cce",
-                    "label": "Year of Passing 12th class(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_d3d94468",
-                    "label": "No. of backlogs/repeats (if any) Please mention the exact no of repeats.(* Mandatory)",
-                    "placeholder": "Type your answer",
-                    "required": true
-                },
-                {
-                    "type": "radio",
-                    "key": "q_6512bd43",
-                    "label": "Education Gap (In between studies or after studies)",
-                    "options": [
-                        "No Gaps",
-                        "1 Yr Gap",
-                        "2 Yr Gap",
-                        "3 Yr Gap",
-                        "3 Yr + Gap"
                     ]
                 },
                 {
@@ -150,11 +217,11 @@
                     "help": "Select all that apply.",
                     "options": [
                         "Significant International Experience",
-                        "Family business / Start Ups Exposure",
-                        "Successful Entrepreneurial Venture",
-                        "Multiple Industry Certifications (CFA, Six Sigma)",
+                        "Industrial Exposure",
+                        "Global Olympiad",
+                        "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Major Projects Undertaken - 7 Figure impact, double-digit improvements"
+                        "Monetary impact"
                     ]
                 }
             ]

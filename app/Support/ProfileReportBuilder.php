@@ -330,7 +330,16 @@ class ProfileReportBuilder
 
         $bach = $find(['% or cgpa in bachelors', 'score in bachelors']);
         $twelfth = $find(['percentage in 12th']);
-        $acad = $has($bach) ? $bach : ($has($twelfth) ? $twelfth : null);
+        // High-school card now stores per-class results (e.g. "Class 12 result
+        // (%) — expected"). Use the HIGHEST class present as the headline
+        // academic figure when there's no 12th-percentage answer. $find returns
+        // by form order, so probe each class label most-senior-first instead.
+        $classResult = null;
+        foreach (['class 12 result', 'class 11 result', 'class 10 result', 'class 9 result'] as $needle) {
+            $hit = $find([$needle]);
+            if ($has($hit)) { $classResult = $hit; break; }
+        }
+        $acad = $has($bach) ? $bach : ($has($twelfth) ? $twelfth : ($has($classResult) ? $classResult : null));
         if ($acad !== null) {
             $v = trim($acad['value']);
             $inBachelors = str_contains(mb_strtolower($acad['label']), 'bachelor');
@@ -338,7 +347,16 @@ class ProfileReportBuilder
             if (is_numeric($v) && (float) $v >= 35 && ! str_contains($v, '%')) {
                 $v .= '%';
             }
-            $line = $v.' in '.($inBachelors ? 'Bachelors' : '12th');
+            // Name the class the figure belongs to: Bachelors, a specific
+            // "Class N" (high-school per-class result), or 12th by default.
+            $where = '12th';
+            if ($inBachelors) {
+                $where = 'Bachelors';
+            } elseif (preg_match('/class\s+(\d+)/i', $acad['label'], $m)) {
+                $where = 'Class '.$m[1]
+                    .(str_contains(mb_strtolower($acad['label']), 'expected') ? ' (expected)' : '');
+            }
+            $line = $v.' in '.$where;
             if (! $inBachelors) {
                 $extras = array_filter([
                     $find(['subject combination'])['value'] ?? '',

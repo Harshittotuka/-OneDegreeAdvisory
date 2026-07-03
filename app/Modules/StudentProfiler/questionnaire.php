@@ -90,6 +90,11 @@ $iconFor = function (string $fieldLabel, string $opt): string {
         'Multiple Industry Certifications (CFA, Six Sigma)'                      => '📜',
         'Publications, Awards, Patents to name'                                  => '🏅',
         'Major Projects Undertaken - 7 Figure impact, double-digit improvements' => '📈',
+        // High-school differentiators (relabelled variants of the above)
+        'Industrial Exposure'                                                   => '🏢',
+        'Global Olympiad'                                                        => '🏅',
+        'Any Renowned certificate other than academic'                          => '📜',
+        'Monetary impact'                                                        => '📈',
         // Notable achievements (masters & doctorate)
         'I have received an award / scholarship'         => '🏆',
         'I have engaged in Academic Projects'            => '📚',
@@ -190,6 +195,14 @@ $iconFor = function (string $fieldLabel, string $opt): string {
     }
     if (str_contains($fl, 'country')) {
         return '🌍';
+    }
+    if (str_contains($fl, 'which class')) {
+        // Current class (High School) — Class 9 / 10 / 11 / 12, each distinct.
+        if (str_contains($ol, '12')) return '🎓';
+        if (str_contains($ol, '11')) return '📗';
+        if (str_contains($ol, '10')) return '📘';
+        if (str_contains($ol, '9'))  return '📙';
+        return '🏫';
     }
 
     // 3) Option-level fallbacks (course types, then a generic yes/no).
