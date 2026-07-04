@@ -46,7 +46,7 @@ class ProfileReportBuilder
         'sat score' => 'SAT Score',
         'gmat score' => 'GMAT Score',
         'gre score' => 'GRE Score',
-        'any budget constraint (Total Cost Per Anum)' => 'Budget Constraint (Total Cost Per Anum)',
+        'any budget constraint (Total Cost per Annum)' => 'Budget Constraint (Total Cost per Annum)',
         'country preference (maximum 2 country)' => 'Country Preference (Max. 2)',
         'country preference' => 'Country Preference',
         'previous visa rejections (if any)' => 'Previous Visa Rejections',

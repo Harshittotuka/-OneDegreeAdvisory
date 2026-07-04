@@ -269,7 +269,7 @@
                 {
                     "type": "radio",
                     "key": "q_3def184a",
-                    "label": "Any Budget Constraint (Total Cost Per Anum)",
+                    "label": "Any Budget Constraint (Total Cost per Annum)",
                     "options": [
                         "No Constraint",
                         "30-40 Lakhs",
@@ -554,7 +554,7 @@
                 {
                     "type": "radio",
                     "key": "q_3def184a",
-                    "label": "Any Budget Constraint (Total Cost Per Anum)",
+                    "label": "Any Budget Constraint (Total Cost per Annum)",
                     "options": [
                         "No Constraint",
                         "30-40 Lakhs",
@@ -909,7 +909,7 @@
                 {
                     "type": "radio",
                     "key": "q_34173cb3",
-                    "label": "Any Budget Constraint (Total Cost Per Anum)",
+                    "label": "Any Budget Constraint (Total Cost per Annum)",
                     "options": [
                         "No Constraint",
                         "30-40 Lakhs",
@@ -1365,7 +1365,7 @@
                 {
                     "type": "radio",
                     "key": "q_d82c8d16",
-                    "label": "Any Budget Constraint (Total Cost Per Anum)",
+                    "label": "Any Budget Constraint (Total Cost per Annum)",
                     "options": [
                         "No budget Constraint",
                         "30-40 Lakhs",
