@@ -142,12 +142,16 @@
 .tpc-ticket-city{font-family:'Poppins'; font-weight:700; font-size:20px; color:var(--tpc-navy-deep); line-height:1;}
 .tpc-ticket-route small{display:block; font-size:9.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
   color:var(--tpc-muted); margin-top:5px;}
-.tpc-ticket-plane{color:var(--tpc-accent); font-size:16px; position:relative; z-index:2; background:#fff; padding:0 5px; align-self:center;}
-/* Dashed flight path with the moving dot. */
-.tpc-ticket-line{position:absolute; left:16%; right:16%; top:9px; height:0; border-top:2px dashed #D9D5EA; z-index:1;}
-.tpc-ticket-line::after{content:''; position:absolute; top:-3px; left:0; width:7px; height:7px; border-radius:50%;
-  background:var(--tpc-accent); animation:tpcFly 3.5s linear infinite;}
-@keyframes tpcFly{0%{left:0;} 100%{left:calc(100% - 7px);}}
+/* Dashed flight path with the plane flying HOME → GOAL along it. */
+.tpc-ticket-line{position:absolute; left:26%; right:26%; top:11px; height:0; border-top:2px dashed #D9D5EA; z-index:1;}
+.tpc-ticket-plane{position:absolute; top:50%; left:0; font-size:15px; line-height:1; color:var(--tpc-accent);
+  background:#fff; padding:0 4px; /* ✈ points right toward GOAL */
+  transform:translate(0,-50%) scaleX(-1); transform-origin:center;
+  animation:tpcFly 3.6s cubic-bezier(.45,0,.55,1) infinite;}
+@keyframes tpcFly{
+  0%{left:0; transform:translate(0,-50%) scaleX(-1);}
+  100%{left:100%; transform:translate(-100%,-50%) scaleX(-1);}
+}
 .tpc-ticket-body{padding:16px 20px 18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 18px;}
 .tpc-ticket-field small{display:block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
   color:var(--tpc-muted); margin-bottom:4px;}
@@ -156,7 +160,9 @@
 .tpc-ticket-ok{color:#1F9D55 !important;}
 .tpc-ticket-barcode{height:30px; margin:0 20px 20px; border-radius:4px; opacity:.85;
   background:repeating-linear-gradient(90deg, var(--tpc-navy-deep) 0 2px, transparent 2px 5px, var(--tpc-navy-deep) 5px 7px, transparent 7px 11px);}
-@media (prefers-reduced-motion: reduce){ .tpc-ticket-line::after{animation:none;} }
+@media (prefers-reduced-motion: reduce){
+  .tpc-ticket-plane{animation:none; left:50%; transform:translate(-50%,-50%) scaleX(-1);}
+}
 
 .tpc-pay-card{background:#fff; padding:36px 34px;}
 .tpc-field-label{display:block; font-size:11.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;

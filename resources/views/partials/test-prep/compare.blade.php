@@ -174,10 +174,9 @@
           <div class="tpc-ticket" aria-hidden="true">
             <div class="tpc-ticket-top">
               <div class="tpc-ticket-route">
-                <div class="tpc-ticket-line"></div>
                 <div><div class="tpc-ticket-city">HOME</div><small>Where you are</small></div>
-                <div class="tpc-ticket-plane">✈</div>
                 <div class="tpc-ticket-goal"><div class="tpc-ticket-city">GOAL</div><small>Where you're headed</small></div>
+                <div class="tpc-ticket-line"><span class="tpc-ticket-plane">✈</span></div>
               </div>
             </div>
             <div class="tpc-ticket-body">

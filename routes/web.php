@@ -105,6 +105,7 @@ Route::prefix('admin')->group(function () {
         // Admin portal — dashboard + enrollments / payments.
         Route::get('panel', [EnrollmentsController::class, 'overview'])->name('admin.overview');
         Route::get('enrollments', [EnrollmentsController::class, 'index'])->name('admin.enrollments.index');
+        Route::get('enrollments/test-prep', [EnrollmentsController::class, 'testPrep'])->name('admin.enrollments.test-prep');
         Route::patch('enrollments/{attempt}/status', [EnrollmentsController::class, 'updateStatus'])->name('admin.enrollments.status');
         Route::delete('enrollments/{attempt}', [EnrollmentsController::class, 'destroy'])->name('admin.enrollments.destroy');
 

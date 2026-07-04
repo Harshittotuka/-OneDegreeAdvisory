@@ -14,28 +14,8 @@
     ];
 
     $tests = [
-        ['title' => '(ACT) American College Testing', 'img' => asset('assets/test-prep/courses/ACT.webp'),
-         'desc' => 'The ACT is a globally recognized undergraduate admission test for students planning to study in the USA and other international destinations. It evaluates English, Mathematics, Reading, Science, and optional Writing skills. Our ACT preparation focuses on concept clarity, time management, and exam strategies to maximize your score.'],
-        ['title' => '(SAT) Scholastic Assessment Test', 'img' => asset('assets/test-prep/courses/SAT.webp'),
-         'desc' => 'The SAT is one of the most important standardized tests for college admissions abroad. It measures critical reading, writing, and mathematical abilities. We help students build strong fundamentals, improve analytical thinking, and gain confidence through practice tests and expert mentoring.'],
-        ['title' => '(IELTS) International English Language Testing System', 'img' => asset('assets/test-prep/courses/IELTS.webp'),
-         'desc' => 'IELTS is an internationally accepted English proficiency test required for study, work, and migration purposes. It assesses Listening, Reading, Writing, and Speaking skills. Our IELTS coaching includes personalized speaking sessions, writing evaluations, and real exam simulations for better performance.'],
-        ['title' => '(PTE) Pearson Test of English', 'img' => asset('assets/test-prep/courses/PTE.webp'),
-         'desc' => 'The Pearson Test of English (PTE) is a computer-based English language exam accepted by universities and immigration authorities worldwide. Our PTE training helps students master speaking fluency, pronunciation, grammar, and AI-based test techniques for higher scores.'],
-        ['title' => '(TOEFL) Test of English as a Foreign Language', 'img' => asset('assets/test-prep/courses/TOEFL.webp'),
-         'desc' => 'TOEFL measures academic English proficiency for students applying to universities in English-speaking countries. We provide structured preparation covering all four modules along with practice exercises, vocabulary enhancement, and test-taking strategies.'],
-        ['title' => '(GRE) Graduate Record Examinations', 'img' => asset('assets/test-prep/courses/GRE.webp'),
-         'desc' => 'The GRE is required for admission into many graduate and postgraduate programs across the world. It evaluates verbal reasoning, quantitative reasoning, and analytical writing skills. Our GRE coaching includes advanced quantitative problem-solving, vocabulary development, and mock examinations.'],
         ['title' => '(GMAT) Graduate Management Admission Test', 'img' => asset('assets/test-prep/courses/GMAT.webp'),
          'desc' => 'The GMAT is specifically designed for MBA and business school aspirants. It assesses analytical, quantitative, verbal, and reasoning abilities. Our preparation program helps students improve logical thinking, data interpretation, and overall business aptitude.'],
-        ['title' => '(IMAT) International Medical Admissions Test', 'img' => 'https://images.unsplash.com/photo-1581595219315-a187dd40c322?auto=format&fit=crop&w=800&q=80',
-         'desc' => 'The International Medical Admissions Test (IMAT) is essential for students seeking admission to medical universities in Italy. Our IMAT preparation covers Biology, Chemistry, Physics, Mathematics, and Logical Reasoning with expert guidance and targeted practice sessions.'],
-        ['title' => '(UCAT) University Clinical Aptitude Test', 'img' => 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=800&q=80',
-         'desc' => 'The UCAT is used by medical and dental schools primarily in the UK to assess aptitude, cognitive ability, and professional behavior. We provide strategic coaching for verbal reasoning, decision making, quantitative reasoning, abstract reasoning, and situational judgment.'],
-        ['title' => 'EU Medicine Entrance Exams', 'img' => 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80',
-         'desc' => 'European medical universities often require entrance examinations for international students. Our specialized preparation programs help students succeed in Biology, Chemistry, Physics, and medical aptitude tests required by top European institutions.'],
-        ['title' => '(LNAT) Law National Aptitude Test', 'img' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
-         'desc' => 'The LNAT is an admissions test for law programs at leading universities. It evaluates reading comprehension, logical reasoning, and essay-writing skills. Our LNAT coaching develops critical thinking abilities and teaches effective legal argumentation techniques.'],
         ['title' => 'Tutoring', 'img' => 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80',
          'desc' => 'We offer personalized tutoring services tailored to individual learning styles and academic goals. Whether students need subject-specific support, homework assistance, or exam preparation, our experienced mentors provide one-on-one guidance for continuous improvement and success.'],
     ];

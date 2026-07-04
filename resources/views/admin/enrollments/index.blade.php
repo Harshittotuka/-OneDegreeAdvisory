@@ -1,6 +1,20 @@
 @extends('admin.layout')
 
-@section('title', 'Enrollments')
+@php
+  // Context lets this table be reused for the all-site list and section-scoped
+  // lists (e.g. Test Prep). Falls back to the original all-enrollments behaviour.
+  $ctx = ($listContext ?? []) + [
+    'title' => 'Enrollments',
+    'listRoute' => 'admin.enrollments.index',
+    'showPage' => true,
+    'intro' => null,
+    'typeNames' => [],
+  ];
+  $type = $type ?? '';
+  $typeNames = $ctx['typeNames'] ?? [];
+@endphp
+
+@section('title', $ctx['title'])
 
 @push('head')
 <style>
@@ -77,6 +91,9 @@
   @endphp
 
   <div data-refresh-zone>
+  @if(!empty($ctx['intro']))
+    <p style="color:var(--muted); font-size:.9rem; margin:-4px 0 20px; max-width:680px;">{{ $ctx['intro'] }}</p>
+  @endif
   <div class="en-stats">
     <div class="en-stat"><div class="k"><i data-lucide="users"></i> Total enrollments</div><div class="v">{{ number_format($stats['total']) }}</div></div>
     <div class="en-stat"><div class="k"><i data-lucide="badge-check"></i> Paid</div><div class="v">{{ number_format($stats['paid']) }}</div></div>
@@ -85,8 +102,16 @@
   </div>
 
   <div class="en-tools">
-    <form method="GET" action="{{ route('admin.enrollments.index') }}">
+    <form method="GET" action="{{ route($ctx['listRoute']) }}">
       <input type="text" name="q" value="{{ $q }}" placeholder="Search name, email, phone, plan, payment id…">
+      @if(count($typeNames))
+        <select name="type" onchange="this.form.submit()" title="Filter by program">
+          <option value="">All programs</option>
+          @foreach($typeNames as $name)
+            <option value="{{ $name }}" @selected($type === $name)>{{ $name }}</option>
+          @endforeach
+        </select>
+      @endif
       <select name="status" onchange="this.form.submit()">
         <option value="">All statuses</option>
         <option value="paid" @selected($status==='paid')>Paid</option>
@@ -95,8 +120,8 @@
         <option value="order_failed" @selected($status==='order_failed')>Order failed</option>
       </select>
       <button class="btn btn-primary btn-sm" type="submit"><i data-lucide="search" style="width:15px;height:15px;"></i> Search</button>
-      @if($q !== '' || $status !== '')
-        <a class="btn btn-ghost btn-sm" href="{{ route('admin.enrollments.index') }}">Clear</a>
+      @if($q !== '' || $status !== '' || $type !== '')
+        <a class="btn btn-ghost btn-sm" href="{{ route($ctx['listRoute']) }}">Clear</a>
       @endif
     </form>
     <span class="en-count">{{ number_format(count($attempts)) }} shown</span>
@@ -108,7 +133,7 @@
         <thead>
           <tr>
             <th>Date</th><th>Customer</th><th>Phone</th><th>Plan</th><th>Amount</th>
-            <th>Status</th><th>Page</th><th>Razorpay</th><th>Actions</th>
+            <th>Status</th>@if($ctx['showPage'])<th>Page</th>@endif<th>Razorpay</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -121,7 +146,7 @@
               <td data-label="Plan">{{ $a->item_name }}</td>
               <td data-label="Amount" class="en-amt">{{ $fmt($a->amount) }}</td>
               <td data-label="Status"><span class="badge {{ $cls }}">{{ $lbl }}</span></td>
-              <td data-label="Page">{{ $a->page_slug }}</td>
+              @if($ctx['showPage'])<td data-label="Page">{{ $a->page_slug }}</td>@endif
               <td data-label="Razorpay">
                 @if($a->razorpay_payment_id)<div class="en-id">{{ $a->razorpay_payment_id }}</div>@endif
                 @if($a->razorpay_order_id)<div class="en-id">{{ $a->razorpay_order_id }}</div>@endif

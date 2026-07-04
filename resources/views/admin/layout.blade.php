@@ -205,7 +205,8 @@
           ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.overview', 'match' => 'admin.overview'],
         ]],
         ['label' => 'Payments', 'items' => [
-          ['label' => 'Enrollments', 'icon' => 'users', 'route' => 'admin.enrollments.index', 'match' => 'admin.enrollments'],
+          ['label' => 'Enrollments', 'icon' => 'users', 'route' => 'admin.enrollments.index', 'match' => 'admin.enrollments.index'],
+          ['label' => 'Test Prep', 'icon' => 'graduation-cap', 'route' => 'admin.enrollments.test-prep', 'match' => 'admin.enrollments.test-prep'],
         ]],
         ['label' => 'Leads', 'items' => [
           ['label' => 'Student Profiler', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.profiler', 'match' => 'admin.submissions.profiler'],

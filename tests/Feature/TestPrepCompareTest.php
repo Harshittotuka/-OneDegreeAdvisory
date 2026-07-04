@@ -259,4 +259,90 @@ class TestPrepCompareTest extends TestCase
 
         $this->assertDatabaseCount('payment_attempts', 0);
     }
+
+    /* ─────────────────────── Admin: Test-Prep enrolments ─────────────────────── */
+
+    public function test_test_prep_type_filter_offers_cms_and_legacy_program_names(): void
+    {
+        if (! in_array('sqlite', \PDO::getAvailableDrivers(), true)) {
+            $this->markTestSkipped('The PHP SQLite PDO driver is not installed.');
+        }
+        Artisan::call('migrate:fresh', ['--force' => true]);
+
+        // CMS lists GRE + IELTS.
+        $this->store()->save([
+            'style' => 'bars',
+            'programs' => [
+                ['name' => 'GRE', 'price' => '18000', 'months' => '2.5', 'visible' => true],
+                ['name' => 'IELTS', 'price' => '4000', 'months' => '1', 'visible' => true],
+            ],
+        ]);
+
+        // Two attempts: one for a current program, one for a program that only
+        // exists in the historical data (renamed/removed since — must still show).
+        $this->seedTestPrepAttempt('GRE', 'a@x.test');
+        $this->seedTestPrepAttempt('GRE Coaching (Legacy)', 'b@x.test');
+
+        $html = $this->withSession(['cms_authenticated' => true])
+            ->get(route('admin.enrollments.test-prep'))
+            ->assertOk()
+            // The dropdown offers both the CMS program and the legacy data name.
+            ->assertSee('All programs')
+            ->assertSee('GRE Coaching (Legacy)')
+            ->assertSee('IELTS')
+            ->getContent();
+
+        // Sanity: the legacy option is a real <option>, not just body text.
+        $this->assertStringContainsString('<option value="GRE Coaching (Legacy)"', $html);
+    }
+
+    public function test_test_prep_type_filter_scopes_the_list_to_one_program(): void
+    {
+        if (! in_array('sqlite', \PDO::getAvailableDrivers(), true)) {
+            $this->markTestSkipped('The PHP SQLite PDO driver is not installed.');
+        }
+        Artisan::call('migrate:fresh', ['--force' => true]);
+
+        $this->store()->save([
+            'style' => 'bars',
+            'programs' => [['name' => 'GRE', 'price' => '18000', 'months' => '2.5', 'visible' => true]],
+        ]);
+
+        $this->seedTestPrepAttempt('GRE', 'gre@x.test', 'GRE Student');
+        $this->seedTestPrepAttempt('GRE Coaching (Legacy)', 'legacy@x.test', 'Legacy Student');
+
+        // Filtering by the legacy type shows only that student, not the GRE one.
+        $this->withSession(['cms_authenticated' => true])
+            ->get(route('admin.enrollments.test-prep', ['type' => 'GRE Coaching (Legacy)']))
+            ->assertOk()
+            ->assertSee('Legacy Student')
+            ->assertDontSee('GRE Student');
+
+        // An unknown/unoffered type is ignored — the full list comes back.
+        $this->withSession(['cms_authenticated' => true])
+            ->get(route('admin.enrollments.test-prep', ['type' => 'Not A Program']))
+            ->assertOk()
+            ->assertSee('Legacy Student')
+            ->assertSee('GRE Student');
+    }
+
+    /** Insert a paid Test-Prep enrolment row directly (bypassing the pay flow). */
+    private function seedTestPrepAttempt(string $itemName, string $email, string $name = 'Someone'): void
+    {
+        PaymentAttempt::create([
+            'request_token' => bin2hex(random_bytes(16)),
+            'session_hash' => str_repeat('a', 64),
+            'page_slug' => TestPrepCompareStore::PAGE_SLUG,
+            'block_id' => TestPrepCompareStore::BLOCK_ID,
+            'option_index' => 0,
+            'item_name' => $itemName,
+            'amount' => 1_800_000,
+            'currency' => 'INR',
+            'status' => 'paid',
+            'paid_at' => now(),
+            'customer_name' => $name,
+            'customer_email' => $email,
+            'customer_phone' => '+91 90000 00000',
+        ]);
+    }
 }
