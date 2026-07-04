@@ -704,16 +704,39 @@
     }
 
     /* ---------- lead contact (name / email / phone) ---------- */
+    function cleanPhone(v) {
+        return String(v || "").replace(/[^0-9+().\-\s]/g, "");
+    }
+
+    function phoneValid(v) {
+        return /\d/.test(String(v || ""));
+    }
+
     function cfield(labelText, key, type, required) {
-        var input = E("input", { class: "sp-cinput", type: type, value: (state.contact[key] || ""),
+        var inputAttrs = { class: "sp-cinput", type: type, value: (state.contact[key] || ""),
             placeholder: labelText, autocomplete: key === "name" ? "name" : key, required: required,
-            "aria-label": labelText, "aria-required": required ? "true" : "false", "aria-invalid": "false" });
+            "aria-label": labelText, "aria-required": required ? "true" : "false", "aria-invalid": "false" };
+        if (key === "phone") {
+            inputAttrs.inputmode = "tel";
+            inputAttrs.pattern = "[0-9+().\\-\\s]*";
+            inputAttrs.value = cleanPhone(inputAttrs.value);
+            state.contact[key] = inputAttrs.value;
+        }
+        var input = E("input", inputAttrs);
         var field = E("label", { class: "sp-cfield" }, [
             E("span", { class: "sp-cfield__lab", text: labelText + (required ? " *" : " (optional)") }),
             input,
             E("span", { class: "sp-cfield__err", "data-cerr": key })
         ]);
-        input.addEventListener("input", function () { state.contact[key] = input.value; field.classList.remove("is-error"); input.setAttribute("aria-invalid", "false"); });
+        input.addEventListener("input", function () {
+            if (key === "phone") {
+                var cleaned = cleanPhone(input.value);
+                if (cleaned !== input.value) input.value = cleaned;
+            }
+            state.contact[key] = input.value;
+            field.classList.remove("is-error");
+            input.setAttribute("aria-invalid", "false");
+        });
         return field;
     }
 
@@ -748,7 +771,8 @@
         var bad = [];
         if (!(state.contact.name || "").trim()) bad.push(setCErr("name", "Please enter your name"));
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((state.contact.email || "").trim())) bad.push(setCErr("email", "Please enter a valid email"));
-        if (!(state.contact.phone || "").trim()) bad.push(setCErr("phone", "Please enter your phone number"));
+        state.contact.phone = cleanPhone(state.contact.phone);
+        if (!phoneValid(state.contact.phone)) bad.push(setCErr("phone", "Please enter a valid phone number"));
         bad = bad.filter(Boolean);
         if (bad.length) { bad[0].scrollIntoView({ behavior: "smooth", block: "center" }); return false; }
         return true;

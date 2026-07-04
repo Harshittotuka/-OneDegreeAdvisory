@@ -257,12 +257,13 @@ class ProfileSubmissionsTest extends TestCase
             'degree'  => 'masters',
             'section' => 6,
             'answers' => ['q_ec_level' => 'Just Participated'],
-            'contact' => ['name' => 'Neha Gupta', 'email' => 'neha@example.com', 'phone' => '9876543210'],
+            'contact' => ['name' => 'Neha Gupta', 'email' => 'neha@example.com', 'phone' => '+91 98abc765-43210'],
         ])->assertOk()->assertJson(['ok' => true]);
 
         $row = $this->store()->all()[0];
         $this->assertSame('Neha Gupta', $row['meta']['name']);
         $this->assertSame('neha@example.com', $row['meta']['email']);
+        $this->assertSame('+91 98765-43210', $row['meta']['phone']);
     }
 
     public function test_admin_list_and_detail_show_lead_contact(): void

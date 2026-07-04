@@ -16,7 +16,7 @@
     $tests = [
         ['title' => '(GMAT) Graduate Management Admission Test', 'img' => asset('assets/test-prep/courses/GMAT.webp'),
          'desc' => 'The GMAT is specifically designed for MBA and business school aspirants. It assesses analytical, quantitative, verbal, and reasoning abilities. Our preparation program helps students improve logical thinking, data interpretation, and overall business aptitude.'],
-        ['title' => 'Tutoring', 'img' => 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80',
+        ['title' => 'Online Tutoring', 'img' => 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80',
          'desc' => 'We offer personalized tutoring services tailored to individual learning styles and academic goals. Whether students need subject-specific support, homework assistance, or exam preparation, our experienced mentors provide one-on-one guidance for continuous improvement and success.'],
     ];
 @endphp

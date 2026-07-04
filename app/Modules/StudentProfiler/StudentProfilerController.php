@@ -124,7 +124,7 @@ class StudentProfilerController
         return [
             'name'  => trim((string) ($contact['name'] ?? '')),
             'email' => trim((string) ($contact['email'] ?? '')),
-            'phone' => trim((string) ($contact['phone'] ?? '')),
+            'phone' => trim((string) preg_replace('/[^0-9+().\-\s]/', '', (string) ($contact['phone'] ?? ''))),
         ];
     }
 
