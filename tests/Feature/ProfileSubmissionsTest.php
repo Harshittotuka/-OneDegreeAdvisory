@@ -56,11 +56,26 @@ class ProfileSubmissionsTest extends TestCase
                 "extracurricular is not placed right after '$afterKey' for $degree"
             );
 
-            // The four MIM-derived fields are present, followed by the
-            // "notable achievements" multi-select — on every level.
+            // The four MIM-derived extracurricular fields are present on every
+            // level; notable achievements belongs only to master's / doctorate
+            // academic background.
             $ec = $sections[array_search('extracurricular', $keys, true)];
-            $expected = ['q_ec_engaged', 'q_ec_level', 'q_ec_current', 'q_differentiators', 'q_achievements'];
-            $this->assertSame($expected, array_column($ec['fields'], 'key'));
+            $this->assertSame(['q_ec_engaged', 'q_ec_level', 'q_ec_current', 'q_differentiators'], array_column($ec['fields'], 'key'));
+
+            $allFieldKeys = [];
+            foreach ($sections as $section) {
+                $allFieldKeys = array_merge($allFieldKeys, array_column($section['fields'], 'key'));
+            }
+
+            $academicKey = $degree === 'doctorate' ? 'higher_ed' : 'academic';
+            $academic = $sections[array_search($academicKey, $keys, true)];
+            $academicFieldKeys = array_column($academic['fields'], 'key');
+
+            if (in_array($degree, ['masters', 'doctorate'], true)) {
+                $this->assertContains('q_achievements', $academicFieldKeys);
+            } else {
+                $this->assertNotContains('q_achievements', $allFieldKeys);
+            }
         }
     }
 

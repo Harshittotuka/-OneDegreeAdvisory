@@ -85,6 +85,7 @@ $iconFor = function (string $fieldLabel, string $opt): string {
         'No, was earlier involved'  => '⏳',
         // Differentiators
         'Significant International Experience'                                   => '🌍',
+        'International Experience'                                               => '🌍',
         'Family business / Start Ups Exposure'                                   => '🏢',
         'Successful Entrepreneurial Venture'                                     => '🚀',
         'Multiple Industry Certifications (CFA, Six Sigma)'                      => '📜',
@@ -95,6 +96,8 @@ $iconFor = function (string $fieldLabel, string $opt): string {
         'Global Olympiad'                                                        => '🏅',
         'Any Renowned certificate other than academic'                          => '📜',
         'Monetary impact'                                                        => '📈',
+        'Project Monetary impact'                                                => '📈',
+        'Project Monetary Impact'                                                => '📈',
         // Notable achievements (masters & doctorate)
         'I have received an award / scholarship'         => '🏆',
         'I have engaged in Academic Projects'            => '📚',
@@ -268,8 +271,40 @@ $workIcons = function (array $options): array {
     }, $options);
 };
 
-// Walk every degree's sections and attach an icon to each radio/chips option.
-// Text / tel fields have no options and are left exactly as they are.
+/**
+ * Attach numeric input constraints to free-value questions that clearly expect
+ * numbers. The client enforces these while typing; the stored answer remains the
+ * same string value the report/admin pipeline already expects.
+ */
+$applyInputRule = function (array &$field): void {
+    if (($field['type'] ?? '') !== 'text') {
+        return;
+    }
+
+    $label = mb_strtolower($field['label'] ?? '');
+    $rule = null;
+
+    if (preg_match('/\byear of (passing|pass|passed)\b/', $label)) {
+        $rule = ['kind' => 'integer', 'inputMode' => 'numeric', 'maxLength' => 4];
+    } elseif (str_contains($label, 'backlogs') || str_contains($label, 'repeats')) {
+        $rule = ['kind' => 'integer', 'inputMode' => 'numeric', 'min' => 0, 'maxLength' => 2];
+    } elseif (str_contains($label, 'ielts') && str_contains($label, 'score')) {
+        $rule = ['kind' => 'decimal', 'inputMode' => 'decimal', 'min' => 0, 'max' => 9, 'maxDecimals' => 1];
+    } elseif (
+        str_contains($label, 'percentage') ||
+        str_contains($label, 'result (%)') ||
+        str_contains($label, '%') ||
+        str_contains($label, 'cgpa')
+    ) {
+        $rule = ['kind' => 'decimal', 'inputMode' => 'decimal', 'min' => 0, 'max' => 100, 'maxDecimals' => 2];
+    }
+
+    if ($rule) {
+        $field['input'] = $rule;
+    }
+};
+
+// Walk every degree's sections and attach presentation + input metadata.
 foreach ($config['sections'] as $degree => &$sections) {
     foreach ($sections as &$section) {
         // Iterate $section['fields'] directly by reference — NOT ($section['fields'] ?? []),
@@ -283,7 +318,13 @@ foreach ($config['sections'] as $degree => &$sections) {
         // whether it was mandatory so the widget can enforce the overall score.
         $overallRequired = false;
         foreach (($section['fields'] ?? []) as $f) {
-            if (($f['type'] ?? '') === 'text' && str_contains(mb_strtolower($f['label'] ?? ''), 'overall')) {
+            $fl = mb_strtolower($f['label'] ?? '');
+            if (
+                ($f['type'] ?? '') === 'text' &&
+                str_contains($fl, 'overall') &&
+                str_contains($fl, 'score') &&
+                preg_match('/\b(ielts|toefl|pte)\b/', $fl)
+            ) {
                 if (! empty($f['required'])) {
                     $overallRequired = true;
                 }
@@ -292,14 +333,21 @@ foreach ($config['sections'] as $degree => &$sections) {
 
         foreach ($section['fields'] as &$field) {
             $fl0 = mb_strtolower($field['label'] ?? '');
+            $applyInputRule($field);
 
             // Hide the standalone "Overall … Score" text field — the engscore
             // widget below renders the overall input itself (its requiredness is
             // carried over to the widget). Kept in $config but flagged hidden so
             // the JS skips it; nothing is rendered or validated twice.
-            if (($field['type'] ?? '') === 'text' && str_contains($fl0, 'overall')) {
+            if (
+                ($field['type'] ?? '') === 'text' &&
+                str_contains($fl0, 'overall') &&
+                str_contains($fl0, 'score') &&
+                preg_match('/\b(ielts|toefl|pte)\b/', $fl0)
+            ) {
                 $field['hidden']   = true;
                 $field['required'] = false;
+                unset($field['input']);
                 continue;
             }
 
@@ -313,6 +361,7 @@ foreach ($config['sections'] as $degree => &$sections) {
             // generic snapshot/review code already renders as chips.
             if (($field['type'] ?? '') === 'text' && str_contains($fl0, 'individual score')) {
                 $field['type'] = 'engscore';
+                unset($field['input']);
                 $field['help'] = 'Add scores for any test you have taken — IELTS, TOEFL and/or PTE. Switch tabs to enter more than one; all are saved.';
                 $field['overall'] = true;
                 $field['overallRequired'] = $overallRequired;

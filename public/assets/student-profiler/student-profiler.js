@@ -313,6 +313,69 @@
         return label.replace(/\{class\}/g, cls || "your current class");
     }
 
+    function inputRule(f) {
+        return (f && f.input && typeof f.input === "object") ? f.input : null;
+    }
+
+    function numberString(n) {
+        return String(n).replace(/\.0+$/, "");
+    }
+
+    function cleanInteger(v, rule) {
+        var out = String(v || "").replace(/\D/g, "");
+        if (rule.maxLength) out = out.slice(0, Number(rule.maxLength) || out.length);
+        if (out !== "" && rule.max != null && Number(out) > Number(rule.max)) out = numberString(rule.max);
+        return out;
+    }
+
+    function cleanDecimal(v, rule) {
+        var raw = String(v || "").replace(/[^\d.]/g, "");
+        var dot = raw.indexOf(".");
+        if (dot !== -1) {
+            raw = raw.slice(0, dot + 1) + raw.slice(dot + 1).replace(/\./g, "");
+        }
+        var maxDecimals = rule.maxDecimals == null ? 2 : Number(rule.maxDecimals);
+        if (dot !== -1 && maxDecimals >= 0) {
+            var parts = raw.split(".");
+            raw = parts[0] + "." + (parts[1] || "").slice(0, maxDecimals);
+        }
+        if (raw !== "" && raw !== "." && rule.max != null && Number(raw) > Number(rule.max)) {
+            raw = numberString(rule.max);
+        }
+        return raw === "." ? "" : raw;
+    }
+
+    function cleanByRule(v, rule) {
+        if (!rule) return String(v || "");
+        return rule.kind === "integer" ? cleanInteger(v, rule) : cleanDecimal(v, rule);
+    }
+
+    function finishByRule(v, rule) {
+        var out = cleanByRule(v, rule);
+        return out.replace(/\.$/, "");
+    }
+
+    function numericValid(v, rule) {
+        if (!rule || isEmpty(v)) return true;
+        var s = String(v);
+        if (rule.kind === "integer" && !/^\d+$/.test(s)) return false;
+        if (rule.kind !== "integer" && !/^\d+(\.\d+)?$/.test(s)) return false;
+        var n = Number(s);
+        if (rule.min != null && n < Number(rule.min)) return false;
+        if (rule.max != null && n > Number(rule.max)) return false;
+        return true;
+    }
+
+    function applyInputAttrs(attrs, rule) {
+        if (!rule) return attrs;
+        attrs.inputmode = rule.inputMode || (rule.kind === "integer" ? "numeric" : "decimal");
+        attrs.pattern = rule.kind === "integer" ? "[0-9]*" : "[0-9]*[.]?[0-9]*";
+        if (rule.maxLength) attrs.maxlength = String(rule.maxLength);
+        if (rule.min != null) attrs.min = String(rule.min);
+        if (rule.max != null) attrs.max = String(rule.max);
+        return attrs;
+    }
+
     function wrap(f, idx, control) {
         return E("div", { class: "sp-field", "data-key": f.key, style: "--i:" + idx }, [
             E("label", { class: "sp-field__label", text: resolveLabel(f) }),
@@ -374,11 +437,28 @@
             }
             case "engscore": return wrap(f, i, renderEng(f));
             case "text": case "email": case "tel": default: {
-                var input = E("input", { type: (f.type === "text" ? "text" : f.type), placeholder: f.placeholder || "", value: get(f.key) || "" });
-                input.addEventListener("input", function () { set(f.key, input.value); clearErr(f.key); });
+                var rule = inputRule(f);
+                var value = rule ? cleanByRule(get(f.key) || "", rule) : (get(f.key) || "");
+                var attrs = applyInputAttrs({ type: (f.type === "text" ? "text" : f.type), placeholder: f.placeholder || "", value: value }, rule);
+                var input = E("input", attrs);
+                input.addEventListener("input", function () {
+                    if (rule) {
+                        var cleaned = cleanByRule(input.value, rule);
+                        if (cleaned !== input.value) input.value = cleaned;
+                    }
+                    set(f.key, input.value);
+                    clearErr(f.key);
+                });
                 var ctl = E("div", { class: "sp-control sp-control--input", "data-key": f.key }, [input, f.unit ? E("span", { class: "sp-unit", text: f.unit }) : null]);
                 input.addEventListener("focus", function () { ctl.classList.add("is-focus"); });
-                input.addEventListener("blur", function () { ctl.classList.remove("is-focus"); });
+                input.addEventListener("blur", function () {
+                    ctl.classList.remove("is-focus");
+                    if (rule) {
+                        var finished = finishByRule(input.value, rule);
+                        if (finished !== input.value) input.value = finished;
+                        set(f.key, finished);
+                    }
+                });
                 return wrap(f, i, ctl);
             }
         }
@@ -464,8 +544,21 @@
         function tune(code, scale, max, step) {
             var span = scaleEls[code], inp = inputEls[code];
             if (!span || !inp) return;
-            if (activeTest()) { span.textContent = scale; inp.setAttribute("max", max); inp.setAttribute("step", step); }
-            else { span.textContent = ""; inp.removeAttribute("max"); }
+            if (activeTest()) {
+                span.textContent = scale;
+                inp.setAttribute("max", max);
+                inp.setAttribute("step", step);
+                inp.dataset.ruleKind = String(step) === "1" ? "integer" : "decimal";
+                inp.dataset.ruleMax = max || "";
+                inp.dataset.ruleDecimals = String(step) === "1" ? "0" : "1";
+            }
+            else {
+                span.textContent = "";
+                inp.removeAttribute("max");
+                delete inp.dataset.ruleKind;
+                delete inp.dataset.ruleMax;
+                delete inp.dataset.ruleDecimals;
+            }
             span.classList.remove("is-pop"); void span.offsetWidth; span.classList.add("is-pop");
         }
         function applyScale() {
@@ -497,7 +590,28 @@
             inputLabel[code] = label;
             var scale = E("span", { class: "sp-eng__scale" });
             scaleEls[code] = scale;
-            inp.addEventListener("input", function () { curScores()[label] = inp.value; commit(); });
+            inp.addEventListener("input", function () {
+                var cleaned = cleanByRule(inp.value, {
+                    kind: inp.dataset.ruleKind || "decimal",
+                    min: 0,
+                    max: inp.dataset.ruleMax || null,
+                    maxDecimals: inp.dataset.ruleDecimals || 1
+                });
+                if (cleaned !== inp.value) inp.value = cleaned;
+                curScores()[label] = inp.value;
+                commit();
+            });
+            inp.addEventListener("blur", function () {
+                var finished = finishByRule(inp.value, {
+                    kind: inp.dataset.ruleKind || "decimal",
+                    min: 0,
+                    max: inp.dataset.ruleMax || null,
+                    maxDecimals: inp.dataset.ruleDecimals || 1
+                });
+                if (finished !== inp.value) inp.value = finished;
+                curScores()[label] = finished;
+                commit();
+            });
             return E("label", { class: "sp-eng__cell" + (extraClass ? " " + extraClass : "") }, [
                 E("span", { class: "sp-eng__cellhead" }, [
                     E("i", { class: "sp-eng__cellicon", text: icon }),
@@ -551,7 +665,7 @@
             // engscore: a mandatory section requires the OVERALL score to be filled.
             var bad = (f.type === "engscore" && f.overallRequired)
                 ? !engHasOverall(f)
-                : (f.required && isEmpty(get(f.key)));
+                : ((f.required && isEmpty(get(f.key))) || !numericValid(get(f.key), inputRule(f)));
             if (bad) {
                 ok = false;
                 var el = stage.querySelector('.sp-field[data-key="' + cssEsc(f.key) + '"]');

@@ -70,7 +70,7 @@ class ProfileReportPdf
             $brand = 'One Degree Advisory';
             $canvas->text(30, $h - 19.5, $brand, $bold, 7.5, $white);
             $bw = $fontMetrics->getTextWidth($brand, $bold, 7.5);
-            $canvas->text(30 + $bw, $h - 19.5, '  |  Contact: 8451825015  |  counselling@onedegreeadvisory.com', $sans, 7.5, $soft);
+            $canvas->text(30 + $bw, $h - 19.5, '  |  Contact: +91 8233365888  |  counselling@onedegreeadvisory.com', $sans, 7.5, $soft);
 
             $pg = 'Page '.($pageNumber - 1).' of '.($pageCount - 1);
             $pw = $fontMetrics->getTextWidth($pg, $bold, 7.5);

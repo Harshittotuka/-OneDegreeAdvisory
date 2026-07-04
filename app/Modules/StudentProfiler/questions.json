@@ -148,7 +148,7 @@
                 {
                     "type": "radio",
                     "key": "q_8f14e45f",
-                    "label": "Your IBDP point score (24 - 45) ( If from IB board or else keep it blank)",
+                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
                     "options": [
                         "24 - 31 points",
                         "32 - 38 points",
@@ -221,20 +221,7 @@
                         "Global Olympiad",
                         "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Project Monetary impact"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_achievements",
-                    "label": "Do you have any other notable achievements? (You can choose multiple)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "I have received an award / scholarship",
-                        "I have engaged in Academic Projects",
-                        "Research Papers",
-                        "Top 10 rank holder",
-                        "Unconventional background (medicine, law etc)"
+                        "Project Monetary Impact"
                     ]
                 }
             ]
@@ -282,7 +269,7 @@
                 {
                     "type": "radio",
                     "key": "q_3def184a",
-                    "label": "Any Budget Constraint (Total Program Cost)",
+                    "label": "Any Budget Constraint (Total Cost Per Anum)",
                     "options": [
                         "No Constraint",
                         "30-40 Lakhs",
@@ -420,7 +407,7 @@
                 {
                     "type": "radio",
                     "key": "q_8f14e45f",
-                    "label": "Your IBDP point score (24 - 45) ( If from IB board or else keep it blank)",
+                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
                     "options": [
                         "24 - 31 points",
                         "32 - 38 points",
@@ -519,20 +506,7 @@
                         "Global Olympiad",
                         "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Project Monetary impact"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_achievements",
-                    "label": "Do you have any other notable achievements? (You can choose multiple)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "I have received an award / scholarship",
-                        "I have engaged in Academic Projects",
-                        "Research Papers",
-                        "Top 10 rank holder",
-                        "Unconventional background (medicine, law etc)"
+                        "Project Monetary Impact"
                     ]
                 }
             ]
@@ -580,7 +554,7 @@
                 {
                     "type": "radio",
                     "key": "q_3def184a",
-                    "label": "Any Budget Constraint (Total Program Cost)",
+                    "label": "Any Budget Constraint (Total Cost Per Anum)",
                     "options": [
                         "No Constraint",
                         "30-40 Lakhs",
@@ -718,7 +692,7 @@
                 {
                     "type": "radio",
                     "key": "q_2f2b2656",
-                    "label": "Your IBDP point score (24 - 45) ( If from IB board or else keep it blank)",
+                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
                     "options": [
                         "24 - 31 points",
                         "32 - 38 points",
@@ -806,6 +780,19 @@
                         "3 years",
                         "3 years +"
                     ]
+                },
+                {
+                    "type": "chips",
+                    "key": "q_achievements",
+                    "label": "Do you have any other notable achievements? (You can choose multiple)",
+                    "help": "Select all that apply.",
+                    "options": [
+                        "I have received an award / scholarship",
+                        "I have engaged in Academic Projects",
+                        "Research Papers",
+                        "Top 10 rank holder",
+                        "Unconventional background (medicine, law etc)"
+                    ]
                 }
             ]
         },
@@ -861,20 +848,7 @@
                         "Global Olympiad",
                         "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Project Monetary impact"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_achievements",
-                    "label": "Do you have any other notable achievements? (You can choose multiple)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "I have received an award / scholarship",
-                        "I have engaged in Academic Projects",
-                        "Research Papers",
-                        "Top 10 rank holder",
-                        "Unconventional background (medicine, law etc)"
+                        "Project Monetary Impact"
                     ]
                 }
             ]
@@ -935,7 +909,7 @@
                 {
                     "type": "radio",
                     "key": "q_34173cb3",
-                    "label": "Any Budget Constraint (Total Program Cost)",
+                    "label": "Any Budget Constraint (Total Cost Per Anum)",
                     "options": [
                         "No Constraint",
                         "30-40 Lakhs",
@@ -1075,7 +1049,7 @@
                 {
                     "type": "radio",
                     "key": "q_d81f9c1b",
-                    "label": "Your IBDP point score (24 - 45) ( If from IB board or else keep it blank)",
+                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
                     "options": [
                         "24 - 31 points",
                         "32 - 38 points",
@@ -1178,6 +1152,19 @@
                     "key": "q_d9d4f495",
                     "label": "Project details of Masters",
                     "placeholder": "Type your answer"
+                },
+                {
+                    "type": "chips",
+                    "key": "q_achievements",
+                    "label": "Do you have any other notable achievements? (You can choose multiple)",
+                    "help": "Select all that apply.",
+                    "options": [
+                        "I have received an award / scholarship",
+                        "I have engaged in Academic Projects",
+                        "Research Papers",
+                        "Top 10 rank holder",
+                        "Unconventional background (medicine, law etc)"
+                    ]
                 },
                 {
                     "type": "text",
@@ -1312,20 +1299,7 @@
                         "Global Olympiad",
                         "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Project Monetary impact"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_achievements",
-                    "label": "Do you have any other notable achievements? (You can choose multiple)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "I have received an award / scholarship",
-                        "I have engaged in Academic Projects",
-                        "Research Papers",
-                        "Top 10 rank holder",
-                        "Unconventional background (medicine, law etc)"
+                        "Project Monetary Impact"
                     ]
                 }
             ]
@@ -1391,7 +1365,7 @@
                 {
                     "type": "radio",
                     "key": "q_d82c8d16",
-                    "label": "Any Budget Constraint (Total Program Cost)",
+                    "label": "Any Budget Constraint (Total Cost Per Anum)",
                     "options": [
                         "No budget Constraint",
                         "30-40 Lakhs",
