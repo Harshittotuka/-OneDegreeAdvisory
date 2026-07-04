@@ -18,6 +18,7 @@ class NewsletterController extends Controller
     public function index(): View
     {
         return view('admin.newsletter.index', [
+            'portal' => 'admin',
             'subscribers' => $this->store->all(),
         ]);
     }

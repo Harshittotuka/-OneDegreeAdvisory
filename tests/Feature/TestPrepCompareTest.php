@@ -112,7 +112,11 @@ class TestPrepCompareTest extends TestCase
             $this->get(route('services.test-prep'))
                 ->assertOk()
                 ->assertSee($marker, false)
-                ->assertSee('IELTS');
+                ->assertSee('IELTS')
+                ->assertSee('tpc-program-name-btn', false)
+                ->assertSee('data-tpc-exam="ielts"', false)
+                ->assertDontSee('Server-verified amount')
+                ->assertDontSee('verified on our server before checkout.');
         }
     }
 

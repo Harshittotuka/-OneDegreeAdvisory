@@ -44,11 +44,22 @@
       accent-color: var(--teal); cursor: pointer; flex-shrink: 0; }
 
     /* Powered-by credit (bottom-right of the screen) */
-    .powered { position: fixed; right: 22px; bottom: 16px; z-index: 3; font-size: .76rem; font-weight: 600;
-      color: var(--muted); letter-spacing: .01em; }
-    .powered b { color: var(--teal); font-weight: 800; }
+    .powered { position: fixed; right: 24px; bottom: 18px; z-index: 3; color: #1d3550; font-size: .82rem;
+      font-weight: 800; letter-spacing: .02em; opacity: .78; text-decoration: none;
+      transition: transform .18s ease, opacity .18s ease, color .18s ease; }
+    .powered:hover { transform: translateY(-2px); opacity: 1; color: var(--teal-dark); }
+    .powered span { position: relative; line-height: 1; }
+    .powered small { font: inherit; font-weight: 600; color: var(--muted); opacity: .72; }
+    .powered span::after { content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 1px;
+      background: linear-gradient(90deg, transparent, currentColor, transparent);
+      opacity: .35; transform: scaleX(.72); transition: transform .18s ease, opacity .18s ease; }
+    .powered:hover span::after { opacity: .7; transform: scaleX(1); }
 
-    @media (max-width: 760px) { body { grid-template-columns: 1fr; } .aside { display: none; } }
+    @media (max-width: 760px) {
+      body { grid-template-columns: 1fr; }
+      .aside { display: none; }
+      .powered { right: 16px; bottom: 14px; font-size: .78rem; }
+    }
   </style>
 </head>
 <body>
@@ -78,6 +89,8 @@
     </form>
   </main>
 
-  <div class="powered">Powered by <b>Infolith</b></div>
+  <a class="powered" href="https://infolith.in/" target="_blank" rel="noopener">
+    <span><small>Powered by</small> Infolith</span>
+  </a>
 </body>
 </html>

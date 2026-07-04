@@ -51,6 +51,13 @@
       box-shadow: 0 5px 14px rgba(102,108,255,.45); }
     .cms-nav-item.is-active:hover { transform: none; color: #fff; }
     .cms-nav-item i { width: 19px; height: 19px; flex-shrink: 0; }
+    .cms-nav-item.is-super-only:not(.is-active) { color: #9a6b00; }
+    .cms-nav-item.is-super-only:not(.is-active) i { color: #b7791f; }
+    .cms-nav-item.is-super-only:not(.is-active):hover { background: #fff8e1; color: #7a4f01; }
+    .cms-nav-item.is-super-only.is-active {
+      background: linear-gradient(72deg, #b7791f 0%, #f0b429 100%);
+      box-shadow: 0 5px 14px rgba(183,121,31,.34);
+    }
     .cms-nav-item.is-soon { opacity: .55; cursor: default; }
     .cms-nav-item.is-soon:hover { background: none; color: var(--side-ink); transform: none; }
     .cms-nav-soon { margin-left: auto; font-size: .58rem; font-weight: 800; letter-spacing: .06em;
@@ -128,6 +135,21 @@
     .cms-toast i { width: 18px; height: 18px; color: var(--teal); flex-shrink: 0; }
     .cms-toast.error i { color: var(--danger); }
 
+    .cms-powered {
+      position: fixed; right: 24px; bottom: 18px; z-index: 45; display: inline-flex; align-items: center;
+      color: #1d3550; font-size: .82rem; font-weight: 800; letter-spacing: .02em; opacity: .78;
+      transition: transform .18s ease, opacity .18s ease, color .18s ease;
+    }
+    .cms-powered:hover { transform: translateY(-2px); opacity: 1; color: var(--teal-dark); }
+    .cms-powered span { position: relative; line-height: 1; }
+    .cms-powered small { font: inherit; font-weight: 600; color: var(--muted); opacity: .72; }
+    .cms-powered span::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 1px;
+      background: linear-gradient(90deg, transparent, currentColor, transparent);
+      opacity: .35; transform: scaleX(.72); transition: transform .18s ease, opacity .18s ease;
+    }
+    .cms-powered:hover span::after { opacity: .7; transform: scaleX(1); }
+
     /* ── Admin portal: rich royal-orange theme ── */
     body.portal-admin {
       --teal: #f97316; --teal-dark: #c2410c; --teal-soft: #fff1e6;
@@ -186,6 +208,7 @@
       .cms-topbar .cms-tb-label { display: none; }
       .cms-topbar a.cms-viewsite, .cms-topbar .cms-refresh { padding: 8px; gap: 0; }
       .cms-wrap { padding: 20px 16px 80px; }
+      .cms-powered { right: 16px; bottom: 14px; font-size: .78rem; }
       .cms-scrim { display: none; position: fixed; inset: 0; background: rgba(8,20,26,.45); z-index: 50; }
       .cms-shell.is-open .cms-scrim { display: block; }
     }
@@ -209,48 +232,46 @@
           ['label' => 'Test Prep', 'icon' => 'graduation-cap', 'route' => 'admin.enrollments.test-prep', 'match' => 'admin.enrollments.test-prep'],
         ]],
         ['label' => 'Leads', 'items' => [
+          ['label' => 'Subscribers', 'icon' => 'mail', 'route' => 'admin.newsletter.index', 'match' => 'admin.newsletter'],
           ['label' => 'Student Profiler', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.profiler', 'match' => 'admin.submissions.profiler'],
-        ]],
-        ['label' => 'Coming soon', 'items' => [
-          ['label' => 'Settings', 'icon' => 'settings', 'soon' => true],
         ]],
       ];
     else :
       $brandSub = $isSuper ? 'Super Admin · Content Studio' : 'Content Studio';
-    $contentItems = [
-      ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
-      // Page Builder sits directly below Home Page — available to all CMS admins.
-      ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'],
-      ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
-      ['label' => 'Subscribers', 'icon' => 'mail', 'route' => 'admin.newsletter.index', 'match' => 'admin.newsletter'],
-    ];
-    // Super admin unlocks the (otherwise hidden) About-page editor.
-    if ($isSuper) {
-      $contentItems[] = ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.live', 'match' => 'admin.about'];
-    }
-    $contentItems[] = ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'];
-    $contentItems[] = ['label' => 'Test Prep · Compare', 'icon' => 'bar-chart-3', 'route' => 'admin.test-prep-compare.index', 'match' => 'admin.test-prep-compare'];
-    $contentItems[] = ['label' => 'Destinations Menu', 'icon' => 'layout-grid', 'route' => 'admin.destinations-layout.index', 'match' => 'admin.destinations-layout'];
-    $contentItems[] = ['label' => 'Unlinked Pages', 'icon' => 'unlink', 'route' => 'admin.unlinked-pages.index', 'match' => 'admin.unlinked-pages'];
-    // Country visibility is a super-admin-only tool.
-    if ($isSuper) {
-      $contentItems[] = ['label' => 'Country visibility', 'icon' => 'eye', 'route' => 'admin.country-visibility.index', 'match' => 'admin.country-visibility'];
-    }
-    $contentItems[] = ['label' => 'Sync non-MBBS countries', 'icon' => 'globe', 'route' => 'admin.country-sync.index', 'match' => 'admin.country-sync'];
-    $contentItems[] = ['label' => 'Sync MBBS countries', 'icon' => 'stethoscope', 'route' => 'admin.mbbs-country-sync.index', 'match' => 'admin.mbbs-country-sync'];
+      $pageItems = [
+        ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
+        ['label' => 'Test Prep', 'icon' => 'bar-chart-3', 'route' => 'admin.test-prep-compare.index', 'match' => 'admin.test-prep-compare'],
+        ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
+        ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'],
+      ];
 
-    $comingSoon = [['label' => 'Settings', 'icon' => 'settings', 'soon' => true]];
-    if (! $isSuper) {
-      array_unshift($comingSoon, ['label' => 'About Page', 'icon' => 'layout-template', 'soon' => true]);
-    }
+      if ($isSuper) {
+        $pageItems[] = ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.live', 'match' => 'admin.about', 'super_only' => true];
+      }
 
-    $navGroups = [
-      ['label' => '', 'items' => [
-        ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard'],
-      ]],
-      ['label' => 'Content', 'items' => $contentItems],
-      ['label' => 'Coming soon', 'items' => $comingSoon],
-    ];
+      $countrySyncItems = [
+        ['label' => 'Non-MBBS', 'icon' => 'globe', 'route' => 'admin.country-sync.index', 'match' => 'admin.country-sync'],
+        ['label' => 'MBBS', 'icon' => 'stethoscope', 'route' => 'admin.mbbs-country-sync.index', 'match' => 'admin.mbbs-country-sync'],
+      ];
+
+      $layoutItems = [
+        ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'],
+        ['label' => 'Destinations Menu', 'icon' => 'layout-grid', 'route' => 'admin.destinations-layout.index', 'match' => 'admin.destinations-layout'],
+        ['label' => 'Unlinked Pages', 'icon' => 'unlink', 'route' => 'admin.unlinked-pages.index', 'match' => 'admin.unlinked-pages'],
+      ];
+
+      if ($isSuper) {
+        $layoutItems[] = ['label' => 'Country Visibility', 'icon' => 'eye', 'route' => 'admin.country-visibility.index', 'match' => 'admin.country-visibility', 'super_only' => true];
+      }
+
+      $navGroups = [
+        ['label' => '', 'items' => [
+          ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.dashboard', 'match' => 'admin.dashboard'],
+        ]],
+        ['label' => 'Pages', 'items' => $pageItems],
+        ['label' => 'Country Data Sync', 'items' => $countrySyncItems],
+        ['label' => 'Layout', 'items' => $layoutItems],
+      ];
     endif;
   @endphp
 
@@ -268,12 +289,12 @@
           @if(! empty($group['label']))<div class="cms-nav-label">{{ $group['label'] }}</div>@endif
           @foreach($group['items'] as $item)
             @if(! empty($item['soon']))
-              <span class="cms-nav-item is-soon">
+              <span class="cms-nav-item is-soon @if(! empty($item['super_only'])) is-super-only @endif">
                 <i data-lucide="{{ $item['icon'] }}"></i>{{ $item['label'] }}
                 <span class="cms-nav-soon">SOON</span>
               </span>
             @else
-              <a class="cms-nav-item @if($current && str_starts_with($current, $item['match'])) is-active @endif"
+              <a class="cms-nav-item @if(! empty($item['super_only'])) is-super-only @endif @if($current && str_starts_with($current, $item['match'])) is-active @endif"
                  href="{{ route($item['route']) }}">
                 <i data-lucide="{{ $item['icon'] }}"></i>{{ $item['label'] }}
               </a>
@@ -311,6 +332,10 @@
       </div>
     </div>
   </div>
+
+  <a class="cms-powered" href="https://infolith.in/" target="_blank" rel="noopener">
+    <span><small>Powered by</small> Infolith</span>
+  </a>
 
   <div class="cms-toasts" id="cms-toasts"></div>
 

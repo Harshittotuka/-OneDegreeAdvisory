@@ -208,7 +208,7 @@ class TestPrepCompareStore
             'payment' => [
                 'eyebrow' => 'Enrol now',
                 'title' => 'Reserve your seat online',
-                'description' => 'Pick your program and pay securely to lock your batch. The amount shown is the exact course fee — verified on our server before checkout.',
+                'description' => 'Pick your program and pay securely to lock your batch. The amount shown is the exact course fee.',
                 'button_label' => 'Pay securely',
                 'note' => 'Payments are processed by Razorpay. Your card details never touch our servers.',
                 'accent' => '#ff5a2e',

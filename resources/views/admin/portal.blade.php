@@ -89,6 +89,22 @@
       cursor:pointer; display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:9px; transition:color .15s, background .15s; }
     .pp-foot button:hover{ color:var(--orange-dk); background:#fff; }
 
+    .pp-infolith{
+      position:fixed; right:24px; bottom:22px; z-index:2; display:inline-flex; align-items:center; gap:10px;
+      padding:0; color:#1d3550; font-size:.84rem; font-weight:800; letter-spacing:.02em;
+      opacity:.82; transition:transform .18s ease, opacity .18s ease, color .18s ease;
+      animation:ppUp .5s .36s ease both;
+    }
+    .pp-infolith:hover{ transform:translateY(-2px); opacity:1; color:#0b74b8; }
+    .pp-infolith span{ position:relative; line-height:1; }
+    .pp-infolith small{ font:inherit; font-weight:600; color:var(--muted); opacity:.72; }
+    .pp-infolith span::after{
+      content:""; position:absolute; left:0; right:0; bottom:-5px; height:1px;
+      background:linear-gradient(90deg, transparent, currentColor, transparent);
+      opacity:.35; transform:scaleX(.72); transition:transform .18s ease, opacity .18s ease;
+    }
+    .pp-infolith:hover span::after{ opacity:.7; transform:scaleX(1); }
+
     @keyframes ppUp{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:none;} }
 
     /* leave transition when a portal is chosen */
@@ -97,7 +113,10 @@
     body.is-leaving.to-admin{ background:#fff4ec; }
     body.is-leaving.to-cms{ background:#f6f6ff; }
 
-    @media(max-width:620px){ .pp-grid{grid-template-columns:1fr;} }
+    @media(max-width:620px){
+      .pp-grid{grid-template-columns:1fr;}
+      .pp-infolith{right:16px; bottom:14px; font-size:.8rem;}
+    }
     @media(prefers-reduced-motion:reduce){
       *{animation:none !important; transition:none !important;}
     }
@@ -132,6 +151,10 @@
       <button type="submit"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Log out</button>
     </form>
   </div>
+
+  <a class="pp-infolith" href="https://infolith.in/" target="_blank" rel="noopener">
+    <span><small>Powered by</small> Infolith</span>
+  </a>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script>

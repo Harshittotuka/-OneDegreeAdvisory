@@ -143,6 +143,73 @@ class SuperAdminCmsTest extends TestCase
             ->assertSee('/services/test-preparation', false);
     }
 
+    public function test_newsletter_subscribers_live_in_admin_portal_not_cms(): void
+    {
+        $this->withSession(['cms_authenticated' => true]);
+
+        $this->get(route('admin.newsletter.index'))
+            ->assertOk()
+            ->assertSee('Newsletter subscribers')
+            ->assertSee('portal-admin', false)
+            ->assertSee('Admin Portal')
+            ->assertSee('Student Profiler')
+            ->assertDontSee('<div class="cms-nav-label">Coming soon</div>', false)
+            ->assertDontSee('Settings')
+            ->assertDontSee('Content Studio')
+            ->assertDontSee('Home Page');
+
+        $this->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee(route('admin.newsletter.index'), false);
+    }
+
+    public function test_cms_sidebar_groups_tabs_by_section(): void
+    {
+        $this->withSession(['cms_authenticated' => true, 'cms_super_admin' => true]);
+
+        $this->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSeeInOrder([
+                'Pages',
+                'Home Page',
+                'Test Prep',
+                'Blog Posts',
+                'Page Builder',
+                'About Page',
+                'Country Data Sync',
+                'Non-MBBS',
+                'MBBS',
+                'Layout',
+                'Notification Bar',
+                'Destinations Menu',
+                'Unlinked Pages',
+                'Country Visibility',
+            ])
+            ->assertSee('is-super-only', false)
+            ->assertSee('.cms-nav-item.is-super-only:not(.is-active) { color: #9a6b00; }', false)
+            ->assertDontSee('<div class="cms-nav-label">Content</div>', false)
+            ->assertDontSee('<div class="cms-nav-label">Super Admin</div>', false)
+            ->assertDontSee('data-nav-group', false)
+            ->assertDontSee('data-nav-group-toggle', false)
+            ->assertDontSee('data-nav-group="coming-soon"', false)
+            ->assertDontSee('Test Prep · Compare')
+            ->assertDontSee('Sync non-MBBS countries')
+            ->assertDontSee('Sync MBBS countries');
+
+    }
+
+    public function test_standard_cms_sidebar_hides_super_only_tabs(): void
+    {
+        $this->withSession(['cms_authenticated' => true]);
+
+        $this->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee('class="cms-nav-item is-super-only', false)
+            ->assertDontSee('About Page')
+            ->assertDontSee('SOON')
+            ->assertDontSee('Country Visibility');
+    }
+
     public function test_country_visibility_tool_hides_frontend_country_pages(): void
     {
         $this->withSession(['cms_authenticated' => true, 'cms_super_admin' => true]);
