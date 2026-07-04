@@ -56,13 +56,10 @@ class ProfileSubmissionsTest extends TestCase
                 "extracurricular is not placed right after '$afterKey' for $degree"
             );
 
-            // The four MIM-derived fields are present; masters & doctorate
-            // additionally carry the "notable achievements" multi-select.
+            // The four MIM-derived fields are present, followed by the
+            // "notable achievements" multi-select — on every level.
             $ec = $sections[array_search('extracurricular', $keys, true)];
-            $expected = ['q_ec_engaged', 'q_ec_level', 'q_ec_current', 'q_differentiators'];
-            if (in_array($degree, ['masters', 'doctorate'], true)) {
-                $expected[] = 'q_achievements';
-            }
+            $expected = ['q_ec_engaged', 'q_ec_level', 'q_ec_current', 'q_differentiators', 'q_achievements'];
             $this->assertSame($expected, array_column($ec['fields'], 'key'));
         }
     }
@@ -87,7 +84,7 @@ class ProfileSubmissionsTest extends TestCase
             'answers' => [
                 'q_ec_engaged'      => ['Competitive Sports', 'Competitions'],
                 'q_ec_level'        => 'Held Leadership positions',
-                'q_differentiators' => ['Successful Entrepreneurial Venture'],
+                'q_differentiators' => ['Industrial Exposure'],
             ],
         ])->assertOk()->assertJson(['ok' => true]);
 
@@ -107,7 +104,7 @@ class ProfileSubmissionsTest extends TestCase
         }
         $this->assertSame(['Competitive Sports', 'Competitions'], $flat['What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)']);
         $this->assertSame(['Held Leadership positions'], $flat['What has been your highest level of participation?']);
-        $this->assertSame(['Successful Entrepreneurial Venture'], $flat['Which of these differentiators apply to you?']);
+        $this->assertSame(['Industrial Exposure'], $flat['Which of these differentiators apply to you?']);
     }
 
     public function test_highschool_degree_mirrors_bachelors_questions(): void

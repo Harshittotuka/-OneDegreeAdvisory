@@ -228,6 +228,7 @@
       $contentItems[] = ['label' => 'About Page', 'icon' => 'layout-template', 'route' => 'admin.about.live', 'match' => 'admin.about'];
     }
     $contentItems[] = ['label' => 'Notification Bar', 'icon' => 'megaphone', 'route' => 'admin.notice-bar.index', 'match' => 'admin.notice-bar'];
+    $contentItems[] = ['label' => 'Test Prep · Compare', 'icon' => 'bar-chart-3', 'route' => 'admin.test-prep-compare.index', 'match' => 'admin.test-prep-compare'];
     $contentItems[] = ['label' => 'Destinations Menu', 'icon' => 'layout-grid', 'route' => 'admin.destinations-layout.index', 'match' => 'admin.destinations-layout'];
     $contentItems[] = ['label' => 'Unlinked Pages', 'icon' => 'unlink', 'route' => 'admin.unlinked-pages.index', 'match' => 'admin.unlinked-pages'];
     // Country visibility is a super-admin-only tool.

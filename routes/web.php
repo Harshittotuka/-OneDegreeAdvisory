@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NewsletterController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
 use App\Http\Controllers\Admin\ProfileSubmissionsController;
+use App\Http\Controllers\Admin\TestPrepCompareCmsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\BriefPageController;
@@ -162,6 +163,10 @@ Route::prefix('admin')->group(function () {
         /* ── Notice-bar CMS (top blue nav) ── */
         Route::get('notice-bar', [NoticeBarCmsController::class, 'edit'])->name('admin.notice-bar.index');
         Route::post('notice-bar', [NoticeBarCmsController::class, 'update'])->name('admin.notice-bar.update');
+
+        /* ── Test-Prep "Compare & enrol" section (programs list, prices, durations, style) ── */
+        Route::get('test-prep-compare', [TestPrepCompareCmsController::class, 'edit'])->name('admin.test-prep-compare.index');
+        Route::post('test-prep-compare', [TestPrepCompareCmsController::class, 'update'])->name('admin.test-prep-compare.update');
 
         /* ── Destinations mega-menu layout (nav dropdown grid) ── */
         Route::get('destinations-layout', [DestinationsLayoutController::class, 'edit'])->name('admin.destinations-layout.index');

@@ -12,6 +12,8 @@ use App\Support\HeroContent;
 use App\Support\MbbsCountryContent;
 use App\Support\NewsletterStore;
 use App\Support\StudyLocationContent;
+use App\Support\TestPrepCompareStore;
+use App\Services\RazorpayGateway;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -287,9 +289,14 @@ class PageController extends Controller
         ]);
     }
 
-    public function testPreparation(): View
+    public function testPreparation(TestPrepCompareStore $compare, RazorpayGateway $razorpay): View
     {
-        return view('pages.test-preparation');
+        return view('pages.test-preparation', [
+            'compare' => $compare->get(),
+            // The live "Pay securely" button only renders when Razorpay keys are
+            // set; otherwise the section still shows prices but routes to enquiry.
+            'paymentEnabled' => $razorpay->configured(),
+        ]);
     }
 
     public function admissionsCounselling(): View

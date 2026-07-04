@@ -59,7 +59,6 @@ class ProfileReportBuilder
         'are you looking for undergraduate degree/ diploma or certificate program' => 'Program Type Sought',
         'are you looking for postgraduate degree/ diploma or certificate program' => 'Program Type Sought',
         'your expectations' => 'Your Expectations',
-        'emergency contact number(* mandatory)' => 'Emergency Contact Number',
         'what all of the following have you been engaged in? (last 2 years only, before that has a limited effect)' => 'Extracurricular Engagement (Last 2 Years)',
         'what has been your highest level of participation?' => 'Highest Level of Participation',
         'are you still involved in the same?' => 'Still Involved in the Same?',

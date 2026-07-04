@@ -216,12 +216,25 @@
                     "label": "Which of these differentiators apply to you?",
                     "help": "Select all that apply.",
                     "options": [
-                        "Significant International Experience",
+                        "International Experience",
                         "Industrial Exposure",
                         "Global Olympiad",
                         "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Monetary impact"
+                        "Project Monetary impact"
+                    ]
+                },
+                {
+                    "type": "chips",
+                    "key": "q_achievements",
+                    "label": "Do you have any other notable achievements? (You can choose multiple)",
+                    "help": "Select all that apply.",
+                    "options": [
+                        "I have received an award / scholarship",
+                        "I have engaged in Academic Projects",
+                        "Research Papers",
+                        "Top 10 rank holder",
+                        "Unconventional background (medicine, law etc)"
                     ]
                 }
             ]
@@ -347,13 +360,6 @@
                     "key": "q_c042f4db",
                     "label": "Your Expectations",
                     "placeholder": "Tell us in a line or two…"
-                },
-                {
-                    "type": "tel",
-                    "key": "q_378a063b",
-                    "label": "Emergency Contact Number(* Mandatory)",
-                    "placeholder": "+91 …",
-                    "required": true
                 }
             ]
         }
@@ -508,12 +514,25 @@
                     "label": "Which of these differentiators apply to you?",
                     "help": "Select all that apply.",
                     "options": [
-                        "Significant International Experience",
-                        "Family business / Start Ups Exposure",
-                        "Successful Entrepreneurial Venture",
-                        "Multiple Industry Certifications (CFA, Six Sigma)",
+                        "International Experience",
+                        "Industrial Exposure",
+                        "Global Olympiad",
+                        "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Major Projects Undertaken - 7 Figure impact, double-digit improvements"
+                        "Project Monetary impact"
+                    ]
+                },
+                {
+                    "type": "chips",
+                    "key": "q_achievements",
+                    "label": "Do you have any other notable achievements? (You can choose multiple)",
+                    "help": "Select all that apply.",
+                    "options": [
+                        "I have received an award / scholarship",
+                        "I have engaged in Academic Projects",
+                        "Research Papers",
+                        "Top 10 rank holder",
+                        "Unconventional background (medicine, law etc)"
                     ]
                 }
             ]
@@ -639,13 +658,6 @@
                     "key": "q_c042f4db",
                     "label": "Your Expectations",
                     "placeholder": "Tell us in a line or two…"
-                },
-                {
-                    "type": "tel",
-                    "key": "q_378a063b",
-                    "label": "Emergency Contact Number(* Mandatory)",
-                    "placeholder": "+91 …",
-                    "required": true
                 }
             ]
         }
@@ -844,12 +856,12 @@
                     "label": "Which of these differentiators apply to you?",
                     "help": "Select all that apply.",
                     "options": [
-                        "Significant International Experience",
-                        "Family business / Start Ups Exposure",
-                        "Successful Entrepreneurial Venture",
-                        "Multiple Industry Certifications (CFA, Six Sigma)",
+                        "International Experience",
+                        "Industrial Exposure",
+                        "Global Olympiad",
+                        "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Major Projects Undertaken - 7 Figure impact, double-digit improvements"
+                        "Project Monetary impact"
                     ]
                 },
                 {
@@ -995,13 +1007,6 @@
                     "key": "q_e369853d",
                     "label": "Your Expectations",
                     "placeholder": "Tell us in a line or two…"
-                },
-                {
-                    "type": "tel",
-                    "key": "q_e3408432",
-                    "label": "Emergency Contact Number(* Mandatory)",
-                    "placeholder": "+91 …",
-                    "required": true
                 }
             ]
         }
@@ -1077,13 +1082,6 @@
                         "39 - 45",
                         "N/A"
                     ]
-                },
-                {
-                    "type": "tel",
-                    "key": "q_277a78fc",
-                    "label": "Emergency Contact Number(* Mandatory)",
-                    "placeholder": "+91 …",
-                    "required": true
                 }
             ]
         },
@@ -1309,12 +1307,12 @@
                     "label": "Which of these differentiators apply to you?",
                     "help": "Select all that apply.",
                     "options": [
-                        "Significant International Experience",
-                        "Family business / Start Ups Exposure",
-                        "Successful Entrepreneurial Venture",
-                        "Multiple Industry Certifications (CFA, Six Sigma)",
+                        "International Experience",
+                        "Industrial Exposure",
+                        "Global Olympiad",
+                        "Any Renowned certificate other than academic",
                         "Publications, Awards, Patents to name",
-                        "Major Projects Undertaken - 7 Figure impact, double-digit improvements"
+                        "Project Monetary impact"
                     ]
                 },
                 {

@@ -137,5 +137,8 @@
     </div>
   </div>
 
+  {{-- ───────── COMPARE & ENROL (CMS-managed: programs, prices, durations, style) ───────── --}}
+  @include('partials.test-prep.compare')
+
 </main>
 @endsection
