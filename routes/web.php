@@ -141,7 +141,7 @@ Route::prefix('admin')->group(function () {
         Route::post('home-hero/import', [HomeHeroCmsController::class, 'importUrl'])->name('admin.home-hero.import');
         Route::post('home-hero/preview', [HomeHeroCmsController::class, 'preview'])->name('admin.home-hero.preview');
 
-        /* ── Brief Page Builder (all CMS admins; raw embed block stays super-admin only) ── */
+        /* ── Brief Page Builder (all CMS admins) ── */
         Route::get('pages', [BriefPageCmsController::class, 'index'])->name('admin.pages.index');
         Route::post('pages', [BriefPageCmsController::class, 'storePage'])->name('admin.pages.store');
         // Authorization OTP gate for saving a page that contains a payment section.

@@ -93,14 +93,9 @@ class BriefPageCmsController extends Controller
             ];
         }
 
-        $types = BriefSchema::types();
-        if (! $this->isSuper()) {
-            unset($types['embed']); // raw HTML/CSS/JS embed stays super-admin only
-        }
-
         return view('admin.brief.studio', [
             'page' => $page,
-            'types' => $types,
+            'types' => BriefSchema::types(),
             'presets' => $presets,
         ]);
     }
@@ -204,10 +199,6 @@ class BriefPageCmsController extends Controller
         if (! BriefSchema::isType($type)) {
             abort(404);
         }
-        if ($type === 'embed' && ! $this->isSuper()) {
-            abort(403, 'The embed block is available to super-admins only.');
-        }
-
         $block = ['id' => 'b'.Str::random(7), 'type' => $type, 'visible' => true, 'data' => BriefSchema::blank($type)];
 
         return response()->json([
@@ -227,9 +218,6 @@ class BriefPageCmsController extends Controller
         if (! BriefSchema::isType($type)) {
             return response()->json(['node' => ''], 422);
         }
-        if ($type === 'embed' && ! $this->isSuper()) {
-            return response()->json(['node' => ''], 403);
-        }
         $data = $this->sanitizeData($type, is_array($request->input('data')) ? $request->input('data') : []);
 
         return response()->json([
@@ -240,7 +228,6 @@ class BriefPageCmsController extends Controller
     /** Clean a full grid layout (rows → cols → blocks). */
     private function sanitizeLayout(array $rows): array
     {
-        $super = $this->isSuper();
         $out = [];
         foreach ($rows as $row) {
             if (! is_array($row)) {
@@ -259,9 +246,6 @@ class BriefPageCmsController extends Controller
                     $type = (string) ($b['type'] ?? '');
                     if (! BriefSchema::isType($type)) {
                         continue;
-                    }
-                    if ($type === 'embed' && ! $super) {
-                        continue; // never persist a raw embed block from a non-super session
                     }
                     $blocks[] = [
                         'id' => (Str::slug((string) ($b['id'] ?? '')) ?: ('b'.Str::random(6))),
@@ -528,7 +512,7 @@ class BriefPageCmsController extends Controller
                 ? (string) $value
                 : (string) array_key_first($field['options'] ?? ['' => '']),
             'richtext' => $this->cleanRichText((string) $value),
-            // Raw embed code (HTML/CSS/JS) — super-admin only, stored as-is (capped).
+            // Raw embed code (HTML/CSS/JS), stored as-is (capped).
             'code' => mb_substr((string) $value, 0, 120000),
             'image' => mb_substr(trim((string) $value), 0, 2000),
             'textarea' => mb_substr(trim((string) $value), 0, 6000),
@@ -552,12 +536,6 @@ class BriefPageCmsController extends Controller
      */
     private function guard(): void
     {
-        // intentionally open; the only restricted feature is the raw embed block (see isSuper()).
-    }
-
-    /** The raw HTML/CSS/JS "AI / Embed" block stays super-admin only. */
-    private function isSuper(): bool
-    {
-        return (bool) session('cms_super_admin');
+        // Intentionally open to standard and super admins.
     }
 }

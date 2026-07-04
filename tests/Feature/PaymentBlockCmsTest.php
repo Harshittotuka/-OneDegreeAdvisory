@@ -77,6 +77,53 @@ class PaymentBlockCmsTest extends TestCase
             ->assertSee("{type:'payment'}", false);
     }
 
+    public function test_standard_cms_admin_can_use_ai_embed_blocks(): void
+    {
+        $html = '<section class="ai-sec"><h2>AI section</h2><script>window.aiSectionReady=true;</script></section>';
+        $storePath = storage_path('app/brief-pages.json');
+        $original = is_file($storePath) ? file_get_contents($storePath) : null;
+
+        try {
+            $block = $this->withSession(['cms_authenticated' => true])
+                ->getJson(route('admin.pages.block', ['type' => 'embed']))
+                ->assertOk()
+                ->assertJsonPath('type', 'embed');
+
+            $this->assertStringContainsString('data-field="html"', (string) $block->json('form'));
+
+            $rendered = $this->withSession(['cms_authenticated' => true])
+                ->postJson(route('admin.pages.render'), [
+                    'type' => 'embed',
+                    'data' => ['html' => $html],
+                ])->assertOk();
+
+            $this->assertStringContainsString($html, (string) $rendered->json('node'));
+
+            $layout = [[
+                'id' => 'r1', 'cols' => [[
+                    'id' => 'c1', 'span' => 12, 'blocks' => [[
+                        'id' => 'b1', 'type' => 'embed', 'visible' => true, 'data' => ['html' => $html],
+                    ]],
+                ]],
+            ]];
+
+            $this->withSession(['cms_authenticated' => true])
+                ->postJson(route('admin.pages.save', 'europe'), [
+                    'title' => 'Europe',
+                    'layout' => $layout,
+                ])->assertOk();
+
+            $saved = file_get_contents($storePath);
+            $this->assertStringContainsString('window.aiSectionReady=true;', (string) $saved);
+        } finally {
+            if ($original === null) {
+                @unlink($storePath);
+            } else {
+                file_put_contents($storePath, $original);
+            }
+        }
+    }
+
     public function test_saving_a_page_with_a_payment_section_requires_authorization(): void
     {
         $layout = [[

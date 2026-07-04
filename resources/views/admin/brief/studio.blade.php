@@ -214,9 +214,16 @@
     .modal-head i{width:18px;height:18px}
     .modal-head button{margin-left:auto;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
     .modal-body{padding:16px 18px;overflow-y:auto}
-    .ai-step{display:flex;align-items:center;gap:8px;margin:15px 0 7px;font-weight:800;font-size:.84rem}
+    .ai-step{display:flex;align-items:flex-start;gap:9px;margin:16px 0 8px;font-weight:800;font-size:.84rem;line-height:1.4}
     .ai-step:first-child{margin-top:0}
-    .ai-step span{flex:none;display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;background:var(--vio-s);color:var(--vio-d);font-size:.72rem}
+    .ai-step>span:first-child{flex:none;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--vio-s);color:var(--vio-d);font-size:.74rem;margin-top:-1px}
+    .ai-step>span:last-child{padding-top:2px}
+    /* ── Build-with-AI mode tabs ── */
+    .ai-tabs{display:flex;gap:6px;background:#f4f2fb;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:4px}
+    .ai-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;color:var(--muted);font-weight:800;font-size:.82rem;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
+    .ai-tab i{width:15px;height:15px}
+    .ai-tab.is-active{background:#fff;color:var(--vio-d);box-shadow:0 1px 3px rgba(30,16,64,.12)}
+    .ai-tab-hint{color:var(--muted);font-size:.78rem;line-height:1.5;margin:6px 0 2px}
     .modal-body textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.87rem;resize:vertical}
     #ai-content{min-height:96px}
     #ai-prompt{min-height:150px;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;background:#faf9ff}
@@ -350,6 +357,11 @@
       <button type="button" data-ai-close><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
+      <div class="ai-tabs" id="ai-tabs">
+        <button type="button" class="ai-tab is-active" data-ai-tab="build"><i data-lucide="pencil-ruler"></i> New from brief</button>
+        <button type="button" class="ai-tab" data-ai-tab="replicate"><i data-lucide="copy"></i> Replicate a page</button>
+      </div>
+      <p class="ai-tab-hint" id="ai-tab-hint">Describe what you want and paste your real copy / numbers / links — the AI designs it from scratch.</p>
       <p class="ai-step"><span>1</span> <span id="ai-step1">Describe the page and paste your content / data</span></p>
       <textarea id="ai-content" placeholder="e.g. A landing page for our IELTS coaching: hero with “Score 8+ with ODA”, 3 feature cards (Live classes, Mock tests, 1-on-1 feedback), pricing ₹9,999, student quotes, closing CTA to book a demo."></textarea>
       <button class="btn btn-primary" id="ai-gen"><i data-lucide="wand-2"></i> Generate prompt</button>
@@ -854,26 +866,56 @@
 
   /* ════════ Build with AI ════════ */
   var aiModal=document.getElementById('ai-modal');
-  var aiMode='page',aiRow=null,aiPaymentBlockId=null;
+  var aiMode='page',aiRow=null,aiPaymentBlockId=null,aiIntent='build';
+  function aiStep1Label(){
+    if(aiMode==='payment') return 'Describe your payment section — what they pay for, the plan name & amount in ₹, who it is for, and the benefits / trust points to highlight';
+    if(aiIntent==='replicate') return aiMode==='row'
+      ? 'Paste the source section’s HTML (or its URL) — and note any changes'
+      : 'Paste the source page’s HTML (or its URL) — and note any changes';
+    return aiMode==='row'
+      ? 'Describe this section and paste its content / data'
+      : 'Describe the whole page and paste your content / data';
+  }
+  function syncAiUi(){
+    // Tabs only apply to page/row (design) modes, not the fixed payment flow.
+    document.getElementById('ai-tabs').hidden=(aiMode==='payment');
+    document.getElementById('ai-tab-hint').hidden=(aiMode==='payment');
+    document.querySelectorAll('#ai-tabs .ai-tab').forEach(function(t){
+      t.classList.toggle('is-active',t.getAttribute('data-ai-tab')===aiIntent);
+    });
+    document.getElementById('ai-tab-hint').textContent=aiIntent==='replicate'
+      ? 'Paste the HTML (or URL) of a page you want to copy — the AI rebuilds it as an editable section, applying only the changes you note.'
+      : 'Describe what you want and paste your real copy / numbers / links — the AI designs it from scratch.';
+    var c=document.getElementById('ai-content');
+    c.placeholder=aiIntent==='replicate'
+      ? 'Paste the full HTML of the page/section to replicate (or its URL). Then, on new lines, list any changes — e.g. “Change only: headline → ‘Study in Canada 2026’, swap the hero image, keep everything else identical.” Leave blank to replicate 1:1.'
+      : 'e.g. A landing page for our IELTS coaching: hero with “Score 8+ with ODA”, 3 feature cards (Live classes, Mock tests, 1-on-1 feedback), pricing ₹9,999, student quotes, closing CTA to book a demo.';
+    document.getElementById('ai-step1').textContent=aiStep1Label();
+  }
   function openAi(mode,arg){
     aiMode=mode==='row'?'row':(mode==='payment'?'payment':'page');
     aiRow=(aiMode==='row')?(arg||null):null;
     aiPaymentBlockId=(aiMode==='payment')?(arg||null):null;
+    if(aiMode==='payment') aiIntent='build';
     document.getElementById('ai-title').textContent=
       aiMode==='payment'?'Design payment section with AI'
       :aiMode==='row'?'Build with AI — this row'
       :'Build with AI — whole page';
-    document.getElementById('ai-step1').textContent=
-      aiMode==='payment'?'Describe your payment section — what they pay for, the plan name & amount in ₹, who it is for, and the benefits / trust points to highlight'
-      :aiMode==='row'?'Describe this section and paste its content / data'
-      :'Describe the whole page and paste your content / data';
     if(aiMode==='payment'){ // fresh slate for a payment design
       document.getElementById('ai-content').value='';
       document.getElementById('ai-prompt-wrap').hidden=true;
       document.getElementById('ai-code').value='';
     }
+    syncAiUi();
     aiModal.classList.add('open'); refresh();
   }
+  document.querySelectorAll('#ai-tabs .ai-tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      aiIntent=t.getAttribute('data-ai-tab')==='replicate'?'replicate':'build';
+      document.getElementById('ai-prompt-wrap').hidden=true; // stale prompt no longer matches the mode
+      syncAiUi(); refresh();
+    });
+  });
   document.getElementById('tb-ai').addEventListener('click',function(){openAi('page');});
   // Per-section button rendered inside a payment block's settings drawer.
   document.addEventListener('click',function(e){
@@ -885,7 +927,7 @@
 
   document.getElementById('ai-gen').addEventListener('click',function(){
     var content=document.getElementById('ai-content').value.trim();
-    document.getElementById('ai-prompt').value=buildAiPrompt(content,aiMode);
+    document.getElementById('ai-prompt').value=buildAiPrompt(content,aiMode,aiIntent);
     document.getElementById('ai-prompt-wrap').hidden=false;
     document.getElementById('ai-prompt').scrollIntoView({behavior:'smooth',block:'nearest'});
   });
@@ -1009,8 +1051,17 @@
     ];
     return L.join('\n');
   }
-  function buildAiPrompt(content,mode){
+  // Shared image guidance so AI-generated images render immediately (never a
+  // broken-image icon) and stay easy to swap in the builder afterwards.
+  var IMAGE_RULES=[
+    '────────── IMAGES (so nothing shows as broken) ──────────',
+    '• For every photo, use a real, working placeholder URL: https://images.unsplash.com/photo-<id> or https://picsum.photos/seed/<word>/1200/800 . Never leave src="" , never use "path/to/image.jpg", local paths, or made-up domains.',
+    '• Always set width, height, alt and style="max-width:100%" on each <img>, and pick placeholder images that suit MY topic so the section looks finished on first paste. I can click any image in the builder afterwards to replace it.',
+    '• Prefer inline-SVG for icons/logos/decoration (they never break); reserve <img> for genuine photos.'
+  ];
+  function buildAiPrompt(content,mode,intent){
     if(mode==='payment') return buildPaymentPrompt(content);
+    if(intent==='replicate') return buildReplicatePrompt(content,mode);
     var isPage=mode!=='row';
     var task=isPage
       ?'Build the COMPLETE BODY of a landing page — 3 to 6 distinct, polished sections (e.g. hero, features/cards, comparison or stats, testimonial, FAQ, closing call-to-action) chosen to fit my content. All sections live inside ONE wrapper.'
@@ -1047,6 +1098,8 @@
       '────────── RESPONSIVE (required) ──────────',
       '• Mobile-first; must look great 320px → 1440px. Inner wrappers centered, max-width ~1200px, fluid padding.',
       '• Every multi-column layout collapses to ONE column under 720px. No fixed widths that overflow. img{max-width:100%}.',
+      ''
+    ].concat(IMAGE_RULES).concat([
       '',
       '────────── JS (only if it adds value) ──────────',
       '• One <script> at the very end, vanilla, wrapped in (function(){ … })(), querying only inside .ai-sec, and safe if elements are missing.',
@@ -1059,10 +1112,62 @@
       '  /* …every other rule ALSO prefixed with .ai-sec … */',
       '  @media(max-width:720px){ .ai-sec [class*="grid"]{grid-template-columns:1fr} }',
       '<\/style>'
-    ].concat(shape).concat([
+    ]).concat(shape).concat([
       '<script>(function(){ /* optional, scoped to .ai-sec */ })();<\/script>',
       '',
       'Reminder: output the code only — start with "<link", end with "<\/script>". Absolutely no ``` anywhere.'
+    ]);
+    return L.join('\n');
+  }
+  // "Replicate a page" — the admin pastes source HTML/URL; the AI reproduces it
+  // 1:1 as an editable, scoped .ai-sec embed, applying only the noted changes.
+  function buildReplicatePrompt(content,mode){
+    var isPage=mode!=='row';
+    var thing=isPage?'PAGE':'SECTION';
+    var wrapper=isPage?'<div class="ai-sec">':'<section class="ai-sec">';
+    var wrapperClose=isPage?'<\/div>':'<\/section>';
+    var L=[
+      'You are a senior front-end engineer. Below is the source of a '+thing.toLowerCase()+' I already like. RECREATE IT AS FAITHFULLY AS POSSIBLE — same layout, structure, sections, order, spacing, colours, fonts and copy — but rebuilt as ONE clean, self-contained block I can paste into my page builder. This is a REPLICATION, not a redesign: do not add, drop, reorder or "improve" anything except the explicit changes I list.',
+      '',
+      '────────── SOURCE TO REPLICATE ──────────',
+      'This is the '+thing.toLowerCase()+' to copy (its HTML, or a URL — if a URL, reproduce it from memory / by fetching it):',
+      (content||'(Paste the full HTML of the page/section to replicate, or its URL. Then, on new lines, list any changes — or leave blank to copy it exactly.)'),
+      '',
+      '────────── CHANGES ──────────',
+      '• Apply ONLY the changes I noted above (look for lines like "Change:", "Change only:", "except:", "swap…", "replace…"). If I listed none, reproduce the source EXACTLY, character-for-character in the visible copy.',
+      '• Keep every heading, paragraph, button label, price, number and link identical to the source unless I explicitly changed it. Do NOT invent lorem-ipsum.',
+      '',
+      '────────── OUTPUT RULES (STRICT) ──────────',
+      '1. Reply with RAW CODE ONLY. No markdown, no triple-backtick code fences, no language tag, no commentary. Your very first character must be "<" and your reply must END with "<\/script>" (or the closing wrapper tag if you add no JS).',
+      '2. Do NOT output <!doctype>, <html>, <head>, <body>, or the source page\'s own navbar / site-header / site-footer — strip those. My site wraps your code with its own header, navigation and footer automatically. Reproduce only the main content '+thing.toLowerCase()+'.',
+      '3. Emit exactly, in this order: one <link> (the fonts the source uses, else Poppins), one <style>, one '+(isPage?'<div class="ai-sec"> containing the reproduced <section>s':'<section class="ai-sec">')+', and at most one <script>.',
+      '4. Re-implement the source\'s CSS inline in your one <style> block (do not rely on the source\'s external stylesheets or class names being present) so it renders identically on its own.',
+      '5. PAYMENT SAFETY: if the source has a price / checkout / pay button, reproduce only its visual copy — never a real payment form, checkout JS, QR or payment link. Append exactly one editable CMS marker after the closing wrapper (and before any script):',
+      '<!-- ODA_PAYMENT {"eyebrow":"Secure payment","title":"Complete your payment","description":"Your short supporting copy","plan":"Plan name","amount":"9999","plan_description":"What this payment covers","badge":"Popular","layout":"split","button_label":"Pay securely","note":"Any terms or tax note","accent":"#F05A28","accent2":"#2B1FA8"} -->',
+      'Use a plain INR amount such as "9999" (no symbol/commas). The page builder converts this marker into the real secure Razorpay block; never imitate that block yourself.',
+      '',
+      '────────── CSS SCOPING (so it never breaks my page) ──────────',
+      '• Prefix EVERY selector with ".ai-sec" — e.g. ".ai-sec .grid{}", ".ai-sec h2{}". No exceptions.',
+      '• Never style html, body, *, :root, nav, footer, or bare element selectors outside .ai-sec. Put CSS variables on ".ai-sec{ --x:… }", never :root. No @import.',
+      '',
+      '────────── RESPONSIVE ──────────',
+      '• Preserve the source\'s responsive behaviour; must look right 320px → 1440px. Multi-column layouts collapse to ONE column under 720px. img{max-width:100%}.',
+      ''
+    ].concat(IMAGE_RULES).concat([
+      '• When replicating, reuse the SOURCE\'s own image URLs if they are absolute and public; otherwise substitute a suitable working placeholder (per the rules above) so nothing shows as broken. I can swap any image in the builder.',
+      '',
+      '────────── OUTPUT SHAPE ──────────',
+      '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">',
+      '<style>',
+      '  .ai-sec{font-family:"Poppins",sans-serif}',
+      '  /* …the source\'s styles, EVERY rule prefixed with .ai-sec … */',
+      '<\/style>',
+      wrapper,
+      '  … the replicated '+thing.toLowerCase()+', structure & copy matching the source …',
+      wrapperClose,
+      '<script>(function(){ /* only if the source needs it, scoped to .ai-sec */ })();<\/script>',
+      '',
+      'Reminder: faithful copy, apply only my listed changes, output code only — start with "<link", end with "<\/script>". No ``` anywhere.'
     ]);
     return L.join('\n');
   }
