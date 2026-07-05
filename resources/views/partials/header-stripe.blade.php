@@ -63,7 +63,6 @@
 
         <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'new-tabs'])
                 type="button" data-stripe-trigger="new-tabs" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-new-tabs">
-          <i class="nav-trigger-ai" data-lucide="sparkles" aria-hidden="true"></i>
           <span>Student Hub</span>
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
@@ -196,14 +195,16 @@
                     <span class="course-menu-count">2 tools</span>
                   </div>
 
-                  <div class="course-menu-grid">
+                  <div class="course-menu-grid course-menu-grid--hub">
                     <a class="course-menu-card" href="{{ route('profiler') }}">
                       <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="user-plus"></i></span>
                       <span class="course-menu-copy"><strong>Build My Profile</strong><small>Map academics, scores &amp; goals</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                     <a class="course-menu-card" href="{{ route('services.test-prep') }}">
                       <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="book-open-check"></i></span>
                       <span class="course-menu-copy"><strong>Test Preparation</strong><small>IELTS, TOEFL, SAT, GRE &amp; GMAT prep</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                   </div>
                 </div>

@@ -162,12 +162,6 @@
   color: var(--teal-dark);
 }
 
-.stripe-nav-trigger .nav-trigger-ai {
-  width: 15px;
-  height: 15px;
-  color: var(--coral, #ff5e32);
-}
-
 .stripe-nav-trigger .nav-trigger-chevron {
   width: 14px;
   height: 14px;
@@ -878,6 +872,32 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
   .stripe-flyout .nav-dropdown-grid {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+  }
+
+  /* Student Hub: only 2 tools, so give them room to read as featured actions
+     rather than compressed rows sized for a 6-item grid. */
+  .stripe-flyout .course-menu-grid--hub {
+    grid-auto-rows: minmax(72px, auto);
+    gap: 10px;
+  }
+
+  .stripe-flyout .course-menu-grid--hub .course-menu-card {
+    grid-template-columns: 44px minmax(0, 1fr) 22px;
+    padding: 12px;
+  }
+
+  .stripe-flyout .course-menu-grid--hub .course-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .stripe-flyout .course-menu-grid--hub .course-menu-copy strong {
+    font-size: 0.96rem;
+    white-space: normal;
+  }
+
+  .stripe-flyout .course-menu-grid--hub .course-menu-copy small {
+    white-space: normal;
   }
 
   /* ---- Pinned Contact CTA footer ------------------------------------------- */
