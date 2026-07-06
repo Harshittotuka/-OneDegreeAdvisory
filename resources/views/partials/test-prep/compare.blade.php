@@ -102,6 +102,7 @@
             </div>
           @endforeach
         </div>
+        <p class="tpc-bars-note">* Fee structure is for online coaching. For offline coaching details, <a href="{{ route('contact') }}">reach out to us</a>.</p>
 
       {{-- ═══════════ VARIANT 2 · PRICING CARDS ═══════════ --}}
       @elseif($style === 'cards')

@@ -64,6 +64,9 @@
 .tpc-bar-row.in .tpc-bar-fill{width:var(--w);}
 .tpc-bar-val{font-size:12.5px; color:var(--tpc-muted); text-align:right; font-variant-numeric:tabular-nums;
   font-weight:600;}
+.tpc-bars-note{max-width:1040px; margin:14px auto 0; font-size:12.5px; color:var(--tpc-muted); text-align:left;}
+.tpc-bars-note a{color:inherit; text-decoration:none; text-shadow:0 0 8px color-mix(in srgb, var(--tpc-accent) 55%, transparent);}
+.tpc-bars-note a:hover{color:var(--tpc-navy-deep);}
 
 /* ═══════════ VARIANT 2 · CARDS ═══════════ */
 .tpc-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:18px;}
