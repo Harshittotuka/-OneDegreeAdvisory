@@ -2,3 +2,4 @@
 !private/
 !public/
 !.gitignore
+!test-prep-compare.json
