@@ -21335,6 +21335,10 @@ body.tp-body {
   color: var(--tp-secndry);
 }
 
+.tp-edwise .prep-carousel-dots {
+  display: none;
+}
+
 /* AOS fade-in (matches source markup) */
 .tp-edwise [data-aos="fade-in"] {
   opacity: 0;
@@ -21399,10 +21403,45 @@ body.tp-body {
   .tp-edwise .prep-hdr p { width: 100%; }
   .tp-edwise .prep-cors-img { max-height: 178px; }
   .tp-edwise .prep-corse-content { padding: 24px 22px; }
-  .tp-edwise .f-768-1 .f-col { width: 100%; }
   .tp-edwise .inner-hero-2 .inner-hero-wrap { flex-direction: column-reverse; gap: 30px 0; min-height: auto; margin-top: 20px; }
   .tp-edwise .inner-hero-2 .inner-hero-right { margin-right: 0; }
   .tp-edwise .benefit-hdr { width: 100%; }
+
+  /* Preparation courses (GMAT, Online Tutoring): horizontal swipe carousel
+     instead of a full-width stack, so both cards are reachable in one row. */
+  .tp-edwise .prop-corse-wrap .f-row.f-768-1 {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0 -15px;
+    padding: 0 15px 6px;
+  }
+  .tp-edwise .prop-corse-wrap .f-row.f-768-1::-webkit-scrollbar { display: none; }
+  .tp-edwise .prop-corse-wrap .f-row.f-768-1 .f-col {
+    width: 86%;
+    flex: 0 0 86%;
+    scroll-snap-align: start;
+  }
+  .tp-edwise .prep-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .tp-edwise .prep-carousel-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #d7deea;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .tp-edwise .prep-carousel-dot.is-active {
+    background: var(--tp-fill);
+    transform: scale(1.2);
+  }
 }
 
 @media all and (max-width: 640px) {

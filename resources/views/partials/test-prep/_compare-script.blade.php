@@ -466,6 +466,22 @@
     });
   }
 
+  /* ── Mobile payment drawer: the navy copy panel collapses to a side tab
+     (see the max-width:820px rules) and slides in on tap. ── */
+  var payBlock = root.querySelector('[data-tpc-pay-block]');
+  var copyToggle = root.querySelector('[data-tpc-copy-toggle]');
+  if (payBlock && copyToggle) {
+    copyToggle.addEventListener('click', function () {
+      var isOpen = payBlock.hasAttribute('data-copy-open');
+      if (isOpen) {
+        payBlock.removeAttribute('data-copy-open');
+      } else {
+        payBlock.setAttribute('data-copy-open', '');
+      }
+      copyToggle.setAttribute('aria-expanded', String(!isOpen));
+    });
+  }
+
   // Draw lucide icons inside this section. The library loads deferred, so it may
   // not be ready yet — try now, and again on window load as a fallback.
   function drawIcons() { if (window.lucide) window.lucide.createIcons(); }

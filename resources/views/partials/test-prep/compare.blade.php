@@ -209,8 +209,13 @@
 
       {{-- ═══════════════════════ PAYMENT ═══════════════════════ --}}
       @php $firstPayable = (int) ($programs[0]['price'] ?? 0) >= 1; @endphp
-      <div class="tpc-pay" id="tp-enrol">
-        <div class="tpc-pay-copy">
+      <div class="tpc-pay" id="tp-enrol" data-tpc-pay-block>
+        <div class="tpc-pay-copy-slide">
+          <button type="button" class="tpc-pay-copy-tab" data-tpc-copy-toggle aria-expanded="false" aria-controls="tpc-pay-copy">
+            <i data-lucide="chevron-left"></i>
+          </button>
+        </div>
+        <div class="tpc-pay-copy" id="tpc-pay-copy">
           @if(!empty($pay['eyebrow']))<span class="tpc-eyebrow tpc-eyebrow--dark"><span class="tpc-dot"></span> {{ $pay['eyebrow'] }}</span>@endif
           @if(!empty($pay['title']))<h3 class="tpc-pay-title">{{ $pay['title'] }}</h3>@endif
           @if(!empty($pay['description']))<p class="tpc-pay-desc">{{ $pay['description'] }}</p>@endif

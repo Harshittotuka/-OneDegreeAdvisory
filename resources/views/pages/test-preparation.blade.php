@@ -98,7 +98,7 @@
         </div>
       </div>
       <div class="prop-corse-wrap">
-        <div class="f-row f-2 f-768-1">
+        <div class="f-row f-2 f-768-1" data-prep-carousel>
           @foreach ($tests as $test)
             <div class="f-col">
               <div class="prep-corse-box">
@@ -113,6 +113,11 @@
             </div>
           @endforeach
         </div>
+        <div class="prep-carousel-dots" data-prep-carousel-dots aria-hidden="true">
+          @foreach ($tests as $i => $test)
+            <span class="prep-carousel-dot @if($i === 0) is-active @endif"></span>
+          @endforeach
+        </div>
       </div>
     </div>
   </div>
@@ -121,4 +126,23 @@
   @include('partials.test-prep.compare')
 
 </main>
+
+<script>
+  (function () {
+    var track = document.querySelector('[data-prep-carousel]');
+    var dots = document.querySelectorAll('[data-prep-carousel-dots] .prep-carousel-dot');
+    if (!track || !dots.length) return;
+
+    var syncActiveDot = function () {
+      var slideWidth = track.clientWidth;
+      if (!slideWidth) return;
+      var index = Math.round(track.scrollLeft / slideWidth);
+      dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === index); });
+    };
+
+    track.addEventListener('scroll', function () {
+      window.requestAnimationFrame(syncActiveDot);
+    }, { passive: true });
+  })();
+</script>
 @endsection

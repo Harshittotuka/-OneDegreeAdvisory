@@ -126,6 +126,10 @@
 /* ═══════════════════ PAYMENT ═══════════════════ */
 .tpc-pay{margin-top:56px; display:grid; grid-template-columns:0.92fr 1.08fr; gap:0;
   border-radius:24px; overflow:hidden; box-shadow:0 34px 70px -30px rgba(18,8,46,.5);}
+/* Only used on mobile (see the max-width:820px block) — hidden by default so
+   they never appear in / disrupt the desktop two-column grid layout. */
+.tpc-pay-copy-tab,
+.tpc-pay-copy-slide{display:none;}
 .tpc-pay-copy{background:var(--tpc-navy-deep); color:#fff; padding:40px 38px; position:relative; overflow:hidden;}
 .tpc-pay-copy::after{content:''; position:absolute; right:-70px; bottom:-70px; width:240px; height:240px;
   border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--tpc-accent) 40%, transparent), transparent 65%);}
@@ -288,13 +292,45 @@ html.tpc-exam-open{overflow:hidden;}
 
 /* ── Responsive ── */
 @media (max-width:820px){
-  .tpc-pay{grid-template-columns:1fr;}
   .tpc-bar-row{grid-template-columns:104px 1fr 78px; gap:11px;}
   .tpc-bar-name{font-size:12px;}
+
+  /* Payment block: the white form (.tpc-pay-card) is the default full view.
+     The navy/blue copy panel is a full-size overlay, same footprint as the
+     white card, that slides in from the right edge on tap and covers it
+     completely — not a partial drawer. The round arrow button lives in
+     .tpc-pay-copy-slide, a slim UNSCROLLABLE sibling that shares the exact
+     same position/transform rules as .tpc-pay-copy — so the button and the
+     panel move as one unit in lock-step, without nesting the button inside
+     the panel's own overflow:auto box (which would clip it, since a single
+     non-visible overflow axis forces the other axis to clip too). */
+  .tpc-pay{display:block; position:relative; grid-template-columns:none; overflow:visible;}
+  .tpc-pay-card{position:relative; border-radius:24px; overflow:hidden;}
+  .tpc-pay-copy,
+  .tpc-pay-copy-slide{
+    display:block; position:absolute; inset:0; z-index:2;
+    transform:translateX(100%); transition:transform .38s cubic-bezier(.4,0,.2,1);
+  }
+  .tpc-pay-copy{overflow-y:auto; border-radius:24px;}
+  .tpc-pay-copy-slide{z-index:3; pointer-events:none;}
+  .tpc-pay[data-copy-open] .tpc-pay-copy,
+  .tpc-pay[data-copy-open] .tpc-pay-copy-slide{transform:translateX(0);}
+  .tpc-pay-copy-tab{
+    display:flex; align-items:center; justify-content:center;
+    position:absolute; top:50%; left:-19px; width:38px; height:38px;
+    margin-top:-19px; border-radius:50%;
+    background:var(--tpc-accent); color:#fff;
+    border:3px solid #fff; box-shadow:0 8px 20px -6px rgba(18,8,46,.55);
+    cursor:pointer; pointer-events:auto;
+  }
+  .tpc-pay-copy-tab svg{width:18px; height:18px; transition:transform .38s cubic-bezier(.4,0,.2,1);}
+  .tpc-pay[data-copy-open] .tpc-pay-copy-tab svg{transform:rotate(180deg);}
 }
 @media (max-width:560px){
   .tpc{padding:60px 0;}
   .tpc-pay-copy, .tpc-pay-card{padding:28px 22px;}
+  .tpc-pay-copy{padding-left:30px;}
+  .tpc-pay-card{padding-right:44px;}
   .tpc-exam-modal__card{padding:30px 22px 24px;}
   .tpc-exam-modal__grid{grid-template-columns:1fr;}
   /* Tier-list rows stack: lead over price+button. */
