@@ -34,6 +34,17 @@ class TestPrepCompareCmsController extends Controller
             'programs.*.price' => 'nullable|string|max:12',
             'programs.*.months' => 'nullable|string|max:8',
             'programs.*.badge' => 'nullable|string|max:40',
+            'programs.*.details.eyebrow' => 'nullable|string|max:60',
+            'programs.*.details.title' => 'nullable|string|max:140',
+            'programs.*.details.tagline' => 'nullable|string|max:200',
+            'programs.*.details.advantage' => 'nullable|string|max:600',
+            'programs.*.details.source' => 'nullable|string|max:200',
+            'programs.*.details.fact_label' => 'nullable|array',
+            'programs.*.details.fact_label.*' => 'nullable|string|max:40',
+            'programs.*.details.fact_value' => 'nullable|array',
+            'programs.*.details.fact_value.*' => 'nullable|string|max:60',
+            'programs.*.details.syllabus' => 'nullable|array',
+            'programs.*.details.syllabus.*' => 'nullable|string|max:200',
             'payment.eyebrow' => 'nullable|string|max:60',
             'payment.title' => 'nullable|string|max:140',
             'payment.description' => 'nullable|string|max:400',
@@ -51,12 +62,34 @@ class TestPrepCompareCmsController extends Controller
                 continue;
             }
 
+            $details = is_array($row['details'] ?? null) ? $row['details'] : [];
+
+            // Facts arrive as parallel label[]/value[] inputs (see the admin
+            // row partial) rather than a nested facts[i][0]/[1] pair, so they
+            // survive add/remove reordering in the browser without needing
+            // matching array keys. Zip them back into [label, value] pairs.
+            $factLabels = (array) ($details['fact_label'] ?? []);
+            $factValues = (array) ($details['fact_value'] ?? []);
+            $facts = [];
+            foreach ($factLabels as $i => $label) {
+                $facts[] = [(string) $label, (string) ($factValues[$i] ?? '')];
+            }
+
             $programs[] = [
                 'name' => (string) ($row['name'] ?? ''),
                 'price' => (string) ($row['price'] ?? ''),
                 'months' => (string) ($row['months'] ?? ''),
                 'badge' => (string) ($row['badge'] ?? ''),
                 'visible' => ! empty($row['visible']),
+                'details' => [
+                    'eyebrow' => (string) ($details['eyebrow'] ?? ''),
+                    'title' => (string) ($details['title'] ?? ''),
+                    'tagline' => (string) ($details['tagline'] ?? ''),
+                    'facts' => $facts,
+                    'advantage' => (string) ($details['advantage'] ?? ''),
+                    'syllabus' => (array) ($details['syllabus'] ?? []),
+                    'source' => (string) ($details['source'] ?? ''),
+                ],
             ];
         }
 

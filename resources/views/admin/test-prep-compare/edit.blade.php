@@ -22,10 +22,10 @@
   .tpc-grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
 
   /* Program rows */
-  .tpc-row{display:grid; grid-template-columns:auto 1fr auto auto; gap:12px; align-items:center;
-    padding:12px; border:1px solid var(--line); border-radius:12px; background:#fafbfc; margin-bottom:10px;}
+  .tpc-row{padding:12px; border:1px solid var(--line); border-radius:12px; background:#fafbfc; margin-bottom:10px;}
   .tpc-row.tpc-dragging{opacity:.5;}
   .tpc-row.tpc-dragover{border-color:var(--teal); box-shadow:0 0 0 2px var(--teal-soft);}
+  .tpc-row-top{display:grid; grid-template-columns:auto 1fr auto auto; gap:12px; align-items:center;}
   .tpc-row-grip{display:flex; align-items:center; color:#bcb9c9; cursor:grab;}
   .tpc-row-grip i{width:17px; height:17px;}
   .tpc-row-fields{display:grid; gap:8px; min-width:0;}
@@ -34,7 +34,7 @@
   .tpc-mini{display:flex; flex-direction:column; gap:3px; font-size:.68rem; font-weight:700; color:var(--muted);
     text-transform:uppercase; letter-spacing:.03em; margin:0;}
   .tpc-mini input{padding:8px 10px; font-size:.86rem;}
-  .tpc-row input, .tpc-row select{padding:9px 11px; font-size:.88rem;}
+  .tpc-row input, .tpc-row select, .tpc-row textarea{padding:9px 11px; font-size:.88rem;}
   .tpc-vis{display:flex; align-items:center; gap:6px; margin:0; font-size:.78rem; font-weight:700; color:var(--muted); white-space:nowrap;}
   .tpc-vis input[type=checkbox]{width:16px; height:16px; accent-color:var(--teal); cursor:pointer;}
   .tpc-row-actions{display:flex; gap:4px;}
@@ -43,7 +43,18 @@
     transition:border-color .15s, color .15s;}
   .tpc-icon-btn:hover{border-color:var(--teal); color:var(--teal);}
   .tpc-icon-btn.tpc-del:hover{border-color:var(--danger); color:var(--danger);}
+  .tpc-icon-btn--on{border-color:var(--teal); color:var(--teal); background:var(--teal-soft);}
   .tpc-icon-btn i{width:16px; height:16px;}
+
+  /* Per-program popup ("exam info") details — collapsible panel below the
+     row's main fields, toggled by the message-square-text icon button. */
+  .tpc-details{margin-top:12px; padding-top:12px; border-top:1px dashed var(--line);}
+  .tpc-details-hint{margin:0 0 12px; font-size:.78rem; color:var(--muted); line-height:1.5;}
+  .tpc-details-label{margin:0 0 6px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted);}
+  .tpc-details-label span{text-transform:none; font-weight:500; letter-spacing:0;}
+  .tpc-fact-row{display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:6px;}
+  .tpc-syllabus-row{display:grid; grid-template-columns:1fr auto; gap:8px; margin-bottom:6px;}
+  .tpc-facts, .tpc-syllabus{margin-top:14px;}
   /* Floating save bar — a self-contained rounded card centred in the content
      column (past the 260px sidebar), lifted off the bottom edge so it reads as
      a floating pill, not a docked strip. Escapes .cms-wrap's transform (it's
@@ -85,8 +96,8 @@
 
   @media (max-width:820px){
     .tpc-grid2, .tpc-grid3{grid-template-columns:1fr;}
-    .tpc-row{grid-template-columns:1fr;}
-    .tpc-row-line1, .tpc-row-line2{grid-template-columns:1fr;}
+    .tpc-row-top{grid-template-columns:1fr;}
+    .tpc-row-line1, .tpc-row-line2, .tpc-fact-row{grid-template-columns:1fr;}
     .tpc-row-grip{display:none;}
     .tpc-row-actions{justify-content:flex-end;}
   }
@@ -246,13 +257,71 @@
     if (first) first.focus();
   });
 
-  // Up / down / delete
+  // Up / down / delete / popup-details toggle / fact & syllabus add-remove
   list.addEventListener('click', function (e) {
     const row = e.target.closest('[data-tpc-row]');
     if (!row) return;
-    if (e.target.closest('[data-tpc-del]')) { row.remove(); refresh(); }
-    else if (e.target.closest('[data-tpc-up]') && row.previousElementSibling) { row.parentNode.insertBefore(row, row.previousElementSibling); }
-    else if (e.target.closest('[data-tpc-down]') && row.nextElementSibling) { row.parentNode.insertBefore(row.nextElementSibling, row); }
+
+    if (e.target.closest('[data-tpc-del]')) {
+      row.remove();
+      refresh();
+      return;
+    }
+    if (e.target.closest('[data-tpc-up]') && row.previousElementSibling) { row.parentNode.insertBefore(row, row.previousElementSibling); return; }
+    if (e.target.closest('[data-tpc-down]') && row.nextElementSibling) { row.parentNode.insertBefore(row.nextElementSibling, row); return; }
+
+    if (e.target.closest('[data-tpc-details-toggle]')) {
+      const panel = row.querySelector('[data-tpc-details]');
+      const btn = e.target.closest('[data-tpc-details-toggle]');
+      if (panel) {
+        panel.hidden = !panel.hidden;
+        btn.classList.toggle('tpc-icon-btn--on', !panel.hidden);
+      }
+      return;
+    }
+
+    if (e.target.closest('[data-tpc-fact-add]')) {
+      const facts = row.querySelector('[data-tpc-facts]');
+      const addBtnEl = e.target.closest('[data-tpc-fact-add]');
+      const idx = row.querySelector('[name*="[details][eyebrow]"]').name.match(/\[(\d+|__INDEX__)\]/)[1];
+      const wrap = document.createElement('div');
+      wrap.className = 'tpc-fact-row';
+      wrap.setAttribute('data-tpc-fact-row', '');
+      wrap.innerHTML =
+        '<input type="text" name="programs[' + idx + '][details][fact_label][]" placeholder="Label (e.g. Score)">' +
+        '<input type="text" name="programs[' + idx + '][details][fact_value][]" placeholder="Value (e.g. Band 0-9)">' +
+        '<button type="button" class="tpc-icon-btn tpc-del" data-tpc-fact-del title="Remove fact"><i data-lucide="x"></i></button>';
+      facts.insertBefore(wrap, addBtnEl);
+      if (window.lucide) lucide.createIcons();
+      wrap.querySelector('input').focus();
+      return;
+    }
+    if (e.target.closest('[data-tpc-fact-del]')) {
+      const factRow = e.target.closest('[data-tpc-fact-row]');
+      if (factRow) factRow.remove();
+      return;
+    }
+
+    if (e.target.closest('[data-tpc-syllabus-add]')) {
+      const syllabus = row.querySelector('[data-tpc-syllabus]');
+      const addBtnEl = e.target.closest('[data-tpc-syllabus-add]');
+      const idx = row.querySelector('[name*="[details][eyebrow]"]').name.match(/\[(\d+|__INDEX__)\]/)[1];
+      const wrap = document.createElement('div');
+      wrap.className = 'tpc-syllabus-row';
+      wrap.setAttribute('data-tpc-syllabus-row', '');
+      wrap.innerHTML =
+        '<input type="text" name="programs[' + idx + '][details][syllabus][]" placeholder="e.g. Reading - academic passages and questions">' +
+        '<button type="button" class="tpc-icon-btn tpc-del" data-tpc-syllabus-del title="Remove line"><i data-lucide="x"></i></button>';
+      syllabus.insertBefore(wrap, addBtnEl);
+      if (window.lucide) lucide.createIcons();
+      wrap.querySelector('input').focus();
+      return;
+    }
+    if (e.target.closest('[data-tpc-syllabus-del]')) {
+      const syllabusRow = e.target.closest('[data-tpc-syllabus-row]');
+      if (syllabusRow) syllabusRow.remove();
+      return;
+    }
   });
 
   // Drag to reorder (via the grip handle).

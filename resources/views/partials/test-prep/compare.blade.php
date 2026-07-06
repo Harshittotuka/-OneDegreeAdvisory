@@ -32,23 +32,16 @@
 
     $fmt = fn ($n) => number_format((int) $n);
     $moLabel = fn ($m) => rtrim(rtrim(number_format((float) $m, 1), '0'), '.').' mo';
-    $examKeyForProgram = static function ($name): ?string {
-        $name = strtolower(trim((string) $name));
 
-        foreach (['ielts', 'pte', 'toefl', 'duolingo', 'sat', 'act', 'gre', 'gmat'] as $key) {
-            if (preg_match('/^'.preg_quote($key, '/').'\b/', $name)) {
-                return $key;
-            }
-        }
+    // A program is clickable (name opens the exam-info popup) when its own
+    // "details" have a title or tagline filled in — the popup content is
+    // authored per-program in the CMS now, not a separate fixed exam list.
+    $hasExamDetails = static fn ($p) => trim((string) ($p['details']['title'] ?? '')) !== '' || trim((string) ($p['details']['tagline'] ?? '')) !== '';
 
-        foreach (['german', 'french', 'japanese'] as $key) {
-            if (preg_match('/^'.preg_quote($key, '/').'\b/', $name)) {
-                return $key;
-            }
-        }
-
-        return null;
-    };
+    // The payment block's chip strip: every visible program with popup
+    // content, in stored order — this is the same $programs list used by
+    // the compare chart above, just filtered down.
+    $examPrograms = array_values(array_filter($programs, $hasExamDetails));
 @endphp
 
 <section id="tp-compare"
@@ -88,14 +81,13 @@
       @if($style === 'bars')
         <div class="tpc-bars" data-tpc-bars
              data-max-price="{{ $maxPrice }}" data-max-months="{{ $maxMonths }}">
-          @foreach($programs as $p)
-            @php $examKey = $examKeyForProgram($p['name'] ?? ''); @endphp
+          @foreach($programs as $i => $p)
             <div class="tpc-bar-row reveal"
                  data-price="{{ (int) ($p['price'] ?? 0) }}"
                  data-months="{{ (float) ($p['months'] ?? 0) }}">
               <div class="tpc-bar-name">
-                @if($examKey)
-                  <button type="button" class="tpc-program-name-btn" data-tpc-exam="{{ $examKey }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
+                @if($hasExamDetails($p))
+                  <button type="button" class="tpc-program-name-btn" data-tpc-exam="{{ $i }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
                 @else
                   {{ $p['name'] }}
                 @endif
@@ -115,15 +107,12 @@
       @elseif($style === 'cards')
         <div class="tpc-cards">
           @foreach($programs as $i => $p)
-            @php
-                $payable = (int) ($p['price'] ?? 0) >= 1;
-                $examKey = $examKeyForProgram($p['name'] ?? '');
-            @endphp
+            @php $payable = (int) ($p['price'] ?? 0) >= 1; @endphp
             <article class="tpc-card reveal">
               @if(!empty($p['badge']))<span class="tpc-card-badge">{{ $p['badge'] }}</span>@endif
               <div class="tpc-card-top">
-                @if($examKey)
-                  <button type="button" class="tpc-card-name tpc-program-name-btn" data-tpc-exam="{{ $examKey }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
+                @if($hasExamDetails($p))
+                  <button type="button" class="tpc-card-name tpc-program-name-btn" data-tpc-exam="{{ $i }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
                 @else
                   <span class="tpc-card-name">{{ $p['name'] }}</span>
                 @endif
@@ -156,14 +145,11 @@
             </thead>
             <tbody>
               @foreach($programs as $i => $p)
-                @php
-                    $payable = (int) ($p['price'] ?? 0) >= 1;
-                    $examKey = $examKeyForProgram($p['name'] ?? '');
-                @endphp
+                @php $payable = (int) ($p['price'] ?? 0) >= 1; @endphp
                 <tr class="reveal" data-price="{{ (int) ($p['price'] ?? 0) }}" data-months="{{ (float) ($p['months'] ?? 0) }}">
                   <td class="tpc-td-name">
-                    @if($examKey)
-                      <button type="button" class="tpc-program-name-btn" data-tpc-exam="{{ $examKey }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
+                    @if($hasExamDetails($p))
+                      <button type="button" class="tpc-program-name-btn" data-tpc-exam="{{ $i }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
                     @else
                       {{ $p['name'] }}
                     @endif
@@ -184,15 +170,12 @@
       @elseif($style === 'stack')
         <div class="tpc-stack">
           @foreach($programs as $i => $p)
-            @php
-                $payable = (int) ($p['price'] ?? 0) >= 1;
-                $examKey = $examKeyForProgram($p['name'] ?? '');
-            @endphp
+            @php $payable = (int) ($p['price'] ?? 0) >= 1; @endphp
             <div class="tpc-tier reveal">
               <div class="tpc-tier-lead">
                 <span class="tpc-tier-name">
-                  @if($examKey)
-                    <button type="button" class="tpc-program-name-btn" data-tpc-exam="{{ $examKey }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
+                  @if($hasExamDetails($p))
+                    <button type="button" class="tpc-program-name-btn" data-tpc-exam="{{ $i }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
                   @else
                     {{ $p['name'] }}
                   @endif
@@ -220,19 +203,15 @@
           @if(!empty($pay['title']))<h3 class="tpc-pay-title">{{ $pay['title'] }}</h3>@endif
           @if(!empty($pay['description']))<p class="tpc-pay-desc">{{ $pay['description'] }}</p>@endif
 
-          <div class="tpc-exam-strip" aria-label="Test details">
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="ielts" aria-haspopup="dialog">IELTS</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="pte" aria-haspopup="dialog">PTE</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="toefl" aria-haspopup="dialog">TOEFL</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="duolingo" aria-haspopup="dialog">Duolingo</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="german" aria-haspopup="dialog">German A1&ndash;B1</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="french" aria-haspopup="dialog">French</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="japanese" aria-haspopup="dialog">Japanese</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="sat" aria-haspopup="dialog">SAT</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="act" aria-haspopup="dialog">ACT</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="gre" aria-haspopup="dialog">GRE</button>
-            <button type="button" class="tpc-exam-chip" data-tpc-exam="gmat" aria-haspopup="dialog">GMAT</button>
-          </div>
+          @if(count($examPrograms) > 0)
+            <div class="tpc-exam-strip" aria-label="Test details">
+              @foreach($programs as $i => $p)
+                @if($hasExamDetails($p))
+                  <button type="button" class="tpc-exam-chip" data-tpc-exam="{{ $i }}" aria-haspopup="dialog">{{ $p['name'] }}</button>
+                @endif
+              @endforeach
+            </div>
+          @endif
 
           {{-- Boarding-pass ticket (mirrors the site hero) — reflects the picked
                program live: Track = name, Fare = price, Status = confirmation. --}}
@@ -335,5 +314,5 @@
 @include('partials.test-prep._compare-styles')
 
 @if(count($programs) > 0)
-  @include('partials.test-prep._compare-script', ['paymentEnabled' => $paymentEnabled])
+  @include('partials.test-prep._compare-script', ['paymentEnabled' => $paymentEnabled, 'programs' => $programs])
 @endif
