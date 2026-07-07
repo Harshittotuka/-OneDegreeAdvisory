@@ -192,13 +192,18 @@
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">New</span>
-                    <span class="course-menu-count">2 tools</span>
+                    <span class="course-menu-count">3 tools</span>
                   </div>
 
                   <div class="course-menu-grid course-menu-grid--hub">
                     <a class="course-menu-card" href="{{ route('profiler') }}">
                       <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="user-plus"></i></span>
                       <span class="course-menu-copy"><strong>Build My Profile</strong><small>Map academics, scores &amp; goals</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('career-library.index') }}">
+                      <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="compass"></i></span>
+                      <span class="course-menu-copy"><strong>Global Career Library</strong><small>Explore 3000+ careers &amp; roadmaps</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                     <a class="course-menu-card" href="{{ route('services.test-prep') }}">

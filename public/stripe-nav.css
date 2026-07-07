@@ -874,8 +874,8 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
     gap: 8px;
   }
 
-  /* Student Hub: only 2 tools, so give them room to read as featured actions
-     rather than compressed rows sized for a 6-item grid. */
+  /* Student Hub: a small set of tools, so give them room to read as featured
+     actions rather than compressed rows sized for a 6-item grid. */
   .stripe-flyout .course-menu-grid--hub {
     grid-auto-rows: minmax(72px, auto);
     gap: 10px;
