@@ -15,7 +15,9 @@ use App\Http\Controllers\Admin\ProfileSubmissionsController;
 use App\Http\Controllers\Admin\TestPrepCompareCmsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
+use App\Http\Controllers\Admin\CareerLibraryCmsController;
 use App\Http\Controllers\BriefPageController;
+use App\Http\Controllers\CareerLibraryController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SeoController;
@@ -60,6 +62,17 @@ Route::get('/services/admissions-counselling', [PageController::class, 'admissio
 Route::get('/services/student-services', [PageController::class, 'studentServices'])->name('services.student-services');
 
 Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study-abroad');
+
+// Global Career Library — a self-contained careers explorer, CMS-managed data
+// in storage/app/career-library.json. Detail URLs are shaped:
+// /global-career-library/{cc}/{Career-Name}/{lang-code}.
+Route::get('/global-career-library', [CareerLibraryController::class, 'index'])->name('career-library.index');
+Route::post('/global-career-library/ensure', [CareerLibraryController::class, 'ensure'])
+    ->middleware('throttle:15,1')
+    ->name('career-library.ensure');
+Route::get('/global-career-library/{country}/{career}/{lang}', [CareerLibraryController::class, 'show'])
+    ->where(['country' => '[A-Za-z]{2}', 'career' => '[^/]+', 'lang' => '[A-Za-z]{2,4}-[A-Za-z]{2}'])
+    ->name('career-library.show');
 
 // Student Profiler module (self-contained in app/Modules/StudentProfiler). One
 // invokable controller serves GET (wizard) and POST (session save / submit).
@@ -168,6 +181,26 @@ Route::prefix('admin')->group(function () {
         /* ── Test-Prep "Compare & enrol" section (programs list, prices, durations, style) ── */
         Route::get('test-prep-compare', [TestPrepCompareCmsController::class, 'edit'])->name('admin.test-prep-compare.index');
         Route::post('test-prep-compare', [TestPrepCompareCmsController::class, 'update'])->name('admin.test-prep-compare.update');
+
+        /* ── Global Career Library (landing settings + per-career LIVE editor) ── */
+        Route::get('career-library', [CareerLibraryCmsController::class, 'index'])->name('admin.career-library.index');
+        Route::post('career-library/settings', [CareerLibraryCmsController::class, 'updateSettings'])->name('admin.career-library.settings');
+        Route::post('career-library', [CareerLibraryCmsController::class, 'store'])->name('admin.career-library.store');
+        Route::post('career-library/reorder', [CareerLibraryCmsController::class, 'reorder'])->name('admin.career-library.reorder');
+        Route::post('career-library/upload', [CareerLibraryCmsController::class, 'upload'])->name('admin.career-library.upload');
+        Route::post('career-library/import', [CareerLibraryCmsController::class, 'importUrl'])->name('admin.career-library.import');
+        Route::get('career-library/{slug}/live', [CareerLibraryCmsController::class, 'live'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.live');
+        Route::post('career-library/{slug}/live', [CareerLibraryCmsController::class, 'liveSave'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.live.save');
+        Route::post('career-library/{slug}/flags', [CareerLibraryCmsController::class, 'updateFlags'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.flags');
+        Route::post('career-library/{slug}/variant', [CareerLibraryCmsController::class, 'addVariant'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.variant');
+        Route::delete('career-library/{slug}/variant', [CareerLibraryCmsController::class, 'deleteVariant'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.variant.delete');
+        Route::delete('career-library/{slug}', [CareerLibraryCmsController::class, 'destroy'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.destroy');
 
         /* ── Destinations mega-menu layout (nav dropdown grid) ── */
         Route::get('destinations-layout', [DestinationsLayoutController::class, 'edit'])->name('admin.destinations-layout.index');
