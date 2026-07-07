@@ -14,8 +14,6 @@
     ];
 
     $tests = [
-        ['title' => '(ACT) American College Testing', 'img' => asset('assets/test-prep/courses/ACT.webp'),
-         'desc' => 'The ACT is a globally recognized undergraduate admission test for students planning to study in the USA and other international destinations. It evaluates English, Mathematics, Reading, Science, and optional Writing skills. Our ACT preparation focuses on concept clarity, time management, and exam strategies to maximize your score.'],
         ['title' => '(SAT) Scholastic Assessment Test', 'img' => asset('assets/test-prep/courses/SAT.webp'),
          'desc' => 'The SAT is one of the most important standardized tests for college admissions abroad. It measures critical reading, writing, and mathematical abilities. We help students build strong fundamentals, improve analytical thinking, and gain confidence through practice tests and expert mentoring.'],
         ['title' => '(IELTS) International English Language Testing System', 'img' => asset('assets/test-prep/courses/IELTS.webp'),
