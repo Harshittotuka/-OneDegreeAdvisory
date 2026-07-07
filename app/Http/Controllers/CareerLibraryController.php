@@ -20,11 +20,11 @@ class CareerLibraryController extends Controller
 
     public function index(): View
     {
-        return view('career-library.index', [
+        return view('career-library.index', array_merge([
             'settings' => $this->store->settings(),
             'careers' => $this->store->visibleCareers(),
             'error' => trim((string) request()->query('error')) ?: null,
-        ]);
+        ], $this->store->availableFilters()));
     }
 
     /**

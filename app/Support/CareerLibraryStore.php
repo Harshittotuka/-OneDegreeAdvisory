@@ -144,6 +144,49 @@ class CareerLibraryStore
     }
 
     /**
+     * The distinct countries and languages that at least one career actually
+     * has a variant for — so the public search form only offers combinations we
+     * can serve real content for (rather than the full 39×14 source lists that
+     * would silently fall back to the default variant). Countries/languages are
+     * returned in the canonical COUNTRIES / LANGUAGE_CODES order.
+     *
+     * @return array{countries: list<string>, languages: list<string>}
+     */
+    public function availableFilters(): array
+    {
+        $countries = [];
+        $languages = [];
+        foreach ($this->careers() as $career) {
+            foreach (array_keys($career['data'] ?? []) as $key) {
+                [$country, $language] = array_pad(explode('|', (string) $key, 2), 2, '');
+                if ($country !== '') {
+                    $countries[$country] = true;
+                }
+                if ($language !== '') {
+                    $languages[$language] = true;
+                }
+            }
+        }
+
+        // Preserve the source ordering (India first, English first).
+        $orderedCountries = array_values(array_filter(
+            array_values(self::COUNTRIES),
+            fn (string $name) => isset($countries[$name])
+        ));
+        $orderedLanguages = array_values(array_filter(
+            array_keys(self::LANGUAGE_CODES),
+            fn (string $name) => isset($languages[$name])
+        ));
+
+        return [
+            // Fall back to the full lists only if the library is somehow empty,
+            // so the form is never rendered with zero options.
+            'countries' => $orderedCountries ?: array_values(self::COUNTRIES),
+            'languages' => $orderedLanguages ?: array_keys(self::LANGUAGE_CODES),
+        ];
+    }
+
+    /**
      * The report payload for a career in a given country/language, falling back
      * to the default variant and then to whichever variant exists. Returns null
      * only when the career has no data at all.

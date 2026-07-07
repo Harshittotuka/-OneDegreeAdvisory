@@ -53,6 +53,16 @@
   .cms-editing .next-steps::before { content: "Links & year come from Career Library settings"; display: block; text-align: center;
     font: 700 .72rem/1.4 Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #93a0b4; margin-bottom: 8px; }
 
+  /* Fixed page chrome (not career data): the read-time / roadmap tags and the
+     "Listen to Brief" button are decorative — dim them and show they're locked
+     so they don't read as editable text the way the real fields do. */
+  .cms-editing .hero-fixed-chrome { opacity: .5; }
+  .cms-editing #btn-voice-brief { opacity: .5; pointer-events: none; }
+
+  /* Demand tile: a real (popover-backed) field, so flag it as clickable. */
+  .cms-editing [data-cl-demand-open] { cursor: pointer; transition: outline-color .12s; outline: 1.5px dashed transparent; outline-offset: 2px; }
+  .cms-editing [data-cl-demand-open]:hover { outline-color: rgba(102,108,255,.75); }
+
   /* ── Inline editables ── */
   .cms-editing [data-ed] { transition: outline-color .12s, background .12s; border-radius: 3px; min-height: 1em; }
   .cms-editing [data-ed]:hover { outline: 1.5px dashed rgba(102,108,255,.75); outline-offset: 2px; cursor: text; }
@@ -611,11 +621,12 @@
     };
   }
 
-  /* ── Stats popover (median salary + demand level) ── */
-  document.querySelector('[data-cl-stats-open]')?.addEventListener('click', function (e) {
-    e.preventDefault(); e.stopPropagation();
+  /* ── Stats popover (median salary + demand level) ──
+     Opened from the ⚙ gear in the Market Snapshot header AND from a direct
+     click on the Demand tile, so demand feels editable in place. --*/
+  function openStatsPopover(anchor) {
     pop.innerHTML =
-      '<h4><i data-lucide="bar-chart-3"></i> Market snapshot extras</h4>' +
+      '<h4><i data-lucide="bar-chart-3"></i> Market snapshot</h4>' +
       '<label>Median salary (not shown on the page)</label>' +
       '<input type="text" id="le-stats-median" value="' + escAttr(statsExtra.median) + '" placeholder="e.g. ₹9-15 LPA">' +
       '<label>Demand level</label>' +
@@ -624,7 +635,7 @@
       '</select>' +
       '<div class="le-pop-row"><button type="button" class="le-pp-btn primary" id="le-stats-done"><i data-lucide="check"></i> Done</button></div>';
     refreshIcons();
-    positionPop(this.getBoundingClientRect());
+    positionPop(anchor.getBoundingClientRect());
     pop.querySelector('#le-stats-median').addEventListener('input', ev => { statsExtra.median = ev.target.value; markDirty(); });
     pop.querySelector('#le-stats-demand').addEventListener('change', ev => {
       statsExtra.demandLevel = ev.target.value;
@@ -632,7 +643,16 @@
       markDirty();
     });
     pop.querySelector('#le-stats-done').onclick = closePop;
+  }
+  document.querySelector('[data-cl-stats-open]')?.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    openStatsPopover(this);
   });
+  const demandTile = document.querySelector('[data-cl-demand-open]');
+  if (demandTile) {
+    demandTile.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openStatsPopover(demandTile); });
+    demandTile.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openStatsPopover(demandTile); } });
+  }
 
   /* ── Tile popover (icon / colours / flags) ── */
   function tileSwatchHtml() {
@@ -820,7 +840,7 @@
   }, true);
 
   document.addEventListener('mousedown', (e) => {
-    if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('#le-crop,[data-ed-img],[data-le-tool],[data-cl-stats-open],#le-tile-btn')) closePop();
+    if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('#le-crop,[data-ed-img],[data-le-tool],[data-cl-stats-open],[data-cl-demand-open],#le-tile-btn')) closePop();
   });
 
   /* ── Drag-to-reorder within a repeater ── */

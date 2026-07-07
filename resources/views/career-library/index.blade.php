@@ -11,7 +11,15 @@
     // Blade's @json splits its argument on commas (they become the json_encode
     // flag/depth params), so anything non-trivial is precomputed here and
     // passed as a bare variable.
+    //
+    // Only surface the countries/languages we actually hold variants for, so the
+    // search form can never offer a combo that silently falls back. Defaults keep
+    // the form working if the controller didn't pass them (e.g. the show() error
+    // fallback renders this same view).
+    $availCountries = $countries ?? array_values(\App\Support\CareerLibraryStore::COUNTRIES);
+    $availLanguages = $languages ?? array_keys(\App\Support\CareerLibraryStore::LANGUAGE_CODES);
     $jsCountries = collect(\App\Support\CareerLibraryStore::COUNTRIES)
+        ->filter(fn ($name) => in_array($name, $availCountries, true))
         ->map(fn ($name, $code) => ['code' => $code, 'name' => $name])->values();
     $jsCareers = collect($careers)
         ->map(fn ($c) => ['title' => $c['title'], 'iconType' => $c['iconType'], 'bg' => $c['bg'], 'text' => $c['text']])->values();
@@ -39,7 +47,7 @@
     const ICONS = @json(\App\Support\CareerLibraryIcons::MAP);
 
     // --- DATA ---
-    const LANGUAGES = @json(array_keys(\App\Support\CareerLibraryStore::LANGUAGE_CODES));
+    const LANGUAGES = @json($availLanguages);
 
     const COUNTRIES = @json($jsCountries);
 

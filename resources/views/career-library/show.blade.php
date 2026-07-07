@@ -90,13 +90,13 @@
             <!-- Action Tags + Voice Button -->
             <div class="flex flex-wrap gap-4 pt-4 items-center">
                 <!-- Read Time -->
-                <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
+                <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10 hero-fixed-chrome">
                     <span class="text-rose-400">{!! Icons::svg('clock') !!}</span>
                     <span class="text-sm">5 min read</span>
                 </div>
 
                 <!-- Roadmap Tag -->
-                <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
+                <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10 hero-fixed-chrome">
                     <span class="text-emerald-400">{!! Icons::svg('target') !!}</span>
                     <span class="text-sm">Detailed Roadmap</span>
                 </div>
@@ -209,7 +209,7 @@
                             <span class="text-lg md:text-xl font-bold text-slate-900 truncate"{!! $ed('jobGrowth') !!}>{{ $stats['jobGrowth'] }}</span>
                         </div>
                     </div>
-                    <div class="bg-rose-50 rounded-xl p-3 border border-rose-100 flex flex-col justify-center min-w-0">
+                    <div class="bg-rose-50 rounded-xl p-3 border border-rose-100 flex flex-col justify-center min-w-0" @if($live) data-cl-demand-open role="button" tabindex="0" title="Click to change demand level" @endif>
                         <span class="text-[10px] font-bold text-rose-400 uppercase">Demand</span>
                         <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
                             <span class="text-rose-500 flex-shrink-0 scale-75">{!! Icons::svg('users') !!}</span>
@@ -377,17 +377,28 @@
                 <div class="divide-y divide-slate-100"{!! $rep($group['key']) !!}>
                     @foreach ($group['options'] as $opt)
                     <div class="group"{!! $it !!}>
-                        <button
-                            onclick="toggleAccordion(this)"
-                            class="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors focus:outline-none"
-                        >
-                            <span class="font-bold text-slate-700 text-lg group-hover:text-indigo-600 transition-colors"{!! $ed('title') !!}>
-                                {{ $opt['title'] }}
-                            </span>
-                            <span class="chevron-icon text-slate-400 transition-transform duration-300">
-                                {!! Icons::svg('chevronDown') !!}
-                            </span>
-                        </button>
+                        @if ($live)
+                            {{-- Live editor: a plain div, not a <button> — browsers block
+                                 contenteditable inside a button, so the title wouldn't be
+                                 editable. The accordion is force-open via CSS while editing. --}}
+                            <div class="w-full text-left px-6 py-4 flex items-center justify-between">
+                                <span class="font-bold text-slate-700 text-lg" data-ed="title">
+                                    {{ $opt['title'] }}
+                                </span>
+                            </div>
+                        @else
+                            <button
+                                onclick="toggleAccordion(this)"
+                                class="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors focus:outline-none"
+                            >
+                                <span class="font-bold text-slate-700 text-lg group-hover:text-indigo-600 transition-colors">
+                                    {{ $opt['title'] }}
+                                </span>
+                                <span class="chevron-icon text-slate-400 transition-transform duration-300">
+                                    {!! Icons::svg('chevronDown') !!}
+                                </span>
+                            </button>
+                        @endif
                         <div class="accordion-content bg-slate-50/50">
                             <div class="px-6 pb-6 pt-2">
                                 <p class="text-slate-600 leading-relaxed mb-4 text-lg"{!! $ed('description') !!}>
@@ -604,10 +615,9 @@
     </div>
 </div></template>
 <template data-cl-tpl="option"><div class="group" data-ed-item>
-    <button onclick="toggleAccordion(this)" class="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors focus:outline-none">
-        <span class="font-bold text-slate-700 text-lg group-hover:text-indigo-600 transition-colors" data-ed="title"></span>
-        <span class="chevron-icon text-slate-400 transition-transform duration-300">{!! Icons::svg('chevronDown') !!}</span>
-    </button>
+    <div class="w-full text-left px-6 py-4 flex items-center justify-between">
+        <span class="font-bold text-slate-700 text-lg" data-ed="title"></span>
+    </div>
     <div class="accordion-content bg-slate-50/50">
         <div class="px-6 pb-6 pt-2">
             <p class="text-slate-600 leading-relaxed mb-4 text-lg" data-ed="description"></p>
