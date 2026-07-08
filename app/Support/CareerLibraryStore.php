@@ -294,6 +294,10 @@ class CareerLibraryStore
             'contact_phone' => $text($settingsIn, 'contact_phone', $defaults['contact_phone'], 40),
             'next_steps_url' => $text($settingsIn, 'next_steps_url', $defaults['next_steps_url'], 300),
             'report_year' => $text($settingsIn, 'report_year', $defaults['report_year'], 8),
+            // When false, the full career report pages are blocked and visitors
+            // only ever see the enquiry popup on the landing page. When true,
+            // submitting the popup takes them on to the report.
+            'detail_pages_enabled' => (bool) ($settingsIn['detail_pages_enabled'] ?? $defaults['detail_pages_enabled']),
         ];
 
         $careers = [];
@@ -479,6 +483,7 @@ class CareerLibraryStore
             'contact_phone' => '8451825015',
             'next_steps_url' => url('/contact'),
             'report_year' => '2026',
+            'detail_pages_enabled' => false,
         ];
     }
 

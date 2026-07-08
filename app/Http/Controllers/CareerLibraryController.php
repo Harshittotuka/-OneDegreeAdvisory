@@ -6,6 +6,7 @@ use App\Support\CareerLibraryStore;
 use App\Support\ProfileSubmissionStore;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -35,8 +36,15 @@ class CareerLibraryController extends Controller
      * e.g. /global-career-library/in/Data-Science/en-IN — the exact URL shape
      * of the original page (career title hyphenated, original casing kept).
      */
-    public function show(string $country, string $career, string $lang): View
+    public function show(string $country, string $career, string $lang): View|RedirectResponse
     {
+        // Detail report pages can be switched off in the CMS. When off, the
+        // landing page only ever shows the enquiry popup, and any direct link to
+        // a report bounces back to the explorer.
+        if (! ($this->store->settings()['detail_pages_enabled'] ?? false)) {
+            return redirect()->route('career-library.index');
+        }
+
         $countryName = CareerLibraryStore::COUNTRIES[strtoupper($country)] ?? 'India';
         $language = array_search(strtolower($lang), array_map('strtolower', CareerLibraryStore::LANGUAGE_CODES), true) ?: 'English';
         $careerName = trim(str_replace('-', ' ', $career));
@@ -163,7 +171,38 @@ class CareerLibraryController extends Controller
             ['name' => $name, 'email' => $email, 'phone' => $phone],
         );
 
-        return response()->json(['ok' => true]);
+        $response = ['ok' => true];
+
+        // Only hand back a report URL to open when the CMS has detail pages on
+        // AND the requested career actually resolves to a curated report. When
+        // off (or unresolvable), the front-end just shows its confirmation.
+        if (($this->store->settings()['detail_pages_enabled'] ?? false) && $career !== '') {
+            $url = $this->detailUrlFor($career, $country !== '' ? $country : 'India', $language !== '' ? $language : 'English');
+            if ($url !== null) {
+                $response['redirect'] = $url;
+            }
+        }
+
+        return response()->json($response);
+    }
+
+    /**
+     * Resolve a career name + country + language to its detail-page URL, or null
+     * if any part is unknown (career not curated, unknown country/language).
+     */
+    private function detailUrlFor(string $careerName, string $country, string $language): ?string
+    {
+        $countryCode = $this->resolveCountryCode($country);
+        $langCode = CareerLibraryStore::LANGUAGE_CODES[$language] ?? null;
+        $entry = $this->store->findByName($careerName);
+
+        if ($countryCode === null || $langCode === null || $entry === null) {
+            return null;
+        }
+
+        $urlName = str_replace(' ', '-', $entry['title']);
+
+        return url('/global-career-library/'.strtolower($countryCode).'/'.$urlName.'/'.$langCode);
     }
 
     /** Match the original page's forgiving country matching (name or code substring). */

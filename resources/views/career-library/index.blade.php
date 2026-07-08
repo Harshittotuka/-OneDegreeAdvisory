@@ -6,6 +6,90 @@
 {{-- Content injected via JS (search form + trending grid), exactly like the source page. --}}
 @endsection
 
+@section('overlays')
+{{-- Lead-capture popup shown when a career is clicked. Self-contained CSS: the
+     page's compiled Tailwind (no build step) omits several utilities this modal
+     needs, so it carries its own styles rather than depending on them. --}}
+<style>
+  #cl-idx-gate { position: fixed; inset: 0; z-index: 100000; display: none; align-items: center; justify-content: center;
+    padding: 16px; background: rgba(15,23,42,.62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  #cl-idx-gate.is-open { display: flex; }
+  .cl-idx-card { position: relative; width: 100%; max-width: 440px; background: #fff; border-radius: 20px;
+    overflow: hidden; box-shadow: 0 30px 70px rgba(2,6,23,.45); animation: fadeInUp .35s ease-out both; }
+  .cl-idx-head { background: linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; padding: 22px 24px; }
+  .cl-idx-head h2 { margin:0; font-size:1.35rem; font-weight:800; line-height:1.2; color:#fff; }
+  .cl-idx-head p { margin:6px 0 0; font-size:.9rem; color:#e0e7ff; line-height:1.5; }
+  .cl-idx-body { padding: 24px; }
+  .cl-idx-field { margin-bottom: 16px; }
+  .cl-idx-field label { display:block; font-size:.85rem; font-weight:600; color:#334155; margin-bottom:6px; }
+  .cl-idx-field input { width:100%; padding:12px 16px; border:1px solid #e2e8f0; border-radius:12px; outline:none;
+    color:#1e293b; font-size:1rem; transition:border-color .15s,box-shadow .15s; background:#fff; }
+  .cl-idx-field input:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(199,210,254,.7); }
+  #cl-idx-error { color:#dc2626; font-size:.85rem; margin:0 0 12px; display:none; }
+  #cl-idx-error.is-shown { display:block; }
+  #cl-idx-submit { width:100%; background:#4f46e5; color:#fff; border:0; font-weight:700; font-size:1rem;
+    padding:13px; border-radius:12px; cursor:pointer; transition:background .15s,opacity .15s; }
+  #cl-idx-submit:hover { background:#4338ca; }
+  #cl-idx-submit:disabled { opacity:.6; cursor:not-allowed; }
+  .cl-idx-fineprint { font-size:.72rem; color:#94a3b8; text-align:center; line-height:1.5; margin:14px 0 0; }
+  .cl-idx-close { position:absolute; top:14px; right:14px; width:32px; height:32px; border:0; border-radius:50%;
+    background:rgba(255,255,255,.18); color:#fff; font-size:1rem; line-height:1; cursor:pointer; z-index:2;
+    display:flex; align-items:center; justify-content:center; }
+  .cl-idx-close:hover { background:rgba(255,255,255,.32); }
+  .cl-idx-success { padding: 34px 28px; text-align:center; }
+  .cl-idx-check { width:64px; height:64px; margin:0 auto 18px; border-radius:50%; background:#dcfce7; color:#16a34a;
+    display:flex; align-items:center; justify-content:center; }
+  .cl-idx-check svg { width:34px; height:34px; }
+  .cl-idx-success h2 { margin:0 0 8px; font-size:1.4rem; font-weight:800; color:#0f172a; }
+  .cl-idx-success p { margin:0; font-size:.95rem; color:#475569; line-height:1.6; }
+  .cl-idx-redirect-note { margin-top:8px !important; font-size:.82rem !important; color:#7c3aed !important; font-weight:600; display:none; }
+  #cl-idx-success-action { margin-top:20px; background:#4f46e5; color:#fff; border:0; font-weight:700; font-size:.95rem;
+    padding:12px 22px; border-radius:12px; cursor:pointer; }
+  #cl-idx-success-action:hover { background:#4338ca; }
+</style>
+<div id="cl-idx-gate" aria-modal="true" role="dialog" aria-labelledby="cl-idx-title">
+  <div class="cl-idx-card">
+    <button type="button" class="cl-idx-close" data-idx-close aria-label="Close">&#10005;</button>
+
+    <div data-idx-form-state>
+      <div class="cl-idx-head">
+        <h2 id="cl-idx-title">Get the full career report</h2>
+        <p>Share your details and our team will help you explore <strong data-idx-career>this career</strong>.</p>
+      </div>
+      <form id="cl-idx-form" class="cl-idx-body" novalidate>
+        <div class="cl-idx-field">
+          <label for="cl-idx-name">Full name</label>
+          <input type="text" id="cl-idx-name" name="name" required autocomplete="name" placeholder="Your name">
+        </div>
+        <div class="cl-idx-field">
+          <label for="cl-idx-email">Email</label>
+          <input type="email" id="cl-idx-email" name="email" required autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="cl-idx-field">
+          <label for="cl-idx-phone">Phone</label>
+          <input type="tel" id="cl-idx-phone" name="phone" required autocomplete="tel" placeholder="+91 90000 00000">
+        </div>
+        <p id="cl-idx-error"></p>
+        <button type="submit" id="cl-idx-submit"><span class="cl-idx-submit-label">Submit details</span></button>
+        <p class="cl-idx-fineprint">By continuing you agree to be contacted about your career interests.</p>
+      </form>
+    </div>
+
+    <div data-idx-success-state style="display:none;">
+      <div class="cl-idx-success">
+        <div class="cl-idx-check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2>Thank you!</h2>
+        <p>Our team will reach out to you shortly with more details.</p>
+        <p class="cl-idx-redirect-note" data-idx-redirect-note>Taking you to the career report…</p>
+        <button type="button" id="cl-idx-success-action" data-idx-success-action>Explore more careers</button>
+      </div>
+    </div>
+  </div>
+</div>
+@endsection
+
 @section('scripts')
 @php
     // Blade's @json splits its argument on commas (they become the json_encode
@@ -55,7 +139,8 @@
 
     const SETTINGS = @json($jsSettings);
 
-    const ENSURE_URL = @json(route('career-library.ensure'));
+    const LEAD_URL = @json(route('career-library.lead'));
+    const DETAIL_ENABLED = @json((bool) ($settings['detail_pages_enabled'] ?? false));
     const CSRF = @json(csrf_token());
     const INITIAL_ERROR = @json($jsError);
 
@@ -69,62 +154,133 @@
         params: @json($jsParams)
     };
 
-    // --- SERVICE ---
-    // Ensures a report exists for the requested combination (fetching it live
-    // into the server cache when needed) and returns the detail-page URL.
-    async function ensureCareerData(params) {
-        try {
-            const text = await $.ajax({
-                url: ENSURE_URL,
-                type: "POST",
-                data: { ...params, _token: CSRF }
-            });
+    // --- ACTION HANDLERS ---
+    // Clicking a trending card or submitting the search no longer navigates to
+    // the report. It opens the lead-capture popup on this page; the report only
+    // opens afterwards when the CMS has "detail pages" switched on.
+    window.handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const form = e.target;
+        openLeadGate({
+            career: (form.careerName.value || '').trim(),
+            country: (form.country.value || 'India').trim() || 'India',
+            language: form.language.value || 'English',
+        });
+    };
 
-            const result = typeof text === 'string' ? JSON.parse(text) : text;
-            if (!result.ok) {
-                throw new Error(result.error || "Invalid career search.");
+    window.exploreTrendingCareer = (careerName) => {
+        openLeadGate({ career: careerName, country: 'India', language: 'English' });
+    };
+
+    // --- LEAD CAPTURE POPUP ---
+    // A single blurred-backdrop popup captures name/email/phone, records the
+    // lead server-side, then flips to a "thank you" state. When the server
+    // returns a report URL (detail pages enabled) it goes on to open the report.
+    const gate = document.getElementById('cl-idx-gate');
+    const leadForm = document.getElementById('cl-idx-form');
+    const leadFormState = gate && gate.querySelector('[data-idx-form-state]');
+    const leadSuccessState = gate && gate.querySelector('[data-idx-success-state]');
+    const leadError = document.getElementById('cl-idx-error');
+    const leadSubmit = document.getElementById('cl-idx-submit');
+    const careerLabel = gate && gate.querySelector('[data-idx-career]');
+    const redirectNote = gate && gate.querySelector('[data-idx-redirect-note]');
+    const successAction = gate && gate.querySelector('[data-idx-success-action]');
+    let leadContext = {};
+
+    function setSubmitLabel(text) {
+        const l = leadSubmit && leadSubmit.querySelector('.cl-idx-submit-label');
+        if (l) l.textContent = text;
+    }
+
+    function openLeadGate(ctx) {
+        if (!gate) return;
+        leadContext = ctx || {};
+        if (careerLabel) careerLabel.textContent = leadContext.career || 'this career';
+        if (leadFormState) leadFormState.style.display = '';
+        if (leadSuccessState) leadSuccessState.style.display = 'none';
+        if (leadError) leadError.classList.remove('is-shown');
+        if (leadForm) leadForm.reset();
+        if (leadSubmit) leadSubmit.disabled = false;
+        setSubmitLabel('Submit details');
+        gate.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        const first = document.getElementById('cl-idx-name');
+        if (first) setTimeout(() => first.focus(), 50);
+    }
+    window.openLeadGate = openLeadGate;
+
+    function closeLeadGate() {
+        if (!gate) return;
+        gate.classList.remove('is-open');
+        document.body.style.overflow = '';
+    }
+
+    function showLeadError(msg) {
+        if (leadError) { leadError.textContent = msg; leadError.classList.add('is-shown'); }
+    }
+
+    function showLeadSuccess(redirect) {
+        if (leadFormState) leadFormState.style.display = 'none';
+        if (leadSuccessState) leadSuccessState.style.display = 'block';
+
+        if (redirect && DETAIL_ENABLED) {
+            if (redirectNote) redirectNote.style.display = 'block';
+            if (successAction) {
+                successAction.textContent = 'View career report →';
+                successAction.onclick = () => { window.location.href = redirect; };
             }
-            return result.redirect;
-
-        } catch (error) {
-            console.error(error);
-            const message = error.responseJSON?.error || error.message;
-            throw new Error(message || "Failed to generate career report.");
+            setTimeout(() => { window.location.href = redirect; }, 1800);
+        } else {
+            if (redirectNote) redirectNote.style.display = 'none';
+            if (successAction) {
+                successAction.textContent = 'Explore more careers';
+                successAction.onclick = () => closeLeadGate();
+            }
         }
     }
 
-    // --- ACTION HANDLERS ---
-    window.handleSearchSubmit = async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const params = {
-            careerName: form.careerName.value,
-            country: form.country.value,
-            language: form.language.value
-        };
-        updateState({ loading: true, error: null, params });
+    if (gate && leadForm) {
+        gate.addEventListener('click', (e) => {
+            if (e.target === gate || (e.target.closest && e.target.closest('[data-idx-close]'))) closeLeadGate();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLeadGate(); });
 
-        try {
-            const redirect = await ensureCareerData(params);
-            window.location.href = redirect;
-        } catch (err) {
-            updateState({ loading: false, error: err.message });
-            showToast(err.message);
-        }
-    };
+        leadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (leadError) leadError.classList.remove('is-shown');
 
-    window.exploreTrendingCareer = async (careerName) => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        const params = { careerName, country: 'India', language: 'English' };
-        updateState({ loading: true, error: null, params, data: null });
+            const name = (document.getElementById('cl-idx-name').value || '').trim();
+            const email = (document.getElementById('cl-idx-email').value || '').trim();
+            const phone = (document.getElementById('cl-idx-phone').value || '').trim();
 
-        try {
-            const redirect = await ensureCareerData(params);
-            window.location.href = redirect;
-        } catch (err) {
-            updateState({ loading: false, error: err.message });
-            showToast(err.message);
-        }
+            if (!name || !email || !phone) { showLeadError('Please fill in your name, email and phone.'); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showLeadError('Please enter a valid email address.'); return; }
+
+            leadSubmit.disabled = true;
+            setSubmitLabel('Submitting…');
+
+            try {
+                const res = await fetch(LEAD_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        name, email, phone,
+                        career: leadContext.career || '',
+                        country: leadContext.country || '',
+                        language: leadContext.language || '',
+                    }),
+                });
+                if (!res.ok) throw new Error('Request failed');
+                let data = {};
+                try { data = await res.json(); } catch (_) {}
+                try { sessionStorage.setItem('cl_lead_captured', '1'); } catch (_) {}
+                showLeadSuccess(data.redirect || null);
+            } catch (err) {
+                leadSubmit.disabled = false;
+                setSubmitLabel('Submit details');
+                showLeadError('Something went wrong. Please try again.');
+            }
+        });
     }
 
     window.resetSearch = () => {

@@ -105,6 +105,21 @@
         <p class="hint">All four cards on a career page link here.</p>
       </div>
     </div>
+
+    <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; margin:18px 0 0; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:#fafbfc;">
+      <input type="hidden" name="detail_pages_enabled" value="0">
+      <input type="checkbox" name="detail_pages_enabled" value="1" @checked($settings['detail_pages_enabled'] ?? false)
+             style="width:18px; height:18px; margin-top:2px; accent-color:var(--teal); cursor:pointer;">
+      <span>
+        <strong style="display:block; font-size:.9rem;">Show full career report pages</strong>
+        <span style="color:var(--muted); font-size:.8rem; line-height:1.5;">
+          When <b>on</b>, submitting the enquiry popup takes the visitor to the full career report.
+          When <b>off</b>, the report pages are blocked (direct links bounce back to the explorer) and
+          visitors only see the “our team will reach out” confirmation.
+        </span>
+      </span>
+    </label>
+
     <div style="margin-top: 18px;">
       <button type="submit" class="btn btn-primary">Save settings</button>
     </div>

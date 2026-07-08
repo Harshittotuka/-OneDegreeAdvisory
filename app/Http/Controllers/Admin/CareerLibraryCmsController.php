@@ -51,9 +51,12 @@ class CareerLibraryCmsController extends Controller
             'report_year' => 'nullable|string|max:8',
         ]);
 
-        $validated = array_map(fn ($v) => (string) ($v ?? ''), $validated);
+        $settings = array_map(fn ($v) => (string) ($v ?? ''), $validated);
+        // Checkbox — absent means off. Kept out of the string cast above so it
+        // stays a real boolean for the store.
+        $settings['detail_pages_enabled'] = $request->boolean('detail_pages_enabled');
 
-        $this->store->updateSettings($validated);
+        $this->store->updateSettings($settings);
 
         return redirect()->route('admin.career-library.index')->with('status', 'Career Library settings saved.');
     }
