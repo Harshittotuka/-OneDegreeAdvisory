@@ -1,256 +1,208 @@
-{{-- Loan & Acco — a self-contained Education-Loan + Student-Accommodation
-     landing page under the Student Hub. Like the Trending Career page, the page
-     body is self-contained (its own scoped CSS/JS below) but it shares the real
-     site chrome (the Stripe navbar from partials.header-stripe + styles.css /
-     stripe-nav.css / stripe-nav.js) so the header is identical site-wide.
+{{-- Loan & Acco — Education-Loan + Student-Accommodation landing page under the
+     Student Hub. Rendered on the shared site layout (layouts.app), so the
+     navbar, footer, contact FAB and the success/fail form popup are identical to
+     the rest of the site. The page body is fully scoped under #la-page so its
+     navy/orange styling never touches the shared chrome.
 
-     The two enquiry forms POST to LoanAccoController, which records each lead in
-     the shared ProfileSubmissionStore (source = loan-acco) — viewable at
-     /admin/submissions → Loan & Acco. --}}
+     Both enquiry forms are ordinary POST forms tagged data-loan-acco-form; the
+     shared script.js (wireFormSubmit) AJAX-submits them and shows the native
+     popup with the {title, message} JSON returned by LoanAccoController. --}}
+@extends('layouts.app')
+
 @php
-    // Notice-bar variant, mirrored from layouts/app.blade.php so the shared
-    // header renders exactly as it does site-wide.
-    $topbarVariant = app(\App\Support\NoticeBarStore::class)->get()['variant'] ?? 'left-socials';
-
-    // Cache-bust local CSS/JS by mtime — same helper as the main layout, so a
-    // deployed nav stylesheet/script change is never served stale here.
-    $assetVer = function (string $file) {
-        $path = public_path($file);
-        return is_file($path) ? asset($file).'?v='.filemtime($path) : asset($file);
-    };
-
-    // Country options — shared by both forms.
+    // Country options shared by both enquiry forms.
     $countries = ['Germany','France','Italy','Netherlands','Canada','UK','Australia','New Zealand','USA','Ireland','Poland','Spain','Finland','Belgium','UAE','Georgia','Kazakhstan','Uzbekistan','Russia'];
 @endphp
-<!DOCTYPE html>
-<html lang="en" data-color-theme="cream" class="topbar-{{ $topbarVariant }}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'Education Loan & Student Accommodation')</title>
-  <meta name="description" content="One Degree Advisory finances your international degree and finds verified student housing — collateral & non-collateral education loans plus accommodation, arranged by one advisory team.">
-  <link rel="icon" type="image/png" href="{{ asset('assets/Logo/favicon.png') }}">
 
-  {{-- Shared site chrome. Load the site stylesheets so the real navbar renders
-       identically; the page body below is fully scoped under #la-page so these
-       site-wide element rules can't bleed into it. --}}
-  <link rel="stylesheet" href="{{ $assetVer('styles.css') }}">
-  <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
-  <script src="{{ $assetVer('stripe-nav.js') }}" defer></script>
+@push('head')
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Neutralise the site's body gradient (fades to dark for the footer) so this
+     paper-white page has no dark band above the footer. */
+  body.la-page-body { background:#fff; }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  /* ============================================================
+     Everything below is scoped under #la-page so it can never
+     touch the shared navbar / footer (which sit outside it).
+     ============================================================ */
+  #la-page{
+    --navy-deep:#0A0752;
+    --navy:#1C0C8C;
+    --navy-soft:#EAEBFB;
+    --orange:#FF5722;
+    --orange-soft:#FFE7DC;
+    --orange-tint:#FF8A50;
+    --ink:#0A0752;
+    --muted:#615E8C;
+    --paper:#FFFFFF;
+    --line:#DEDFF5;
+    --radius:18px;
 
-  @if (\App\Support\Seo::isCanonicalHost())
-    <link rel="canonical" href="{{ url()->current() }}">
-  @else
-    <meta name="robots" content="noindex, nofollow">
-  @endif
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  #la-page *{box-sizing:border-box;}
+  #la-page h1,#la-page h2,#la-page h3{font-family:'Sora',sans-serif; font-weight:600; letter-spacing:-0.02em; line-height:1.1; max-width:none;}
+  #la-page h1{color:var(--navy);}
+  #la-page a{color:inherit; text-decoration:none;}
+  #la-page img{display:block; max-width:100%;}
+  #la-page p{margin:0;}
+  #la-page .wrap{max-width:1160px; margin:0 auto; padding:0 28px;}
+  #la-page .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--orange);
+    display:flex; align-items:center; gap:8px; margin-bottom:14px;
+  }
 
-  <style>
-    /* ============================================================
-       All page styles are scoped under #la-page so they never touch
-       the shared navbar (which sits outside #la-page).
-       ============================================================ */
-    #la-page{
-      --navy-deep:#0A0752;
-      --navy:#1C0C8C;
-      --navy-soft:#EAEBFB;
-      --orange:#FF5722;
-      --orange-soft:#FFE7DC;
-      --orange-tint:#FF8A50;
-      --ink:#0A0752;
-      --muted:#615E8C;
-      --paper:#FFFFFF;
-      --line:#DEDFF5;
-      --radius:18px;
+  /* ---------- HERO ---------- */
+  #la-page .hero{
+    position:relative;
+    background:radial-gradient(circle at 82% 30%, #F3F1FC 0%, #FFFFFF 55%);
+    color:var(--ink); overflow:hidden; padding:80px 0 76px; border-bottom:1px solid var(--line);
+  }
+  #la-page .hero .ring{position:absolute; border:1.5px solid rgba(43,27,143,0.10); border-radius:50%; top:50%; left:78%; transform:translate(-50%,-50%);}
+  #la-page .hero .ring.r1{width:520px; height:520px;}
+  #la-page .hero .ring.r2{width:380px; height:380px; border-color:rgba(255,87,34,0.20);}
+  #la-page .hero .ring.r3{width:240px; height:240px;}
+  #la-page .hero .degree-dot{
+    position:absolute; width:14px; height:14px; border-radius:50%; background:var(--orange);
+    top:50%; left:78%; animation:la-orbit 22s linear infinite; box-shadow:0 0 24px rgba(255,87,34,0.5);
+  }
+  @keyframes la-orbit{
+    from{transform:translate(-50%,-50%) rotate(0deg) translateX(190px) rotate(0deg);}
+    to{transform:translate(-50%,-50%) rotate(360deg) translateX(190px) rotate(-360deg);}
+  }
+  #la-page .hero-inner{position:relative; z-index:2; max-width:680px;}
+  #la-page .hero h1{font-size:clamp(38px,5.4vw,60px); margin-bottom:22px; color:var(--navy);}
+  #la-page .hero h1 em{font-style:normal; color:var(--orange);}
+  #la-page .hero p.lead{font-size:18px; color:var(--muted); max-width:520px; margin-bottom:34px;}
+  #la-page .hero-ctas{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:52px;}
+  #la-page .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:14px 26px; border-radius:100px;
+    font-weight:600; font-size:15px; cursor:pointer; border:none; font-family:'Inter',sans-serif;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  #la-page .btn:hover{transform:translateY(-2px);}
+  #la-page .btn-primary{background:var(--orange); color:#fff; box-shadow:0 10px 24px rgba(255,87,34,0.35);}
+  #la-page .btn-ghost{background:var(--navy-soft); color:var(--navy); border:1px solid var(--line);}
+  #la-page .btn-navy{background:var(--navy); color:#fff; box-shadow:0 10px 24px rgba(43,27,143,0.3);}
+  #la-page .btn-block{width:100%; justify-content:center; margin-top:28px;}
+  #la-page .btn[disabled]{opacity:.65; cursor:progress; transform:none;}
 
-      font-family:'Inter',sans-serif;
-      color:var(--ink);
-      background:var(--paper);
-      line-height:1.55;
-      -webkit-font-smoothing:antialiased;
-    }
-    #la-page *{box-sizing:border-box;}
-    #la-page h1,#la-page h2,#la-page h3{font-family:'Sora',sans-serif; font-weight:600; letter-spacing:-0.02em; line-height:1.1; max-width:none;}
-    #la-page h1{color:var(--navy);}
-    #la-page a{color:inherit; text-decoration:none;}
-    #la-page img{display:block; max-width:100%;}
-    #la-page p{margin:0;}
-    #la-page .wrap{max-width:1160px; margin:0 auto; padding:0 28px;}
-    #la-page .eyebrow{
-      font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500;
-      letter-spacing:0.14em; text-transform:uppercase; color:var(--orange);
-      display:flex; align-items:center; gap:8px; margin-bottom:14px;
-    }
+  #la-page .hero-stats{display:flex; gap:44px; flex-wrap:wrap;}
+  #la-page .hero-stats div{border-left:2px solid var(--line); padding-left:14px;}
+  #la-page .hero-stats .num{font-family:'Sora',sans-serif; font-size:26px; font-weight:700; color:var(--navy);}
+  #la-page .hero-stats .lbl{font-size:12.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
 
-    /* ---------- HERO ---------- */
-    #la-page .hero{
-      position:relative;
-      background:radial-gradient(circle at 82% 30%, #F3F1FC 0%, #FFFFFF 55%);
-      color:var(--ink); overflow:hidden; padding:80px 0 76px; border-bottom:1px solid var(--line);
-    }
-    #la-page .hero .ring{position:absolute; border:1.5px solid rgba(43,27,143,0.10); border-radius:50%; top:50%; left:78%; transform:translate(-50%,-50%);}
-    #la-page .hero .ring.r1{width:520px; height:520px;}
-    #la-page .hero .ring.r2{width:380px; height:380px; border-color:rgba(255,87,34,0.20);}
-    #la-page .hero .ring.r3{width:240px; height:240px;}
-    #la-page .hero .degree-dot{
-      position:absolute; width:14px; height:14px; border-radius:50%; background:var(--orange);
-      top:50%; left:78%; animation:la-orbit 22s linear infinite; box-shadow:0 0 24px rgba(255,87,34,0.5);
-    }
-    @keyframes la-orbit{
-      from{transform:translate(-50%,-50%) rotate(0deg) translateX(190px) rotate(0deg);}
-      to{transform:translate(-50%,-50%) rotate(360deg) translateX(190px) rotate(-360deg);}
-    }
-    #la-page .hero-inner{position:relative; z-index:2; max-width:680px;}
-    #la-page .hero h1{font-size:clamp(38px,5.4vw,60px); margin-bottom:22px; color:var(--navy);}
-    #la-page .hero h1 em{font-style:normal; color:var(--orange);}
-    #la-page .hero p.lead{font-size:18px; color:var(--muted); max-width:520px; margin-bottom:34px;}
-    #la-page .hero-ctas{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:52px;}
-    #la-page .btn{
-      display:inline-flex; align-items:center; gap:8px; padding:14px 26px; border-radius:100px;
-      font-weight:600; font-size:15px; cursor:pointer; border:none; font-family:'Inter',sans-serif;
-      transition:transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    #la-page .btn:hover{transform:translateY(-2px);}
-    #la-page .btn-primary{background:var(--orange); color:#fff; box-shadow:0 10px 24px rgba(255,87,34,0.35);}
-    #la-page .btn-ghost{background:var(--navy-soft); color:var(--navy); border:1px solid var(--line);}
-    #la-page .btn-navy{background:var(--navy); color:#fff; box-shadow:0 10px 24px rgba(43,27,143,0.3);}
-    #la-page .btn-block{width:100%; justify-content:center; margin-top:8px;}
-    #la-page .btn[disabled]{opacity:.6; cursor:progress; transform:none;}
+  /* ---------- SERVICE CARDS ---------- */
+  #la-page .services{padding:76px 0 40px;}
+  #la-page .services-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  #la-page .service-card{
+    border:1px solid var(--line); border-radius:var(--radius); padding:36px; background:var(--paper);
+    transition:box-shadow 0.2s ease, transform 0.2s ease; display:flex; flex-direction:column;
+  }
+  #la-page .service-card:hover{box-shadow:0 20px 40px rgba(21,15,61,0.08); transform:translateY(-3px);}
+  #la-page .service-card .icon{
+    width:76px; height:76px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    margin-bottom:22px; border:1.5px solid var(--line);
+  }
+  #la-page .service-card .icon svg{width:34px; height:34px;}
+  #la-page .service-card.loan .icon{color:var(--navy); background:var(--navy-soft);}
+  #la-page .service-card.stay .icon{color:var(--orange); background:var(--orange-soft);}
+  #la-page .service-card h3{font-size:30px; margin-bottom:10px; color:var(--navy);}
+  #la-page .service-card p{color:var(--muted); font-size:15px; margin-bottom:22px; flex-grow:1;}
+  #la-page .service-card .go{font-weight:600; font-size:14.5px; display:inline-flex; align-items:center; gap:6px;}
+  #la-page .service-card.loan .go{color:var(--navy);}
+  #la-page .service-card.stay .go{color:var(--orange);}
+  #la-page .card-foot{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto;}
+  #la-page .wa-btn{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  #la-page .service-card.loan .wa-btn{background:var(--navy-soft); color:var(--navy);}
+  #la-page .service-card.stay .wa-btn{background:var(--orange-soft); color:var(--orange);}
+  #la-page .wa-btn svg{width:17px; height:17px;}
 
-    #la-page .hero-stats{display:flex; gap:44px; flex-wrap:wrap;}
-    #la-page .hero-stats div{border-left:2px solid var(--line); padding-left:14px;}
-    #la-page .hero-stats .num{font-family:'Sora',sans-serif; font-size:26px; font-weight:700; color:var(--navy);}
-    #la-page .hero-stats .lbl{font-size:12.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
+  /* ---------- SECTION SHELLS ---------- */
+  #la-page section.block{padding:84px 0;}
+  #la-page section.block.tint{background:var(--navy-soft);}
+  #la-page .block-head{max-width:640px; margin-bottom:48px;}
+  #la-page .block-head h2{font-size:clamp(28px,3.4vw,38px); margin-bottom:14px; color:var(--navy);}
+  #la-page .block-head p{color:var(--muted); font-size:16.5px;}
 
-    /* ---------- SERVICE CARDS ---------- */
-    #la-page .services{padding:76px 0 40px;}
-    #la-page .services-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
-    #la-page .service-card{
-      border:1px solid var(--line); border-radius:var(--radius); padding:36px; background:var(--paper);
-      transition:box-shadow 0.2s ease, transform 0.2s ease; display:flex; flex-direction:column;
-    }
-    #la-page .service-card:hover{box-shadow:0 20px 40px rgba(21,15,61,0.08); transform:translateY(-3px);}
-    #la-page .service-card .icon{
-      width:76px; height:76px; border-radius:16px; display:flex; align-items:center; justify-content:center;
-      margin-bottom:22px; border:1.5px solid var(--line);
-    }
-    #la-page .service-card .icon svg{width:34px; height:34px;}
-    #la-page .service-card.loan .icon{color:var(--navy); background:var(--navy-soft);}
-    #la-page .service-card.stay .icon{color:var(--orange); background:var(--orange-soft);}
-    #la-page .service-card h3{font-size:30px; margin-bottom:10px; color:var(--navy);}
-    #la-page .service-card p{color:var(--muted); font-size:15px; margin-bottom:22px; flex-grow:1;}
-    #la-page .service-card .go{font-weight:600; font-size:14.5px; display:inline-flex; align-items:center; gap:6px;}
-    #la-page .service-card.loan .go{color:var(--navy);}
-    #la-page .service-card.stay .go{color:var(--orange);}
-    #la-page .card-foot{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto;}
-    #la-page .wa-btn{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-    #la-page .service-card.loan .wa-btn{background:var(--navy-soft); color:var(--navy);}
-    #la-page .service-card.stay .wa-btn{background:var(--orange-soft); color:var(--orange);}
-    #la-page .wa-btn svg{width:17px; height:17px;}
+  /* loan type cards */
+  #la-page .type-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:60px;}
+  #la-page .type-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:30px;}
+  #la-page .type-card .tag{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.08em;
+    text-transform:uppercase; padding:5px 12px; border-radius:100px; margin-bottom:18px;
+  }
+  #la-page .type-card.collateral .tag{background:var(--navy-soft); color:var(--navy);}
+  #la-page .type-card.noncollateral .tag{background:var(--orange-soft); color:var(--orange);}
+  #la-page .type-card h4{font-family:'Sora',sans-serif; font-size:21px; margin-bottom:16px; color:var(--navy);}
+  #la-page .type-card ul{list-style:none; margin:0; padding:0;}
+  #la-page .type-card li{font-size:14.5px; color:var(--ink); padding:8px 0; border-top:1px solid var(--line); display:flex; gap:10px; align-items:flex-start;}
+  #la-page .type-card li:first-of-type{border-top:none;}
+  #la-page .type-card li::before{content:"✓"; color:var(--orange); font-weight:700;}
 
-    /* ---------- SECTION SHELLS ---------- */
-    #la-page section.block{padding:84px 0;}
-    #la-page section.block.tint{background:var(--navy-soft);}
-    #la-page .block-head{max-width:640px; margin-bottom:48px;}
-    #la-page .block-head h2{font-size:clamp(28px,3.4vw,38px); margin-bottom:14px; color:var(--navy);}
-    #la-page .block-head p{color:var(--muted); font-size:16.5px;}
+  /* chips row for accommodation types */
+  #la-page .chip-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:40px;}
+  #la-page .chip{font-size:13.5px; font-weight:500; padding:9px 16px; border-radius:100px; background:#fff; border:1px solid var(--line); color:var(--navy);}
+  #la-page .chip.chip-alt{background:var(--orange-soft); border-color:var(--orange-soft); color:var(--orange);}
 
-    /* loan type cards */
-    #la-page .type-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:60px;}
-    #la-page .type-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:30px;}
-    #la-page .type-card .tag{
-      display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.08em;
-      text-transform:uppercase; padding:5px 12px; border-radius:100px; margin-bottom:18px;
-    }
-    #la-page .type-card.collateral .tag{background:var(--navy-soft); color:var(--navy);}
-    #la-page .type-card.noncollateral .tag{background:var(--orange-soft); color:var(--orange);}
-    #la-page .type-card h4{font-family:'Sora',sans-serif; font-size:21px; margin-bottom:16px; color:var(--navy);}
-    #la-page .type-card ul{list-style:none; margin:0; padding:0;}
-    #la-page .type-card li{font-size:14.5px; color:var(--ink); padding:8px 0; border-top:1px solid var(--line); display:flex; gap:10px; align-items:flex-start;}
-    #la-page .type-card li:first-of-type{border-top:none;}
-    #la-page .type-card li::before{content:"✓"; color:var(--orange); font-weight:700;}
+  /* ---------- FORMS ---------- */
+  #la-page .form-shell{background:#fff; border:1px solid var(--line); border-radius:22px; padding:40px; box-shadow:0 30px 60px rgba(21,15,61,0.06);}
+  #la-page .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px 20px;}
+  #la-page .field{display:flex; flex-direction:column; gap:7px;}
+  #la-page .field.full{grid-column:1/-1;}
+  #la-page label{font-size:12.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--navy);}
+  #la-page input, #la-page select{
+    font-family:'Inter',sans-serif; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line);
+    font-size:14.5px; color:var(--ink); background:#FBFAFF; transition:border-color 0.15s ease; width:100%;
+  }
+  #la-page input:focus, #la-page select:focus{outline:none; border-color:var(--orange); background:#fff;}
+  #la-page select{appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%236B6584' stroke-width='1.6' fill='none'/></svg>"); background-repeat:no-repeat; background-position:right 14px center;}
+  #la-page .radio-group{display:flex; gap:10px; flex-wrap:wrap;}
+  #la-page .radio-pill{
+    flex:1; min-width:150px; border:1.5px solid var(--line); border-radius:10px; padding:12px 14px;
+    display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; background:#FBFAFF;
+  }
+  #la-page .radio-pill input{width:auto; padding:0;}
+  #la-page .radio-pill:has(input:checked){border-color:var(--orange); background:var(--orange-soft);}
+  #la-page .other-field{display:none; margin-top:10px;}
+  #la-page .other-field.show{display:flex;}
 
-    /* chips row for accommodation types */
-    #la-page .chip-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:40px;}
-    #la-page .chip{font-size:13.5px; font-weight:500; padding:9px 16px; border-radius:100px; background:#fff; border:1px solid var(--line); color:var(--navy);}
-    #la-page .chip.chip-alt{background:var(--orange-soft); border-color:var(--orange-soft); color:var(--orange);}
+  /* ---------- FAQ ---------- */
+  #la-page details{border:1px solid var(--line); border-radius:14px; padding:18px 22px;}
+  #la-page details summary{cursor:pointer; font-weight:600; color:var(--navy); font-family:'Sora',sans-serif;}
+  #la-page details p{margin-top:10px; color:var(--muted); font-size:14.5px;}
 
-    /* ---------- FORMS ---------- */
-    #la-page .form-shell{background:#fff; border:1px solid var(--line); border-radius:22px; padding:40px; box-shadow:0 30px 60px rgba(21,15,61,0.06);}
-    #la-page .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px 20px;}
-    #la-page .field{display:flex; flex-direction:column; gap:7px;}
-    #la-page .field.full{grid-column:1/-1;}
-    #la-page label{font-size:12.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--navy);}
-    #la-page input, #la-page select{
-      font-family:'Inter',sans-serif; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line);
-      font-size:14.5px; color:var(--ink); background:#FBFAFF; transition:border-color 0.15s ease; width:100%;
-    }
-    #la-page input:focus, #la-page select:focus{outline:none; border-color:var(--orange); background:#fff;}
-    #la-page select{appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%236B6584' stroke-width='1.6' fill='none'/></svg>"); background-repeat:no-repeat; background-position:right 14px center;}
-    #la-page .radio-group{display:flex; gap:10px; flex-wrap:wrap;}
-    #la-page .radio-pill{
-      flex:1; min-width:150px; border:1.5px solid var(--line); border-radius:10px; padding:12px 14px;
-      display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; background:#FBFAFF;
-    }
-    #la-page .radio-pill input{width:auto; padding:0;}
-    #la-page .radio-pill:has(input:checked){border-color:var(--orange); background:var(--orange-soft);}
-    #la-page .other-field{display:none; margin-top:10px;}
-    #la-page .other-field.show{display:flex;}
-    #la-page .form-error{display:none; color:#b42318; font-size:13.5px; margin-top:14px; font-weight:500;}
-    #la-page .form-error.show{display:block;}
-    #la-page .success{
-      display:none; align-items:flex-start; gap:12px; background:var(--navy-soft); border:1px solid var(--navy);
-      border-radius:14px; padding:18px 20px; margin-top:20px; font-size:14.5px; color:var(--navy);
-    }
-    #la-page .success.show{display:flex;}
-    #la-page .success b{font-family:'Sora',sans-serif;}
-    #la-page .success .tick{flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px;}
+  /* ---------- CONNECT ---------- */
+  #la-page .connect-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:stretch;}
+  #la-page .connect-list{display:flex; flex-direction:column; gap:14px;}
+  #la-page .connect-item{display:flex; align-items:center; gap:16px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 20px; transition:border-color 0.2s ease, transform 0.2s ease;}
+  #la-page .connect-item:hover{border-color:var(--orange); transform:translateX(3px);}
+  #la-page .connect-item .ci-icon{width:44px; height:44px; border-radius:12px; background:var(--navy-soft); color:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  #la-page .connect-item .ci-icon svg{width:20px; height:20px;}
+  #la-page .connect-item .ci-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:3px;}
+  #la-page .connect-item .ci-value{font-size:15px; font-weight:600; color:var(--ink);}
+  #la-page .connect-map{border-radius:18px; overflow:hidden; border:1px solid var(--line); min-height:320px; height:100%;}
+  #la-page .connect-map iframe{width:100%; height:100%; min-height:320px; border:0; display:block;}
 
-    /* ---------- FAQ ---------- */
-    #la-page details{border:1px solid var(--line); border-radius:14px; padding:18px 22px;}
-    #la-page details summary{cursor:pointer; font-weight:600; color:var(--navy); font-family:'Sora',sans-serif;}
-    #la-page details p{margin-top:10px; color:var(--muted); font-size:14.5px;}
+  @media (max-width:760px){
+    #la-page .services-grid,
+    #la-page .type-grid,
+    #la-page .connect-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:640px){
+    #la-page .form-grid{grid-template-columns:1fr;}
+    #la-page .form-shell{padding:26px;}
+  }
+</style>
+@endpush
 
-    /* ---------- CONNECT ---------- */
-    #la-page .connect-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:stretch;}
-    #la-page .connect-list{display:flex; flex-direction:column; gap:14px;}
-    #la-page .connect-item{display:flex; align-items:center; gap:16px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px 20px; transition:border-color 0.2s ease, transform 0.2s ease;}
-    #la-page .connect-item:hover{border-color:var(--orange); transform:translateX(3px);}
-    #la-page .connect-item .ci-icon{width:44px; height:44px; border-radius:12px; background:var(--navy-soft); color:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-    #la-page .connect-item .ci-icon svg{width:20px; height:20px;}
-    #la-page .connect-item .ci-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:3px;}
-    #la-page .connect-item .ci-value{font-size:15px; font-weight:600; color:var(--ink);}
-    #la-page .connect-map{border-radius:18px; overflow:hidden; border:1px solid var(--line); min-height:320px; height:100%;}
-    #la-page .connect-map iframe{width:100%; height:100%; min-height:320px; border:0; display:block;}
-
-    /* floating buttons */
-    #la-page .floaters{position:fixed; right:22px; bottom:22px; display:flex; flex-direction:column; gap:12px; z-index:60;}
-    #la-page .floaters a{width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; box-shadow:0 12px 24px rgba(21,15,61,0.25);}
-    #la-page .floaters a svg{width:24px; height:24px;}
-    #la-page .fl-whatsapp{background:#25D366;}
-    #la-page .fl-call{background:var(--navy);}
-
-    @media (max-width:760px){
-      #la-page .services-grid,
-      #la-page .type-grid,
-      #la-page .connect-grid{grid-template-columns:1fr;}
-    }
-    @media (max-width:640px){
-      #la-page .form-grid{grid-template-columns:1fr;}
-      #la-page .form-shell{padding:26px;}
-    }
-  </style>
-</head>
-<body data-color-theme="cream">
-
-  {{-- Shared site navbar — identical to the rest of the site. Highlight the
-       Student Hub trigger, which is keyed on activeNav = 'new-tabs'. --}}
-  @include('partials.header-stripe', ['activeNav' => 'new-tabs'])
-
+@section('content')
+<main id="{{ $mainId ?? 'main' }}">
   <div id="la-page">
 
     <section class="hero">
@@ -341,7 +293,9 @@
           <h3 style="font-size:22px; margin-bottom:6px; color:var(--navy);">Apply for an Education Loan</h3>
           <p style="color:var(--muted); font-size:14.5px; margin-bottom:26px;">Takes under 2 minutes. No documents needed yet — this is just to check your eligibility.</p>
 
-          <form id="loanForm" novalidate>
+          <form id="loanForm" method="POST" action="{{ route('loan-acco.lead') }}" data-loan-acco-form>
+            @csrf
+            <input type="hidden" name="form" value="loan">
             <div class="form-grid">
               <div class="field">
                 <label for="loanName">Full name</label>
@@ -357,12 +311,12 @@
               </div>
               <div class="field">
                 <label for="loanCountry">Country of study</label>
-                <select id="loanCountry" name="country" onchange="laToggleOther('loanCountry','loanCountryOtherWrap')">
+                <select id="loanCountry" name="country" data-la-country>
                   <option value="">Select a country</option>
                   @foreach($countries as $c)<option>{{ $c }}</option>@endforeach
                   <option value="Other">Other — my country isn't listed</option>
                 </select>
-                <div class="field other-field" id="loanCountryOtherWrap">
+                <div class="field other-field" data-la-country-other>
                   <input type="text" name="country_other" placeholder="Type your destination country">
                 </div>
               </div>
@@ -411,12 +365,7 @@
                 </div>
               </div>
             </div>
-            <button type="submit" class="btn btn-navy btn-block">Check My Loan Eligibility</button>
-            <div class="form-error" id="loanError">Please fill in your name, a valid email and phone number.</div>
-            <div class="success" id="loanSuccess">
-              <span class="tick">✓</span>
-              <span><b>Request received.</b> A loan advisor will call you within 48-72 hours to walk through your eligibility and next steps.</span>
-            </div>
+            <button type="submit" class="btn btn-navy btn-block"><span>Check My Loan Eligibility</span></button>
           </form>
         </div>
       </div>
@@ -442,7 +391,9 @@
           <h3 style="font-size:22px; margin-bottom:6px; color:var(--navy);">Apply for Accommodation</h3>
           <p style="color:var(--muted); font-size:14.5px; margin-bottom:26px;">Share your destination and preferences — we'll shortlist verified options within your budget.</p>
 
-          <form id="stayForm" novalidate>
+          <form id="stayForm" method="POST" action="{{ route('loan-acco.lead') }}" data-loan-acco-form>
+            @csrf
+            <input type="hidden" name="form" value="accommodation">
             <div class="form-grid">
               <div class="field">
                 <label for="stayName">Full name</label>
@@ -458,12 +409,12 @@
               </div>
               <div class="field">
                 <label for="stayCountry">Destination country</label>
-                <select id="stayCountry" name="country" onchange="laToggleOther('stayCountry','stayCountryOtherWrap')">
+                <select id="stayCountry" name="country" data-la-country>
                   <option value="">Select a country</option>
                   @foreach($countries as $c)<option>{{ $c }}</option>@endforeach
                   <option value="Other">Other — my country isn't listed</option>
                 </select>
-                <div class="field other-field" id="stayCountryOtherWrap">
+                <div class="field other-field" data-la-country-other>
                   <input type="text" name="country_other" placeholder="Type your destination country">
                 </div>
               </div>
@@ -485,9 +436,9 @@
                 <div class="radio-group" style="margin-top:10px;">
                   <label class="radio-pill"><input type="radio" name="stay_type" value="University Residence"> University Residence</label>
                   <label class="radio-pill"><input type="radio" name="stay_type" value="Homestay"> Homestay</label>
-                  <label class="radio-pill"><input type="radio" name="stay_type" value="Other" id="stayTypeOtherTrigger"> Other</label>
+                  <label class="radio-pill"><input type="radio" name="stay_type" value="Other"> Other</label>
                 </div>
-                <div class="field other-field" id="stayTypeOtherWrap">
+                <div class="field other-field" data-la-staytype-other>
                   <input type="text" name="stay_type_other" placeholder="Tell us what kind of stay you're looking for">
                 </div>
               </div>
@@ -510,12 +461,7 @@
                 </select>
               </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Find My Accommodation</button>
-            <div class="form-error" id="stayError">Please fill in your name, a valid email and phone number.</div>
-            <div class="success" id="staySuccess">
-              <span class="tick">✓</span>
-              <span><b>Request received.</b> Our accommodation team will shortlist verified options and reach out within 48-72 hours.</span>
-            </div>
+            <button type="submit" class="btn btn-primary btn-block"><span>Find My Accommodation</span></button>
           </form>
         </div>
       </div>
@@ -588,122 +534,30 @@
       </div>
     </section>
 
-    <div class="floaters">
-      <a href="https://wa.me/918233365888" class="fl-whatsapp" target="_blank" rel="noopener" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
-      <a href="tel:+918233365888" class="fl-call" title="Call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
-    </div>
-
   </div>{{-- /#la-page --}}
+</main>
 
-  {{-- The shared navbar uses Lucide <i data-lucide> icons. We don't load the
-       main site's script.js here, so render them once Lucide is ready. --}}
-  <script>
-    (function initNavIcons(){
-      if (window.lucide) { window.lucide.createIcons(); return; }
-      var tries = 0;
-      var t = setInterval(function(){
-        if (window.lucide || tries++ > 40) { clearInterval(t); if (window.lucide) window.lucide.createIcons(); }
-      }, 50);
-    })();
-  </script>
+<script>
+  // Reveal the "Other" free-text fields. Form submission itself is handled by
+  // the shared script.js (wireFormSubmit → native success/fail popup).
+  (function(){
+    document.querySelectorAll('[data-la-country]').forEach(function(sel){
+      var wrap = sel.parentElement.querySelector('[data-la-country-other]');
+      if (!wrap) return;
+      sel.addEventListener('change', function(){
+        wrap.classList.toggle('show', sel.value === 'Other');
+      });
+    });
 
-  <script>
-    (function(){
-      var LEAD_URL = @json(route('loan-acco.lead'));
-      var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-      // Reveal the "Other" text field for a country <select>.
-      window.laToggleOther = function(selectId, wrapId){
-        var wrap = document.getElementById(wrapId);
-        if (!wrap) return;
-        wrap.classList.toggle('show', document.getElementById(selectId).value === 'Other');
-      };
-
-      // Accommodation-type "Other" pill.
-      document.querySelectorAll('input[name="stay_type"]').forEach(function(radio){
+    document.querySelectorAll('[data-la-staytype-other]').forEach(function(wrap){
+      var form = wrap.closest('form');
+      if (!form) return;
+      form.querySelectorAll('input[name="stay_type"]').forEach(function(radio){
         radio.addEventListener('change', function(){
-          document.getElementById('stayTypeOtherWrap').classList.toggle('show', radio.value === 'Other');
+          wrap.classList.toggle('show', radio.value === 'Other');
         });
       });
-
-      function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-      // Serialise a form into a flat {label: value} map with friendly labels,
-      // skipping empties. Radios/selects come through as their chosen value.
-      function collect(form, labels){
-        var data = new FormData(form);
-        var out = {};
-        labels.forEach(function(pair){
-          var raw = (data.get(pair.name) || '').toString().trim();
-          if (raw !== '') out[pair.label] = raw;
-        });
-        return out;
-      }
-
-      function wire(formId, errorId, successId, formType, labels){
-        var form = document.getElementById(formId);
-        if (!form) return;
-        var errEl = document.getElementById(errorId);
-        var okEl  = document.getElementById(successId);
-
-        form.addEventListener('submit', function(e){
-          e.preventDefault();
-          errEl.classList.remove('show');
-
-          var name  = (form.querySelector('[name="name"]').value  || '').trim();
-          var email = (form.querySelector('[name="email"]').value || '').trim();
-          var phone = (form.querySelector('[name="phone"]').value || '').trim();
-
-          if (!name || !phone || !isValidEmail(email)) {
-            errEl.classList.add('show');
-            return;
-          }
-
-          var btn = form.querySelector('button[type="submit"]');
-          var label = btn.textContent;
-          btn.disabled = true; btn.textContent = 'Sending…';
-
-          fetch(LEAD_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-            body: JSON.stringify({ form: formType, name: name, email: email, phone: phone, fields: collect(form, labels) })
-          })
-          .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
-          .then(function(){
-            form.querySelectorAll('.field, .radio-group, button[type="submit"]').forEach(function(el){ el.style.display = 'none'; });
-            okEl.classList.add('show');
-          })
-          .catch(function(){
-            btn.disabled = false; btn.textContent = label;
-            errEl.textContent = 'Something went wrong — please try again, or WhatsApp us on +91 82333 65888.';
-            errEl.classList.add('show');
-          });
-        });
-      }
-
-      wire('loanForm', 'loanError', 'loanSuccess', 'loan', [
-        {name:'country', label:'Country of study'},
-        {name:'country_other', label:'Country (other)'},
-        {name:'course', label:'Course / program'},
-        {name:'university', label:'University'},
-        {name:'loan_type', label:'Preferred loan type'},
-        {name:'loan_amount', label:'Loan amount required'},
-        {name:'cibil', label:'Co-applicant CIBIL score'},
-        {name:'property', label:'Property available for collateral'}
-      ]);
-
-      wire('stayForm', 'stayError', 'staySuccess', 'accommodation', [
-        {name:'country', label:'Destination country'},
-        {name:'country_other', label:'Country (other)'},
-        {name:'city', label:'City / university area'},
-        {name:'move_date', label:'Preferred move-in date'},
-        {name:'stay_type', label:'Accommodation type'},
-        {name:'stay_type_other', label:'Accommodation type (other)'},
-        {name:'duration', label:'Duration of stay'},
-        {name:'budget', label:'Monthly budget'}
-      ]);
-    })();
-  </script>
-
-</body>
-</html>
+    });
+  })();
+</script>
+@endsection
