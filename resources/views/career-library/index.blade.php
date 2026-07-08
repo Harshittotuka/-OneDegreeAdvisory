@@ -1,6 +1,6 @@
 @extends('career-library.layout')
 
-@section('title', 'Global Career Library')
+@section('title', 'Trending Career')
 
 @section('app')
 {{-- Content injected via JS (search form + trending grid), exactly like the source page. --}}
@@ -534,7 +534,7 @@
     }
 
     if(window.self !== window.top){
-        document.querySelectorAll('nav').forEach(function(nav) {
+        document.querySelectorAll('nav, .stripe-site-header').forEach(function(nav) {
             nav.style.display = 'none';
         });
     }

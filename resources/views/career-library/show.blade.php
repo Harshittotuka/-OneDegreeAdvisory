@@ -54,7 +54,7 @@
     ];
 @endphp
 
-@section('title', $seo['title'] !== '' ? $seo['title'] : $careerName.' Career — Global Career Library')
+@section('title', $seo['title'] !== '' ? $seo['title'] : $careerName.' Career — Trending Career')
 @section('meta_description', $seo['description'] !== '' ? $seo['description'] : 'Explore the '.$careerName.' career path: salary, eligibility, pathways and outlook.')
 @section('meta_keywords', ! empty($seo['keywords']) ? implode(',', $seo['keywords']) : 'career, guidance, roadmap, jobs, profession, education')
 
@@ -86,31 +86,6 @@
             <p class="text-lg md:text-xl text-indigo-50 leading-relaxed max-w-2xl border-l-4 border-rose-500 pl-6"{!! $ed('introduction') !!}>
                 {{ $data['introduction'] }}
             </p>
-
-            <!-- Action Tags + Voice Button -->
-            <div class="flex flex-wrap gap-4 pt-4 items-center">
-                <!-- Read Time -->
-                <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10 hero-fixed-chrome">
-                    <span class="text-rose-400">{!! Icons::svg('clock') !!}</span>
-                    <span class="text-sm">5 min read</span>
-                </div>
-
-                <!-- Roadmap Tag -->
-                <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg border border-white/10 hero-fixed-chrome">
-                    <span class="text-emerald-400">{!! Icons::svg('target') !!}</span>
-                    <span class="text-sm">Detailed Roadmap</span>
-                </div>
-
-                <!-- Voice Brief Button -->
-                <button
-                    id="btn-voice-brief"
-                    onclick="playVoiceBrief()"
-                    class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg border border-indigo-400 shadow-lg shadow-indigo-900/20 transition-all hover:scale-105 active:scale-95 ml-2 ring-2 ring-indigo-500/50 ring-offset-2 ring-offset-slate-900 rpdf"
-                >
-                    <span class="text-white">{!! Icons::svg('volumeHigh') !!}</span>
-                    <span class="text-sm font-bold text-white">Listen to Brief</span>
-                </button>
-            </div>
         </div>
 
         <!-- Right: Market Snapshot (COMPACT DESIGN) -->
@@ -636,108 +611,184 @@
 @endif
 @endsection
 
+@unless ($live)
+@section('overlays')
+{{-- Lead-capture gate. The career report is hidden behind this until the
+     visitor submits their contact details (recorded server-side). Once done
+     the front-end sets a session flag so it isn't shown again this visit. It is
+     NOT rendered in the admin live editor. --}}
+{{-- Self-contained styles: the page's compiled Tailwind (no build step) omits
+     several utilities this modal would need (arbitrary z-index, /opacity
+     backdrops, focus:ring, hover states), so the gate is styled with its own
+     dedicated CSS below rather than depending on those classes existing. --}}
+<style>
+    #cl-lead-gate {
+        position: fixed; inset: 0; z-index: 100000;
+        display: none; align-items: center; justify-content: center;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.62);
+        -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    }
+    #cl-lead-gate.is-open { display: flex; }
+    .cl-gate-card {
+        width: 100%; max-width: 440px; background: #fff;
+        border-radius: 20px; overflow: hidden;
+        box-shadow: 0 30px 70px rgba(2, 6, 23, .45);
+        animation: fadeInUp .35s ease-out both;
+    }
+    .cl-gate-head {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: #fff; padding: 22px 24px;
+    }
+    .cl-gate-head h2 { margin: 0; font-size: 1.35rem; font-weight: 800; line-height: 1.2; color: #fff; }
+    .cl-gate-head p { margin: 6px 0 0; font-size: .9rem; color: #e0e7ff; line-height: 1.5; }
+    .cl-gate-body { padding: 24px; }
+    .cl-gate-field { margin-bottom: 16px; }
+    .cl-gate-field label { display: block; font-size: .85rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
+    .cl-gate-field input {
+        width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0;
+        border-radius: 12px; outline: none; color: #1e293b; font-size: 1rem;
+        transition: border-color .15s, box-shadow .15s; background: #fff;
+    }
+    .cl-gate-field input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(199, 210, 254, .7); }
+    #cl-lead-error { color: #dc2626; font-size: .85rem; margin: 0 0 12px; display: none; }
+    #cl-lead-error.is-shown { display: block; }
+    #cl-lead-submit {
+        width: 100%; background: #4f46e5; color: #fff; border: 0;
+        font-weight: 700; font-size: 1rem; padding: 13px; border-radius: 12px;
+        cursor: pointer; transition: background .15s, opacity .15s;
+    }
+    #cl-lead-submit:hover { background: #4338ca; }
+    #cl-lead-submit:disabled { opacity: .6; cursor: not-allowed; }
+    .cl-gate-fineprint { font-size: .72rem; color: #94a3b8; text-align: center; line-height: 1.5; margin: 14px 0 0; }
+</style>
+<div id="cl-lead-gate" aria-modal="true" role="dialog" aria-labelledby="cl-lead-title">
+    <div class="cl-gate-card">
+        <div class="cl-gate-head">
+            <h2 id="cl-lead-title">Get the full career report</h2>
+            <p>Share your details and our team will help you explore <strong>{{ $data['title'] }}</strong>.</p>
+        </div>
+        <form id="cl-lead-form" class="cl-gate-body" novalidate>
+            <div class="cl-gate-field">
+                <label for="cl-lead-name">Full name</label>
+                <input type="text" id="cl-lead-name" name="name" required autocomplete="name" placeholder="Your name">
+            </div>
+            <div class="cl-gate-field">
+                <label for="cl-lead-email">Email</label>
+                <input type="email" id="cl-lead-email" name="email" required autocomplete="email" placeholder="you@example.com">
+            </div>
+            <div class="cl-gate-field">
+                <label for="cl-lead-phone">Phone</label>
+                <input type="tel" id="cl-lead-phone" name="phone" required autocomplete="tel" placeholder="+91 90000 00000">
+            </div>
+            <p id="cl-lead-error"></p>
+            <button type="submit" id="cl-lead-submit">
+                <span class="cl-lead-submit-label">View career report</span>
+            </button>
+            <p class="cl-gate-fineprint">By continuing you agree to be contacted about your career interests.</p>
+        </form>
+    </div>
+</div>
+@endsection
+@endunless
+
 @section('scripts')
 @php
     // Blade's @json splits its argument on commas (they become the json_encode
-    // flag/depth params), so these payloads are precomputed variables.
-    $jsParams = ['careerName' => $searchName, 'country' => $countryName, 'language' => $language];
-    $jsBrief = [
-        'title' => $data['title'],
-        'introduction' => $data['introduction'],
-        'eligibility' => $data['eligibility'],
-        'stats' => [
-            'demandLevel' => $demandLevel,
-            'jobGrowth' => $stats['jobGrowth'],
-            'salary' => ['entry' => $entrySalary],
-        ],
-    ];
+    // flag/depth params), so this payload is a precomputed variable.
+    // Lead-gate context — which career the visitor is opening.
+    $jsLeadContext = ['career' => $data['title'], 'country' => $countryName, 'language' => $language];
 @endphp
 <script type="module">
 
-    const ICONS = {
-        volumeHigh: @json(Icons::svg('volumeHigh')),
-        square: @json(Icons::svg('square'))
-    };
+    @unless ($live)
+    // --- LEAD GATE ---
+    // Hide the career report behind a contact form until the visitor submits
+    // their details (recorded server-side). Once submitted we set a session
+    // flag so it isn't shown again for other careers this visit.
+    (function () {
+        const GATE_KEY = 'cl_lead_captured';
+        const gate = document.getElementById('cl-lead-gate');
+        const form = document.getElementById('cl-lead-form');
+        if (!gate || !form) return;
 
-    const currentState = {
-        params: @json($jsParams),
-        data: @json($jsBrief)
-    };
+        const LEAD_URL = @json(route('career-library.lead'));
+        const CSRF = @json(csrf_token());
+        const CONTEXT = @json($jsLeadContext);
 
-    // --- VOICE BRIEF LOGIC ---
-    // Language Code Mapping
-    const LANGUAGE_CODES = @json(\App\Support\CareerLibraryStore::LANGUAGE_CODES);
+        // Already captured this session → never gate again.
+        let captured = false;
+        try { captured = sessionStorage.getItem(GATE_KEY) === '1'; } catch (e) {}
+        if (captured) return;
 
-    window.playVoiceBrief = () => {
-        const btn = document.getElementById('btn-voice-brief');
-        if (!btn) return;
+        const submitBtn = document.getElementById('cl-lead-submit');
+        const errorEl = document.getElementById('cl-lead-error');
 
-        // STOP if speaking
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-            // Reset UI to Play state
-            btn.innerHTML = `<span class="text-white">${ICONS.volumeHigh}</span><span class="text-sm font-bold text-white">Listen to Brief</span>`;
-            btn.classList.remove('animate-pulse');
-            return;
+        function openGate() {
+            gate.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+            const first = document.getElementById('cl-lead-name');
+            if (first) setTimeout(() => first.focus(), 50);
         }
 
-        const data = currentState.data;
-        if (!data) return;
-
-        // Determine Language
-        const selectedLang = currentState.params.language || 'English';
-        const langCode = LANGUAGE_CODES[selectedLang] || 'en-US';
-
-        // Construct Text based on Language
-        let text = '';
-        if (selectedLang === 'English') {
-            text = `Here is a quick overview for ${data.title}. ${data.introduction}. In terms of eligibility, you typically need ${data.eligibility.slice(0,2).join(' and ')}. The market demand is ${data.stats.demandLevel} with a projected growth of ${data.stats.jobGrowth}. Entry level salaries start around ${data.stats.salary.entry}.`;
-        } else {
-            // For other languages, read the title and introduction (which are already in that language)
-            // to avoid mixing English template phrases with foreign text.
-            text = `${data.title}. ${data.introduction}`;
+        function closeGate() {
+            gate.classList.remove('is-open');
+            document.body.style.overflow = '';
         }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = langCode;
-
-        // Voice Selection
-        const voices = window.speechSynthesis.getVoices();
-        let targetVoice = null;
-
-        if (selectedLang === 'English') {
-            // Prefer India English (en-IN)
-            targetVoice = voices.find(v => v.lang === 'en-IN' || v.name.includes('India'));
-        } else {
-            // Try to find exact match for the language code
-            targetVoice = voices.find(v => v.lang === langCode);
+        function showError(msg) {
+            if (!errorEl) return;
+            errorEl.textContent = msg;
+            errorEl.classList.add('is-shown');
         }
 
-        // Fallback
-        if (!targetVoice) {
-            // Try finding any voice starting with the lang code (e.g. 'fr' for 'fr-FR')
-            targetVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
-        }
+        openGate();
 
-        if (targetVoice) utterance.voice = targetVoice;
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            errorEl && errorEl.classList.remove('is-shown');
 
-        // Set UI to Stop State
-        btn.innerHTML = `<span class="text-white">${ICONS.square}</span><span class="text-sm font-bold text-white">Stop Brief</span>`;
-        btn.classList.add('animate-pulse');
+            const name = form.name.value.trim();
+            const email = form.email.value.trim();
+            const phone = form.phone.value.trim();
 
-        utterance.onend = () => {
-        // Reset UI to Play state on finish
-        btn.innerHTML = `<span class="text-white">${ICONS.volumeHigh}</span><span class="text-sm font-bold text-white">Listen to Brief</span>`;
-        btn.classList.remove('animate-pulse');
-        };
+            if (!name || !email || !phone) {
+                showError('Please fill in your name, email and phone.');
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('Please enter a valid email address.');
+                return;
+            }
 
-        window.speechSynthesis.speak(utterance);
-    };
+            submitBtn.disabled = true;
+            const label = submitBtn.querySelector('.cl-lead-submit-label');
+            const prev = label ? label.textContent : '';
+            if (label) label.textContent = 'Submitting…';
 
-    // Ensure voices are loaded (for Chrome)
-    window.speechSynthesis.onvoiceschanged = () => {
-        // This ensures getVoices() returns data when needed
-    };
+            try {
+                const res = await fetch(LEAD_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, phone, ...CONTEXT }),
+                });
+
+                if (!res.ok) throw new Error('Request failed');
+
+                try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) {}
+                closeGate();
+            } catch (err) {
+                submitBtn.disabled = false;
+                if (label) label.textContent = prev;
+                showError('Something went wrong. Please try again.');
+            }
+        });
+    })();
+    @endunless
 
     window.toggleAccordion = (btn) => {
         const content = btn.nextElementSibling;
@@ -753,12 +804,8 @@
         }
     };
 
-    window.addEventListener('beforeunload', () => {
-        if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
-    });
-
     if(window.self !== window.top){
-        document.querySelectorAll('nav').forEach(function(nav) {
+        document.querySelectorAll('nav, .stripe-site-header').forEach(function(nav) {
             nav.style.display = 'none';
         });
     }

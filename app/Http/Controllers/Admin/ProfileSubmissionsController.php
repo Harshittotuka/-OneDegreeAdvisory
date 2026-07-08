@@ -32,12 +32,23 @@ class ProfileSubmissionsController extends Controller
     /** Student Profiler submissions list. */
     public function profiler(): View
     {
-        $all = $this->store->all();
-
         return view('admin.submissions.index', [
             'portal'      => 'admin',
             'source'      => 'profiler',
-            'submissions' => array_values(array_filter($all, fn ($r) => ($r['source'] ?? '') === 'profiler')),
+            'submissions' => $this->store->bySource('profiler'),
+        ]);
+    }
+
+    /** Loan & Acco enquiry list (from /loan-accommodation). */
+    public function loanAcco(): View
+    {
+        return view('admin.submissions.index', [
+            'portal'      => 'admin',
+            'source'      => 'loan-acco',
+            'submissions' => $this->store->bySource('loan-acco'),
+            'tabName'     => 'Loan & Acco',
+            'tabBlurb'    => 'Education-loan & accommodation enquiries (/loan-accommodation).',
+            'emptyUrl'    => route('loan-acco.index'),
         ]);
     }
 
@@ -85,17 +96,27 @@ class ProfileSubmissionsController extends Controller
             $this->store->delete($id);
         }
 
-        return redirect()->route('admin.submissions.profiler')->with('status', 'Submission removed.');
+        $route = $request->input('source') === 'loan-acco'
+            ? 'admin.submissions.loan-acco'
+            : 'admin.submissions.profiler';
+
+        return redirect()->route($route)->with('status', 'Submission removed.');
+    }
+
+    /** Only "profiler" and "loan-acco" are exportable tabs; anything else → profiler. */
+    private function resolveSource(Request $request): string
+    {
+        return $request->input('source') === 'loan-acco' ? 'loan-acco' : 'profiler';
     }
 
     /**
-     * Download the Student Profiler submissions as a flat CSV (one row per
-     * answered question).
+     * Download a submissions tab as a flat CSV (one row per answered question).
      */
     public function export(Request $request): StreamedResponse
     {
-        $rows = $this->store->bySource('profiler');
-        $suffix = '-profiler';
+        $source = $this->resolveSource($request);
+        $rows = $this->store->bySource($source);
+        $suffix = '-'.$source;
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
@@ -139,7 +160,8 @@ class ProfileSubmissionsController extends Controller
      */
     public function exportExcel(Request $request): Response
     {
-        $rows = $this->store->bySource('profiler');
+        $source = $this->resolveSource($request);
+        $rows = $this->store->bySource($source);
 
         $tab = ProfileSubmissionStore::tabulate($rows);
 
@@ -153,8 +175,9 @@ class ProfileSubmissionsController extends Controller
             $data[] = $line;
         }
 
-        $xlsx = SimpleXlsx::build($headers, $data, 'Student Profiler');
-        $filename = 'profile-submissions-profiler-'.date('Y-m-d').'.xlsx';
+        $sheet = $source === 'loan-acco' ? 'Loan & Acco' : 'Student Profiler';
+        $xlsx = SimpleXlsx::build($headers, $data, $sheet);
+        $filename = 'profile-submissions-'.$source.'-'.date('Y-m-d').'.xlsx';
 
         return response($xlsx, 200, [
             'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

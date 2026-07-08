@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\CareerLibraryStore;
+use App\Support\ProfileSubmissionStore;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,8 +15,10 @@ use Illuminate\Http\Request;
  */
 class CareerLibraryController extends Controller
 {
-    public function __construct(private CareerLibraryStore $store)
-    {
+    public function __construct(
+        private CareerLibraryStore $store,
+        private ProfileSubmissionStore $submissions,
+    ) {
     }
 
     public function index(): View
@@ -100,6 +103,67 @@ class CareerLibraryController extends Controller
             'ok' => true,
             'redirect' => url('/global-career-library/'.strtolower($countryCode).'/'.$urlName.'/'.$langCode),
         ]);
+    }
+
+    /**
+     * Capture a visitor's contact details before they view a career report.
+     * The report page shows a blocking form; on submit this records the lead
+     * (into the shared profile-submissions store, source "career-library") and
+     * the front-end unlocks the page for the rest of the session.
+     */
+    public function lead(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:120',
+            'email' => 'required|email|max:190',
+            'phone' => 'required|string|max:40',
+            // Context — which career/place they were about to open. Optional so a
+            // lead is still captured even if the front-end couldn't supply it.
+            'career' => 'nullable|string|max:200',
+            'country' => 'nullable|string|max:60',
+            'language' => 'nullable|string|max:40',
+        ]);
+
+        $name = trim($validated['name']);
+        $email = trim($validated['email']);
+        $phone = trim($validated['phone']);
+        $career = trim((string) ($validated['career'] ?? ''));
+        $country = trim((string) ($validated['country'] ?? ''));
+        $language = trim((string) ($validated['language'] ?? ''));
+
+        // A human-readable snapshot in the same shape ProfileSubmissionStore uses
+        // for the profiler/evaluator, so the admin viewer + exports render it the
+        // same way (section → question → answer).
+        $answers = [
+            ['label' => 'Name', 'value' => [$name]],
+            ['label' => 'Email', 'value' => [$email]],
+            ['label' => 'Phone', 'value' => [$phone]],
+        ];
+        if ($career !== '') {
+            $answers[] = ['label' => 'Career', 'value' => [$career]];
+        }
+        if ($country !== '') {
+            $answers[] = ['label' => 'Country', 'value' => [$country]];
+        }
+        if ($language !== '') {
+            $answers[] = ['label' => 'Language', 'value' => [$language]];
+        }
+
+        $sections = [[
+            'eyebrow' => 'Trending Career',
+            'title'   => 'Contact request',
+            'answers' => $answers,
+        ]];
+
+        $this->submissions->add(
+            'career-library',
+            'Trending Career',
+            null,
+            $sections,
+            ['name' => $name, 'email' => $email, 'phone' => $phone],
+        );
+
+        return response()->json(['ok' => true]);
     }
 
     /** Match the original page's forgiving country matching (name or code substring). */

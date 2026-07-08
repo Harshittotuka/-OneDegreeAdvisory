@@ -192,7 +192,7 @@
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">New</span>
-                    <span class="course-menu-count">3 tools</span>
+                    <span class="course-menu-count">4 tools</span>
                   </div>
 
                   <div class="course-menu-grid course-menu-grid--hub">
@@ -203,12 +203,17 @@
                     </a>
                     <a class="course-menu-card" href="{{ route('career-library.index') }}">
                       <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="compass"></i></span>
-                      <span class="course-menu-copy"><strong>Global Career Library</strong><small>Explore 3000+ careers &amp; roadmaps</small></span>
+                      <span class="course-menu-copy"><strong>Trending Career</strong><small>Explore 3000+ careers &amp; roadmaps</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                     <a class="course-menu-card" href="{{ route('services.test-prep') }}">
                       <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="book-open-check"></i></span>
                       <span class="course-menu-copy"><strong>Test Preparation</strong><small>IELTS, TOEFL, SAT, GRE &amp; GMAT prep</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('loan-acco.index') }}">
+                      <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="wallet"></i></span>
+                      <span class="course-menu-copy"><strong>Loan &amp; Acco</strong><small>Education loans &amp; verified student housing</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                   </div>

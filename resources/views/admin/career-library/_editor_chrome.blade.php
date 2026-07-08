@@ -53,12 +53,6 @@
   .cms-editing .next-steps::before { content: "Links & year come from Career Library settings"; display: block; text-align: center;
     font: 700 .72rem/1.4 Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #93a0b4; margin-bottom: 8px; }
 
-  /* Fixed page chrome (not career data): the read-time / roadmap tags and the
-     "Listen to Brief" button are decorative — dim them and show they're locked
-     so they don't read as editable text the way the real fields do. */
-  .cms-editing .hero-fixed-chrome { opacity: .5; }
-  .cms-editing #btn-voice-brief { opacity: .5; pointer-events: none; }
-
   /* Demand tile: a real (popover-backed) field, so flag it as clickable. */
   .cms-editing [data-cl-demand-open] { cursor: pointer; transition: outline-color .12s; outline: 1.5px dashed transparent; outline-offset: 2px; }
   .cms-editing [data-cl-demand-open]:hover { outline-color: rgba(102,108,255,.75); }

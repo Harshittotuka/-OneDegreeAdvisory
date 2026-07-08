@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\Admin\CareerLibraryCmsController;
 use App\Http\Controllers\BriefPageController;
 use App\Http\Controllers\CareerLibraryController;
+use App\Http\Controllers\LoanAccoController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SeoController;
@@ -70,6 +71,11 @@ Route::get('/global-career-library', [CareerLibraryController::class, 'index'])-
 Route::post('/global-career-library/ensure', [CareerLibraryController::class, 'ensure'])
     ->middleware('throttle:15,1')
     ->name('career-library.ensure');
+// Contact-details capture that gates viewing a career report. Stored as a lead
+// in the shared profile-submissions store (source = career-library).
+Route::post('/global-career-library/lead', [CareerLibraryController::class, 'lead'])
+    ->middleware('throttle:15,1')
+    ->name('career-library.lead');
 Route::get('/global-career-library/{country}/{career}/{lang}', [CareerLibraryController::class, 'show'])
     ->where(['country' => '[A-Za-z]{2}', 'career' => '[^/]+', 'lang' => '[A-Za-z]{2,4}-[A-Za-z]{2}'])
     ->name('career-library.show');
@@ -77,6 +83,14 @@ Route::get('/global-career-library/{country}/{career}/{lang}', [CareerLibraryCon
 // Student Profiler module (self-contained in app/Modules/StudentProfiler). One
 // invokable controller serves GET (wizard) and POST (session save / submit).
 Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentProfilerController::class)->name('profiler');
+
+// Loan & Acco — Education-Loan + Student-Accommodation landing page (Student
+// Hub). Both enquiry forms POST to ::lead, which records a lead in the shared
+// profile-submissions store (source = loan-acco).
+Route::get('/loan-accommodation', [LoanAccoController::class, 'index'])->name('loan-acco.index');
+Route::post('/loan-accommodation/lead', [LoanAccoController::class, 'lead'])
+    ->middleware('throttle:15,1')
+    ->name('loan-acco.lead');
 
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
@@ -210,6 +224,7 @@ Route::prefix('admin')->group(function () {
         /* ── Student Profiler submissions (from /profiler) ── */
         Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index'); // → Student Profiler tab
         Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
+        Route::get('submissions/loan-acco', [ProfileSubmissionsController::class, 'loanAcco'])->name('admin.submissions.loan-acco');
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
         Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');

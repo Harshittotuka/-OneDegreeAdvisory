@@ -1,21 +1,61 @@
-{{-- Global Career Library — standalone page shell (own compiled Tailwind, own
-     slim navbar; the main site chrome is intentionally absent). --}}
+{{-- Trending Career — page shell. Uses its own compiled Tailwind (output.css)
+     for the page body, but shares the real site chrome (the Stripe navbar from
+     partials.header-stripe + its styles.css / stripe-nav.css / stripe-nav.js),
+     so the navbar here is identical to the rest of the site. --}}
+@php
+    // Notice-bar variant, mirrored from layouts/app.blade.php so the shared
+    // header renders exactly as it does site-wide.
+    $topbarVariant = app(\App\Support\NoticeBarStore::class)->get()['variant'] ?? 'left-socials';
+
+    // Cache-bust local CSS/JS by mtime — same helper as the main layout, so a
+    // deployed nav stylesheet/script change is never served stale here.
+    $assetVer = function (string $file) {
+        $path = public_path($file);
+        return is_file($path) ? asset($file).'?v='.filemtime($path) : asset($file);
+    };
+@endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-color-theme="cream" class="topbar-{{ $topbarVariant }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@yield('title', 'Global Career Library')</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Trending Career')</title>
     <meta name="description" content="@yield('meta_description', 'An intelligent career library tool that generates comprehensive career paths, work nature insights, and curated resources for any profession.')">
     <meta name="keywords" content="@yield('meta_keywords', 'career, guidance, ai, roadmap, jobs, profession, education')">
     <link rel="icon" type="image/png" href="{{ asset('assets/Logo/favicon.png') }}" />
+    {{-- Page body is Tailwind; the shared navbar needs the site stylesheets.
+         Load Tailwind first so the site nav CSS (loaded after) wins for the
+         header, while Tailwind utilities (class selectors) still beat the
+         element-level body/link rules from styles.css. --}}
     <link href="{{ asset('career-library/output.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ $assetVer('styles.css') }}">
+    <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="{{ $assetVer('stripe-nav.js') }}" defer></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         /* Enforce professional sans-serif for all headings */
         h1, h2, h3, h4, h5, h6 { font-family: 'Inter', sans-serif; }
+
+        /* We now load the site's styles.css (for the shared navbar). It carries
+           bare element rules (h1/h2/h3 font-family/size/line-height/margin, the
+           dark body background gradient, etc.) meant for the main site's layout.
+           Neutralise them inside this Tailwind page so the page keeps rendering
+           exactly as it did before — the navbar (which sits OUTSIDE #app-container
+           and uses no headings) is unaffected. Tailwind utility classes still win
+           by specificity; these element-level resets only catch nodes with no
+           matching utility. */
+        body.cl-body { background: #fafaf9; } /* Tailwind bg-stone-50, kills the site's dark gradient */
+        #app-container h1, #app-container h2, #app-container h3,
+        #app-container h4, #app-container h5, #app-container h6 {
+            font-family: 'Inter', sans-serif;
+            line-height: normal;
+            max-width: none;
+        }
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.85);
@@ -110,7 +150,7 @@
     </style>
 
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:title" content="@yield('title', 'Global Career Library')">
+    <meta property="og:title" content="@yield('title', 'Trending Career')">
     <meta property="og:type" content="website">
     <meta property="og:image" content="{{ asset('assets/Logo/og-image.png') }}">
 
@@ -120,40 +160,10 @@
         <meta name="robots" content="noindex, nofollow" />
     @endif
 </head>
-<body class="bg-stone-50 text-slate-900 antialiased selection:bg-rose-100 selection:text-rose-700 min-h-screen flex flex-col{{ ! empty($live) ? ' cms-editing' : '' }}">
+<body class="cl-body bg-stone-50 text-slate-900 antialiased selection:bg-rose-100 selection:text-rose-700 min-h-screen flex flex-col{{ ! empty($live) ? ' cms-editing' : '' }}">
 
-    <!-- Navbar -->
-    <nav class="relative z-10 border-b border-white/50 bg-white/50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto pt-2 pb-2 px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-2 cursor-pointer">
-                    <a href="{{ url('/') }}"><img class="img-responsive" style="display: inline-block;max-width: 200px !important;max-height: 80px;" loading="lazy" src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory"></a>
-                </div>
-                <div class="flex items-center gap-2 cursor-pointer hidden md:block">
-                    <ul class="flex items-center gap-6 text-gray-700">
-
-                        <!-- Email -->
-                        <li class="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
-                                <polyline points="22,6 12,13 2,6"></polyline>
-                            </svg>
-                            <a href="mailto:{{ $settings['contact_email'] }}"><span>{{ $settings['contact_email'] }}</span></a>
-                        </li>
-
-                        <!-- Phone -->
-                        <li class="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67 A2 2 0 0 1 4.11 2h3 a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 a2 2 0 0 1-.45 2.11L8.09 9.91 a16 16 0 0 0 6 6 l1.27-1.27 a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 A2 2 0 0 1 22 16.92z"/>
-                            </svg>
-                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $settings['contact_phone']) }}"><span>{{ $settings['contact_phone'] }}</span></a>
-                        </li>
-
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
+    {{-- Shared site navbar — identical to the rest of the site. --}}
+    @include('partials.header-stripe', ['activeNav' => 'courses'])
 
     <div id="toast-container" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 space-y-3 flex flex-col items-center">
     </div>
@@ -176,6 +186,22 @@
     </main>
 
     @yield('overlays')
+
+    {{-- The shared navbar uses Lucide <i data-lucide> icons. On the main site
+         script.js does the initial createIcons(); we don't load script.js here,
+         so render them once Lucide is ready (it's deferred, so poll briefly). --}}
+    <script>
+        (function initNavIcons() {
+            if (window.lucide) { window.lucide.createIcons(); return; }
+            var tries = 0;
+            var t = setInterval(function () {
+                if (window.lucide || tries++ > 40) {
+                    clearInterval(t);
+                    if (window.lucide) window.lucide.createIcons();
+                }
+            }, 50);
+        })();
+    </script>
 
     <!-- Logic -->
     @yield('scripts')

@@ -78,8 +78,11 @@
 @endpush
 
 @php
-  $tabName  = 'Student Profiler';
-  $tabBlurb = 'Completed Student Profiler questionnaires (/profiler).';
+  // Tab heading / blurb / empty-state link are supplied by the controller so
+  // this one view serves every submissions source; default to Student Profiler.
+  $tabName  = $tabName  ?? 'Student Profiler';
+  $tabBlurb = $tabBlurb ?? 'Completed Student Profiler questionnaires (/profiler).';
+  $emptyUrl = $emptyUrl ?? route('profiler');
   $view = request('view') === 'table' ? 'table' : 'cards';
 @endphp
 
@@ -218,6 +221,7 @@
                         onsubmit="return confirm('Delete this submission permanently?');">
                     @csrf
                     <input type="hidden" name="id" value="{{ $s['id'] ?? '' }}">
+                    <input type="hidden" name="source" value="{{ $source }}">
                     <button class="btn btn-danger btn-sm" type="submit" title="Delete submission">
                       <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
                     </button>
@@ -266,7 +270,7 @@
   @else
     <div class="panel panel-pad" style="text-align:center;color:var(--muted);padding:50px 20px;">
       No {{ $tabName }} submissions yet. They’ll appear here when visitors complete the
-      <a href="{{ route('profiler') }}" target="_blank">{{ $tabName }}</a>.
+      <a href="{{ $emptyUrl }}" target="_blank">{{ $tabName }}</a>.
     </div>
   @endif
 @endsection

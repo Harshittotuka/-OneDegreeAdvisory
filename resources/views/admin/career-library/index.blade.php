@@ -44,7 +44,7 @@
 
 @section('content')
 <p class="cl-intro">
-  Manage the <a href="{{ route('career-library.index') }}" target="_blank" rel="noopener">Global Career Library</a> —
+  Manage the <a href="{{ route('career-library.index') }}" target="_blank" rel="noopener">Trending Career</a> library —
   the landing page copy, the career tiles (order, icon, colours, visibility) and every career's full report.
   Drag rows to reorder the public grid. The first 40 visible tiles show first on the landing page.
 </p>
