@@ -71,10 +71,10 @@
       return; // toggle still works; nothing else to wire up
     }
 
-    const ORDER = ["destinations", "courses", "services", "new-tabs"];
+    const ORDER = ["destinations", "new-tabs"];
     const sectionFor = (key) => sections.find((s) => s.dataset.stripeSection === key);
     const triggerFor = (key) => triggers.find((t) => t.dataset.stripeTrigger === key);
-    const isDesktop = () => window.matchMedia("(min-width: 921px)").matches;
+    const isDesktop = () => window.matchMedia("(min-width: 1081px)").matches;
 
     let isOpen = false;
     let activeKey = null;
@@ -343,7 +343,7 @@
     // never locks open on click. Hovering it opens the column; the column then
     // stays open while the pointer is anywhere in the card (see bg.mouseleave
     // below), so you can travel diagonally to its options without it closing.
-    // At ≤920px it falls back to the classic inline tap-accordion.
+    // At <=1080px it falls back to the classic inline tap-accordion.
     flyout.querySelectorAll(".submenu-wrap").forEach((wrap) => {
       const sub = wrap.querySelector(".course-submenu");
       if (!sub) return;

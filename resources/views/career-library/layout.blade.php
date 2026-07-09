@@ -163,7 +163,7 @@
 <body class="cl-body bg-stone-50 text-slate-900 antialiased selection:bg-rose-100 selection:text-rose-700 min-h-screen flex flex-col{{ ! empty($live) ? ' cms-editing' : '' }}">
 
     {{-- Shared site navbar — identical to the rest of the site. --}}
-    @include('partials.header-stripe', ['activeNav' => 'courses'])
+    @include('partials.header-stripe', ['activeNav' => 'career-library'])
 
     <div id="toast-container" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 space-y-3 flex flex-col items-center">
     </div>

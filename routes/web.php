@@ -92,6 +92,11 @@ Route::post('/loan-accommodation/lead', [LoanAccoController::class, 'lead'])
     ->middleware('throttle:15,1')
     ->name('loan-acco.lead');
 
+// Visa — Student Hub landing page with a free visa-eligibility pre-check. Fully
+// static (no lead capture): the advisor CTA routes to /contact and the checker
+// result opens a WhatsApp / email "connect with a counsellor" popup.
+Route::get('/visa', [PageController::class, 'visa'])->name('visa');
+
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
 Route::get('/europe', [BriefPageController::class, 'show'])->defaults('slug', 'europe')->name('europe');

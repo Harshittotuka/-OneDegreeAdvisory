@@ -397,9 +397,8 @@
    overlay card to the right and slots the sub-items in as a clean, top-aligned
    second column sharing the same surface (a thin divider separates them). The
    card width/height/top are set by JS so it fits exactly — no dead space.
-   At ≤920px it falls back to the classic inline accordion (styles.css); the
-   921–960px override below keeps the column style (global flips at ≤960px). */
-@media (min-width: 921px) {
+   At <=1080px it falls back to the classic inline accordion (styles.css). */
+@media (min-width: 1081px) {
   /* Anchor the column to the services card, not the (bottom) trigger row */
   .stripe-flyout-section[data-stripe-section="services"] .submenu-wrap {
     position: static;
@@ -526,7 +525,7 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
 }
 
 /* ============================================================================
-   Mobile (≤920px) — premium right-side, full-height off-canvas drawer
+   Mobile (<=1080px) - premium right-side, full-height off-canvas drawer
    ----------------------------------------------------------------------------
    The nav panel becomes a fixed drawer that slides in from the right edge at
    full viewport height, over a blurred scrim. Layout inside the drawer:
@@ -534,7 +533,7 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
      • a scrollable body (links + inline accordion sections),
      • a pinned Contact CTA footer.
    ========================================================================== */
-@media (max-width: 920px) {
+@media (max-width: 1080px) {
   /* Lock the page behind the open drawer. */
   body.stripe-nav-open {
     overflow: hidden;
@@ -917,7 +916,7 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
 }
 
 /* Respect reduced-motion: the drawer/scrim appear without the slide/rotate. */
-@media (max-width: 920px) and (prefers-reduced-motion: reduce) {
+@media (max-width: 1080px) and (prefers-reduced-motion: reduce) {
   .stripe-nav-panel,
   .stripe-nav-open .stripe-nav-panel {
     transition: visibility 0s;
