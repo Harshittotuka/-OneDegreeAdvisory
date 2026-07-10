@@ -36,16 +36,45 @@
     background:rgba(255,255,255,.18); color:#fff; font-size:1rem; line-height:1; cursor:pointer; z-index:2;
     display:flex; align-items:center; justify-content:center; }
   .cl-idx-close:hover { background:rgba(255,255,255,.32); }
-  .cl-idx-success { padding: 34px 28px; text-align:center; }
-  .cl-idx-check { width:64px; height:64px; margin:0 auto 18px; border-radius:50%; background:#dcfce7; color:#16a34a;
-    display:flex; align-items:center; justify-content:center; }
-  .cl-idx-check svg { width:34px; height:34px; }
-  .cl-idx-success h2 { margin:0 0 8px; font-size:1.4rem; font-weight:800; color:#0f172a; }
-  .cl-idx-success p { margin:0; font-size:.95rem; color:#475569; line-height:1.6; }
-  .cl-idx-redirect-note { margin-top:8px !important; font-size:.82rem !important; color:#7c3aed !important; font-weight:600; display:none; }
-  #cl-idx-success-action { margin-top:20px; background:#4f46e5; color:#fff; border:0; font-weight:700; font-size:.95rem;
-    padding:12px 22px; border-radius:12px; cursor:pointer; }
-  #cl-idx-success-action:hover { background:#4338ca; }
+  .cl-idx-success { padding: 40px 28px 34px; text-align:center; position:relative; overflow:hidden; }
+  .cl-idx-confetti { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .cl-idx-confetti span { position:absolute; top:-10%; width:8px; height:14px; border-radius:2px; opacity:0;
+    animation: cl-confetti-fall 1.6s ease-in forwards; }
+  @keyframes cl-confetti-fall {
+    0%   { opacity:0; transform: translate3d(0,-20px,0) rotate(0deg); }
+    8%   { opacity:1; }
+    100% { opacity:0; transform: translate3d(var(--cl-drift,0px),260px,0) rotate(var(--cl-spin,360deg)); }
+  }
+  .cl-idx-badge-wrap { position:relative; width:88px; height:88px; margin:0 auto 20px; }
+  .cl-idx-badge-ring { position:absolute; inset:0; border-radius:50%; border:2px solid rgba(22,163,74,.35); opacity:0;
+    animation: cl-ring-pulse 1.4s ease-out .15s forwards; }
+  .cl-idx-badge-ring.cl-ring-2 { animation-delay:.32s; }
+  @keyframes cl-ring-pulse {
+    0%   { transform: scale(.6); opacity:.55; }
+    100% { transform: scale(1.9); opacity:0; }
+  }
+  .cl-idx-check { position:absolute; inset:12px; border-radius:50%; background:radial-gradient(circle at 32% 28%,#4ade80,#16a34a);
+    color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 24px -6px rgba(22,163,74,.55), inset 0 2px 4px rgba(255,255,255,.35);
+    transform: scale(0); animation: cl-check-pop .5s cubic-bezier(.34,1.56,.64,1) .1s forwards; }
+  .cl-idx-check svg { width:36px; height:36px; }
+  .cl-idx-check svg path { stroke-dasharray:28; stroke-dashoffset:28; animation: cl-check-draw .4s ease-out .45s forwards; }
+  @keyframes cl-check-pop { to { transform: scale(1); } }
+  @keyframes cl-check-draw { to { stroke-dashoffset:0; } }
+  .cl-idx-success h2 { margin:0 0 8px; font-size:1.5rem; font-weight:800; color:#0f172a;
+    opacity:0; transform: translateY(6px); animation: cl-fade-up .4s ease-out .35s forwards; }
+  .cl-idx-success p { margin:0; font-size:.95rem; color:#475569; line-height:1.6;
+    opacity:0; transform: translateY(6px); animation: cl-fade-up .4s ease-out .45s forwards; }
+  @keyframes cl-fade-up { to { opacity:1; transform:translateY(0); } }
+  .cl-idx-redirect-note { margin-top:10px !important; font-size:.82rem !important; color:#7c3aed !important; font-weight:600; display:none;
+    align-items:center; justify-content:center; gap:6px; }
+  .cl-idx-redirect-note .cl-idx-spinner { width:13px; height:13px; border-radius:50%; border:2px solid rgba(124,58,237,.25);
+    border-top-color:#7c3aed; animation: cl-spin .7s linear infinite; display:inline-block; }
+  @keyframes cl-spin { to { transform: rotate(360deg); } }
+  #cl-idx-success-action { margin-top:22px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border:0; font-weight:700; font-size:.95rem;
+    padding:13px 26px; border-radius:12px; cursor:pointer; box-shadow:0 10px 20px -8px rgba(79,70,229,.55);
+    transition:transform .15s, box-shadow .15s; opacity:0; animation: cl-fade-up .4s ease-out .55s forwards; }
+  #cl-idx-success-action:hover { transform: translateY(-2px); box-shadow:0 14px 24px -8px rgba(79,70,229,.6); }
+  #cl-idx-success-action:active { transform: translateY(0); }
 </style>
 <div id="cl-idx-gate" aria-modal="true" role="dialog" aria-labelledby="cl-idx-title">
   <div class="cl-idx-card">
@@ -77,12 +106,17 @@
 
     <div data-idx-success-state style="display:none;">
       <div class="cl-idx-success">
-        <div class="cl-idx-check">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <div class="cl-idx-confetti" data-idx-confetti aria-hidden="true"></div>
+        <div class="cl-idx-badge-wrap">
+          <div class="cl-idx-badge-ring"></div>
+          <div class="cl-idx-badge-ring cl-ring-2"></div>
+          <div class="cl-idx-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
         </div>
         <h2>Thank you!</h2>
         <p>Our team will reach out to you shortly with more details.</p>
-        <p class="cl-idx-redirect-note" data-idx-redirect-note>Taking you to the career report…</p>
+        <p class="cl-idx-redirect-note" data-idx-redirect-note><span class="cl-idx-spinner"></span> Taking you to the career report…</p>
         <button type="button" id="cl-idx-success-action" data-idx-success-action>Explore more careers</button>
       </div>
     </div>
@@ -96,12 +130,11 @@
     // flag/depth params), so anything non-trivial is precomputed here and
     // passed as a bare variable.
     //
-    // Only surface the countries/languages we actually hold variants for, so the
-    // search form can never offer a combo that silently falls back. Defaults keep
-    // the form working if the controller didn't pass them (e.g. the show() error
+    // Only surface the countries we actually hold variants for, so the search
+    // form can never offer a combo that silently falls back. Defaults keep the
+    // form working if the controller didn't pass them (e.g. the show() error
     // fallback renders this same view).
     $availCountries = $countries ?? array_values(\App\Support\CareerLibraryStore::COUNTRIES);
-    $availLanguages = $languages ?? array_keys(\App\Support\CareerLibraryStore::LANGUAGE_CODES);
     $jsCountries = collect(\App\Support\CareerLibraryStore::COUNTRIES)
         ->filter(fn ($name) => in_array($name, $availCountries, true))
         ->map(fn ($name, $code) => ['code' => $code, 'name' => $name])->values();
@@ -131,7 +164,6 @@
     const ICONS = @json(\App\Support\CareerLibraryIcons::MAP);
 
     // --- DATA ---
-    const LANGUAGES = @json($availLanguages);
 
     const COUNTRIES = @json($jsCountries);
 
@@ -164,7 +196,7 @@
         openLeadGate({
             career: (form.careerName.value || '').trim(),
             country: (form.country.value || 'India').trim() || 'India',
-            language: form.language.value || 'English',
+            language: 'English',
         });
     };
 
@@ -219,12 +251,49 @@
         if (leadError) { leadError.textContent = msg; leadError.classList.add('is-shown'); }
     }
 
+    const confettiHost = gate && gate.querySelector('[data-idx-confetti]');
+    const CONFETTI_COLORS = ['#4f46e5', '#7c3aed', '#16a34a', '#f59e0b', '#ec4899', '#0ea5e9'];
+
+    function spawnConfetti() {
+        if (!confettiHost) return;
+        confettiHost.innerHTML = '';
+        const pieces = 26;
+        for (let i = 0; i < pieces; i++) {
+            const el = document.createElement('span');
+            const left = Math.random() * 100;
+            const drift = (Math.random() * 120 - 60).toFixed(0) + 'px';
+            const spin = (Math.random() * 520 + 200).toFixed(0) + 'deg';
+            const delay = (Math.random() * 0.25).toFixed(2) + 's';
+            const duration = (1.1 + Math.random() * 0.7).toFixed(2) + 's';
+            el.style.left = left + '%';
+            el.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+            el.style.setProperty('--cl-drift', drift);
+            el.style.setProperty('--cl-spin', spin);
+            el.style.animationDelay = delay;
+            el.style.animationDuration = duration;
+            if (i % 3 === 0) el.style.borderRadius = '50%';
+            confettiHost.appendChild(el);
+        }
+    }
+
+    function replayEntranceAnimations() {
+        if (!leadSuccessState) return;
+        const animated = leadSuccessState.querySelectorAll('.cl-idx-badge-ring, .cl-idx-check, .cl-idx-check svg path, h2, p, #cl-idx-success-action');
+        animated.forEach((node) => {
+            node.style.animation = 'none';
+            void node.offsetWidth;
+            node.style.animation = '';
+        });
+    }
+
     function showLeadSuccess(redirect) {
         if (leadFormState) leadFormState.style.display = 'none';
         if (leadSuccessState) leadSuccessState.style.display = 'block';
+        replayEntranceAnimations();
+        spawnConfetti();
 
         if (redirect && DETAIL_ENABLED) {
-            if (redirectNote) redirectNote.style.display = 'block';
+            if (redirectNote) redirectNote.style.display = 'flex';
             if (successAction) {
                 successAction.textContent = 'View career report →';
                 successAction.onclick = () => { window.location.href = redirect; };
@@ -437,29 +506,13 @@
                 </div>
             </div>
 
-            <!-- Language Select -->
-            <div class="w-full md:w-40 relative group text-left h-16">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500">
-                ${ICONS.globe}
-                </div>
-                <select
-                name="language"
-                class="w-full pl-11 pr-8 h-full rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white/50 focus:bg-white text-slate-800 font-medium appearance-none cursor-pointer text-lg"
-                >
-                ${LANGUAGES.map(lang => `<option value="${lang}" ${params.language === lang ? 'selected' : ''}>${lang}</option>`).join('')}
-                </select>
-                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
-                ${ICONS.chevronDown}
-                </div>
-            </div>
-
             <!-- Submit Button -->
             <button
                 type="submit"
                 class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-16 px-8 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 w-full md:w-auto text-lg"
             >
                 <span>Explore</span>
-                ${ICONS.sparkles}
+                <span style="width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">${ICONS.sparkles.replace('width="24" height="24"', 'width="20" height="20"')}</span>
             </button>
             </form>
 

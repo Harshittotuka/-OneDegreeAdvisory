@@ -132,7 +132,11 @@
   /* ===== SERVICE CARDS ===== */
   #visa-page .services-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:32px;}
   @media(max-width:900px){#visa-page .services-grid{grid-template-columns:repeat(2,1fr);}}
-  @media(max-width:560px){#visa-page .services-grid{grid-template-columns:1fr;}}
+  @media(max-width:560px){
+    #visa-page .services-grid{display:flex;grid-template-columns:none;flex-wrap:nowrap;overflow-x:auto;overflow-y:visible;gap:14px;margin:32px -24px 0;padding:4px 24px 10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    #visa-page .services-grid::-webkit-scrollbar{display:none;}
+    #visa-page .services-grid .service-card{flex:0 0 82%;scroll-snap-align:center;}
+  }
   #visa-page .service-card{position:relative;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;padding:20px 19px 24px;background:var(--card);}
   #visa-page .service-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad-brand);transform:scaleX(0);transform-origin:left;transition:transform .35s ease;}
   #visa-page .service-card::after{content:attr(data-num);position:absolute;right:10px;bottom:-20px;font-family:var(--font-head);font-weight:700;font-size:76px;line-height:1;color:var(--navy);opacity:.05;pointer-events:none;transition:opacity .3s ease,color .3s ease;}
@@ -221,7 +225,11 @@
   #visa-page .result-cta{margin-top:20px;padding-top:18px;border-top:1px solid rgba(0,0,0,.08);display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
   #visa-page .result-cta p{font-size:14px;color:var(--muted);flex:1;min-width:220px;}
   #visa-page .checker-explainer{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px;}
-  @media(max-width:760px){#visa-page .checker-explainer{grid-template-columns:1fr;}}
+  @media(max-width:760px){
+    #visa-page .checker-explainer{display:flex;grid-template-columns:none;flex-wrap:nowrap;overflow-x:auto;overflow-y:visible;gap:16px;margin:32px -24px 0;padding:4px 24px 10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    #visa-page .checker-explainer::-webkit-scrollbar{display:none;}
+    #visa-page .checker-explainer .edu-card{flex:0 0 86%;scroll-snap-align:center;}
+  }
 
   /* ===== MARKET SNAPSHOT ===== */
   #visa-page .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:32px;}
