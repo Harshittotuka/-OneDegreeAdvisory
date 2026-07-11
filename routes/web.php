@@ -22,6 +22,7 @@ use App\Http\Controllers\LoanAccoController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\SopController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -96,6 +97,14 @@ Route::post('/loan-accommodation/lead', [LoanAccoController::class, 'lead'])
 // static (no lead capture): the advisor CTA routes to /contact and the checker
 // result opens a WhatsApp / email "connect with a counsellor" popup.
 Route::get('/visa', [PageController::class, 'visa'])->name('visa');
+
+// Statement of Purpose — SOP / admissions-writing studio landing page (Student
+// Hub). The "book a strategy call" form POSTs to ::lead, which records a lead in
+// the shared profile-submissions store (source = sop).
+Route::get('/statement-of-purpose', [SopController::class, 'index'])->name('sop.index');
+Route::post('/statement-of-purpose/lead', [SopController::class, 'lead'])
+    ->middleware('throttle:15,1')
+    ->name('sop.lead');
 
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
@@ -230,6 +239,7 @@ Route::prefix('admin')->group(function () {
         Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index'); // → Student Profiler tab
         Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
         Route::get('submissions/loan-acco', [ProfileSubmissionsController::class, 'loanAcco'])->name('admin.submissions.loan-acco');
+        Route::get('submissions/statement-of-purpose', [ProfileSubmissionsController::class, 'sop'])->name('admin.submissions.sop');
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
         Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');

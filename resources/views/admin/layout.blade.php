@@ -235,6 +235,7 @@
           ['label' => 'Subscribers', 'icon' => 'mail', 'route' => 'admin.newsletter.index', 'match' => 'admin.newsletter'],
           ['label' => 'Student Profiler', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.profiler', 'match' => 'admin.submissions.profiler'],
           ['label' => 'Loan & Acco', 'icon' => 'wallet', 'route' => 'admin.submissions.loan-acco', 'match' => 'admin.submissions.loan-acco'],
+          ['label' => 'Statement of Purpose', 'icon' => 'feather', 'route' => 'admin.submissions.sop', 'match' => 'admin.submissions.sop'],
         ]],
       ];
     else :

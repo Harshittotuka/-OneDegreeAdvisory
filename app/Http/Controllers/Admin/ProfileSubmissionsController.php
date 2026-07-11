@@ -52,6 +52,19 @@ class ProfileSubmissionsController extends Controller
         ]);
     }
 
+    /** Statement of Purpose enquiry list (from /statement-of-purpose). */
+    public function sop(): View
+    {
+        return view('admin.submissions.index', [
+            'portal'      => 'admin',
+            'source'      => 'sop',
+            'submissions' => $this->store->bySource('sop'),
+            'tabName'     => 'Statement of Purpose',
+            'tabBlurb'    => 'Strategy-call requests from the SOP writing studio (/statement-of-purpose).',
+            'emptyUrl'    => route('sop.index'),
+        ]);
+    }
+
     public function show(string $id): View|RedirectResponse
     {
         $submission = $this->store->find($id);
@@ -96,17 +109,21 @@ class ProfileSubmissionsController extends Controller
             $this->store->delete($id);
         }
 
-        $route = $request->input('source') === 'loan-acco'
-            ? 'admin.submissions.loan-acco'
-            : 'admin.submissions.profiler';
+        $route = match ($request->input('source')) {
+            'loan-acco' => 'admin.submissions.loan-acco',
+            'sop'       => 'admin.submissions.sop',
+            default     => 'admin.submissions.profiler',
+        };
 
         return redirect()->route($route)->with('status', 'Submission removed.');
     }
 
-    /** Only "profiler" and "loan-acco" are exportable tabs; anything else → profiler. */
+    /** Only "profiler", "loan-acco" and "sop" are real tabs; anything else → profiler. */
     private function resolveSource(Request $request): string
     {
-        return $request->input('source') === 'loan-acco' ? 'loan-acco' : 'profiler';
+        $source = $request->input('source');
+
+        return in_array($source, ['loan-acco', 'sop'], true) ? $source : 'profiler';
     }
 
     /**
@@ -175,7 +192,11 @@ class ProfileSubmissionsController extends Controller
             $data[] = $line;
         }
 
-        $sheet = $source === 'loan-acco' ? 'Loan & Acco' : 'Student Profiler';
+        $sheet = match ($source) {
+            'loan-acco' => 'Loan & Acco',
+            'sop'       => 'Statement of Purpose',
+            default     => 'Student Profiler',
+        };
         $xlsx = SimpleXlsx::build($headers, $data, $sheet);
         $filename = 'profile-submissions-'.$source.'-'.date('Y-m-d').'.xlsx';
 
