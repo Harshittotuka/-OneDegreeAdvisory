@@ -1,7 +1,7 @@
 @php
     $pageTitle = 'Postgraduate (PG) Programs | One Degree Advisory';
     $pageDescription = 'Master\'s and postgraduate study abroad — program selection, applications, research fit, scholarships, and visas, led by a senior partner.';
-    $activeNav = 'courses';
+    $activeNav = 'postgraduate';
     $mainId = 'main';
 @endphp
 

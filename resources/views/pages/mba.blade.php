@@ -1,7 +1,7 @@
 @php
     $pageTitle = 'MBA Programs Abroad | One Degree Advisory';
     $pageDescription = 'Study an MBA abroad — business school selection, applications, essays, GMAT/GRE strategy, scholarships, and visas, led by a senior partner.';
-    $activeNav = 'courses';
+    $activeNav = 'mba';
     $mainId = 'main';
 @endphp
 

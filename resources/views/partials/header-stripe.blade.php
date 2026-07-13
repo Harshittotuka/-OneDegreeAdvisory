@@ -49,15 +49,9 @@
         <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'home']) href="{{ route('home') }}">Home</a>
         <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'about']) href="{{ route('about') }}">About</a>
 
-        <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'destinations'])
+        <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => in_array($activeNav ?? null, ['destinations', 'mbbs', 'undergraduate', 'postgraduate', 'mba'], true)])
                 type="button" data-stripe-trigger="destinations" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-destinations">
           <span>Destinations</span>
-          <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
-        </button>
-
-        <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => in_array($activeNav ?? null, ['courses', 'mbbs'], true)])
-                type="button" data-stripe-trigger="courses" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-courses">
-          <span>Courses</span>
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
 
@@ -66,6 +60,8 @@
           <span>Student Hub</span>
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
+
+        <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'career-library']) href="{{ route('career-library.index') }}">Trending Careers</a>
 
       </div>
 
@@ -83,8 +79,20 @@
                  style="--dest-cols: {{ $destLayout['columns'] }}; --dest-gap: {{ $destLayout['gap'] }}px; --dest-width: {{ $destLayout['width'] }}px;">
               <div class="nav-dropdown-shell">
                 <div class="nav-dropdown-main">
-                  <div class="nav-dropdown-topline">
+                  <div class="nav-dropdown-topline nav-dropdown-topline--guide-links">
                     <span class="nav-dropdown-badge">Country guides</span>
+                    <a @class(['nav-dropdown-badge', 'nav-dropdown-badge-link', 'is-active' => ($activeNav ?? null) === 'undergraduate']) href="{{ route('courses.ug') }}">
+                      <span>Undergrad</span>
+                      <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+                    </a>
+                    <a @class(['nav-dropdown-badge', 'nav-dropdown-badge-link', 'is-active' => ($activeNav ?? null) === 'postgraduate']) href="{{ route('courses.pg') }}">
+                      <span>Postgrad</span>
+                      <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+                    </a>
+                    <a @class(['nav-dropdown-badge', 'nav-dropdown-badge-link', 'is-active' => ($activeNav ?? null) === 'mba']) href="{{ route('courses.mba') }}">
+                      <span>MBA</span>
+                      <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+                    </a>
                   </div>
 
                   <div class="nav-dropdown-grid">
@@ -108,7 +116,10 @@
                   </div>
 
                   <div class="nav-dropdown-topline nav-dropdown-topline--mbbs">
-                    <span class="nav-dropdown-badge">MBBS</span>
+                    <a class="nav-dropdown-badge nav-dropdown-badge-link nav-dropdown-badge--gold" href="{{ route('mbbs.student') }}">
+                      <span>MBBS</span>
+                      <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+                    </a>
                   </div>
 
                   <div class="nav-dropdown-grid">
@@ -147,52 +158,13 @@
               </div>
             </div>
 
-            {{-- ============ Courses ============ --}}
-            <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-courses" data-stripe-section="courses" role="region" aria-label="Courses">
-              <div class="nav-dropdown-shell">
-                <div class="nav-dropdown-main course-menu">
-                  <div class="nav-dropdown-topline course-menu-topline">
-                    <span class="nav-dropdown-badge">Course pathways</span>
-                    <span class="course-menu-count">6 tracks</span>
-                  </div>
-
-                  <div class="course-menu-grid">
-                    <a class="course-menu-card course-menu-card--mbbs" href="{{ route('mbbs.student') }}">
-                      <span class="course-icon course-icon--mbbs" aria-hidden="true"><i data-lucide="stethoscope"></i></span>
-                      <span class="course-menu-copy"><strong>MBBS</strong><small>Medicine abroad</small></span>
-                    </a>
-                    <a class="course-menu-card" href="{{ route('courses.pg') }}">
-                      <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="award"></i></span>
-                      <span class="course-menu-copy"><strong>Postgraduate</strong><small>Master's and PG</small></span>
-                    </a>
-                    <a class="course-menu-card" href="{{ route('courses.ug') }}">
-                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="graduation-cap"></i></span>
-                      <span class="course-menu-copy"><strong>Undergraduate</strong><small>Bachelor's degrees</small></span>
-                    </a>
-                    <a class="course-menu-card" href="{{ route('courses.mba') }}">
-                      <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="trending-up"></i></span>
-                      <span class="course-menu-copy"><strong>MBA</strong><small>Business abroad</small></span>
-                    </a>
-                    <a class="course-menu-card" href="{{ route('courses.doctoral') }}">
-                      <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="microscope"></i></span>
-                      <span class="course-menu-copy"><strong>Doctoral</strong><small>PhD and research</small></span>
-                    </a>
-                    <a class="course-menu-card" href="{{ route('courses.llb') }}">
-                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="scale"></i></span>
-                      <span class="course-menu-copy"><strong>LLB</strong><small>Law programs abroad</small></span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {{-- ============ Student Hub ============ --}}
             <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-new-tabs" data-stripe-section="new-tabs" role="region" aria-label="Student Hub">
               <div class="nav-dropdown-shell">
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">New</span>
-                    <span class="course-menu-count">2 tools</span>
+                    <span class="course-menu-count">5 tools</span>
                   </div>
 
                   <div class="course-menu-grid course-menu-grid--hub">
@@ -204,6 +176,21 @@
                     <a class="course-menu-card" href="{{ route('services.test-prep') }}">
                       <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="book-open-check"></i></span>
                       <span class="course-menu-copy"><strong>Test Preparation</strong><small>IELTS, TOEFL, SAT, GRE &amp; GMAT prep</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('loan-acco.index') }}">
+                      <span class="course-icon course-icon--doctoral" aria-hidden="true"><i data-lucide="wallet"></i></span>
+                      <span class="course-menu-copy"><strong>Loan &amp; Acco</strong><small>Education loans &amp; verified student housing</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a @class(['course-menu-card', 'is-active' => ($activeNav ?? null) === 'visa']) href="{{ route('visa') }}">
+                      <span class="course-icon course-icon--visa" aria-hidden="true"><i data-lucide="stamp"></i></span>
+                      <span class="course-menu-copy"><strong>Visa</strong><small>Free eligibility check &amp; expert visa guidance</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('sop.index') }}">
+                      <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="feather"></i></span>
+                      <span class="course-menu-copy"><strong>Statement of Purpose</strong><small>Human-written SOPs, LORs, resumes &amp; essays</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                   </div>

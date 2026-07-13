@@ -1005,6 +1005,12 @@ ready(() => {
   // Blog newsletter sign-ups ("Stay Current On…" + "Stay in the loop") — same
   // AJAX flow + confirmation popup; the email is stored server-side.
   document.querySelectorAll("[data-newsletter-form]").forEach(wireFormSubmit);
+  // Loan & Acco enquiry forms (/loan-accommodation) — same AJAX flow + popup;
+  // each lead is stored server-side (source = loan-acco).
+  document.querySelectorAll("[data-loan-acco-form]").forEach(wireFormSubmit);
+  // Statement of Purpose "book a strategy call" form (/statement-of-purpose) —
+  // same AJAX flow + popup; each lead is stored server-side (source = sop).
+  document.querySelectorAll("[data-sop-form]").forEach(wireFormSubmit);
 
   // ── Resume drag-and-drop uploader (careers form) ──
   // The native file input is hidden; the styled zone opens it on click and

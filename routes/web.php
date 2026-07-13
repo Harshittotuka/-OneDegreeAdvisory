@@ -15,10 +15,14 @@ use App\Http\Controllers\Admin\ProfileSubmissionsController;
 use App\Http\Controllers\Admin\TestPrepCompareCmsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
+use App\Http\Controllers\Admin\CareerLibraryCmsController;
 use App\Http\Controllers\BriefPageController;
+use App\Http\Controllers\CareerLibraryController;
+use App\Http\Controllers\LoanAccoController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\SopController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -61,9 +65,46 @@ Route::get('/services/student-services', [PageController::class, 'studentService
 
 Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study-abroad');
 
+// Global Career Library — a self-contained careers explorer, CMS-managed data
+// in storage/app/career-library.json. Detail URLs are shaped:
+// /global-career-library/{cc}/{Career-Name}/{lang-code}.
+Route::get('/global-career-library', [CareerLibraryController::class, 'index'])->name('career-library.index');
+Route::post('/global-career-library/ensure', [CareerLibraryController::class, 'ensure'])
+    ->middleware('throttle:15,1')
+    ->name('career-library.ensure');
+// Contact-details capture that gates viewing a career report. Stored as a lead
+// in the shared profile-submissions store (source = career-library).
+Route::post('/global-career-library/lead', [CareerLibraryController::class, 'lead'])
+    ->middleware('throttle:15,1')
+    ->name('career-library.lead');
+Route::get('/global-career-library/{country}/{career}/{lang}', [CareerLibraryController::class, 'show'])
+    ->where(['country' => '[A-Za-z]{2}', 'career' => '[^/]+', 'lang' => '[A-Za-z]{2,4}-[A-Za-z]{2}'])
+    ->name('career-library.show');
+
 // Student Profiler module (self-contained in app/Modules/StudentProfiler). One
 // invokable controller serves GET (wizard) and POST (session save / submit).
 Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentProfilerController::class)->name('profiler');
+
+// Loan & Acco — Education-Loan + Student-Accommodation landing page (Student
+// Hub). Both enquiry forms POST to ::lead, which records a lead in the shared
+// profile-submissions store (source = loan-acco).
+Route::get('/loan-accommodation', [LoanAccoController::class, 'index'])->name('loan-acco.index');
+Route::post('/loan-accommodation/lead', [LoanAccoController::class, 'lead'])
+    ->middleware('throttle:15,1')
+    ->name('loan-acco.lead');
+
+// Visa — Student Hub landing page with a free visa-eligibility pre-check. Fully
+// static (no lead capture): the advisor CTA routes to /contact and the checker
+// result opens a WhatsApp / email "connect with a counsellor" popup.
+Route::get('/visa', [PageController::class, 'visa'])->name('visa');
+
+// Statement of Purpose — SOP / admissions-writing studio landing page (Student
+// Hub). The "book a strategy call" form POSTs to ::lead, which records a lead in
+// the shared profile-submissions store (source = sop).
+Route::get('/statement-of-purpose', [SopController::class, 'index'])->name('sop.index');
+Route::post('/statement-of-purpose/lead', [SopController::class, 'lead'])
+    ->middleware('throttle:15,1')
+    ->name('sop.lead');
 
 // Brief pages — CMS-built (.odp-* design). The four seeded pages keep their
 // original top-level URLs; new pages are served under /briefs/{slug}.
@@ -169,6 +210,26 @@ Route::prefix('admin')->group(function () {
         Route::get('test-prep-compare', [TestPrepCompareCmsController::class, 'edit'])->name('admin.test-prep-compare.index');
         Route::post('test-prep-compare', [TestPrepCompareCmsController::class, 'update'])->name('admin.test-prep-compare.update');
 
+        /* ── Global Career Library (landing settings + per-career LIVE editor) ── */
+        Route::get('career-library', [CareerLibraryCmsController::class, 'index'])->name('admin.career-library.index');
+        Route::post('career-library/settings', [CareerLibraryCmsController::class, 'updateSettings'])->name('admin.career-library.settings');
+        Route::post('career-library', [CareerLibraryCmsController::class, 'store'])->name('admin.career-library.store');
+        Route::post('career-library/reorder', [CareerLibraryCmsController::class, 'reorder'])->name('admin.career-library.reorder');
+        Route::post('career-library/upload', [CareerLibraryCmsController::class, 'upload'])->name('admin.career-library.upload');
+        Route::post('career-library/import', [CareerLibraryCmsController::class, 'importUrl'])->name('admin.career-library.import');
+        Route::get('career-library/{slug}/live', [CareerLibraryCmsController::class, 'live'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.live');
+        Route::post('career-library/{slug}/live', [CareerLibraryCmsController::class, 'liveSave'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.live.save');
+        Route::post('career-library/{slug}/flags', [CareerLibraryCmsController::class, 'updateFlags'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.flags');
+        Route::post('career-library/{slug}/variant', [CareerLibraryCmsController::class, 'addVariant'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.variant');
+        Route::delete('career-library/{slug}/variant', [CareerLibraryCmsController::class, 'deleteVariant'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.variant.delete');
+        Route::delete('career-library/{slug}', [CareerLibraryCmsController::class, 'destroy'])
+            ->where('slug', '[a-z0-9-]+')->name('admin.career-library.destroy');
+
         /* ── Destinations mega-menu layout (nav dropdown grid) ── */
         Route::get('destinations-layout', [DestinationsLayoutController::class, 'edit'])->name('admin.destinations-layout.index');
         Route::post('destinations-layout', [DestinationsLayoutController::class, 'update'])->name('admin.destinations-layout.update');
@@ -177,6 +238,8 @@ Route::prefix('admin')->group(function () {
         /* ── Student Profiler submissions (from /profiler) ── */
         Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index'); // → Student Profiler tab
         Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
+        Route::get('submissions/loan-acco', [ProfileSubmissionsController::class, 'loanAcco'])->name('admin.submissions.loan-acco');
+        Route::get('submissions/statement-of-purpose', [ProfileSubmissionsController::class, 'sop'])->name('admin.submissions.sop');
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
         Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');

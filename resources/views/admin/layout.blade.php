@@ -234,6 +234,8 @@
         ['label' => 'Leads', 'items' => [
           ['label' => 'Subscribers', 'icon' => 'mail', 'route' => 'admin.newsletter.index', 'match' => 'admin.newsletter'],
           ['label' => 'Student Profiler', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.profiler', 'match' => 'admin.submissions.profiler'],
+          ['label' => 'Loan & Acco', 'icon' => 'wallet', 'route' => 'admin.submissions.loan-acco', 'match' => 'admin.submissions.loan-acco'],
+          ['label' => 'Statement of Purpose', 'icon' => 'feather', 'route' => 'admin.submissions.sop', 'match' => 'admin.submissions.sop'],
         ]],
       ];
     else :
@@ -241,6 +243,7 @@
       $pageItems = [
         ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
         ['label' => 'Test Prep', 'icon' => 'bar-chart-3', 'route' => 'admin.test-prep-compare.index', 'match' => 'admin.test-prep-compare'],
+        ['label' => 'Trending Career', 'icon' => 'library', 'route' => 'admin.career-library.index', 'match' => 'admin.career-library'],
         ['label' => 'Blog Posts', 'icon' => 'newspaper', 'route' => 'admin.blog.index', 'match' => 'admin.blog'],
         ['label' => 'Page Builder', 'icon' => 'layout-panel-top', 'route' => 'admin.pages.index', 'match' => 'admin.pages'],
       ];

@@ -1,7 +1,7 @@
 @php
     $pageTitle = 'Undergraduate (UG) Programs | One Degree Advisory';
     $pageDescription = 'Plan your undergraduate journey abroad — shortlist, applications, essays, scholarships, and visas, guided file by file by a senior partner.';
-    $activeNav = 'courses';
+    $activeNav = 'undergraduate';
     $mainId = 'main';
 @endphp
 

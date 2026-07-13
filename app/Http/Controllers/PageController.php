@@ -334,6 +334,24 @@ class PageController extends Controller
         return view('pages.doctoral');
     }
 
+    /**
+     * Visa — a self-contained Student Hub landing page with a free
+     * visa-eligibility pre-check. It renders on the shared site layout so the
+     * navbar/footer match the rest of the site; there is no server-side lead
+     * capture (the advisor CTA links to /contact and the checker result opens a
+     * WhatsApp/email popup), so no controller logic beyond serving the view.
+     */
+    public function visa(): View
+    {
+        return view('pages.visa', [
+            'activeNav'       => 'new-tabs',
+            'bodyClass'       => 'visa-page-body',
+            'pageTitle'       => 'Student Visa Guidance & Free Eligibility Check',
+            'pageDescription' => 'Expert student visa guidance — a free 60-second eligibility pre-check, refusal analysis, mock interviews, and end-to-end filing support for any destination and any university, ranked or not.',
+            'mainId'          => 'main',
+        ]);
+    }
+
     public function mbbsStudent(MbbsCountryContent $content): View
     {
         return view('pages.mbbs-student', [
