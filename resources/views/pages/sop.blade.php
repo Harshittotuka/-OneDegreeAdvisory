@@ -189,6 +189,7 @@
   #sop-page .service-card-image{padding:0;min-height:160px;}
   #sop-page .service-card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.2,.8,.2,1);}
   #sop-page .service-card-image:hover img{transform:scale(1.04);}
+  #sop-page .service-carousel-nav{display:none;}
 
   /* HANDWRITING COMPARISON */
   #sop-page .hw-compare{background:var(--parchment);}
@@ -356,26 +357,29 @@
   #sop-page .game-side .rules li{margin-bottom:12px;padding-left:24px;position:relative;color:rgba(237,234,251,0.82);line-height:1.45;}
   #sop-page .game-side .rules li:last-child{margin-bottom:0;}
   #sop-page .game-side .rules li::before{content:"";position:absolute;left:0;top:9px;width:13px;height:2px;background:var(--brass);border-radius:2px;}
-  #sop-page .game-main{padding:40px;display:flex;flex-direction:column;position:relative;overflow:hidden;background:var(--paper);}
+  #sop-page .game-main{
+    padding:40px;display:flex;flex-direction:column;position:relative;overflow:hidden;
+    isolation:isolate;
+    background:linear-gradient(135deg,#FCFBFF 0%,#FFFFFF 52%,#FFF7F3 100%);
+  }
   #sop-page .game-panel{display:none;flex-direction:column;flex:1;position:relative;z-index:1;}
   #sop-page .game-panel.active{display:flex;}
-  /* Original "let's play the game" graphic as the panel backdrop, clearly
-     visible and gently "breathing" for subtle life. */
+  /* The original game artwork works as an offset watermark instead of
+     competing with the interactive content. */
   #sop-page .game-main::before{
     content:"";
     position:absolute;
     inset:0;
     background-image:url("{{ asset('assets/sop/game-bg.jpg') }}");
-    background-size:contain;
-    background-position:center;
+    background-size:460px;
+    background-position:calc(100% + 115px) 50%;
     background-repeat:no-repeat;
-    opacity:0.5;
+    opacity:.095;
     pointer-events:none;
     z-index:0;
-    will-change:transform;
-    animation:sopBreathe 11s ease-in-out infinite;
+    filter:saturate(.9);
   }
-  /* Animated ambient brand glows, drifting over the backdrop for depth. */
+  /* Fine editorial grid + ambient brand glows give the right panel depth. */
   #sop-page .game-main::after{
     content:"";
     position:absolute;
@@ -383,12 +387,75 @@
     pointer-events:none;
     z-index:0;
     background-image:
-      radial-gradient(55% 55% at 86% 6%, rgba(255,94,50,0.16), transparent 60%),
-      radial-gradient(60% 55% at 10% 94%, rgba(26,0,136,0.13), transparent 60%);
-    animation:sopGlow 8s ease-in-out infinite alternate;
+      radial-gradient(52% 60% at 92% 4%,rgba(255,94,50,.14),transparent 66%),
+      radial-gradient(58% 58% at 4% 100%,rgba(26,0,136,.11),transparent 68%),
+      linear-gradient(rgba(26,0,136,.032) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(26,0,136,.032) 1px,transparent 1px);
+    background-size:auto,auto,32px 32px,32px 32px;
+    -webkit-mask-image:linear-gradient(135deg,rgba(0,0,0,.28),#000 62%,rgba(0,0,0,.62));
+    mask-image:linear-gradient(135deg,rgba(0,0,0,.28),#000 62%,rgba(0,0,0,.62));
+    opacity:.9;
   }
-  @keyframes sopBreathe{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
-  @keyframes sopGlow{0%{opacity:.65;transform:translate(0,0);}100%{opacity:1;transform:translate(10px,-8px);}}
+  /* Clearly visible foreground graphics carry the motion; the background itself
+     stays completely still. */
+  #sop-page .game-stage-decor{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  #sop-page .game-decor{position:absolute;display:block;}
+  #sop-page .game-decor-paper{
+    top:28px;right:24px;width:96px;height:74px;
+    border:1px solid rgba(26,0,136,.18);border-radius:9px;
+    background:rgba(255,255,255,.9);
+    box-shadow:0 16px 34px -20px rgba(26,0,136,.58);
+    animation:sopDecorPaper 4.8s ease-in-out infinite;
+  }
+  #sop-page .game-decor-paper i{
+    position:absolute;left:16px;height:3px;border-radius:3px;
+    background:rgba(26,0,136,.19);transform-origin:left;
+    animation:sopProofLine 3.4s ease-in-out infinite;
+  }
+  #sop-page .game-decor-paper i:nth-child(1){top:18px;width:53px;}
+  #sop-page .game-decor-paper i:nth-child(2){top:29px;width:42px;animation-delay:.16s;}
+  #sop-page .game-decor-paper i:nth-child(3){top:40px;width:47px;animation-delay:.32s;}
+  #sop-page .game-decor-paper b{
+    position:absolute;right:9px;bottom:7px;width:25px;height:25px;border-radius:50%;
+    display:grid;place-items:center;background:var(--crimson);color:#fff;
+    font-family:var(--sans);font-size:15px;line-height:1;
+    box-shadow:0 7px 14px -7px rgba(255,94,50,.8);
+    animation:sopProofCheck 3.4s cubic-bezier(.2,.8,.2,1) infinite;
+  }
+  #sop-page .game-decor-quote{
+    left:25px;top:34px;color:rgba(255,94,50,.32);
+    font-family:var(--serif);font-size:82px;line-height:1;
+    animation:sopDecorQuote 3.8s ease-in-out infinite;
+  }
+  #sop-page .game-decor-pencil{
+    left:34px;bottom:42px;width:92px;height:17px;border-radius:4px 10px 10px 4px;
+    background:linear-gradient(180deg,#FF8760 0%,#FF5E32 100%);
+    box-shadow:0 10px 20px -12px rgba(255,94,50,.75);
+    transform-origin:center;
+    animation:sopDecorPencil 4.4s ease-in-out infinite;
+  }
+  #sop-page .game-decor-pencil::before{
+    content:"";position:absolute;left:-18px;top:0;
+    border-top:8.5px solid transparent;border-bottom:8.5px solid transparent;border-right:18px solid #E5B888;
+  }
+  #sop-page .game-decor-pencil::after{
+    content:"";position:absolute;left:-18px;top:6px;
+    border-top:2.5px solid transparent;border-bottom:2.5px solid transparent;border-right:6px solid var(--ink);
+  }
+  #sop-page .game-decor-spark{
+    width:18px;height:18px;background:var(--brass);
+    clip-path:polygon(50% 0,61% 38%,100% 50%,61% 62%,50% 100%,39% 62%,0 50%,39% 38%);
+    animation:sopDecorSpark 2.4s ease-in-out infinite;
+  }
+  #sop-page .game-decor-spark.one{left:143px;top:58px;animation-delay:.2s;}
+  #sop-page .game-decor-spark.two{right:138px;bottom:48px;width:14px;height:14px;background:var(--ribbon);animation-delay:.75s;}
+  #sop-page .game-decor-spark.three{right:36px;top:154px;width:11px;height:11px;background:#E8A33D;animation-delay:1.25s;}
+  @keyframes sopDecorPaper{0%,100%{transform:translateY(0) rotate(4deg);}50%{transform:translateY(11px) rotate(1deg);}}
+  @keyframes sopProofLine{0%,15%{transform:scaleX(.25);opacity:.25;}40%,76%{transform:scaleX(1);opacity:1;}100%{transform:scaleX(.25);opacity:.25;}}
+  @keyframes sopProofCheck{0%,100%{transform:scale(.72) rotate(-10deg);opacity:.7;}46%,80%{transform:scale(1) rotate(0);opacity:1;}}
+  @keyframes sopDecorQuote{0%,100%{transform:translateY(0) rotate(-5deg);opacity:.62;}50%{transform:translateY(-9px) rotate(1deg);opacity:1;}}
+  @keyframes sopDecorPencil{0%,100%{transform:translateX(0) rotate(-16deg);}50%{transform:translateX(22px) translateY(-7px) rotate(-10deg);}}
+  @keyframes sopDecorSpark{0%,100%{transform:scale(.55) rotate(0);opacity:.35;}50%{transform:scale(1.2) rotate(90deg);opacity:1;}}
   #sop-page .game-hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;font-family:var(--mono);font-size:13px;color:var(--ink-soft);flex-wrap:wrap;gap:8px;}
   #sop-page .game-hud .hearts{color:var(--crimson);font-size:26px;line-height:1;letter-spacing:5px;}
   #sop-page .progress-bar{height:5px;background:rgba(26,0,136,0.1);border-radius:3px;overflow:hidden;margin-bottom:28px;}
@@ -455,7 +522,40 @@
   /* Draw the eye to the primary action with a soft pulsing ring. */
   #sop-page #start-btn{animation:sopPulse 2.6s ease-in-out infinite;}
   @keyframes sopPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,94,50,0.5);}70%{box-shadow:0 0 0 15px rgba(255,94,50,0);}}
-  #sop-page .game-end .score-big{font-family:var(--serif);font-size:56px;font-weight:700;color:var(--ink);}
+  #sop-page .game-end-content{
+    position:relative;z-index:1;
+    width:min(100%,480px);
+    padding:30px 38px 34px;
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    border:1px solid rgba(255,255,255,.86);
+    border-radius:16px;
+    background:rgba(255,255,255,.68);
+    box-shadow:0 26px 70px -40px rgba(26,0,136,.58),inset 0 1px 0 rgba(255,255,255,.9);
+    -webkit-backdrop-filter:blur(14px) saturate(125%);
+    backdrop-filter:blur(14px) saturate(125%);
+  }
+  #sop-page .score-medallion{
+    position:relative;
+    width:128px;height:128px;border-radius:50%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(244,241,252,.92));
+    border:1px solid rgba(26,0,136,.12);
+    box-shadow:0 18px 36px -22px rgba(26,0,136,.62),0 0 0 9px rgba(255,94,50,.055);
+  }
+  #sop-page .score-medallion::before{
+    content:"";position:absolute;inset:-7px;border-radius:inherit;
+    border:1px dashed rgba(255,94,50,.5);
+    animation:sopMedallionOrbit 18s linear infinite;
+  }
+  #sop-page .score-label{
+    font-family:var(--mono);font-size:9px;line-height:1;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--crimson);
+    margin-bottom:3px;
+  }
+  #sop-page .game-end .score-big{font-family:var(--serif);font-size:58px;line-height:.95;font-weight:700;color:var(--ink);}
+  #sop-page .game-end-message{color:var(--ink-soft);max-width:360px;font-size:15px;line-height:1.6;}
+  #sop-page .game-end-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:2px;}
+  @keyframes sopMedallionOrbit{to{transform:rotate(360deg);}}
 
   /* ── Phrase Checker / Sprint interaction animations (replay every step) ── */
   #sop-page #game-play{position:relative;}
@@ -490,38 +590,40 @@
   @keyframes sopPop{0%{opacity:0;transform:translateY(4px) scale(.9);}100%{opacity:1;transform:translateY(0) scale(1);}}
   @keyframes sopFloatPoints{0%{opacity:0;transform:translate(-50%,10px) scale(.8);}25%{opacity:1;transform:translate(-50%,-6px) scale(1.1);}100%{opacity:0;transform:translate(-50%,-54px) scale(1);}}
 
-  /* Round complete → fade + scale + blur the backdrop graphic out, then reveal a
-     celebratory backdrop (spotlight + slow ray-burst + drifting confetti). */
-  #sop-page .game-main.round-over::before{animation:sopImgOut .9s cubic-bezier(.4,0,.2,1) forwards;}
-  #sop-page .game-end.end-in{animation:sopEndIn .9s cubic-bezier(.2,.8,.2,1);}
-  @keyframes sopImgOut{from{opacity:.5;transform:scale(1);filter:blur(0);}to{opacity:0;transform:scale(1.18);filter:blur(8px);}}
+  /* Round complete transitions the watermark into a focused result stage. */
+  #sop-page .game-main.round-over::before{animation:sopImgOut .75s cubic-bezier(.4,0,.2,1) forwards;}
+  #sop-page .game-main.round-over::after{animation:sopResultWash .8s cubic-bezier(.2,.8,.2,1) forwards;}
+  #sop-page .game-end.end-in .game-end-content{animation:sopEndIn .72s cubic-bezier(.2,.8,.2,1) both;}
+  #sop-page .game-end.end-in .game-end-content > *{animation:sopResultItem .62s cubic-bezier(.2,.8,.2,1) both;}
+  #sop-page .game-end.end-in .game-end-content > *:nth-child(1){animation-delay:.12s;}
+  #sop-page .game-end.end-in .game-end-content > *:nth-child(2){animation-delay:.2s;}
+  #sop-page .game-end.end-in .game-end-content > *:nth-child(3){animation-delay:.28s;}
+  #sop-page .game-end.end-in .game-end-content > *:nth-child(4){animation-delay:.36s;}
+  @keyframes sopImgOut{from{opacity:.095;transform:scale(1);filter:blur(0);}to{opacity:0;transform:scale(1.12);filter:blur(7px);}}
+  @keyframes sopResultWash{from{opacity:.72;transform:scale(1);}to{opacity:1;transform:scale(1.03);}}
   @keyframes sopEndIn{from{opacity:0;transform:translateY(18px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+  @keyframes sopResultItem{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
   #sop-page .end-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
   #sop-page .game-end > *:not(.end-fx){position:relative;z-index:1;}
   #sop-page .end-glow{
-    position:absolute;left:50%;top:46%;width:440px;height:440px;transform:translate(-50%,-50%);
-    border-radius:50%;background:radial-gradient(circle, rgba(255,94,50,0.20), rgba(26,0,136,0.07) 46%, transparent 70%);
-    animation:sopEndGlow 6s ease-in-out infinite;
+    position:absolute;left:50%;top:50%;width:480px;height:480px;transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.92) 0 18%,rgba(255,94,50,.16) 34%,rgba(26,0,136,.07) 53%,transparent 72%);
   }
-  #sop-page .end-rays{
-    position:absolute;left:50%;top:46%;width:560px;height:560px;transform:translate(-50%,-50%);border-radius:50%;
-    background:repeating-conic-gradient(from 0deg, rgba(26,0,136,0.06) 0deg 7deg, transparent 7deg 22deg);
-    -webkit-mask-image:radial-gradient(circle, #000 0%, transparent 62%);
-    mask-image:radial-gradient(circle, #000 0%, transparent 62%);
-    animation:sopRaySpin 48s linear infinite;
+  #sop-page .end-glow::after{
+    content:"";position:absolute;inset:86px;border-radius:50%;
+    border:1px dashed rgba(255,94,50,.2);
   }
-  #sop-page .end-confetti i{position:absolute;top:-12%;width:10px;height:10px;border-radius:2px;opacity:0;animation:sopConfetti 9s ease-in-out infinite;}
+  #sop-page .end-confetti i{position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:2px;opacity:0;}
+  #sop-page .game-end.end-in .end-confetti i{animation:sopConfettiBurst 1.45s cubic-bezier(.12,.7,.25,1) var(--delay,0s) both;}
   #sop-page .end-confetti i:nth-child(3n+1){background:var(--brass);}
   #sop-page .end-confetti i:nth-child(3n+2){background:var(--ribbon);}
   #sop-page .end-confetti i:nth-child(3n){background:#E8A33D;border-radius:50%;}
-  @keyframes sopEndGlow{0%,100%{opacity:.75;transform:translate(-50%,-50%) scale(1);}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08);}}
-  @keyframes sopRaySpin{to{transform:translate(-50%,-50%) rotate(360deg);}}
-  @keyframes sopConfetti{
-    0%{opacity:0;transform:translate(0,0) rotate(0);}
-    12%{opacity:.9;}
-    88%{opacity:.9;}
-    100%{opacity:0;transform:translate(16px,400px) rotate(320deg);}
+  @keyframes sopConfettiBurst{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.25) rotate(0);}
+    18%{opacity:.95;}
+    100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.8) rotate(var(--turn,240deg));}
   }
   #sop-page .hidden{display:none !important;}
 
@@ -603,6 +705,12 @@
   @media (max-width:640px){
     #sop-page .hw-row{grid-template-columns:1fr;gap:6px;padding:14px 10px;}
     #sop-page .hw-card{padding:32px 20px 40px;}
+    #sop-page .game-main{padding:26px 18px;min-height:500px;}
+    #sop-page .game-end-content{padding:26px 18px 28px;border-radius:12px;}
+    #sop-page .score-medallion{width:112px;height:112px;}
+    #sop-page .game-end .score-big{font-size:50px;}
+    #sop-page .game-end-actions{width:100%;}
+    #sop-page .game-end-actions .btn{flex:1;justify-content:center;padding:13px 12px;}
   }
   @media (max-width:960px){
     #sop-page .hero .wrap{grid-template-columns:1fr;}
@@ -613,7 +721,66 @@
     #sop-page .game-shell{grid-template-columns:1fr;}
   }
   @media (max-width:680px){
-    #sop-page .service-grid{grid-template-columns:1fr;}
+    #sop-page .service-grid{
+      display:flex;
+      gap:12px;
+      overflow-x:auto;
+      scroll-snap-type:x mandatory;
+      scroll-behavior:smooth;
+      overscroll-behavior-x:contain;
+      scrollbar-width:none;
+      background:transparent;
+      border:0;
+      padding:1px 28px 14px 1px;
+    }
+    #sop-page .service-grid::-webkit-scrollbar{display:none;}
+    #sop-page .service-card{
+      flex:0 0 calc(100% - 28px);
+      scroll-snap-align:start;
+      scroll-snap-stop:always;
+      border:1px solid rgba(26,0,136,0.12);
+      border-radius:4px;
+    }
+    #sop-page .service-card .idx{font-size:11px;margin-bottom:8px;}
+    #sop-page .service-card .icon{width:34px;height:34px;margin-bottom:16px;}
+    #sop-page .service-card h3{
+      font-size:clamp(18px,4.6vw,20px);
+      line-height:1.3;
+      margin-bottom:10px;
+    }
+    #sop-page .service-card p{
+      font-size:clamp(15px,3.8vw,16px);
+      line-height:1.6;
+    }
+    #sop-page .service-card-image{min-height:360px;}
+    #sop-page .service-carousel-nav{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:8px;
+      padding-right:58px;
+    }
+    #sop-page .service-carousel-status{
+      font-family:var(--mono);
+      color:var(--ink-soft);
+      font-size:11px;
+      letter-spacing:.12em;
+    }
+    #sop-page .service-carousel-buttons{display:flex;gap:8px;}
+    #sop-page .service-carousel-btn{
+      width:42px;
+      height:42px;
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(26,0,136,0.24);
+      border-radius:50%;
+      background:rgba(255,255,255,.7);
+      color:var(--ink);
+      font-size:20px;
+      line-height:1;
+      cursor:pointer;
+    }
+    #sop-page .service-carousel-btn:disabled{opacity:.35;cursor:default;}
     #sop-page .hero-stats{flex-wrap:wrap;gap:22px;}
   }
 </style>
@@ -711,6 +878,13 @@
         </div>
 
       </div>
+      <div class="service-carousel-nav" aria-label="Document services carousel controls">
+        <span class="service-carousel-status" aria-live="polite">01 / 08</span>
+        <div class="service-carousel-buttons">
+          <button class="service-carousel-btn service-carousel-prev" type="button" aria-label="Previous service">&#8592;</button>
+          <button class="service-carousel-btn service-carousel-next" type="button" aria-label="Next service">&#8594;</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -765,6 +939,14 @@
         </div>
 
         <div class="game-main">
+          <div class="game-stage-decor" aria-hidden="true">
+            <span class="game-decor game-decor-quote">&ldquo;</span>
+            <span class="game-decor game-decor-paper"><i></i><i></i><i></i><b>&#10003;</b></span>
+            <span class="game-decor game-decor-pencil"></span>
+            <span class="game-decor game-decor-spark one"></span>
+            <span class="game-decor game-decor-spark two"></span>
+            <span class="game-decor game-decor-spark three"></span>
+          </div>
 
           <!-- CLICHE PANEL -->
           <div class="game-panel active" id="panel-cliche">
@@ -803,31 +985,35 @@
             </div>
 
             <div id="game-end" class="game-end hidden">
-              {{-- Celebratory end-screen backdrop (spotlight + ray-burst + confetti). --}}
+              {{-- Refined result-stage backdrop with orbit rings and a short particle burst. --}}
               <div class="end-fx" aria-hidden="true">
                 <span class="end-glow"></span>
-                <span class="end-rays"></span>
                 <div class="end-confetti">
-                  <i style="left:8%;animation-delay:.1s;animation-duration:8.5s;"></i>
-                  <i style="left:18%;animation-delay:1.2s;animation-duration:9.5s;"></i>
-                  <i style="left:28%;animation-delay:.6s;animation-duration:8s;"></i>
-                  <i style="left:38%;animation-delay:2s;animation-duration:10s;"></i>
-                  <i style="left:47%;animation-delay:.9s;animation-duration:9s;"></i>
-                  <i style="left:56%;animation-delay:2.4s;animation-duration:8.5s;"></i>
-                  <i style="left:64%;animation-delay:.3s;animation-duration:10s;"></i>
-                  <i style="left:72%;animation-delay:1.6s;animation-duration:9.2s;"></i>
-                  <i style="left:80%;animation-delay:.7s;animation-duration:8.2s;"></i>
-                  <i style="left:88%;animation-delay:2.1s;animation-duration:9.8s;"></i>
-                  <i style="left:14%;animation-delay:3s;animation-duration:9s;"></i>
-                  <i style="left:92%;animation-delay:1s;animation-duration:8.8s;"></i>
+                  <i style="--tx:-220px;--ty:-112px;--turn:-260deg;--delay:.04s;"></i>
+                  <i style="--tx:-155px;--ty:-172px;--turn:310deg;--delay:.1s;"></i>
+                  <i style="--tx:-72px;--ty:-205px;--turn:-220deg;--delay:.16s;"></i>
+                  <i style="--tx:46px;--ty:-206px;--turn:280deg;--delay:.07s;"></i>
+                  <i style="--tx:148px;--ty:-164px;--turn:-300deg;--delay:.18s;"></i>
+                  <i style="--tx:222px;--ty:-88px;--turn:250deg;--delay:.12s;"></i>
+                  <i style="--tx:230px;--ty:86px;--turn:-270deg;--delay:.02s;"></i>
+                  <i style="--tx:142px;--ty:165px;--turn:300deg;--delay:.14s;"></i>
+                  <i style="--tx:42px;--ty:205px;--turn:-240deg;--delay:.08s;"></i>
+                  <i style="--tx:-82px;--ty:196px;--turn:290deg;--delay:.2s;"></i>
+                  <i style="--tx:-174px;--ty:146px;--turn:-320deg;--delay:.11s;"></i>
+                  <i style="--tx:-232px;--ty:52px;--turn:260deg;--delay:.05s;"></i>
                 </div>
               </div>
-              <div class="eyebrow" style="margin:0;">Round Complete</div>
-              <div class="score-big" id="final-score">0</div>
-              <p id="end-message" style="color:var(--ink-soft);max-width:360px;">Nice instincts.</p>
-              <div style="display:flex;gap:14px;">
-                <button class="btn btn-ghost" id="replay-btn">Play Again</button>
-                <a href="#contact" class="btn btn-primary">Get an Original SOP →</a>
+              <div class="game-end-content">
+                <div class="eyebrow" style="margin:0;">Round Complete</div>
+                <div class="score-medallion">
+                  <span class="score-label">Final score</span>
+                  <div class="score-big" id="final-score">0</div>
+                </div>
+                <p class="game-end-message" id="end-message">Nice instincts.</p>
+                <div class="game-end-actions">
+                  <button class="btn btn-ghost" id="replay-btn">Play Again</button>
+                  <a href="#contact" class="btn btn-primary">Get an Original SOP →</a>
+                </div>
               </div>
             </div>
           </div>
@@ -1045,6 +1231,48 @@
     });
   }, {threshold:0.15});
   revealEls.forEach(el => io.observe(el));
+
+  /* ---------- MOBILE SERVICES CAROUSEL ---------- */
+  (function(){
+    const track = root.querySelector('.service-grid');
+    const slides = track ? Array.from(track.querySelectorAll('.service-card')) : [];
+    const prev = root.querySelector('.service-carousel-prev');
+    const next = root.querySelector('.service-carousel-next');
+    const status = root.querySelector('.service-carousel-status');
+    if(!track || !slides.length || !prev || !next || !status) return;
+
+    let activeIndex = 0;
+    let frame;
+
+    function slideLeft(index){
+      return slides[index].offsetLeft - track.offsetLeft;
+    }
+
+    function updateCarousel(){
+      activeIndex = slides.reduce((nearest, slide, index) => {
+        return Math.abs(slideLeft(index) - track.scrollLeft) < Math.abs(slideLeft(nearest) - track.scrollLeft)
+          ? index
+          : nearest;
+      }, 0);
+      status.textContent = String(activeIndex + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+      prev.disabled = activeIndex === 0;
+      next.disabled = activeIndex === slides.length - 1;
+    }
+
+    function goTo(index){
+      const target = Math.max(0, Math.min(index, slides.length - 1));
+      track.scrollTo({left:slideLeft(target), behavior:'smooth'});
+    }
+
+    prev.addEventListener('click', () => goTo(activeIndex - 1));
+    next.addEventListener('click', () => goTo(activeIndex + 1));
+    track.addEventListener('scroll', () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updateCarousel);
+    }, {passive:true});
+    window.addEventListener('resize', updateCarousel, {passive:true});
+    updateCarousel();
+  })();
 
   /* ---------- COUNTERS ---------- */
   const counters = root.querySelectorAll('[data-count]');
