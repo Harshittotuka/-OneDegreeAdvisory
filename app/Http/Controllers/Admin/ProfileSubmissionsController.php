@@ -65,6 +65,19 @@ class ProfileSubmissionsController extends Controller
         ]);
     }
 
+    /** Visa Mock Interview "unlock full interview" leads (from /visa-mock-interview). */
+    public function visaMock(): View
+    {
+        return view('admin.submissions.index', [
+            'portal'      => 'admin',
+            'source'      => 'visa-mock',
+            'submissions' => $this->store->bySource('visa-mock'),
+            'tabName'     => 'Visa Mock Interview',
+            'tabBlurb'    => 'Leads captured when a candidate unlocks the full AI Visa Mock Interview (/visa-mock-interview).',
+            'emptyUrl'    => route('visa-mock'),
+        ]);
+    }
+
     public function show(string $id): View|RedirectResponse
     {
         $submission = $this->store->find($id);
@@ -112,18 +125,19 @@ class ProfileSubmissionsController extends Controller
         $route = match ($request->input('source')) {
             'loan-acco' => 'admin.submissions.loan-acco',
             'sop'       => 'admin.submissions.sop',
+            'visa-mock' => 'admin.submissions.visa-mock',
             default     => 'admin.submissions.profiler',
         };
 
         return redirect()->route($route)->with('status', 'Submission removed.');
     }
 
-    /** Only "profiler", "loan-acco" and "sop" are real tabs; anything else → profiler. */
+    /** Only "profiler", "loan-acco", "sop" and "visa-mock" are real tabs; anything else → profiler. */
     private function resolveSource(Request $request): string
     {
         $source = $request->input('source');
 
-        return in_array($source, ['loan-acco', 'sop'], true) ? $source : 'profiler';
+        return in_array($source, ['loan-acco', 'sop', 'visa-mock'], true) ? $source : 'profiler';
     }
 
     /**
@@ -195,6 +209,7 @@ class ProfileSubmissionsController extends Controller
         $sheet = match ($source) {
             'loan-acco' => 'Loan & Acco',
             'sop'       => 'Statement of Purpose',
+            'visa-mock' => 'Visa Mock Interview',
             default     => 'Student Profiler',
         };
         $xlsx = SimpleXlsx::build($headers, $data, $sheet);

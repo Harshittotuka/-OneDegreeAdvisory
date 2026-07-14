@@ -164,7 +164,7 @@
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">New</span>
-                    <span class="course-menu-count">5 tools</span>
+                    <span class="course-menu-count">6 tools</span>
                   </div>
 
                   <div class="course-menu-grid course-menu-grid--hub">
@@ -186,6 +186,11 @@
                     <a @class(['course-menu-card', 'is-active' => ($activeNav ?? null) === 'visa']) href="{{ route('visa') }}">
                       <span class="course-icon course-icon--visa" aria-hidden="true"><i data-lucide="stamp"></i></span>
                       <span class="course-menu-copy"><strong>Visa</strong><small>Free eligibility check &amp; expert visa guidance</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <a class="course-menu-card" href="{{ route('visa-mock') }}">
+                      <span class="course-icon course-icon--llb" aria-hidden="true"><i data-lucide="video"></i></span>
+                      <span class="course-menu-copy"><strong>Visa Mock Interview</strong><small>AI mock interview with instant readiness feedback</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                     <a class="course-menu-card" href="{{ route('sop.index') }}">

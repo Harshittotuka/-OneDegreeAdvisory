@@ -98,6 +98,15 @@ Route::post('/loan-accommodation/lead', [LoanAccoController::class, 'lead'])
 // result opens a WhatsApp / email "connect with a counsellor" popup.
 Route::get('/visa', [PageController::class, 'visa'])->name('visa');
 
+// AI Visa Mock Interview — a self-contained, browser-based mock-interview tool
+// (Student Hub). The free round is capped at 10 questions; unlocking the full
+// interview opens a popup that captures contact details, recorded as a lead in
+// the shared profile-submissions store (source = "visa-mock").
+Route::get('/visa-mock-interview', [PageController::class, 'visaMock'])->name('visa-mock');
+Route::post('/visa-mock-interview/lead', [PageController::class, 'visaMockLead'])
+    ->middleware('throttle:15,1')
+    ->name('visa-mock.lead');
+
 // Statement of Purpose — SOP / admissions-writing studio landing page (Student
 // Hub). The "book a strategy call" form POSTs to ::lead, which records a lead in
 // the shared profile-submissions store (source = sop).
@@ -240,6 +249,7 @@ Route::prefix('admin')->group(function () {
         Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
         Route::get('submissions/loan-acco', [ProfileSubmissionsController::class, 'loanAcco'])->name('admin.submissions.loan-acco');
         Route::get('submissions/statement-of-purpose', [ProfileSubmissionsController::class, 'sop'])->name('admin.submissions.sop');
+        Route::get('submissions/visa-mock', [ProfileSubmissionsController::class, 'visaMock'])->name('admin.submissions.visa-mock');
         Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
         Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
         Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');

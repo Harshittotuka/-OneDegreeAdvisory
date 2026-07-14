@@ -11,6 +11,7 @@ use App\Support\BlogContent;
 use App\Support\HeroContent;
 use App\Support\MbbsCountryContent;
 use App\Support\NewsletterStore;
+use App\Support\ProfileSubmissionStore;
 use App\Support\StudyLocationContent;
 use App\Support\TestPrepCompareStore;
 use App\Services\RazorpayGateway;
@@ -349,6 +350,85 @@ class PageController extends Controller
             'pageTitle'       => 'Student Visa Guidance & Free Eligibility Check',
             'pageDescription' => 'Expert student visa guidance — a free 60-second eligibility pre-check, refusal analysis, mock interviews, and end-to-end filing support for any destination and any university, ranked or not.',
             'mainId'          => 'main',
+        ]);
+    }
+
+    /**
+     * AI Visa Mock Interview — a self-contained, browser-based mock-interview
+     * tool under the Student Hub (/visa-mock-interview). Everything (camera/mic,
+     * transcription, scoring, report) runs client-side; the only server contact
+     * is the lead capture below. Rendered on the shared site layout so the
+     * navbar/footer match the rest of the site.
+     */
+    public function visaMock(): View
+    {
+        return view('pages.visa-mock-interview', [
+            'activeNav'       => 'new-tabs',
+            'bodyClass'       => 'vmi-page-body',
+            'pageTitle'       => 'AI Visa Mock Interview — Free Practice & Feedback',
+            'pageDescription' => 'Practise your student-visa interview with an AI assessor: real embassy-style questions, live camera and voice review, and an instant readiness report. Free 10-question round.',
+            'mainId'          => 'main',
+        ]);
+    }
+
+    /**
+     * Capture a "unlock the full interview" lead from the mock-interview page.
+     * The popup POSTs here through a small fetch handler that expects a JSON
+     * {ok, title, message} back. The lead is stored in the shared
+     * ProfileSubmissionStore (source = "visa-mock") in the same
+     * section → question → answer shape the admin viewer / exports expect.
+     */
+    public function visaMockLead(Request $request, ProfileSubmissionStore $submissions): JsonResponse
+    {
+        $validated = $request->validate([
+            'name'  => 'required|string|max:120',
+            'email' => 'required|email|max:190',
+            'phone' => 'required|string|max:40',
+            // Optional context about the practice round they were unlocking.
+            'destination' => 'nullable|string|max:120',
+            'level'       => 'nullable|string|max:120',
+            'plan'        => 'nullable|string|max:120',
+        ]);
+
+        $name  = trim($validated['name']);
+        $email = trim($validated['email']);
+        $phone = trim($validated['phone']);
+
+        $answers = [
+            ['label' => 'Name',  'value' => [$name]],
+            ['label' => 'Email', 'value' => [$email]],
+            ['label' => 'Phone', 'value' => [$phone]],
+        ];
+
+        foreach ([
+            'destination' => 'Destination country',
+            'level'       => 'Study level',
+            'plan'        => 'Interview length requested',
+        ] as $key => $label) {
+            $value = trim((string) ($validated[$key] ?? ''));
+            if ($value !== '') {
+                $answers[] = ['label' => $label, 'value' => [Str::limit($value, 200, '')]];
+            }
+        }
+
+        $sections = [[
+            'eyebrow' => 'Visa Mock Interview',
+            'title'   => 'Consulting / callback request',
+            'answers' => $answers,
+        ]];
+
+        $submissions->add(
+            'visa-mock',
+            'Visa Mock Interview',
+            null,
+            $sections,
+            ['name' => $name, 'email' => $email, 'phone' => $phone],
+        );
+
+        return response()->json([
+            'ok'      => true,
+            'title'   => "Thanks — we've got your details",
+            'message' => 'Our visa team will reach out to you shortly with proper consulting and the next steps to prepare for your interview. In the meantime, you can keep practising the free round.',
         ]);
     }
 
