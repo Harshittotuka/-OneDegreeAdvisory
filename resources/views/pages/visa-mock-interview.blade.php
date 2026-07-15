@@ -487,7 +487,7 @@
   #vmi-page .vmi-ai__hint i{width:14px;height:14px;color:var(--gold);}
   #vmi-page .transcript-box.is-live{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,94,50,.12);}
 
-  html.vmi-lock{overflow:hidden !important;}
+  html.vmi-lock{overflow:hidden !important;scrollbar-gutter:stable;}
 
   /* ============================================================
      2026 redesign layer — calm, cinematic and product-led.
@@ -840,6 +840,41 @@
   #vmi-page .vmi-analyze__steps li.is-done .tick{background:var(--good);border-color:var(--good);}
   #vmi-page .vmi-analyze__bar{background:var(--line);}
 
+  /* -- Pre-interview preparation transition -- */
+  @keyframes vmiPrepareOrbit{to{transform:rotate(360deg);}}
+  @keyframes vmiPreparePulse{0%,100%{transform:scale(1);box-shadow:0 18px 44px -24px rgba(16,2,88,.35);}50%{transform:scale(1.04);box-shadow:0 22px 54px -20px rgba(85,87,232,.42);}}
+  #vmi-page .vmi-prepare{position:fixed;inset:0;z-index:100004;display:flex;align-items:center;justify-content:center;padding:24px;
+    color:var(--ink);font-family:var(--font-body);background-color:#eef1f8;background-image:radial-gradient(900px 520px at 50% -130px,rgba(85,87,232,.13),transparent 72%);
+    opacity:0;visibility:hidden;pointer-events:none;will-change:opacity;transition:opacity .52s cubic-bezier(.22,1,.36,1),visibility 0s linear .52s;}
+  #vmi-page .vmi-prepare.is-visible{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .52s cubic-bezier(.22,1,.36,1),visibility 0s;}
+  #vmi-page .vmi-prepare.is-leaving{opacity:0;visibility:visible;pointer-events:none;transition:opacity .46s cubic-bezier(.4,0,.2,1);}
+  #vmi-page .vmi-prepare__inner{text-align:center;width:min(100%,460px);opacity:0;filter:blur(3px);transform:translateY(18px) scale(.985);will-change:opacity,transform,filter;
+    transition:opacity .44s ease .08s,filter .44s ease .08s,transform .62s cubic-bezier(.22,1,.36,1) .04s;}
+  #vmi-page .vmi-prepare.is-visible .vmi-prepare__inner{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}
+  #vmi-page .vmi-prepare.is-leaving .vmi-prepare__inner{opacity:.72;filter:blur(1px);transform:translateY(-8px) scale(.992);transition:opacity .38s ease,filter .38s ease,transform .46s ease;}
+  #vmi-page .vmi-prepare__mark{position:relative;width:116px;height:116px;margin:0 auto 28px;display:grid;place-items:center;}
+  #vmi-page .vmi-prepare__ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(85,87,232,.16);border-top-color:var(--orange);animation:vmiPrepareOrbit 1.25s linear infinite;}
+  #vmi-page .vmi-prepare__ring::after{content:"";position:absolute;inset:9px;border-radius:50%;border:1px dashed rgba(85,87,232,.22);}
+  #vmi-page .vmi-prepare__core{position:relative;width:82px;height:82px;border-radius:24px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,var(--navy),#5659e8);animation:vmiPreparePulse 2s ease-in-out infinite;}
+  #vmi-page .vmi-prepare__core i{width:34px;height:34px;}
+  #vmi-page .vmi-prepare h2{margin:0 0 9px;color:var(--navy-deep);font-family:var(--font-head);font-size:clamp(27px,4vw,36px);line-height:1.15;}
+  #vmi-page .vmi-prepare__sub{margin:0 auto 26px;color:var(--muted);font-size:14.5px;line-height:1.6;}
+  #vmi-page .vmi-prepare__steps{list-style:none;margin:0 auto 22px;padding:0;max-width:350px;display:flex;flex-direction:column;gap:9px;text-align:left;}
+  #vmi-page .vmi-prepare__steps li{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1px solid transparent;border-radius:12px;color:#9498aa;font-size:13.5px;font-weight:700;transition:color .3s ease,background .3s ease,border-color .3s ease,transform .3s ease;}
+  #vmi-page .vmi-prepare__steps .dot{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:#c9ccd8;transition:background .3s ease,box-shadow .3s ease;}
+  #vmi-page .vmi-prepare__steps li.is-active{color:var(--navy-deep);background:#fff;border-color:var(--line);transform:translateX(4px);}
+  #vmi-page .vmi-prepare__steps li.is-active .dot{background:var(--orange);box-shadow:0 0 0 5px rgba(255,94,50,.12);}
+  #vmi-page .vmi-prepare__steps li.is-done{color:var(--navy-deep);}
+  #vmi-page .vmi-prepare__steps li.is-done .dot{background:var(--good);box-shadow:none;}
+  #vmi-page .vmi-prepare__bar{height:5px;max-width:350px;margin:0 auto;overflow:hidden;border-radius:99px;background:var(--line);}
+  #vmi-page .vmi-prepare__bar span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--orange),var(--navy-soft));transition:width .55s cubic-bezier(.22,1,.36,1);}
+  @media(prefers-reduced-motion:reduce){
+    #vmi-page .vmi-prepare,#vmi-page .vmi-prepare.is-visible,#vmi-page .vmi-prepare.is-leaving,#vmi-page .vmi-prepare__inner,#vmi-page .vmi-prepare.is-visible .vmi-prepare__inner,#vmi-page .vmi-prepare.is-leaving .vmi-prepare__inner{transition:none;}
+    #vmi-page .vmi-prepare__ring,#vmi-page .vmi-prepare__core{animation:none;}
+    #vmi-page .vmi-prepare__steps li{transition:none;transform:none;}
+    #vmi-page .vmi-prepare__bar span{transition:none;}
+  }
+
   /* -- Report: gentler score ring, no big glow -- */
   #vmi-page .score-ring{filter:none;}
 </style>
@@ -997,6 +1032,24 @@
         <div class="actions vmi-start-row" data-reveal>
           <button class="btn btn-primary btn-lg btn-start" id="btn-start-interview" disabled><i data-lucide="play"></i> Start mock interview</button>
           <span style="align-self:center;color:var(--muted);font-size:13px;">Takes about 5–10 minutes · fully private</span>
+        </div>
+      </div>
+
+      {{-- ============ PRE-INTERVIEW SETUP TRANSITION ============ --}}
+      <div id="vmi-preparing" class="vmi-prepare" role="status" aria-live="polite" aria-label="Setting up your interview" aria-hidden="true">
+        <div class="vmi-prepare__inner">
+          <div class="vmi-prepare__mark" aria-hidden="true">
+            <span class="vmi-prepare__ring"></span>
+            <span class="vmi-prepare__core"><i data-lucide="user-check"></i></span>
+          </div>
+          <h2>We&rsquo;re setting up your interview</h2>
+          <p class="vmi-prepare__sub">Just a moment while we prepare your private practice session.</p>
+          <ul class="vmi-prepare__steps">
+            <li data-pstep><span class="dot"></span>Confirming your interview settings</li>
+            <li data-pstep><span class="dot"></span>Preparing your visa interviewer</li>
+            <li data-pstep><span class="dot"></span>Loading your first question</li>
+          </ul>
+          <div class="vmi-prepare__bar" aria-hidden="true"><span></span></div>
         </div>
       </div>
 
@@ -1288,7 +1341,8 @@
 <script>
   window.VMI_CONFIG = {
     leadUrl: @json(route('visa-mock.lead')),
-    csrf: (document.querySelector('meta[name="csrf-token"]') || {}).content || @json(csrf_token())
+    csrf: (document.querySelector('meta[name="csrf-token"]') || {}).content || @json(csrf_token()),
+    questionAudioBase: @json(asset('assets/audio/visa-mock-interview'))
   };
 </script>
 
@@ -1534,8 +1588,14 @@ $("in-mode").addEventListener("change", (e)=> applyModeUi(e.target.value));
    ============================================================ */
 function buildQueue(totalWanted){
   const all = [];
+  let questionNumber = 1;
   QUESTION_BANK.forEach(group=>{
-    group.items.forEach(q=> all.push({cat:group.cat, q}));
+    group.items.forEach(q=>{
+      const audioBase = String(window.VMI_CONFIG.questionAudioBase || "").replace(/\/$/, "");
+      const audio = audioBase ? audioBase + "/q" + questionNumber + ".mp3" : "";
+      all.push({cat:group.cat, q, questionNumber, audio});
+      questionNumber++;
+    });
   });
   if(totalWanted >= all.length) return all.slice();
   const step = all.length / totalWanted;
@@ -1549,7 +1609,65 @@ function buildQueue(totalWanted){
 /* ============================================================
    START INTERVIEW
    ============================================================ */
+function runInterviewSetup(onCovered){
+  return new Promise(function(resolve){
+    const overlay = $("vmi-preparing");
+    if(!overlay){ if(onCovered) onCovered(); resolve(); return; }
+
+    const steps = Array.prototype.slice.call(overlay.querySelectorAll("[data-pstep]"));
+    const bar = overlay.querySelector(".vmi-prepare__bar span");
+    const minimumVisibleTime = 3000;
+    const enterTime = PREFERS_REDUCED ? 60 : 540;
+    const perStep = PREFERS_REDUCED ? 800 : 650;
+    const fadeTime = PREFERS_REDUCED ? 0 : 460;
+    let index = 0;
+    let visibleAt = 0;
+
+    overlay.classList.remove("is-visible", "is-leaving");
+    overlay.setAttribute("aria-hidden", "false");
+    steps.forEach(function(step){ step.classList.remove("is-active", "is-done"); });
+    if(bar){ bar.style.transition = "none"; bar.style.width = "0%"; void bar.offsetWidth; bar.style.transition = ""; }
+    if(window.lucide) try{ window.lucide.createIcons(); }catch(e){}
+
+    function advance(){
+      if(index > 0){
+        steps[index - 1].classList.remove("is-active");
+        steps[index - 1].classList.add("is-done");
+      }
+      if(index >= steps.length){
+        const remainingTime = Math.max(0, minimumVisibleTime - (Date.now() - visibleAt));
+        setTimeout(function(){
+          overlay.classList.remove("is-visible");
+          overlay.classList.add("is-leaving");
+          overlay.setAttribute("aria-hidden", "true");
+          resolve();
+          setTimeout(function(){ overlay.classList.remove("is-leaving"); }, fadeTime);
+        }, remainingTime);
+        return;
+      }
+      steps[index].classList.add("is-active");
+      if(bar) bar.style.width = (((index + 1) / steps.length) * 100) + "%";
+      index++;
+      setTimeout(advance, perStep);
+    }
+
+    /* Two paint frames guarantee that the browser sees the hidden starting
+       state before transitioning the overlay over the still-visible setup. */
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        visibleAt = Date.now();
+        overlay.classList.add("is-visible");
+        setTimeout(function(){
+          if(onCovered) onCovered();
+          advance();
+        }, enterTime);
+      });
+    });
+  });
+}
+
 $("btn-start-interview").addEventListener("click", async () => {
+  if(state.interviewActive) return;
   state.mode = $("in-mode").value;
   let wanted = parseInt($("in-count").value,10) || FREE_LIMIT;
   if(!state.unlocked && wanted > FREE_LIMIT) wanted = FREE_LIMIT;
@@ -1558,11 +1676,14 @@ $("btn-start-interview").addEventListener("click", async () => {
   state.qIndex = 0;
   state.results = [];
 
-  hide($("screen-setup"));
-  show($("screen-interview"));
   state.interviewActive = true;
   document.documentElement.classList.add("vmi-lock");
   setAvatarState("idle");
+  primeQuestionAudio((state.queue[0] || {}).audio);
+  const preparing = runInterviewSetup(function(){
+    hide($("screen-setup"));
+    show($("screen-interview"));
+  });
 
   const streamIsLive = state.stream && state.stream.getTracks().some(t=>t.readyState==="live");
   if(state.mode === "video" && streamIsLive){
@@ -1573,6 +1694,7 @@ $("btn-start-interview").addEventListener("click", async () => {
   }
 
   setAnswerMode("speak");
+  await preparing;
   loadQuestion();
 });
 
@@ -1641,77 +1763,43 @@ const CATEGORY_ICONS = {
 
 /* ---- AI interviewer persona: speaking avatar + voice + typewriter ---- */
 state.aiVoice = true;
-let vmiVoices = [];
-let vmiChosenVoice = null;
-let vmiVoiceWarmed = false;
-function loadVoices(){ try{ vmiVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }catch(e){ vmiVoices = []; } }
-if("speechSynthesis" in window){
-  loadVoices();
-  // Voices register lazily; when the OS adds a better (neural) voice, forget the
-  // earlier pick so pickVoice() can re-evaluate and upgrade to it.
-  try{ window.speechSynthesis.onvoiceschanged = function(){ loadVoices(); vmiChosenVoice = null; }; }catch(e){}
-}
+let vmiQuestionAudio = null;
+let vmiAudioRequest = 0;
 
-/* Prime the speech engine on the first genuine user gesture. Chrome and Safari
-   drop or robotise the very first utterance until the engine has been "warmed",
-   so a silent, zero-volume utterance gets that out of the way before the
-   interview's first question is asked — the real voice then sounds clean. */
-function warmUpVoice(){
-  if(vmiVoiceWarmed || !("speechSynthesis" in window)) return;
-  vmiVoiceWarmed = true;
-  try{
-    loadVoices();
-    const u = new SpeechSynthesisUtterance(" ");
-    u.volume = 0; u.rate = 1;
-    window.speechSynthesis.speak(u);
-  }catch(e){}
-  ["pointerdown","keydown","touchstart"].forEach(function(ev){ window.removeEventListener(ev, warmUpVoice); });
-}
-["pointerdown","keydown","touchstart"].forEach(function(ev){ window.addEventListener(ev, warmUpVoice, {passive:true}); });
-
-function pickVoice(){
-  if(vmiChosenVoice) return vmiChosenVoice;
-  if(!vmiVoices.length) loadVoices();
-  const englishVoices = vmiVoices.filter(v=>/^en(?:[-_]|$)/i.test(v.lang || ""));
-  if(!englishVoices.length) return null;
-
-  // Browsers expose voices in a different order on every operating system.
-  // Score known neural/natural voices first so we do not accidentally choose
-  // an older robotic "desktop" voice simply because it appears first.
-  const preferredNames = [
-    /sonia.*(natural|online)/i, /ryan.*(natural|online)/i, /libby.*(natural|online)/i,
-    /aria.*(natural|online)/i, /jenny.*(natural|online)/i, /guy.*(natural|online)/i,
-    /ava.*(natural|online)/i, /andrew.*(natural|online)/i, /emma.*(natural|online)/i,
-    /neerja.*(natural|online)/i, /prabhat.*(natural|online)/i,
-    /google uk english female/i, /google uk english male/i,
-    /google us english/i, /samantha/i, /daniel/i, /serena/i,
-    /karen/i, /moira/i, /rishi/i
-  ];
-
-  function voiceScore(voice){
-    const name = voice.name || "";
-    const lang = (voice.lang || "").replace("_", "-").toLowerCase();
-    let score = 0;
-
-    preferredNames.forEach((pattern, index)=>{
-      if(pattern.test(name)) score = Math.max(score, 240 - index * 5);
-    });
-    if(/natural|neural|premium|enhanced|online/i.test(name)) score += 110;
-    else if(/google/i.test(name)) score += 60;
-    if(lang === "en-gb") score += 36;
-    else if(lang === "en-au") score += 26;
-    else if(lang === "en-us") score += 22;
-    else if(lang === "en-in") score += 18;
-    if(voice.default) score += 5;
-    if(/desktop|compact|espeak|pico|robo/i.test(name)) score -= 120;
-    return score;
+function getQuestionAudio(){
+  if(!vmiQuestionAudio){
+    vmiQuestionAudio = new Audio();
+    vmiQuestionAudio.preload = "auto";
   }
+  return vmiQuestionAudio;
+}
 
-  const best = englishVoices.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0] || null;
-  // Lock the choice in only once a genuinely natural/neural voice is available;
-  // otherwise keep re-checking as better voices register over the first seconds.
-  if(best && /natural|neural|premium|enhanced|online|google/i.test(best.name || "")) vmiChosenVoice = best;
-  return best;
+function stopInterviewerAudio(){
+  vmiAudioRequest++;
+  if(!vmiQuestionAudio) return;
+  try{
+    vmiQuestionAudio.pause();
+    vmiQuestionAudio.currentTime = 0;
+  }catch(e){}
+}
+
+/* Unlock the reusable audio element during the Start button's user gesture.
+   This keeps question 1 playable after the preparation transition finishes. */
+function primeQuestionAudio(audioUrl){
+  if(!audioUrl) return;
+  try{
+    const audio = getQuestionAudio();
+    const requestId = ++vmiAudioRequest;
+    audio.src = audioUrl;
+    audio.muted = true;
+    const reset = function(){
+      if(requestId !== vmiAudioRequest) return;
+      try{ audio.pause(); audio.currentTime = 0; audio.muted = false; }catch(e){}
+    };
+    const playPromise = audio.play();
+    if(playPromise && typeof playPromise.then === "function") playPromise.then(reset).catch(reset);
+    setTimeout(reset, 300);
+  }catch(e){}
 }
 function setAvatarState(s){
   const a = document.querySelector("#vmi-page .vmi-ai__avatar");
@@ -1872,43 +1960,35 @@ function initVoiceAgentCanvas(){
 }
 initVoiceAgentCanvas();
 
-let vmiKeepAlive = null;
-function vmiStopKeepAlive(){ if(vmiKeepAlive){ clearInterval(vmiKeepAlive); vmiKeepAlive = null; } }
+function aiSpeak(audioUrl){
+  stopInterviewerAudio();
+  if(state.aiVoice === false || !audioUrl){
+    setAvatarState("idle");
+    return;
+  }
 
-function aiSpeak(text){
-  const fallback = ()=>{ setAvatarState("speaking"); setTimeout(()=>{ if(!state.recognizing) setAvatarState("idle"); }, Math.min(4600, 600 + String(text).length*46)); };
-  if(state.aiVoice === false || !("speechSynthesis" in window)){ fallback(); return; }
-  try{ window.speechSynthesis.cancel(); }catch(e){}
-  vmiStopKeepAlive();
+  const requestId = vmiAudioRequest;
   try{
-    const clean = String(text).replace(/\s+/g, " ").trim();
-    // Speak one sentence at a time: the engine inserts a natural breath between
-    // sentences (far more human than one long monotone run), and short chunks
-    // sidestep Chrome's ~15s long-utterance cut-off.
-    const chunks = (clean.match(/[^.!?]+[.!?]*/g) || [clean]).map(s=>s.trim()).filter(Boolean);
-    if(!chunks.length){ fallback(); return; }
-    const v = pickVoice();
+    const audio = getQuestionAudio();
+    audio.src = audioUrl;
+    audio.muted = false;
+    audio.currentTime = 0;
+    audio.onplaying = ()=>{ if(requestId === vmiAudioRequest) setAvatarState("speaking"); };
+    audio.onended = ()=>{ if(requestId === vmiAudioRequest && !state.recognizing) setAvatarState("idle"); };
+    audio.onerror = ()=>{
+      if(requestId !== vmiAudioRequest) return;
+      console.warn("Recorded interviewer audio could not be played:", audioUrl);
+      if(!state.recognizing) setAvatarState("idle");
+    };
     setAvatarState("speaking");
-    // Chrome silently pauses a queued utterance after a few seconds; a periodic
-    // resume() keeps longer questions flowing to the end.
-    vmiKeepAlive = setInterval(function(){
-      try{ if(window.speechSynthesis.speaking) window.speechSynthesis.resume(); }catch(e){}
-    }, 8000);
-    chunks.forEach(function(chunk, idx){
-      const u = new SpeechSynthesisUtterance(chunk);
-      if(v) u.voice = v;
-      u.lang = v && v.lang ? v.lang : "en-GB";
-      u.rate = 0.95;   // measured, natural interviewer pace
-      u.pitch = 1.0;   // true-to-voice pitch reads as more human than a lowered one
-      u.volume = 1;
-      if(idx === 0) u.onstart = ()=> setAvatarState("speaking");
-      if(idx === chunks.length - 1){
-        u.onend = ()=>{ vmiStopKeepAlive(); if(!state.recognizing) setAvatarState("idle"); };
-        u.onerror = ()=>{ vmiStopKeepAlive(); if(!state.recognizing) setAvatarState("idle"); };
-      }
-      window.speechSynthesis.speak(u);
-    });
-  }catch(e){ vmiStopKeepAlive(); fallback(); }
+    const playPromise = audio.play();
+    if(playPromise && typeof playPromise.catch === "function"){
+      playPromise.catch(()=>{ if(requestId === vmiAudioRequest && !state.recognizing) setAvatarState("idle"); });
+    }
+  }catch(e){
+    console.warn("Recorded interviewer audio is unavailable", e);
+    if(!state.recognizing) setAvatarState("idle");
+  }
 }
 function typeQuestion(text){
   const el = $("q-text");
@@ -1930,7 +2010,7 @@ function presentQuestion(item){
     try{ bubble.animate([{opacity:0,transform:"translateY(12px) scale(.98)"},{opacity:1,transform:"none"}],{duration:420,easing:"cubic-bezier(.2,.8,.2,1)"}); }catch(e){}
   }
   typeQuestion(item.q);
-  aiSpeak(item.q);
+  aiSpeak(item.audio);
 }
 
 function loadQuestion(){
@@ -2103,7 +2183,7 @@ function startRecording(){
   state.frameAttempts = 0;
   state.frameHits = 0;
   hide($("btn-record")); show($("btn-stop")); show($("rec-badge"));
-  try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
+  stopInterviewerAudio();
   clearInterval(state.typeTimer);
   setAvatarState("listening");
   $("transcript-box").textContent = "Listening…";
@@ -2641,7 +2721,7 @@ function runAnalyzing(){
 
 async function finishInterview(){
   state.interviewActive = false;
-  try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
+  stopInterviewerAudio();
   clearInterval(state.typeTimer);
   releaseMediaStream();
 
@@ -3172,7 +3252,7 @@ const btnExit = $("btn-exit-interview");
 if(btnExit){
   btnExit.addEventListener("click", function(){
     if(state.results.length && !window.confirm("Exit the interview? Your progress in this round will be lost.")) return;
-    try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){}
+    stopInterviewerAudio();
     state.recognizing = false; state.wantRestart = false; state.interviewActive = false;
     if(state.recognition){ try{ state.recognition.stop(); }catch(e){} }
     clearInterval(state.timerInterval); clearInterval(state.frameInterval); clearInterval(state.typeTimer);
@@ -3193,7 +3273,7 @@ if(btnVoice){
     btnVoice.title = state.aiVoice ? "Mute interviewer voice" : "Unmute interviewer voice";
     btnVoice.innerHTML = state.aiVoice ? '<i data-lucide="volume-2"></i>' : '<i data-lucide="volume-x"></i>';
     if(window.lucide) try{ window.lucide.createIcons(); }catch(e){}
-    if(!state.aiVoice){ try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch(e){} }
+    if(!state.aiVoice) stopInterviewerAudio();
   });
 }
 
