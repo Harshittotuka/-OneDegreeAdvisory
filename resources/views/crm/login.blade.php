@@ -47,7 +47,12 @@
             <span class="eyebrow">Secure team access</span>
             <h1>{{ session('otp_sent') || $errors->has('otp') ? 'Verify your number' : 'Welcome to your CRM' }}</h1>
             <p class="login-intro">
-                {{ session('otp_sent') || $errors->has('otp') ? 'Enter the six-digit code sent to your registered mobile number.' : 'Sign in using the mobile number registered by your super admin.' }}
+                @if(session('otp_sent') || $errors->has('otp'))
+                    @php($otpDelivery = (array) session('crm_otp_delivery', []))
+                    Enter the six-digit code sent securely to your registered {{ in_array('sms', $otpDelivery, true) && in_array('email', $otpDelivery, true) ? 'email and mobile number' : (in_array('sms', $otpDelivery, true) ? 'mobile number' : 'email address') }}.
+                @else
+                    Sign in using the mobile number registered by your super admin.
+                @endif
             </p>
 
             @if($errors->any())

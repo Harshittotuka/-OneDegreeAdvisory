@@ -205,6 +205,17 @@ html[data-crm-theme="orbit"] .dashboard-panel{background:linear-gradient(145deg,
 html[data-crm-theme="orbit"] .dashboard-kicker{color:#ff7078}
 html[data-crm-theme="orbit"] .dashboard-metrics strong{font-family:var(--orbit-display,"Sora",sans-serif)}
 
+.team-member{flex-wrap:wrap}
+.team-member-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team-member-edit{flex:0 0 100%;margin:2px 0 0 46px;border-top:1px solid rgba(127,127,127,.16);padding-top:7px}
+.team-member-edit summary{cursor:pointer;color:inherit;opacity:.68;font-size:.62rem;font-weight:750}
+.team-member-edit form{display:grid;grid-template-columns:1fr 1fr auto;gap:7px;margin-top:8px}
+.team-member-edit input{min-width:0;width:100%;border:1px solid rgba(127,127,127,.26);border-radius:8px;background:#fff;padding:8px 9px;color:inherit;font-size:.68rem;outline:0}
+.team-member-edit input:focus{border-color:currentColor}
+.team-member-edit .btn{padding:7px 10px;font-size:.65rem}
+
+@media(max-width:560px){.team-member-edit{margin-left:0}.team-member-edit form{grid-template-columns:1fr}.team-member-edit .btn{width:100%}}
+
 @keyframes dashboard-map-pulse{0%,100%{transform:scale(.8);opacity:.13}50%{transform:scale(1.15);opacity:.25}}
 
 @media(max-width:1180px){

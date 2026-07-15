@@ -161,6 +161,7 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
         Route::patch('leads/{lead}/student-journey', [\App\Http\Controllers\Crm\CrmLeadController::class, 'updateStudentJourney'])->name('leads.student-journey.update');
         Route::delete('leads/{lead}', [\App\Http\Controllers\Crm\CrmLeadController::class, 'destroy'])->name('leads.destroy');
         Route::post('team', [\App\Http\Controllers\Crm\CrmUserController::class, 'store'])->name('team.store');
+        Route::patch('team/{member}', [\App\Http\Controllers\Crm\CrmUserController::class, 'update'])->name('team.update');
         Route::patch('team/{member}/toggle', [\App\Http\Controllers\Crm\CrmUserController::class, 'toggle'])->name('team.toggle');
     });
 });

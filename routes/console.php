@@ -7,7 +7,10 @@ use App\Mail\ContactThankYouMail;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
+
+Schedule::command('crm:send-follow-up-reminders')->dailyAt('08:00')->timezone('Asia/Kolkata')->withoutOverlapping();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -31,6 +34,7 @@ Artisan::command('mail:doctor {--mailer=*}', function () {
         config('mail.default'),
         config('site.forms.contact.mailer'),
         config('site.forms.careers.mailer'),
+        config('crm.email.mailer'),
     ];
 
     $mailerNames = array_values(array_unique(array_filter(array_map(

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CrmUser extends Model
 {
-    protected $fillable = ['name', 'phone', 'role', 'is_active', 'created_by', 'last_login_at'];
+    protected $fillable = ['name', 'phone', 'email', 'role', 'is_active', 'created_by', 'last_login_at'];
 
     protected function casts(): array
     {

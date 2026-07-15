@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\CrmOtpCode;
 use App\Models\CrmUser;
+use App\Services\CrmNotifier;
 use App\Services\CrmOtpSender;
+use App\Services\CrmSuperAdminSync;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,11 +25,11 @@ class CrmAuthController extends Controller
         return view('crm.login');
     }
 
-    public function requestOtp(Request $request, CrmOtpSender $sender): RedirectResponse
+    public function requestOtp(Request $request, CrmOtpSender $sender, CrmSuperAdminSync $superAdmins): RedirectResponse
     {
         $data = $request->validate(['phone' => ['required', 'string', 'regex:/^[6-9][0-9]{9}$/']]);
         $phone = $this->normalisePhone($data['phone']);
-        $this->ensureSuperAdmin();
+        $superAdmins->sync();
         $user = CrmUser::query()->where('phone', $phone)->where('is_active', true)->first();
 
         if (! $user) {
@@ -45,7 +47,7 @@ class CrmAuthController extends Controller
         ]);
 
         try {
-            $sender->send($phone, $otp);
+            $deliveryChannels = $sender->send($user, $otp);
         } catch (RuntimeException $exception) {
             $record->delete();
 
@@ -54,6 +56,7 @@ class CrmAuthController extends Controller
 
         $request->session()->put('crm_otp_user_id', $user->id);
         $request->session()->put('crm_otp_phone', $phone);
+        $request->session()->put('crm_otp_delivery', $deliveryChannels);
 
         $response = back()->with('otp_sent', true)->with('otp_phone', $phone);
         if (app()->isLocal() || app()->runningUnitTests() || config('crm.otp.debug')) {
@@ -63,7 +66,7 @@ class CrmAuthController extends Controller
         return $response;
     }
 
-    public function verify(Request $request): RedirectResponse
+    public function verify(Request $request, CrmNotifier $notifier): RedirectResponse
     {
         $data = $request->validate(['otp' => ['required', 'digits:6']]);
         $userId = $request->session()->get('crm_otp_user_id');
@@ -92,14 +95,27 @@ class CrmAuthController extends Controller
         $user->update(['last_login_at' => now()]);
         $request->session()->regenerate();
         $request->session()->put('crm_user_id', $user->id);
-        $request->session()->forget(['crm_otp_user_id', 'crm_otp_phone']);
+        $request->session()->forget(['crm_otp_user_id', 'crm_otp_phone', 'crm_otp_delivery']);
+
+        $notifier->sendToUsers(
+            [$user],
+            'Successful One Degree CRM sign-in',
+            'New CRM sign-in',
+            'Your One Degree CRM account was signed in successfully.',
+            [
+                'Account' => $user->name,
+                'Time' => now()->format('d M Y, g:i A'),
+                'IP address' => $request->ip() ?: 'Unavailable',
+            ],
+            route('crm.dashboard'),
+        );
 
         return redirect()->intended(route('crm.dashboard'));
     }
 
     public function logout(Request $request): RedirectResponse
     {
-        $request->session()->forget(['crm_user_id', 'crm_otp_user_id', 'crm_otp_phone']);
+        $request->session()->forget(['crm_user_id', 'crm_otp_user_id', 'crm_otp_phone', 'crm_otp_delivery']);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -109,18 +125,5 @@ class CrmAuthController extends Controller
     private function normalisePhone(string $phone): string
     {
         return substr((string) preg_replace('/\D+/', '', $phone), -10);
-    }
-
-    private function ensureSuperAdmin(): void
-    {
-        $phone = $this->normalisePhone((string) config('crm.super_admin.phone'));
-        if (strlen($phone) !== 10) {
-            return;
-        }
-
-        CrmUser::query()->updateOrCreate(
-            ['phone' => $phone],
-            ['name' => (string) config('crm.super_admin.name', 'Main Admin'), 'role' => 'super_admin', 'is_active' => true]
-        );
     }
 }
