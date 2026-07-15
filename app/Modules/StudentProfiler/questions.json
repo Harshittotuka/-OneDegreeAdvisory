@@ -862,9 +862,8 @@
                 {
                     "type": "text",
                     "key": "q_02e74f10",
-                    "label": "Overall IELTS / ToEFL / PTE Score or Expected(* Mandatory)",
-                    "placeholder": "e.g. 7.5",
-                    "required": true
+                    "label": "Overall IELTS / ToEFL / PTE Score or Expected",
+                    "placeholder": "e.g. 7.5"
                 },
                 {
                     "type": "text",

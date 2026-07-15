@@ -103,6 +103,7 @@ class StudentProfilerTest extends TestCase
         $this->assertSame('9', $this->profilerField($config, 'highschool', 'q_9bf31c7f')['tests'][0]['max']);
         $this->assertSame('engscore', $this->profilerField($config, 'masters', 'q_3dd48ab3')['type']);
         $this->assertSame('9', $this->profilerField($config, 'masters', 'q_3dd48ab3')['tests'][0]['max']);
+        $this->assertFalse($this->profilerField($config, 'masters', 'q_3dd48ab3')['overallRequired']);
         $this->assertArrayNotHasKey('input', $this->profilerField($config, 'masters', 'q_98f13708'));
     }
 
