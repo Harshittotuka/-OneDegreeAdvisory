@@ -1,14 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="crm-css-pending">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <title>CRM sign in · One Degree Advisory</title>
+    <style>html.crm-css-pending body{visibility:hidden}</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link id="crmThemeStylesheet" rel="stylesheet" data-classic-href="{{ asset('assets/crm/crm-classic.css') }}" data-evergreen-href="{{ asset('assets/crm/crm.css') }}" data-orbit-href="{{ asset('assets/crm/crm-orbit.css') }}">
+    <link id="crmThemeStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm.css') }}" data-classic-href="{{ asset('assets/crm/crm-classic.css') }}" data-evergreen-href="{{ asset('assets/crm/crm.css') }}" data-orbit-href="{{ asset('assets/crm/crm-orbit.css') }}">
     <script>
         (() => {
             let theme = 'evergreen';
@@ -18,9 +19,20 @@
             } catch (error) {}
             document.documentElement.dataset.crmTheme = theme;
             const stylesheet = document.getElementById('crmThemeStylesheet');
-            stylesheet.href = theme === 'classic' ? stylesheet.dataset.classicHref : (theme === 'orbit' ? stylesheet.dataset.orbitHref : stylesheet.dataset.evergreenHref);
+            const selectedHref = theme === 'classic' ? stylesheet.dataset.classicHref : (theme === 'orbit' ? stylesheet.dataset.orbitHref : stylesheet.dataset.evergreenHref);
+            const reveal = () => document.documentElement.classList.remove('crm-css-pending');
+
+            if (stylesheet.href === selectedHref) {
+                reveal();
+                return;
+            }
+
+            stylesheet.addEventListener('load', reveal, { once: true });
+            stylesheet.addEventListener('error', reveal, { once: true });
+            stylesheet.href = selectedHref;
         })();
     </script>
+    <noscript><style>html.crm-css-pending body{visibility:visible}</style></noscript>
     <link rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
 </head>
 <body>
