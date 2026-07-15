@@ -199,25 +199,66 @@ document.addEventListener('DOMContentLoaded', () => {
         setDrawerExpanded(drawerExpanded ?? sessionStorage.getItem('crmDrawerExpanded') === '1', false);
         initialiseDrawerChrome();
         initialiseDashboardMap();
+        initialiseToasts();
     };
 
-    const showPageMessage = (message, type = 'error') => {
-        const content = document.querySelector('[data-crm-app] .content');
-        if (!content) return;
-        content.querySelector('[data-ajax-message]')?.remove();
+    const dismissToast = (toast) => {
+        if (!toast || toast.classList.contains('is-leaving')) return;
+        toast.classList.add('is-leaving');
+        setTimeout(() => toast.remove(), reducedMotion.matches ? 20 : 310);
+    };
+
+    const scheduleToast = (toast) => {
+        if (!toast || toast.dataset.toastScheduled === '1') return;
+        toast.dataset.toastScheduled = '1';
+        setTimeout(() => dismissToast(toast), 6500);
+    };
+
+    const initialiseToasts = () => {
+        document.querySelectorAll('[data-toast]').forEach(scheduleToast);
+    };
+
+    const showToast = (message, type = 'error', title = null) => {
+        let stack = document.querySelector('[data-crm-toast-stack]');
+        if (!stack) {
+            stack = document.createElement('div');
+            stack.className = 'crm-toast-stack';
+            stack.dataset.crmToastStack = '';
+            stack.setAttribute('aria-live', 'polite');
+            document.body.append(stack);
+        }
+
         const notice = document.createElement('div');
-        notice.className = `flash${type === 'error' ? ' error' : ''}`;
-        notice.dataset.flash = '';
-        notice.dataset.ajaxMessage = '';
-        const text = document.createElement('span');
-        text.textContent = message;
+        notice.className = `crm-toast is-${type}`;
+        notice.dataset.toast = '';
+        notice.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        const icon = document.createElement('span');
+        icon.className = 'crm-toast-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = type === 'error'
+            ? '<svg viewBox="0 0 24 24"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>'
+            : (type === 'info' ? '<svg viewBox="0 0 24 24"><path d="M12 11v6M12 7h.01"/><circle cx="12" cy="12" r="9"/></svg>' : '<svg viewBox="0 0 24 24"><path d="m7 12 3 3 7-7"/></svg>');
+        const copy = document.createElement('span');
+        copy.className = 'crm-toast-copy';
+        const heading = document.createElement('strong');
+        heading.textContent = title || (type === 'error' ? 'Action needs attention' : (type === 'info' ? 'For your information' : 'Update complete'));
+        const detail = document.createElement('span');
+        detail.textContent = message;
+        copy.append(heading, detail);
         const close = document.createElement('button');
         close.type = 'button';
-        close.setAttribute('aria-label', 'Dismiss');
+        close.dataset.toastClose = '';
+        close.setAttribute('aria-label', 'Dismiss notification');
         close.textContent = '×';
-        notice.append(text, close);
-        content.prepend(notice);
+        const progress = document.createElement('i');
+        progress.className = 'crm-toast-progress';
+        progress.setAttribute('aria-hidden', 'true');
+        notice.append(icon, copy, close, progress);
+        stack.prepend(notice);
+        scheduleToast(notice);
     };
+
+    const showPageMessage = (message, type = 'error') => showToast(message, type);
 
     const isDashboardUrl = (url) => {
         const path = url.pathname.replace(/\/$/, '');
@@ -325,14 +366,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const textarea = form.querySelector('textarea[name="comment"]');
         const submit = form.querySelector('button[type="submit"]');
         const submitLabel = form.querySelector('[data-timeline-submit]');
-        const feedback = form.querySelector('[data-timeline-feedback]');
         const originalLabel = submitLabel?.textContent || 'Add to timeline';
 
         const showFeedback = (message, type) => {
-            if (!feedback) return;
-            feedback.textContent = message;
-            feedback.classList.toggle('success', type === 'success');
-            feedback.classList.toggle('error', type === 'error');
+            if (message) showToast(message, type);
         };
 
         form.dataset.submitting = 'true';
@@ -403,9 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (commentCount) commentCount.textContent = '0 / 3000';
             showFeedback(payload.message || 'Added.', 'success');
             textarea?.focus();
-            setTimeout(() => {
-                if (feedback?.classList.contains('success')) showFeedback('', '');
-            }, 2200);
         } catch (error) {
             showFeedback('Could not add the comment. Please try again.', 'error');
         } finally {
@@ -505,9 +539,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const flashClose = target.closest('[data-flash] button');
-        if (flashClose) {
-            flashClose.closest('[data-flash]')?.remove();
+        const toastClose = target.closest('[data-toast-close]');
+        if (toastClose) {
+            dismissToast(toastClose.closest('[data-toast]'));
             return;
         }
 

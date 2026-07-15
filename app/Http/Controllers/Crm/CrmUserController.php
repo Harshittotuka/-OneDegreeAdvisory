@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
 use App\Models\CrmUser;
+use App\Services\CrmAuditLogger;
 use App\Services\CrmNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ use Illuminate\Validation\Rule;
 
 class CrmUserController extends Controller
 {
-    public function store(Request $request, CrmNotifier $notifier): RedirectResponse
+    public function store(Request $request, CrmNotifier $notifier, CrmAuditLogger $auditLogger): RedirectResponse
     {
         /** @var CrmUser $admin */
         $admin = $request->attributes->get('crm_user');
@@ -32,6 +33,13 @@ class CrmUserController extends Controller
             'is_active' => true, 'created_by' => $admin->id,
         ]);
 
+        $auditLogger->record($request, $admin, 'team_member_created', 'Created CRM team member '.$member->name.'.', [
+            'subject_type' => 'team_member',
+            'subject_id' => $member->id,
+            'subject_label' => $member->name,
+            'changes' => ['after' => $member->only(['name', 'phone', 'email', 'role', 'is_active'])],
+        ]);
+
         $roleLabel = $member->isSuperAdmin() ? 'super admin' : 'counsellor';
         $recipients = CrmUser::query()->where('role', 'super_admin')->where('is_active', true)->get()->push($member)->unique('id');
         $notifier->sendToUsers(
@@ -47,7 +55,7 @@ class CrmUserController extends Controller
         return back()->with('status', ucfirst($roleLabel).' created. They can now sign in with their phone and receive the OTP on their registered email.');
     }
 
-    public function update(Request $request, CrmUser $member, CrmNotifier $notifier): RedirectResponse
+    public function update(Request $request, CrmUser $member, CrmNotifier $notifier, CrmAuditLogger $auditLogger): RedirectResponse
     {
         /** @var CrmUser $admin */
         $admin = $request->attributes->get('crm_user');
@@ -56,7 +64,15 @@ class CrmUserController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', Rule::unique('crm_users', 'email')->ignore($member->id)],
         ]);
+        $before = $member->only(['name', 'email']);
         $member->update(['name' => trim($data['name']), 'email' => strtolower(trim($data['email']))]);
+
+        $auditLogger->record($request, $admin, 'team_member_updated', 'Updated CRM team member '.$member->name.'.', [
+            'subject_type' => 'team_member',
+            'subject_id' => $member->id,
+            'subject_label' => $member->name,
+            'changes' => ['before' => $before, 'after' => $member->only(['name', 'email'])],
+        ]);
 
         $recipients = CrmUser::query()->where('role', 'super_admin')->where('is_active', true)->get()->push($member)->unique('id');
         $notifier->sendToUsers(
@@ -71,7 +87,7 @@ class CrmUserController extends Controller
         return back()->with('status', $member->name.'\'s account details were updated.');
     }
 
-    public function toggle(Request $request, CrmUser $member, CrmNotifier $notifier): RedirectResponse
+    public function toggle(Request $request, CrmUser $member, CrmNotifier $notifier, CrmAuditLogger $auditLogger): RedirectResponse
     {
         /** @var CrmUser $admin */
         $admin = $request->attributes->get('crm_user');
@@ -79,7 +95,15 @@ class CrmUserController extends Controller
         if ($member->isSuperAdmin() && $member->is_active && CrmUser::query()->where('role', 'super_admin')->where('is_active', true)->count() <= 1) {
             return back()->withErrors(['team' => 'At least one super admin must remain active.']);
         }
+        $wasActive = $member->is_active;
         $member->update(['is_active' => ! $member->is_active]);
+
+        $auditLogger->record($request, $admin, 'team_member_access_changed', ($member->is_active ? 'Restored' : 'Disabled').' CRM access for '.$member->name.'.', [
+            'subject_type' => 'team_member',
+            'subject_id' => $member->id,
+            'subject_label' => $member->name,
+            'changes' => ['before' => ['is_active' => $wasActive], 'after' => ['is_active' => $member->is_active]],
+        ]);
 
         $roleLabel = $member->isSuperAdmin() ? 'Super admin' : 'Counsellor';
         $recipients = CrmUser::query()->where('role', 'super_admin')->where('is_active', true)->get()->push($member)->unique('id');

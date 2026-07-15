@@ -17,7 +17,7 @@ return [
         'ttl_minutes' => (int) env('CRM_OTP_TTL_MINUTES', 5),
         'max_attempts' => (int) env('CRM_OTP_MAX_ATTEMPTS', 5),
         'debug' => (bool) env('CRM_OTP_DEBUG', false),
-        'channels' => array_values(array_filter(array_map('trim', explode(',', (string) env('CRM_OTP_CHANNELS', 'email,sms'))))),
+        'channels' => array_values(array_filter(array_map('trim', explode(',', (string) env('CRM_OTP_CHANNELS', 'email'))))),
     ],
     'sms' => [
         'driver' => env('CRM_SMS_DRIVER', 'msg91'),

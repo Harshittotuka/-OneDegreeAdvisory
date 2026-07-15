@@ -32,7 +32,7 @@
 }
 
 *{box-sizing:border-box}
-html{font-size:15px}
+html{font-size:16px}
 body{margin:0;color:var(--ink);background:radial-gradient(1100px 520px at 88% -8%,#faf7ec 0%,rgba(250,247,236,0) 62%),var(--paper);font-family:var(--font-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button,input,select,textarea{font:inherit}
 button,a{transition:.18s ease}

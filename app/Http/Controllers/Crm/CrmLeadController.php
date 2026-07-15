@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
 use App\Models\CrmUser;
+use App\Services\CrmAuditLogger;
 use App\Services\CrmNotifier;
 use App\Support\CrmOptions;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,10 @@ use Illuminate\Validation\Rule;
 
 class CrmLeadController extends Controller
 {
-    public function __construct(private readonly CrmNotifier $notifier) {}
+    public function __construct(
+        private readonly CrmNotifier $notifier,
+        private readonly CrmAuditLogger $auditLogger,
+    ) {}
 
     public function store(Request $request): RedirectResponse
     {
@@ -42,13 +46,9 @@ class CrmLeadController extends Controller
             return $lead;
         });
 
-        $this->notifyLead(
-            $lead,
-            $user,
-            'New CRM lead: '.$lead->name,
-            'A new lead was created',
-            $user->name.' created '.$lead->name.' in the CRM.',
-        );
+        $this->auditLead($request, $user, $lead, 'lead_created', 'Created lead '.$lead->name.'.', [
+            'after' => $lead->only(['lead_number', 'name', 'phone', 'email', 'status', 'priority', 'assigned_to', 'follow_up_at']),
+        ]);
 
         return redirect()->route('crm.dashboard', ['lead' => $lead->id])->with('status', 'Lead created successfully.');
     }
@@ -70,7 +70,6 @@ class CrmLeadController extends Controller
         }
 
         $before = $lead->getAttributes();
-        $previousAssignee = $lead->assignee;
         $lead->fill($data);
         if ($lead->isDirty('follow_up_at')) {
             $lead->follow_up_completed_at = null;
@@ -91,15 +90,10 @@ class CrmLeadController extends Controller
         if ($labels !== []) {
             $this->activity($lead, $user, 'updated', 'Updated '.implode(', ', $labels).'.', ['before' => $before, 'changes' => $changes]);
             $lead->unsetRelation('assignee')->load('assignee');
-            $this->notifyLead(
-                $lead,
-                $user,
-                'CRM lead updated: '.$lead->name,
-                'Lead details were updated',
-                $user->name.' updated '.implode(', ', $labels).' for '.$lead->name.'.',
-                ['Changed fields' => implode(', ', $labels)],
-                $previousAssignee ? [$previousAssignee] : [],
-            );
+            $this->auditLead($request, $user, $lead, 'lead_updated', 'Updated '.implode(', ', $labels).' for '.$lead->name.'.', [
+                'before' => array_intersect_key($before, $changes),
+                'after' => $changes,
+            ]);
         }
 
         return back()->with('status', 'Lead details updated.');
@@ -113,14 +107,9 @@ class CrmLeadController extends Controller
         $data = $request->validate(['comment' => ['required', 'string', 'max:3000']]);
         $activity = $this->activity($lead, $user, 'comment', trim($data['comment']));
         $lead->update(['last_contacted_at' => now()]);
-        $this->notifyLead(
-            $lead,
-            $user,
-            'New CRM timeline note: '.$lead->name,
-            'A timeline note was added',
-            $user->name.' added a new interaction note for '.$lead->name.'.',
-            ['Timeline note' => trim($data['comment'])],
-        );
+        $this->auditLead($request, $user, $lead, 'timeline_comment_added', 'Added a timeline comment for '.$lead->name.'.', [
+            'comment' => trim($data['comment']),
+        ]);
 
         if ($request->expectsJson()) {
             $activity->load('user');
@@ -146,15 +135,13 @@ class CrmLeadController extends Controller
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
         $this->guardLead($lead, $user);
+        $before = ['follow_up_completed_at' => $lead->getRawOriginal('follow_up_completed_at')];
         $lead->update(['follow_up_completed_at' => now(), 'last_contacted_at' => now()]);
         $this->activity($lead, $user, 'follow_up_done', 'Follow-up marked complete.');
-        $this->notifyLead(
-            $lead,
-            $user,
-            'CRM follow-up completed: '.$lead->name,
-            'Follow-up marked complete',
-            $user->name.' completed the scheduled follow-up for '.$lead->name.'.',
-        );
+        $this->auditLead($request, $user, $lead, 'follow_up_completed', 'Completed the scheduled follow-up for '.$lead->name.'.', [
+            'before' => $before,
+            'after' => ['follow_up_completed_at' => $lead->follow_up_completed_at?->toDateTimeString()],
+        ]);
 
         return back()->with('status', 'Follow-up completed.');
     }
@@ -172,8 +159,14 @@ class CrmLeadController extends Controller
             'payment_reference' => ['nullable', 'string', 'max:150'],
             'conversion_remarks' => ['nullable', 'string', 'max:3000'],
         ]);
+        $before = $lead->only(['is_student', 'status', 'student_category', 'student_stage', 'enrollment_amount', 'enrollment_date', 'payment_reference', 'conversion_remarks']);
         $lead->update($data + ['is_student' => true, 'status' => 'converted']);
         $this->activity($lead, $user, 'converted', 'Converted to an enrolled student at stage “'.CrmOptions::STUDENT_STAGES[$data['student_stage']].'”.');
+
+        $this->auditLead($request, $user, $lead, 'lead_converted', 'Converted '.$lead->name.' into an enrolled student.', [
+            'before' => $before,
+            'after' => $lead->only(array_keys($before)),
+        ]);
 
         $this->notifyLead(
             $lead,
@@ -218,17 +211,10 @@ class CrmLeadController extends Controller
                 ? 'Student journey advanced to “'.$stage.'”.'
                 : 'Updated student enrolment information.';
             $this->activity($lead, $user, 'student_stage', $body, ['before' => $before, 'changes' => $dirty]);
-            $this->notifyLead(
-                $lead,
-                $user,
-                'CRM student journey updated: '.$lead->name,
-                'Student journey updated',
-                $user->name.' updated the student journey for '.$lead->name.'.',
-                [
-                    'Student stage' => CrmOptions::STUDENT_STAGES[$lead->student_stage],
-                    'Changed fields' => implode(', ', array_map(fn (string $field): string => str_replace('_', ' ', $field), $changes)),
-                ],
-            );
+            $this->auditLead($request, $user, $lead, 'student_journey_updated', 'Updated the student journey for '.$lead->name.'.', [
+                'before' => array_intersect_key($before, $dirty),
+                'after' => $dirty,
+            ]);
         }
 
         return back()->with('status', $changes === [] ? 'Student journey is already up to date.' : 'Student journey updated.');
@@ -240,14 +226,10 @@ class CrmLeadController extends Controller
         $user = $request->attributes->get('crm_user');
         abort_unless($user->isSuperAdmin(), 403);
         $lead->loadMissing('assignee');
-        $this->notifier->sendToUsers(
-            $this->notifier->leadRecipients($lead, $user),
-            'CRM lead moved to trash: '.$lead->name,
-            'Lead moved to trash',
-            $user->name.' moved '.$lead->name.' to the CRM trash.',
-            $this->notifier->leadDetails($lead),
-            route('crm.dashboard'),
-        );
+        $this->auditLead($request, $user, $lead, 'lead_deleted', 'Moved '.$lead->name.' to the CRM trash.', [
+            'lead_number' => $lead->lead_number,
+            'owner' => $lead->assignee?->name,
+        ]);
         $lead->delete();
 
         return redirect()->route('crm.dashboard')->with('status', 'Lead moved to trash.');
@@ -267,7 +249,6 @@ class CrmLeadController extends Controller
         $header = array_map(fn ($value) => strtolower(trim((string) $value)), $header);
         $created = 0;
         $skipped = 0;
-        $firstCreatedLead = null;
         while (($row = fgetcsv($handle)) !== false) {
             $row = array_pad($row, count($header), null);
             $item = array_combine($header, array_slice($row, 0, count($header))) ?: [];
@@ -291,27 +272,15 @@ class CrmLeadController extends Controller
             ]);
             $lead->update(['lead_number' => 'OD-'.str_pad((string) (10000 + $lead->id), 5, '0', STR_PAD_LEFT)]);
             $this->activity($lead, $user, 'imported', 'Lead imported from CSV.');
-            $firstCreatedLead ??= $lead;
             $created++;
         }
         fclose($handle);
 
-        if ($firstCreatedLead) {
-            $firstCreatedLead->loadMissing('assignee');
-            $this->notifier->sendToUsers(
-                $this->notifier->leadRecipients($firstCreatedLead, $user),
-                'CRM lead import completed',
-                'Lead import completed',
-                $user->name.' completed a CRM lead import.',
-                [
-                    'Imported leads' => $created,
-                    'Skipped rows' => $skipped,
-                    'Assigned counsellor' => $firstCreatedLead->assignee?->name ?? 'Unassigned',
-                ],
-                route('crm.dashboard', ['view' => 'leads']),
-                'View imported leads',
-            );
-        }
+        $this->auditLogger->record($request, $user, 'leads_imported', 'Imported '.$created.' lead(s) and skipped '.$skipped.' row(s).', [
+            'subject_type' => 'lead_import',
+            'subject_label' => $data['file']->getClientOriginalName(),
+            'changes' => ['imported' => $created, 'skipped' => $skipped, 'assigned_to' => $data['assigned_to'] ?? $user->id],
+        ]);
 
         return back()->with('status', "Imported {$created} lead(s); skipped {$skipped} invalid or duplicate row(s).");
     }
@@ -353,6 +322,18 @@ class CrmLeadController extends Controller
         return CrmLeadActivity::query()->create([
             'crm_lead_id' => $lead->id, 'crm_user_id' => $user->id,
             'type' => $type, 'body' => $body, 'metadata' => $metadata ?: null,
+        ]);
+    }
+
+    /** @param array<string, mixed> $changes */
+    private function auditLead(Request $request, CrmUser $actor, CrmLead $lead, string $event, string $description, array $changes = []): void
+    {
+        $this->auditLogger->record($request, $actor, $event, $description, [
+            'crm_lead_id' => $lead->id,
+            'subject_type' => 'lead',
+            'subject_id' => $lead->id,
+            'subject_label' => $lead->lead_number.' · '.$lead->name,
+            'changes' => $changes,
         ]);
     }
 

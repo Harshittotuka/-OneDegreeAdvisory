@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
+use App\Models\CrmAuditLog;
 use App\Models\CrmLead;
 use App\Models\CrmUser;
 use App\Support\CrmOptions;
@@ -24,7 +25,14 @@ class CrmDashboardController extends Controller
         $todayEnd = $now->copy()->endOfDay();
         $tomorrowEnd = $now->copy()->addDay()->endOfDay();
 
-        $view = in_array($request->query('view'), ['dashboard', 'leads', 'followups', 'students'], true)
+        if ($request->query('view') === 'audit') {
+            abort_unless($user->isSuperAdmin(), 403);
+        }
+        $allowedViews = ['dashboard', 'leads', 'followups', 'students'];
+        if ($user->isSuperAdmin()) {
+            $allowedViews[] = 'audit';
+        }
+        $view = in_array($request->query('view'), $allowedViews, true)
             ? $request->query('view') : 'dashboard';
         $followUpLayout = $view === 'followups' && in_array($request->query('layout'), ['table', 'calendar'], true)
             ? $request->query('layout') : 'table';
@@ -60,6 +68,40 @@ class CrmDashboardController extends Controller
         $this->applyFilters($leads, $request, $user);
         $followUpCalendar = $this->followUpCalendar($base, $request, $user, $view === 'followups' && $followUpLayout === 'calendar');
 
+        $auditEvents = [
+            'lead_created' => 'Lead created',
+            'lead_updated' => 'Lead updated',
+            'timeline_comment_added' => 'Timeline comment added',
+            'follow_up_completed' => 'Follow-up completed',
+            'lead_converted' => 'Lead converted',
+            'student_journey_updated' => 'Student journey updated',
+            'lead_deleted' => 'Lead moved to trash',
+            'leads_imported' => 'Leads imported',
+            'team_member_created' => 'Team member created',
+            'team_member_updated' => 'Team member updated',
+            'team_member_access_changed' => 'Team access changed',
+            'crm_login' => 'CRM login',
+            'crm_logout' => 'CRM logout',
+        ];
+        $auditLogs = null;
+        if ($view === 'audit') {
+            $auditQuery = CrmAuditLog::query()->with(['actor', 'lead'])->latest();
+            if ($search = trim((string) $request->query('audit_search'))) {
+                $auditQuery->where(function (Builder $query) use ($search): void {
+                    $query->where('description', 'like', "%{$search}%")
+                        ->orWhere('subject_label', 'like', "%{$search}%")
+                        ->orWhereHas('actor', fn (Builder $actor) => $actor->where('name', 'like', "%{$search}%"));
+                });
+            }
+            if (array_key_exists((string) $request->query('audit_event'), $auditEvents)) {
+                $auditQuery->where('event', $request->query('audit_event'));
+            }
+            if ($request->filled('audit_user')) {
+                $auditQuery->where('crm_user_id', $request->integer('audit_user'));
+            }
+            $auditLogs = $auditQuery->paginate(30)->withQueryString();
+        }
+
         $selectedLead = null;
         if ($request->filled('lead')) {
             $selectedLead = CrmLead::query()->visibleTo($user)
@@ -75,6 +117,8 @@ class CrmDashboardController extends Controller
             'selectedLead' => $selectedLead,
             'counsellors' => CrmUser::query()->where('role', 'counsellor')->where('is_active', true)->orderBy('name')->get(),
             'team' => $user->isSuperAdmin() ? CrmUser::query()->orderByDesc('is_active')->orderBy('name')->get() : collect(),
+            'auditLogs' => $auditLogs,
+            'auditEvents' => $auditEvents,
             'view' => $view,
             'followUpLayout' => $followUpLayout,
             'statuses' => CrmOptions::STATUSES,

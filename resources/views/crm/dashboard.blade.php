@@ -1,11 +1,17 @@
 @php
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
-    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Lead pipeline', 'Manage enquiries, ownership and progress'], 'followups' => ['Follow-up planner', 'Upcoming and overdue conversations'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages']];
+    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Lead pipeline', 'Manage enquiries, ownership and progress'], 'followups' => ['Follow-up planner', 'Upcoming and overdue conversations'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it']];
     $currentTitle = $titles[$view];
     $filterQuery = request()->except(['page', 'lead']);
     $calendarQuery = request()->except(['page', 'lead', 'month']);
     $followUpLayoutQuery = request()->except(['page', 'lead', 'layout', 'month']);
     $leadErrors = $errors->getBag('leadCreate');
+    $auditValue = static function (mixed $value): string {
+        if ($value === null || $value === '') return 'Not set';
+        if (is_bool($value)) return $value ? 'Yes' : 'No';
+        if (is_array($value)) return (string) json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return (string) $value;
+    };
 @endphp
 <!doctype html>
 <html lang="en" class="crm-css-pending">
@@ -49,10 +55,15 @@
     <noscript><style>html.crm-css-pending body{visibility:visible}</style></noscript>
     <link rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/crm/crm-dashboard.css') }}?v={{ filemtime(public_path('assets/crm/crm-dashboard.css')) }}">
+    <link rel="stylesheet" href="{{ asset('assets/crm/crm-toast.css') }}?v={{ filemtime(public_path('assets/crm/crm-toast.css')) }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
 <div class="crm-app" data-crm-app>
+@include('crm.partials.toasts', [
+    'successMessage' => session('status'),
+    'errorMessage' => $errors->getBag('default')->first(),
+])
 <div class="shell">
     <aside class="sidebar" id="sidebar">
         <div class="login-brand">
@@ -68,7 +79,10 @@
         </nav>
         @if($crmUser->isSuperAdmin())
             <div class="nav-label" style="margin-top:28px">Administration</div>
-            <nav class="nav"><button class="nav-link" style="border:0;background:transparent;text-align:left;width:100%" data-modal-open="teamModal"><span class="nav-icon">◎</span> Team management</button></nav>
+            <nav class="nav">
+                <a class="nav-link {{ $view === 'audit' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'audit']) }}"><span class="nav-icon">≣</span> Audit log</a>
+                <button class="nav-link" style="border:0;background:transparent;text-align:left;width:100%" data-modal-open="teamModal"><span class="nav-icon">◎</span> Team management</button>
+            </nav>
         @endif
         <div class="sidebar-bottom">
             <div class="side-user">
@@ -113,13 +127,6 @@
         </header>
 
         <div class="content">
-            @if(session('status'))
-                <div class="flash" data-flash>{{ session('status') }}<button type="button" aria-label="Dismiss">×</button></div>
-            @endif
-            @if($errors->getBag('default')->any())
-                <div class="flash error" data-flash><span><strong>Please check the submitted details.</strong> {{ $errors->getBag('default')->first() }}</span><button type="button" aria-label="Dismiss">×</button></div>
-            @endif
-
             @if($view === 'dashboard')
                 <section class="stats" aria-label="Lead summary">
                     <a class="stat" href="{{ route('crm.dashboard', ['view' => 'leads']) }}"><span class="stat-top"><span class="stat-icon">◫</span></span><strong>{{ $stats['total'] }}</strong><span>Total leads</span></a>
@@ -212,6 +219,56 @@
                         </div>
                     </section>
                 </div>
+            @elseif($view === 'audit' && $auditLogs)
+                <section class="workspace audit-workspace">
+                    <div class="workspace-head">
+                        <div class="workspace-title"><h2>Audit log</h2><p>{{ number_format($auditLogs->total()) }} recorded action{{ $auditLogs->total() === 1 ? '' : 's' }}</p></div>
+                        <span class="audit-private-label">Super admin only</span>
+                    </div>
+                    <form class="filters audit-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
+                        <input type="hidden" name="view" value="audit">
+                        <div class="search-wrap"><input class="control" type="search" name="audit_search" value="{{ request('audit_search') }}" placeholder="Search user, action or record"></div>
+                        <select class="control" name="audit_event"><option value="">All actions</option>@foreach($auditEvents as $key=>$label)<option value="{{ $key }}" @selected(request('audit_event')===$key)>{{ $label }}</option>@endforeach</select>
+                        <select class="control" name="audit_user"><option value="">All users</option>@foreach($team as $member)<option value="{{ $member->id }}" @selected((string)request('audit_user')===(string)$member->id)>{{ $member->name }}</option>@endforeach</select>
+                    </form>
+
+                    @if($auditLogs->count())
+                        <div class="audit-list">
+                            @foreach($auditLogs as $log)
+                                <article class="audit-entry">
+                                    <div class="audit-entry-main">
+                                        <span class="audit-avatar">{{ $initials($log->actor?->name) }}</span>
+                                        <span class="audit-actor"><strong>{{ $log->actor?->name ?? 'Deleted user' }}</strong><small>{{ $log->actor?->isSuperAdmin() ? 'Super admin' : ($log->actor ? 'Counsellor' : 'Account removed') }}</small></span>
+                                        <span class="audit-action"><span class="audit-event">{{ $auditEvents[$log->event] ?? str($log->event)->replace('_', ' ')->title() }}</span><strong>{{ $log->description }}</strong>@if($log->subject_label)<small>@if($log->lead)<a href="{{ route('crm.dashboard', ['view' => 'leads', 'lead' => $log->lead->id]) }}">{{ $log->subject_label }}</a>@else{{ $log->subject_label }}@endif</small>@endif</span>
+                                        <span class="audit-meta"><strong>{{ $log->created_at->format('d M Y') }}</strong><small>{{ $log->created_at->format('g:i:s A') }}</small><small>{{ $log->ip_address ?: 'IP unavailable' }}</small></span>
+                                    </div>
+                                    @if($log->changes)
+                                        <details class="audit-details">
+                                            <summary>View recorded details</summary>
+                                            <div class="audit-change-groups">
+                                                @foreach($log->changes as $group => $values)
+                                                    <div class="audit-change-group">
+                                                        <strong>{{ str((string)$group)->replace('_', ' ')->title() }}</strong>
+                                                        @if(is_array($values))
+                                                            @foreach($values as $field => $value)
+                                                                <span><b>{{ str((string)$field)->replace('_', ' ')->title() }}</b><em>{{ $auditValue($value) }}</em></span>
+                                                            @endforeach
+                                                        @else
+                                                            <span><em>{{ $auditValue($values) }}</em></span>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </details>
+                                    @endif
+                                </article>
+                            @endforeach
+                        </div>
+                        @if($auditLogs->hasPages())<div class="pagination-wrap">{{ $auditLogs->onEachSide(1)->links() }}</div>@endif
+                    @else
+                        <div class="empty"><span class="empty-icon">≣</span><h3>No audit entries found</h3><p>Try changing the filters. New CRM actions will be recorded here.</p></div>
+                    @endif
+                </section>
             @else
             <section class="workspace">
                 <div class="workspace-head">
@@ -377,9 +434,22 @@
         <div class="modal-body">
             <div class="team-list">
                 @foreach($team as $member)
-                    <div class="team-member">
+                    <div class="team-member {{ $member->isSuperAdmin() ? 'role-super-admin' : 'role-counsellor' }}">
                         <span class="avatar">{{ $initials($member->name) }}</span>
-                        <span class="team-member-info"><strong>{{ $member->name }}</strong><span>{{ $member->email ?: 'Email not added' }}</span><span>+91 {{ $member->phone }} · {{ $member->isSuperAdmin() ? 'Super admin' : 'Counsellor' }}</span></span>
+                        <span class="team-member-info">
+                            <span class="team-member-title"><strong>{{ $member->name }}</strong>@if($member->id === $crmUser->id)<em>You</em>@endif</span>
+                            <span class="team-member-role {{ $member->isSuperAdmin() ? 'is-super-admin' : 'is-counsellor' }}">
+                                @if($member->isSuperAdmin())
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.8 8.1 7 10 4.2-1.9 7-5.3 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+                                    Super admin
+                                @else
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg>
+                                    Counsellor
+                                @endif
+                            </span>
+                            <span class="team-member-contact">{{ $member->email ?: 'Email not added' }}</span>
+                            <span class="team-member-contact">+91 {{ $member->phone }}</span>
+                        </span>
                         <span class="state {{ $member->is_active ? '' : 'off' }}">{{ $member->is_active ? 'Active' : 'Disabled' }}</span>
                         @if($member->id !== $crmUser->id)<form method="post" action="{{ route('crm.team.toggle',$member) }}" data-ajax-preserve-modal="teamModal">@csrf @method('PATCH')<button class="btn btn-ghost" type="submit" title="{{ $member->is_active ? 'Disable access' : 'Restore access' }}">{{ $member->is_active ? '⊘' : '↻' }}</button></form>@endif
                         <details class="team-member-edit">
@@ -399,7 +469,7 @@
                     <div class="field"><label>Name</label><input name="name" required></div>
                     <div class="field"><label>Mobile number</label><input name="phone" inputmode="tel" required></div>
                     <div class="field full"><label>Email address</label><input type="email" name="email" placeholder="name@example.com" required></div>
-                    <div class="field full"><label>Access level</label><select name="role" required><option value="counsellor">Counsellor</option><option value="super_admin">Super admin</option></select></div>
+                    <div class="field full"><label>Access level</label><select name="role" required><option value="counsellor">Counsellor — assigned leads only</option><option value="super_admin">Super admin — complete CRM access</option></select><div class="team-role-guide"><span class="is-counsellor"><b>● Counsellor</b><small>Manages only leads assigned to them</small></span><span class="is-super-admin"><b>◆ Super admin</b><small>Full team, lead and audit-log access</small></span></div></div>
                 </div>
                 <button class="btn btn-primary btn-block" type="submit">Create team account</button>
             </form>
@@ -486,8 +556,6 @@
             </div>
             <div class="tabs drawer-tabs"><button class="tab active" data-tab="details"><span class="tab-symbol">◫</span><span>Details<small>Profile & status</small></span></button><button class="tab" data-tab="timeline"><span class="tab-symbol">◷</span><span>Timeline<small><span data-timeline-count>{{ $selectedLead->activities->count() }}</span> activities</small></span></button><button class="tab" data-tab="student"><span class="tab-symbol">◇</span><span>Student<small>{{ $selectedLead->is_student ? ($studentStages[$selectedLead->student_stage] ?? 'Journey') : 'Not enrolled' }}</small></span></button></div>
 
-            @if(session('status'))<div class="drawer-feedback" data-drawer-feedback><span>✓</span><div><strong>Update complete</strong><p>{{ session('status') }}</p></div><button type="button" aria-label="Dismiss" data-dismiss-drawer-feedback>×</button></div>@endif
-
             <div class="tab-panel active" data-panel="details">
                 <section class="lead-snapshot {{ in_array($selectedLead->status, $closedStatuses, true) ? 'is-closed' : '' }}">
                     <div class="lead-orbit" style="--lead-progress:{{ $currentStatus['phase'] * 25 }}" aria-hidden="true"><svg viewBox="0 0 100 100"><circle class="orbit-track" cx="50" cy="50" r="42" pathLength="100"/><circle class="orbit-value" cx="50" cy="50" r="42" pathLength="100"/></svg><span>{{ $currentStatus['symbol'] }}</span></div>
@@ -538,7 +606,7 @@
                     <form method="post" action="{{ route('crm.leads.comments.store',$selectedLead) }}" data-timeline-form>@csrf
                         <div class="comment-templates"><span>Quick start</span><button type="button" data-comment-template="Call connected — ">Call connected</button><button type="button" data-comment-template="No answer — retry on ">No answer</button><button type="button" data-comment-template="Documents requested — ">Documents requested</button></div>
                         <div class="comment-input-wrap"><textarea name="comment" rows="4" maxlength="3000" placeholder="Write the call outcome, student concern, documents discussed or next action…" required></textarea><span data-comment-count>0 / 3000</span></div>
-                        <div class="drawer-actions composer-actions"><span class="timeline-feedback" data-timeline-feedback role="status" aria-live="polite"></span><button class="btn btn-primary" type="submit"><span data-timeline-submit>Add to timeline</span><b aria-hidden="true">＋</b></button></div>
+                        <div class="drawer-actions composer-actions"><button class="btn btn-primary" type="submit"><span data-timeline-submit>Add to timeline</span><b aria-hidden="true">＋</b></button></div>
                     </form>
                 </div>
 

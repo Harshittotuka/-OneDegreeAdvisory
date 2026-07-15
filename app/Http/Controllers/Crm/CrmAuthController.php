@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\CrmOtpCode;
 use App\Models\CrmUser;
-use App\Services\CrmNotifier;
+use App\Services\CrmAuditLogger;
 use App\Services\CrmOtpSender;
 use App\Services\CrmSuperAdminSync;
 use Illuminate\Contracts\View\View;
@@ -59,14 +59,14 @@ class CrmAuthController extends Controller
         $request->session()->put('crm_otp_delivery', $deliveryChannels);
 
         $response = back()->with('otp_sent', true)->with('otp_phone', $phone);
-        if (app()->isLocal() || app()->runningUnitTests() || config('crm.otp.debug')) {
+        if (app()->runningUnitTests() || config('crm.otp.debug')) {
             $response->with('debug_otp', $otp);
         }
 
         return $response;
     }
 
-    public function verify(Request $request, CrmNotifier $notifier): RedirectResponse
+    public function verify(Request $request, CrmAuditLogger $auditLogger): RedirectResponse
     {
         $data = $request->validate(['otp' => ['required', 'digits:6']]);
         $userId = $request->session()->get('crm_otp_user_id');
@@ -97,24 +97,27 @@ class CrmAuthController extends Controller
         $request->session()->put('crm_user_id', $user->id);
         $request->session()->forget(['crm_otp_user_id', 'crm_otp_phone', 'crm_otp_delivery']);
 
-        $notifier->sendToUsers(
-            [$user],
-            'Successful One Degree CRM sign-in',
-            'New CRM sign-in',
-            'Your One Degree CRM account was signed in successfully.',
-            [
-                'Account' => $user->name,
-                'Time' => now()->format('d M Y, g:i A'),
-                'IP address' => $request->ip() ?: 'Unavailable',
-            ],
-            route('crm.dashboard'),
-        );
+        $auditLogger->record($request, $user, 'crm_login', 'Signed in to the CRM.', [
+            'subject_type' => 'authentication',
+            'subject_id' => $user->id,
+            'subject_label' => $user->name,
+        ]);
 
         return redirect()->intended(route('crm.dashboard'));
     }
 
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request, CrmAuditLogger $auditLogger): RedirectResponse
     {
+        /** @var CrmUser|null $user */
+        $user = $request->attributes->get('crm_user');
+        if ($user) {
+            $auditLogger->record($request, $user, 'crm_logout', 'Signed out of the CRM.', [
+                'subject_type' => 'authentication',
+                'subject_id' => $user->id,
+                'subject_label' => $user->name,
+            ]);
+        }
+
         $request->session()->forget(['crm_user_id', 'crm_otp_user_id', 'crm_otp_phone', 'crm_otp_delivery']);
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -34,8 +34,13 @@
     </script>
     <noscript><style>html.crm-css-pending body{visibility:visible}</style></noscript>
     <link rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/crm/crm-toast.css') }}?v={{ filemtime(public_path('assets/crm/crm-toast.css')) }}">
 </head>
 <body>
+@include('crm.partials.toasts', [
+    'errorMessage' => $errors->first(),
+    'infoMessage' => session('debug_otp') ? 'Local test OTP: '.session('debug_otp') : null,
+])
 <main class="crm-login">
     <section class="login-panel">
         <div class="login-card auth-step">
@@ -54,14 +59,6 @@
                     Sign in using the mobile number registered by your super admin.
                 @endif
             </p>
-
-            @if($errors->any())
-                <div class="alert alert-error">{{ $errors->first() }}</div>
-            @endif
-
-            @if(session('debug_otp'))
-                <div class="alert alert-info"><strong>Local test OTP:</strong> {{ session('debug_otp') }}</div>
-            @endif
 
             @if(session('otp_sent') || $errors->has('otp'))
                 <form method="post" action="{{ route('crm.otp.verify') }}" data-transition-form data-transition-label="Opening your workspace…">

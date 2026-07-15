@@ -325,6 +325,18 @@ html[data-crm-theme="orbit"] .followup-calendar-head h3{font-family:var(--orbit-
 .team-management-modal .team-member>.avatar{width:44px;height:44px}
 .team-management-modal .team-member-info{min-width:0}
 .team-management-modal .team-member-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team-management-modal .team-member.role-super-admin{border-left:4px solid #9a63cb;background:linear-gradient(100deg,rgba(249,241,255,.72),rgba(255,255,255,.96) 34%)}
+.team-management-modal .team-member.role-counsellor{border-left:4px solid #3f91c7;background:linear-gradient(100deg,rgba(235,247,255,.74),rgba(255,255,255,.96) 34%)}
+.team-management-modal .team-member.role-super-admin>.avatar{background:linear-gradient(145deg,#a75dc5,#7652ca);color:#fff;box-shadow:0 6px 15px rgba(126,78,182,.2)}
+.team-management-modal .team-member.role-counsellor>.avatar{background:linear-gradient(145deg,#3f9bc6,#2874ad);color:#fff;box-shadow:0 6px 15px rgba(42,119,174,.18)}
+.team-member-info .team-member-title{display:flex!important;align-items:center;gap:6px;margin-bottom:6px;overflow:visible!important}
+.team-member-title strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team-member-title em{flex:0 0 auto;padding:2px 5px;border-radius:5px;background:rgba(95,101,120,.1);color:#6d7382;font-size:.5rem;font-style:normal;font-weight:850;text-transform:uppercase;letter-spacing:.04em}
+.team-member-info .team-member-role{display:inline-flex!important;align-items:center;gap:5px;width:max-content;max-width:100%;margin-bottom:6px;padding:4px 8px;border:1px solid;border-radius:999px;font-size:.57rem!important;font-weight:850;text-transform:uppercase;letter-spacing:.055em;overflow:visible!important}
+.team-member-role svg{flex:0 0 auto;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.team-member-role.is-super-admin{border-color:#d9b9ed;background:#f4eaff;color:#75419c}
+.team-member-role.is-counsellor{border-color:#b8dbef;background:#eaf7ff;color:#17658f}
+.team-member-info .team-member-contact{color:inherit;opacity:.62;font-size:.6rem!important}
 .team-management-modal .team-member>.state{justify-self:end;white-space:nowrap}
 .team-management-modal .team-member>form{margin:0;justify-self:end}
 .team-management-modal .team-member>form .btn{width:34px;height:34px;padding:0;display:grid;place-items:center}
@@ -340,6 +352,42 @@ html[data-crm-theme="orbit"] .followup-calendar-head h3{font-family:var(--orbit-
 .team-create-heading h3{margin:0;font-size:.82rem}
 .team-create-heading p{margin:4px 0 0;opacity:.62;font-size:.65rem}
 .team-create-form .btn-block{margin-top:2px}
+.team-role-guide{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px}
+.team-role-guide>span{min-width:0;padding:9px 10px;border:1px solid rgba(127,127,127,.16);border-radius:10px;background:#fff}
+.team-role-guide b,.team-role-guide small{display:block}
+.team-role-guide b{font-size:.61rem}.team-role-guide small{margin-top:3px;opacity:.62;font-size:.55rem;line-height:1.4}
+.team-role-guide .is-counsellor b{color:#17658f}.team-role-guide .is-super-admin b{color:#75419c}
+
+/* Super-admin audit log */
+.audit-workspace{--audit-accent:#175244;--audit-soft:#eef3ea;--audit-line:rgba(75,86,80,.16);--audit-muted:#68736c;--audit-surface:rgba(255,255,255,.66)}
+html[data-crm-theme="classic"] .audit-workspace{--audit-accent:#21147f;--audit-soft:#f0edff;--audit-line:rgba(52,60,78,.14);--audit-muted:#7a8394;--audit-surface:#fff}
+html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-soft:#efedff;--audit-line:rgba(98,84,207,.16);--audit-muted:#727792;--audit-surface:rgba(255,255,255,.72)}
+.audit-private-label{display:inline-flex;align-items:center;padding:6px 10px;border:1px solid var(--audit-line);border-radius:999px;background:var(--audit-soft);color:var(--audit-accent);font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.audit-filters{grid-template-columns:minmax(260px,1.6fr) minmax(180px,.75fr) minmax(180px,.75fr)!important}
+.audit-filters>input[type="hidden"]{display:none!important}
+.audit-list{display:grid}
+.audit-entry{border-bottom:1px solid var(--audit-line);background:var(--audit-surface)}
+.audit-entry:last-child{border-bottom:0}
+.audit-entry-main{display:grid;grid-template-columns:40px minmax(130px,.65fr) minmax(280px,2fr) minmax(120px,.55fr);align-items:center;gap:13px;padding:15px 20px}
+.audit-avatar{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--audit-soft);color:var(--audit-accent);font-size:.68rem;font-weight:850}
+.audit-actor,.audit-action,.audit-meta{min-width:0}
+.audit-actor strong,.audit-actor small,.audit-action strong,.audit-action small,.audit-meta strong,.audit-meta small{display:block}
+.audit-actor strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.76rem}
+.audit-actor small,.audit-action small,.audit-meta small{margin-top:3px;color:var(--audit-muted);font-size:.63rem}
+.audit-action strong{margin-top:5px;font-size:.75rem;line-height:1.4}
+.audit-action small a{color:var(--audit-accent);font-weight:750}
+.audit-event{display:inline-flex;padding:3px 7px;border-radius:999px;background:var(--audit-soft);color:var(--audit-accent);font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.035em}
+.audit-meta{text-align:right}
+.audit-meta strong{font-size:.7rem}
+.audit-details{padding:0 20px 13px 73px}
+.audit-details summary{width:max-content;cursor:pointer;color:var(--audit-accent);font-size:.63rem;font-weight:800}
+.audit-change-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px;margin-top:10px}
+.audit-change-group{min-width:0;padding:10px 12px;border:1px solid var(--audit-line);border-radius:10px;background:var(--audit-soft)}
+.audit-change-group>strong{display:block;margin-bottom:6px;color:var(--audit-accent);font-size:.61rem;text-transform:uppercase;letter-spacing:.05em}
+.audit-change-group>span{display:grid;grid-template-columns:minmax(85px,.7fr) minmax(0,1.3fr);gap:8px;padding:4px 0;border-top:1px solid var(--audit-line);font-size:.62rem}
+.audit-change-group>span:first-of-type{border-top:0}
+.audit-change-group b{font-weight:750}
+.audit-change-group em{overflow-wrap:anywhere;color:var(--audit-muted);font-style:normal}
 
 @media(max-width:640px){
     .crm-stage-summary{grid-template-columns:46px minmax(0,1fr)!important;gap:11px!important;padding:13px!important}
@@ -365,6 +413,16 @@ html[data-crm-theme="orbit"] .followup-calendar-head h3{font-family:var(--orbit-
     .team-member-edit form{grid-template-columns:1fr}
     .team-member-edit .btn{width:100%}
     .team-create-form{padding:15px}
+    .team-role-guide{grid-template-columns:1fr}
+    .audit-filters{grid-template-columns:1fr!important}
+    .audit-filters>.search-wrap,.audit-filters>.control{display:block!important;grid-column:auto!important}
+    .audit-entry-main{grid-template-columns:36px minmax(0,1fr);gap:9px;padding:13px 14px}
+    .audit-avatar{width:36px;height:36px}
+    .audit-action,.audit-meta{grid-column:2}
+    .audit-meta{text-align:left;display:flex;gap:8px;flex-wrap:wrap}
+    .audit-meta small{margin-top:0}
+    .audit-details{padding:0 14px 13px 59px}
+    .audit-change-groups{grid-template-columns:1fr}
 }
 
 @keyframes dashboard-map-pulse{0%,100%{transform:scale(.8);opacity:.13}50%{transform:scale(1.15);opacity:.25}}

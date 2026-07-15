@@ -15,14 +15,14 @@ class CrmOtpSender
     /** @return list<string> */
     public function send(CrmUser $user, string $otp): array
     {
-        if (app()->isLocal() || config('crm.otp.debug')) {
-            Log::info('CRM login OTP generated for local development.', ['phone' => $user->phone, 'otp' => $otp]);
+        if (config('crm.otp.debug')) {
+            Log::info('CRM login OTP generated in debug mode.', ['phone' => $user->phone, 'otp' => $otp]);
 
             return ['debug'];
         }
 
         $delivered = [];
-        foreach ((array) config('crm.otp.channels', ['email', 'sms']) as $channel) {
+        foreach ((array) config('crm.otp.channels', ['email']) as $channel) {
             try {
                 if ($channel === 'email') {
                     $this->sendEmail($user, $otp);
@@ -41,7 +41,7 @@ class CrmOtpSender
         }
 
         if ($delivered === []) {
-            throw new RuntimeException('Unable to send OTP right now. Please contact a super admin to check your email or SMS setup.');
+            throw new RuntimeException('Unable to send OTP right now. Please contact a super admin to check the registered email and mail setup.');
         }
 
         return array_values(array_unique($delivered));
