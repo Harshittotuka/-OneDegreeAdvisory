@@ -320,7 +320,7 @@ class CrmLeadController extends Controller
     {
         $rules = [
             'name' => ['required', 'string', 'max:150'],
-            'phone' => ['required', 'string', 'regex:/^(?:\+?91[\s-]?)?[6-9][0-9\s-]{8,13}$/'],
+            'phone' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:190'], 'city' => ['nullable', 'string', 'max:120'],
             'course_interest' => ['nullable', 'string', 'max:180'], 'country_interest' => ['nullable', 'string', 'max:120'],
             'category' => ['nullable', Rule::in(array_keys(CrmOptions::CATEGORIES))],

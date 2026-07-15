@@ -29,7 +29,7 @@
         })();
     </script>
     <link rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/crm/crm-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/crm/crm-dashboard.css') }}?v={{ filemtime(public_path('assets/crm/crm-dashboard.css')) }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
@@ -285,7 +285,7 @@
 
 @if($crmUser->isSuperAdmin())
 <div class="overlay" id="teamModal" aria-hidden="true">
-    <div class="modal sm">
+    <div class="modal team-management-modal">
         <div class="modal-head"><div><h2>Team management</h2><p>Create counsellors or super admins and control their CRM access.</p></div><button class="close-btn" data-modal-close>×</button></div>
         <div class="modal-body">
             <div class="team-list">
@@ -298,19 +298,19 @@
                         <details class="team-member-edit">
                             <summary>Edit name or email</summary>
                             <form method="post" action="{{ route('crm.team.update',$member) }}" data-ajax-preserve-modal="teamModal">@csrf @method('PATCH')
-                                <input name="name" value="{{ $member->name }}" aria-label="Name" required>
-                                <input type="email" name="email" value="{{ $member->email }}" placeholder="name@example.com" aria-label="Email address" required>
-                                <button class="btn btn-outline" type="submit">Save</button>
+                                <label><span>Name</span><input name="name" value="{{ $member->name }}" required></label>
+                                <label><span>Email address</span><input type="email" name="email" value="{{ $member->email }}" placeholder="name@example.com" required></label>
+                                <button class="btn btn-outline" type="submit">Save changes</button>
                             </form>
                         </details>
                     </div>
                 @endforeach
             </div>
-            <form method="post" action="{{ route('crm.team.store') }}" data-ajax-preserve-modal="teamModal">@csrf
-                <h3 style="font-size:.8rem;margin:0 0 13px">Add a team member</h3>
+            <form class="team-create-form" method="post" action="{{ route('crm.team.store') }}" data-ajax-preserve-modal="teamModal">@csrf
+                <div class="team-create-heading"><h3>Add a team member</h3><p>They can sign in using the mobile number below.</p></div>
                 <div class="form-grid">
                     <div class="field"><label>Name</label><input name="name" required></div>
-                    <div class="field"><label>Mobile number</label><input name="phone" maxlength="10" inputmode="numeric" required></div>
+                    <div class="field"><label>Mobile number</label><input name="phone" inputmode="tel" required></div>
                     <div class="field full"><label>Email address</label><input type="email" name="email" placeholder="name@example.com" required></div>
                     <div class="field full"><label>Access level</label><select name="role" required><option value="counsellor">Counsellor</option><option value="super_admin">Super admin</option></select></div>
                 </div>

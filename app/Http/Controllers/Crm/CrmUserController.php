@@ -18,12 +18,17 @@ class CrmUserController extends Controller
         abort_unless($admin->isSuperAdmin(), 403);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'phone' => ['required', 'string', 'regex:/^[6-9][0-9]{9}$/', 'unique:crm_users,phone'],
+            'phone' => ['required', 'string', 'max:30'],
             'email' => ['required', 'email', 'max:190', 'unique:crm_users,email'],
             'role' => ['required', Rule::in(['counsellor', 'super_admin'])],
         ]);
+        $phone = $this->normalisePhone($data['phone']);
+        if (CrmUser::query()->where('phone', $phone)->exists()) {
+            return back()->withErrors(['phone' => 'This mobile number already has a CRM account.'])->withInput();
+        }
+
         $member = CrmUser::query()->create([
-            'name' => trim($data['name']), 'phone' => $data['phone'], 'email' => strtolower(trim($data['email'])), 'role' => $data['role'],
+            'name' => trim($data['name']), 'phone' => $phone, 'email' => strtolower(trim($data['email'])), 'role' => $data['role'],
             'is_active' => true, 'created_by' => $admin->id,
         ]);
 
@@ -90,5 +95,10 @@ class CrmUserController extends Controller
         );
 
         return back()->with('status', $roleLabel.' access '.($member->is_active ? 'restored.' : 'disabled.'));
+    }
+
+    private function normalisePhone(string $phone): string
+    {
+        return substr((string) preg_replace('/\D+/', '', $phone), -10);
     }
 }

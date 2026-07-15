@@ -29,7 +29,7 @@ class CrmTest extends TestCase
         config()->set('crm.super_admin.name', 'CRM Owner');
         config()->set('crm.super_admin.phone', '9876543210');
 
-        $request = $this->post(route('crm.otp.request'), ['phone' => '9876543210']);
+        $request = $this->post(route('crm.otp.request'), ['phone' => '+91 98765 43210']);
         $request->assertRedirect()->assertSessionHas('otp_sent')->assertSessionHas('debug_otp');
         $otp = session('debug_otp');
 
@@ -81,7 +81,7 @@ class CrmTest extends TestCase
             ->withSession(['crm_user_id' => $admin->id])
             ->from(route('crm.dashboard'))
             ->post(route('crm.leads.store'), [
-                'name' => 'Invalid Phone Lead', 'phone' => '123', 'priority' => 'medium', 'status' => 'new',
+                'name' => 'Invalid Status Lead', 'phone' => '123', 'priority' => 'medium', 'status' => 'not-a-status',
             ]);
 
         $response
@@ -90,9 +90,20 @@ class CrmTest extends TestCase
             ->assertSee('aria-hidden="false"', false)
             ->assertSee('data-open-on-load', false)
             ->assertSee('class="field has-error"', false)
-            ->assertSee('The phone field format is invalid.')
-            ->assertSee('value="Invalid Phone Lead"', false)
+            ->assertSee('The selected status is invalid.')
+            ->assertSee('value="Invalid Status Lead"', false)
             ->assertDontSee('Please check the submitted details.');
+    }
+
+    public function test_lead_mobile_number_has_no_strict_format_validation(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.leads.store'), [
+            'name' => 'Short Mobile Lead', 'phone' => '123', 'priority' => 'medium', 'status' => 'new',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('crm_leads', ['name' => 'Short Mobile Lead', 'phone' => '123']);
     }
 
     public function test_dashboard_renders_partial_navigation_hooks(): void
@@ -124,6 +135,9 @@ class CrmTest extends TestCase
             ->assertSee('data-leaflet-canvas', false)
             ->assertSee('data-map-points=', false)
             ->assertSee('leaflet@1.9.4', false)
+            ->assertSee('team-management-modal', false)
+            ->assertSee('team-create-form', false)
+            ->assertSee('Save changes')
             ->assertSee('Where students want to study')
             ->assertSee('Pipeline health')
             ->assertSee('Lead sources')
@@ -164,7 +178,7 @@ class CrmTest extends TestCase
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
         $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.team.store'), [
-            'name' => 'New Counsellor', 'phone' => '9876543211', 'email' => 'counsellor@example.com', 'role' => 'counsellor',
+            'name' => 'New Counsellor', 'phone' => '+91 98765 43211', 'email' => 'counsellor@example.com', 'role' => 'counsellor',
         ])->assertSessionHasNoErrors();
         $counsellor = CrmUser::query()->where('phone', '9876543211')->firstOrFail();
         $this->assertSame('counsellor@example.com', $counsellor->email);

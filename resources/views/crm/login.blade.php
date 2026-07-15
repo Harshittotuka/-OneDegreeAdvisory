@@ -83,7 +83,7 @@
                         <label for="phone">Registered mobile number</label>
                         <div class="input-wrap">
                             <span class="phone-code">+91</span>
-                            <input id="phone" name="phone" type="tel" value="{{ old('phone') }}" inputmode="numeric" autocomplete="tel" maxlength="10" placeholder="98765 43210" autofocus required>
+                            <input id="phone" name="phone" type="tel" value="{{ old('phone') }}" inputmode="tel" autocomplete="tel" placeholder="98765 43210" autofocus required>
                         </div>
                     </div>
                     <button class="btn btn-navy btn-block" type="submit">Send secure OTP <span aria-hidden="true">→</span></button>

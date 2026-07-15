@@ -27,7 +27,7 @@ class CrmAuthController extends Controller
 
     public function requestOtp(Request $request, CrmOtpSender $sender, CrmSuperAdminSync $superAdmins): RedirectResponse
     {
-        $data = $request->validate(['phone' => ['required', 'string', 'regex:/^[6-9][0-9]{9}$/']]);
+        $data = $request->validate(['phone' => ['required', 'string', 'max:30']]);
         $phone = $this->normalisePhone($data['phone']);
         $superAdmins->sync();
         $user = CrmUser::query()->where('phone', $phone)->where('is_active', true)->first();
