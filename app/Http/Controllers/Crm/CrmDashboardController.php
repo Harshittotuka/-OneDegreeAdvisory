@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CrmLead;
 use App\Models\CrmUser;
 use App\Support\CrmOptions;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ class CrmDashboardController extends Controller
 
         $view = in_array($request->query('view'), ['dashboard', 'leads', 'followups', 'students'], true)
             ? $request->query('view') : 'dashboard';
+        $followUpLayout = $view === 'followups' && in_array($request->query('layout'), ['table', 'calendar'], true)
+            ? $request->query('layout') : 'table';
 
         $stats = [
             'total' => (clone $base)->count(),
@@ -55,6 +58,7 @@ class CrmDashboardController extends Controller
             $leads->latest('updated_at');
         }
         $this->applyFilters($leads, $request, $user);
+        $followUpCalendar = $this->followUpCalendar($base, $request, $user, $view === 'followups' && $followUpLayout === 'calendar');
 
         $selectedLead = null;
         if ($request->filled('lead')) {
@@ -67,16 +71,67 @@ class CrmDashboardController extends Controller
             'dashboard' => $dashboard,
             'notifications' => $notifications,
             'leads' => $leads->paginate(20)->withQueryString(),
+            'followUpCalendar' => $followUpCalendar,
             'selectedLead' => $selectedLead,
             'counsellors' => CrmUser::query()->where('role', 'counsellor')->where('is_active', true)->orderBy('name')->get(),
             'team' => $user->isSuperAdmin() ? CrmUser::query()->orderByDesc('is_active')->orderBy('name')->get() : collect(),
             'view' => $view,
+            'followUpLayout' => $followUpLayout,
             'statuses' => CrmOptions::STATUSES,
             'priorities' => CrmOptions::PRIORITIES,
             'categories' => CrmOptions::CATEGORIES,
             'studentStages' => CrmOptions::STUDENT_STAGES,
             'studentCategories' => CrmOptions::STUDENT_CATEGORIES,
         ]);
+    }
+
+    private function followUpCalendar(Builder $base, Request $request, CrmUser $user, bool $include): ?array
+    {
+        if (!$include) {
+            return null;
+        }
+
+        $month = now()->startOfMonth();
+        $requestedMonth = trim((string) $request->query('month'));
+        if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $requestedMonth)) {
+            try {
+                $month = Carbon::createFromFormat('!Y-m', $requestedMonth)->startOfMonth();
+            } catch (\Throwable) {
+                $month = now()->startOfMonth();
+            }
+        }
+
+        $monthEnd = $month->copy()->endOfMonth();
+        $calendarQuery = (clone $base)
+            ->with('assignee')
+            ->whereNull('follow_up_completed_at')
+            ->whereBetween('follow_up_at', [$month->copy()->startOfDay(), $monthEnd->copy()->endOfDay()])
+            ->orderBy('follow_up_at');
+        $this->applyFilters($calendarQuery, $request, $user);
+
+        $events = $calendarQuery->get();
+        $eventsByDate = $events->groupBy(fn (CrmLead $lead): string => $lead->follow_up_at->format('Y-m-d'));
+        $gridStart = $month->copy()->startOfWeek(Carbon::MONDAY);
+        $gridEnd = $monthEnd->copy()->endOfWeek(Carbon::SUNDAY);
+        $days = [];
+
+        for ($day = $gridStart->copy(); $day->lte($gridEnd); $day->addDay()) {
+            $days[] = [
+                'date' => $day->copy(),
+                'events' => $eventsByDate->get($day->format('Y-m-d'), collect()),
+                'inMonth' => $day->month === $month->month && $day->year === $month->year,
+            ];
+        }
+
+        return [
+            'month' => $month,
+            'previous' => $month->copy()->subMonth()->format('Y-m'),
+            'next' => $month->copy()->addMonth()->format('Y-m'),
+            'weeks' => array_chunk($days, 7),
+            'total' => $events->count(),
+            'dueToday' => $events->filter(fn (CrmLead $lead): bool => $lead->follow_up_at->isToday())->count(),
+            'overdue' => $events->filter(fn (CrmLead $lead): bool => $lead->follow_up_at->isPast())->count(),
+        ];
     }
 
     private function dashboardData(Builder $base, array $stats, mixed $todayStart, mixed $todayEnd, bool $includeDetails): array

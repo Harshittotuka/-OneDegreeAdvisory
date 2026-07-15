@@ -3,19 +3,22 @@
     $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Lead pipeline', 'Manage enquiries, ownership and progress'], 'followups' => ['Follow-up planner', 'Upcoming and overdue conversations'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages']];
     $currentTitle = $titles[$view];
     $filterQuery = request()->except(['page', 'lead']);
+    $calendarQuery = request()->except(['page', 'lead', 'month']);
+    $followUpLayoutQuery = request()->except(['page', 'lead', 'layout', 'month']);
     $leadErrors = $errors->getBag('leadCreate');
 @endphp
 <!doctype html>
-<html lang="en">
+<html lang="en" class="crm-css-pending">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <title>{{ $currentTitle[0] }} · One Degree CRM</title>
+    <style>html.crm-css-pending body{visibility:hidden}</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link id="crmThemeStylesheet" rel="stylesheet" data-classic-href="{{ asset('assets/crm/crm-classic.css') }}" data-evergreen-href="{{ asset('assets/crm/crm.css') }}" data-orbit-href="{{ asset('assets/crm/crm-orbit.css') }}">
+    <link id="crmThemeStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm.css') }}" data-classic-href="{{ asset('assets/crm/crm-classic.css') }}" data-evergreen-href="{{ asset('assets/crm/crm.css') }}" data-orbit-href="{{ asset('assets/crm/crm-orbit.css') }}">
     <script>
         (() => {
             let theme = 'evergreen';
@@ -25,9 +28,25 @@
             } catch (error) {}
             document.documentElement.dataset.crmTheme = theme;
             const stylesheet = document.getElementById('crmThemeStylesheet');
-            stylesheet.href = theme === 'classic' ? stylesheet.dataset.classicHref : (theme === 'orbit' ? stylesheet.dataset.orbitHref : stylesheet.dataset.evergreenHref);
+            const selectedHref = theme === 'classic' ? stylesheet.dataset.classicHref : (theme === 'orbit' ? stylesheet.dataset.orbitHref : stylesheet.dataset.evergreenHref);
+            const reveal = () => document.documentElement.classList.remove('crm-css-pending');
+            const revealFallback = window.setTimeout(reveal, 2500);
+            const revealAfterStylesheet = () => {
+                window.clearTimeout(revealFallback);
+                reveal();
+            };
+
+            if (stylesheet.href === selectedHref) {
+                revealAfterStylesheet();
+                return;
+            }
+
+            stylesheet.addEventListener('load', revealAfterStylesheet, { once: true });
+            stylesheet.addEventListener('error', revealAfterStylesheet, { once: true });
+            stylesheet.href = selectedHref;
         })();
     </script>
+    <noscript><style>html.crm-css-pending body{visibility:visible}</style></noscript>
     <link rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/crm/crm-dashboard.css') }}?v={{ filemtime(public_path('assets/crm/crm-dashboard.css')) }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
@@ -198,6 +217,12 @@
                 <div class="workspace-head">
                     <div class="workspace-title"><h2>{{ $currentTitle[0] }}</h2><p>{{ number_format($leads->total()) }} record{{ $leads->total() === 1 ? '' : 's' }} in this view</p></div>
                     <div class="action-row">
+                        @if($view === 'followups')
+                            <div class="followup-view-switch" role="group" aria-label="Follow-up display">
+                                <a @class(['active' => $followUpLayout === 'table']) href="{{ route('crm.dashboard', array_merge($followUpLayoutQuery, ['view' => 'followups', 'layout' => 'table'])) }}" aria-pressed="{{ $followUpLayout === 'table' ? 'true' : 'false' }}"><span aria-hidden="true">&#9776;</span> Table</a>
+                                <a @class(['active' => $followUpLayout === 'calendar']) href="{{ route('crm.dashboard', array_merge($followUpLayoutQuery, ['view' => 'followups', 'layout' => 'calendar', 'month' => request('month', now()->format('Y-m'))])) }}" aria-pressed="{{ $followUpLayout === 'calendar' ? 'true' : 'false' }}"><span aria-hidden="true">&#9638;</span> Calendar</a>
+                            </div>
+                        @endif
                         <button class="btn btn-outline" data-modal-open="importModal">⇧ <span>Import Excel / CSV</span></button>
                         <a class="btn btn-outline" href="{{ route('crm.leads.export', $filterQuery) }}" data-native-navigation>⇩ <span>Export</span></a>
                         <button class="btn btn-primary" data-modal-open="leadModal">＋ <span>Add lead</span></button>
@@ -205,6 +230,8 @@
                 </div>
                 <form class="filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
                     <input type="hidden" name="view" value="{{ $view }}">
+                    @if($view === 'followups')<input type="hidden" name="layout" value="{{ $followUpLayout }}">@endif
+                    @if($view === 'followups' && $followUpLayout === 'calendar')<input type="hidden" name="month" value="{{ request('month', now()->format('Y-m')) }}">@endif
                     <div class="search-wrap"><input class="control" type="search" name="search" value="{{ request('search') }}" placeholder="Search name, phone, email or lead ID"></div>
                     <select class="control" name="status"><option value="">All statuses</option>@foreach($statuses as $key=>$label)<option value="{{ $key }}" @selected(request('status')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="priority"><option value="">All priorities</option>@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected(request('priority')===$key)>{{ $label }}</option>@endforeach</select>
@@ -212,6 +239,65 @@
                     @if($crmUser->isSuperAdmin())<select class="control" name="assigned_to"><option value="">All counsellors</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected((string)request('assigned_to')===(string)$person->id)>{{ $person->name }}</option>@endforeach</select>@else<span></span>@endif
                 </form>
 
+                @if($view === 'followups' && $followUpLayout === 'calendar' && $followUpCalendar)
+                    @php
+                        $calendarMonth = $followUpCalendar['month'];
+                        $previousMonthUrl = route('crm.dashboard', array_merge($calendarQuery, ['view' => 'followups', 'month' => $followUpCalendar['previous']]));
+                        $nextMonthUrl = route('crm.dashboard', array_merge($calendarQuery, ['view' => 'followups', 'month' => $followUpCalendar['next']]));
+                        $todayMonthUrl = route('crm.dashboard', array_merge($calendarQuery, ['view' => 'followups', 'month' => now()->format('Y-m')]));
+                    @endphp
+                    <section class="followup-calendar" aria-label="Follow-up calendar for {{ $calendarMonth->format('F Y') }}">
+                        <div class="followup-calendar-head">
+                            <div>
+                                <span class="followup-calendar-kicker">Monthly schedule</span>
+                                <h3>{{ $calendarMonth->format('F Y') }}</h3>
+                                <p>{{ $followUpCalendar['total'] }} scheduled · {{ $followUpCalendar['dueToday'] }} due today · {{ $followUpCalendar['overdue'] }} overdue</p>
+                            </div>
+                            <div class="followup-calendar-actions">
+                                <a href="{{ $previousMonthUrl }}" aria-label="Previous month">&larr;</a>
+                                <a class="followup-calendar-today" href="{{ $todayMonthUrl }}">Today</a>
+                                <a href="{{ $nextMonthUrl }}" aria-label="Next month">&rarr;</a>
+                            </div>
+                        </div>
+                        <div class="followup-calendar-scroll">
+                            <div class="followup-calendar-grid">
+                                @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday)
+                                    <div class="followup-calendar-weekday">{{ $weekday }}</div>
+                                @endforeach
+                                @foreach($followUpCalendar['weeks'] as $week)
+                                    @foreach($week as $day)
+                                        <div @class(['followup-calendar-day', 'is-muted' => !$day['inMonth'], 'is-today' => $day['date']->isToday(), 'has-events' => $day['events']->isNotEmpty()])>
+                                            <div class="followup-calendar-date">
+                                                <span>{{ $day['date']->format('j') }}</span>
+                                                @if($day['date']->isToday())<small>Today</small>@endif
+                                            </div>
+                                            <div class="followup-calendar-events">
+                                                @foreach($day['events']->take(3) as $calendarLead)
+                                                    @php
+                                                        $calendarLeadUrl = request()->fullUrlWithQuery(['lead' => $calendarLead->id]);
+                                                        $calendarOverdue = $calendarLead->follow_up_at->isPast();
+                                                    @endphp
+                                                    <a @class(['followup-calendar-event', 'is-overdue' => $calendarOverdue, 'priority-high' => $calendarLead->priority === 'high']) href="{{ $calendarLeadUrl }}" title="Open {{ $calendarLead->name }} to view and edit lead details">
+                                                        <span class="followup-calendar-event-top"><b>{{ $calendarLead->follow_up_at->format('g:i A') }}</b><em>{{ $priorities[$calendarLead->priority] ?? ucfirst($calendarLead->priority) }}</em></span>
+                                                        <strong>{{ $calendarLead->name }}</strong>
+                                                        <small class="followup-calendar-event-detail">{{ $calendarLead->phone }} · {{ $calendarLead->course_interest ?: ($calendarLead->country_interest ?: ($categories[$calendarLead->category] ?? 'General enquiry')) }}</small>
+                                                        <small class="followup-calendar-event-owner">{{ $calendarLead->assignee?->name ?? 'Unassigned' }}<span>View &amp; edit &rarr;</span></small>
+                                                    </a>
+                                                @endforeach
+                                                @if($day['events']->count() > 3)
+                                                    <span class="followup-calendar-more">+{{ $day['events']->count() - 3 }} more</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="followup-calendar-legend"><span><i class="is-scheduled"></i>Scheduled</span><span><i class="is-priority"></i>High priority</span><span><i class="is-overdue"></i>Overdue</span></div>
+                    </section>
+                @endif
+
+                @if($view !== 'followups' || $followUpLayout === 'table')
                 @if($leads->count())
                     <div class="table-wrap">
                         <table>
@@ -239,6 +325,7 @@
                     @if($leads->hasPages())<div class="pagination-wrap">{{ $leads->onEachSide(1)->links() }}</div>@endif
                 @else
                     <div class="empty"><span class="empty-icon">⌕</span><h3>No leads found</h3><p>Adjust the filters or add your first lead to this view.</p></div>
+                @endif
                 @endif
             </section>
             @endif
@@ -382,6 +469,8 @@
     $journeyPosition = array_search($selectedLead->student_stage, $journeyKeys, true);
     $journeyPosition = $journeyPosition === false ? -1 : $journeyPosition;
     $nextJourneyKey = $journeyPosition >= 0 && isset($journeyKeys[$journeyPosition + 1]) ? $journeyKeys[$journeyPosition + 1] : null;
+    $journeyIsAlert = in_array($selectedLead->student_stage, ['visa_rejected', 'dropped'], true);
+    $journeyIsComplete = !$journeyIsAlert && $journeyPosition === count($journeyKeys) - 1;
 @endphp
 <div class="drawer-overlay" id="leadDrawer">
     <aside class="drawer">
@@ -466,9 +555,10 @@
 
             <div class="tab-panel" data-panel="student">
                 @if($selectedLead->is_student)
-                    <section class="journey-hero {{ in_array($selectedLead->student_stage, ['visa_rejected','dropped'], true) ? 'journey-alert' : '' }}">
-                        <div class="journey-graphic" aria-hidden="true"><span class="journey-globe">◇</span><i class="journey-route route-one"></i><i class="journey-route route-two"></i><b>✦</b></div>
-                        <div><span class="section-kicker">Current student stage</span><h3>{{ $studentStages[$selectedLead->student_stage] ?? 'Journey not started' }}</h3><p>{{ $stageGuidance[$selectedLead->student_stage] ?? 'Select the current stage and keep the student record up to date.' }}</p>@if($nextJourneyKey)<span class="next-stage-pill">Next: {{ $studentStages[$nextJourneyKey] }}</span>@endif</div>
+                    <section class="journey-hero crm-stage-summary {{ $journeyIsAlert ? 'journey-alert' : '' }} {{ $journeyIsComplete ? 'journey-complete' : '' }}">
+                        <div class="journey-stage-mark" aria-hidden="true"><span>{{ $journeyIsAlert ? '!' : ($journeyIsComplete ? '✓' : ($journeyPosition >= 0 ? $journeyPosition + 1 : '•')) }}</span></div>
+                        <div class="journey-stage-copy"><span class="section-kicker">Current student stage</span><h3>{{ $studentStages[$selectedLead->student_stage] ?? 'Journey not started' }}</h3><p>{{ $stageGuidance[$selectedLead->student_stage] ?? 'Select the current stage and keep the student record up to date.' }}</p></div>
+                        <div class="journey-stage-status"><strong>{{ $journeyIsAlert ? 'Needs attention' : ($journeyIsComplete ? 'Journey complete' : ($journeyPosition >= 0 ? 'Step '.($journeyPosition + 1).' of '.count($journeyKeys) : 'Stage pending')) }}</strong><small>{{ $nextJourneyKey ? 'Next: '.$studentStages[$nextJourneyKey] : ($journeyIsComplete ? 'Pre-departure ready' : 'Review and update') }}</small></div>
                     </section>
 
                     <div class="journey-track" aria-label="Student journey progress">

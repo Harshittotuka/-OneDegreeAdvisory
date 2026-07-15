@@ -205,6 +205,117 @@ html[data-crm-theme="orbit"] .dashboard-panel{background:linear-gradient(145deg,
 html[data-crm-theme="orbit"] .dashboard-kicker{color:#ff7078}
 html[data-crm-theme="orbit"] .dashboard-metrics strong{font-family:var(--orbit-display,"Sora",sans-serif)}
 
+/* Compact student-stage summary in the lead workspace. */
+.crm-stage-summary{
+    --stage-bg:#fff;
+    --stage-soft:#f1efff;
+    --stage-line:#ddd9f5;
+    --stage-ink:#252b3d;
+    --stage-muted:#6e7688;
+    --stage-accent:#5a45bc;
+    display:grid!important;
+    grid-template-columns:52px minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:14px!important;
+    margin-bottom:13px!important;
+    padding:15px 16px!important;
+    border:1px solid var(--stage-line)!important;
+    border-radius:16px!important;
+    background:var(--stage-bg)!important;
+    color:var(--stage-ink)!important;
+    box-shadow:0 6px 18px rgba(25,30,56,.05)!important;
+    overflow:visible!important;
+}
+html[data-crm-theme="evergreen"] .crm-stage-summary{--stage-bg:#fffdf7;--stage-soft:#e8efe8;--stage-line:#dcd8c9;--stage-ink:#1e2923;--stage-muted:#68736c;--stage-accent:#276151}
+html[data-crm-theme="orbit"] .crm-stage-summary{--stage-bg:#fbfbff;--stage-soft:#edecff;--stage-line:#d6d4ef;--stage-ink:#20233d;--stage-muted:#666c84;--stage-accent:#6f5ad7}
+.crm-stage-summary.journey-alert{--stage-bg:#fff7f6;--stage-soft:#fbe4e2;--stage-line:#efcbc8;--stage-ink:#572d2c;--stage-muted:#866462;--stage-accent:#b23a35}
+.crm-stage-summary.journey-complete{--stage-soft:#e3f3ea;--stage-line:#c9e3d4;--stage-accent:#16845b}
+.journey-stage-mark{width:52px;height:52px;display:grid;place-items:center;border-radius:14px;background:var(--stage-soft);color:var(--stage-accent)}
+.journey-stage-mark span{width:28px;height:28px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--stage-accent) 30%,transparent);border-radius:50%;font-size:.72rem;font-weight:900}
+.journey-stage-copy{min-width:0}
+.crm-stage-summary .section-kicker{display:block;margin:0 0 4px;color:var(--stage-accent)!important;font-size:.55rem;letter-spacing:.1em}
+.crm-stage-summary h3{margin:0 0 4px!important;color:var(--stage-ink)!important;font-family:inherit!important;font-size:.92rem!important;font-weight:750!important;letter-spacing:-.01em}
+html[data-crm-theme="evergreen"] .crm-stage-summary h3{font-family:var(--font-display,"Fraunces",serif)!important;font-weight:600!important}
+html[data-crm-theme="orbit"] .crm-stage-summary h3{font-family:var(--orbit-display,"Sora",sans-serif)!important}
+.crm-stage-summary p{margin:0!important;color:var(--stage-muted)!important;font-size:.63rem!important;line-height:1.45!important}
+.journey-stage-status{min-width:128px;padding:9px 11px;border:1px solid var(--stage-line);border-radius:11px;background:color-mix(in srgb,var(--stage-soft) 55%,var(--stage-bg));text-align:left}
+.journey-stage-status strong,.journey-stage-status small{display:block}
+.journey-stage-status strong{color:var(--stage-accent);font-size:.62rem}
+.journey-stage-status small{margin-top:4px;color:var(--stage-muted);font-size:.53rem;line-height:1.35}
+
+/* Follow-up table/calendar switch and month calendar, shared by all CRM themes. */
+.followup-view-switch{display:flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--line,#e1e5ed);border-radius:11px;background:var(--soft,#f5f7fb)}
+.followup-view-switch a{height:34px;padding:0 10px;display:flex;align-items:center;gap:6px;border-radius:8px;color:var(--muted,#687287);font-size:.67rem;font-weight:750;white-space:nowrap}
+.followup-view-switch a:hover{color:var(--navy,#21147f)}
+.followup-view-switch a.active{background:var(--card,#fff);color:var(--navy,#21147f);box-shadow:0 3px 10px rgba(25,30,56,.09)}
+.followup-view-switch a span{font-size:.78rem}
+.followup-calendar{
+    --cal-bg:#fff;
+    --cal-soft:#f6f7fb;
+    --cal-ink:#172033;
+    --cal-muted:#687287;
+    --cal-line:#e1e5ed;
+    --cal-accent:#21147f;
+    --cal-accent-soft:#efedff;
+    --cal-warn:#f65b35;
+    --cal-danger:#c03f49;
+    padding:20px;
+    border-bottom:1px solid var(--cal-line);
+    background:var(--cal-bg);
+    color:var(--cal-ink);
+}
+html[data-crm-theme="evergreen"] .followup-calendar{
+    --cal-bg:#fffdf7;--cal-soft:#f4f1e8;--cal-ink:#1b2620;--cal-muted:#68736c;--cal-line:#e1dccb;
+    --cal-accent:#175244;--cal-accent-soft:#e3ece3;--cal-warn:#d9a441;--cal-danger:#b23a35;
+}
+html[data-crm-theme="orbit"] .followup-calendar{
+    --cal-bg:#fbfbff;--cal-soft:#f0f1ff;--cal-ink:#1d203d;--cal-muted:#626883;--cal-line:#d9dbee;
+    --cal-accent:#6f5ad7;--cal-accent-soft:#ebeaff;--cal-warn:#ff7078;--cal-danger:#e95669;
+}
+.followup-calendar-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px}
+.followup-calendar-kicker{display:block;margin-bottom:4px;color:var(--cal-accent);font-size:.59rem;font-weight:850;letter-spacing:.11em;text-transform:uppercase}
+.followup-calendar-head h3{margin:0;font-size:1.08rem;letter-spacing:-.02em}
+.followup-calendar-head p{margin:5px 0 0;color:var(--cal-muted);font-size:.7rem}
+html[data-crm-theme="evergreen"] .followup-calendar-head h3{font-family:var(--font-display,"Fraunces",serif);font-weight:600}
+html[data-crm-theme="orbit"] .followup-calendar-head h3{font-family:var(--orbit-display,"Sora",sans-serif)}
+.followup-calendar-actions{display:flex;align-items:center;gap:6px;padding:4px;border:1px solid var(--cal-line);border-radius:12px;background:var(--cal-soft)}
+.followup-calendar-actions a{min-width:34px;height:32px;padding:0 9px;display:grid;place-items:center;border-radius:8px;color:var(--cal-muted);font-size:.74rem;font-weight:800}
+.followup-calendar-actions a:hover{background:var(--cal-bg);color:var(--cal-accent);box-shadow:0 3px 10px rgba(24,29,57,.07)}
+.followup-calendar-actions .followup-calendar-today{min-width:52px;background:var(--cal-bg);color:var(--cal-accent)}
+.followup-calendar-scroll{overflow-x:auto;border:1px solid var(--cal-line);border-radius:14px;background:var(--cal-line);scrollbar-width:thin}
+.followup-calendar-grid{min-width:840px;display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:1px}
+.followup-calendar-weekday{padding:9px 10px;background:var(--cal-soft);color:var(--cal-muted);text-align:center;font-size:.58rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.followup-calendar-day{min-height:142px;padding:9px;background:var(--cal-bg);transition:background .18s}
+.followup-calendar-day.has-events:hover{background:color-mix(in srgb,var(--cal-accent-soft) 30%,var(--cal-bg))}
+.followup-calendar-day.is-muted{background:color-mix(in srgb,var(--cal-soft) 58%,var(--cal-bg));color:var(--cal-muted)}
+.followup-calendar-date{height:23px;display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.followup-calendar-date>span{width:23px;height:23px;display:grid;place-items:center;border-radius:8px;font-size:.66rem;font-weight:800}
+.followup-calendar-date small{color:var(--cal-accent);font-size:.52rem;font-weight:800}
+.followup-calendar-day.is-today .followup-calendar-date>span{background:var(--cal-accent);color:#fff;box-shadow:0 5px 12px color-mix(in srgb,var(--cal-accent) 25%,transparent)}
+.followup-calendar-events{display:grid;gap:5px}
+.followup-calendar-event{position:relative;min-width:0;padding:7px 7px 7px 10px;border:1px solid color-mix(in srgb,var(--cal-accent) 17%,var(--cal-line));border-radius:9px;background:var(--cal-accent-soft);color:var(--cal-ink);overflow:hidden}
+.followup-calendar-event:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cal-accent)}
+.followup-calendar-event:hover{border-color:color-mix(in srgb,var(--cal-accent) 45%,var(--cal-line));transform:translateY(-1px);box-shadow:0 5px 12px rgba(25,30,56,.08)}
+.followup-calendar-event>span,.followup-calendar-event>strong,.followup-calendar-event>small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.followup-calendar-event-top{display:flex!important;align-items:center;justify-content:space-between;gap:5px;color:var(--cal-accent);font-size:.52rem;text-transform:uppercase}
+.followup-calendar-event-top b{overflow:hidden;text-overflow:ellipsis;font-weight:850}
+.followup-calendar-event-top em{flex:0 0 auto;max-width:50%;padding:2px 4px;border-radius:5px;background:color-mix(in srgb,var(--cal-accent) 10%,transparent);overflow:hidden;text-overflow:ellipsis;font-size:.45rem;font-style:normal;font-weight:800}
+.followup-calendar-event>strong{margin-top:2px;font-size:.64rem}
+.followup-calendar-event>small{margin-top:2px;color:var(--cal-muted);font-size:.52rem}
+.followup-calendar-event-detail{opacity:.92}
+.followup-calendar-event-owner{display:flex!important;align-items:center;justify-content:space-between;gap:5px;padding-top:3px;border-top:1px solid color-mix(in srgb,var(--cal-accent) 12%,transparent)}
+.followup-calendar-event-owner>span{flex:0 0 auto;color:var(--cal-accent);font-size:.46rem;font-weight:800}
+.followup-calendar-event.priority-high:before{background:var(--cal-warn)}
+.followup-calendar-event.is-overdue{border-color:color-mix(in srgb,var(--cal-danger) 24%,var(--cal-line));background:color-mix(in srgb,var(--cal-danger) 8%,var(--cal-bg))}
+.followup-calendar-event.is-overdue:before{background:var(--cal-danger)}
+.followup-calendar-event.is-overdue .followup-calendar-event-top,.followup-calendar-event.is-overdue .followup-calendar-event-owner>span{color:var(--cal-danger)}
+.followup-calendar-more{padding:2px 6px;color:var(--cal-muted);font-size:.54rem;font-weight:750}
+.followup-calendar-legend{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:11px;color:var(--cal-muted);font-size:.56rem;font-weight:700}
+.followup-calendar-legend span{display:flex;align-items:center;gap:5px}
+.followup-calendar-legend i{width:7px;height:7px;border-radius:50%;background:var(--cal-accent)}
+.followup-calendar-legend i.is-priority{background:var(--cal-warn)}
+.followup-calendar-legend i.is-overdue{background:var(--cal-danger)}
+
 .crm-app .overlay,.crm-app .drawer-overlay{z-index:1000}
 .team-management-modal{width:min(720px,calc(100% - 32px));max-height:min(88dvh,800px)}
 .team-management-modal .modal-head{padding:20px 24px}
@@ -231,6 +342,18 @@ html[data-crm-theme="orbit"] .dashboard-metrics strong{font-family:var(--orbit-d
 .team-create-form .btn-block{margin-top:2px}
 
 @media(max-width:640px){
+    .crm-stage-summary{grid-template-columns:46px minmax(0,1fr)!important;gap:11px!important;padding:13px!important}
+    .journey-stage-mark{width:46px;height:46px;border-radius:12px}
+    .journey-stage-status{grid-column:2;min-width:0;width:100%}
+    .followup-view-switch{width:100%}
+    .followup-view-switch a{flex:1;justify-content:center}
+    .followup-calendar{padding:15px}
+    .followup-calendar-head{align-items:flex-start;margin-bottom:12px}
+    .followup-calendar-head p{max-width:190px;line-height:1.45}
+    .followup-calendar-actions{flex:0 0 auto}
+    .followup-calendar-grid{min-width:760px;grid-template-columns:repeat(7,minmax(108px,1fr))}
+    .followup-calendar-day{min-height:128px;padding:7px}
+    .followup-calendar-legend{justify-content:flex-start;gap:10px;overflow:auto;white-space:nowrap}
     .team-management-modal{width:calc(100% - 16px);max-height:calc(100dvh - 16px);border-radius:16px}
     .team-management-modal .modal-head{padding:17px}
     .team-management-modal .modal-body{padding:15px 15px 18px;scrollbar-gutter:auto}
