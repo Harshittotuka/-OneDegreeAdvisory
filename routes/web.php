@@ -140,6 +140,31 @@ Route::get('/countries/{country}', [PageController::class, 'country'])
     ->where('country', '[A-Za-z0-9-]+')
     ->name('country.show');
 
+/* ───────────────── One Degree Lead CRM ───────────────── */
+Route::prefix('crm')->name('crm.')->group(function (): void {
+    Route::get('login', [\App\Http\Controllers\Crm\CrmAuthController::class, 'show'])->name('login');
+    Route::post('otp/request', [\App\Http\Controllers\Crm\CrmAuthController::class, 'requestOtp'])
+        ->middleware('throttle:5,10')->name('otp.request');
+    Route::post('otp/verify', [\App\Http\Controllers\Crm\CrmAuthController::class, 'verify'])
+        ->middleware('throttle:10,10')->name('otp.verify');
+
+    Route::middleware('crm.auth')->group(function (): void {
+        Route::get('/', [\App\Http\Controllers\Crm\CrmDashboardController::class, 'index'])->name('dashboard');
+        Route::post('logout', [\App\Http\Controllers\Crm\CrmAuthController::class, 'logout'])->name('logout');
+        Route::get('leads/export', [\App\Http\Controllers\Crm\CrmDashboardController::class, 'export'])->name('leads.export');
+        Route::post('leads/import', [\App\Http\Controllers\Crm\CrmLeadController::class, 'import'])->name('leads.import');
+        Route::post('leads', [\App\Http\Controllers\Crm\CrmLeadController::class, 'store'])->name('leads.store');
+        Route::put('leads/{lead}', [\App\Http\Controllers\Crm\CrmLeadController::class, 'update'])->name('leads.update');
+        Route::post('leads/{lead}/comments', [\App\Http\Controllers\Crm\CrmLeadController::class, 'comment'])->name('leads.comments.store');
+        Route::post('leads/{lead}/follow-up/complete', [\App\Http\Controllers\Crm\CrmLeadController::class, 'completeFollowUp'])->name('leads.follow-up.complete');
+        Route::post('leads/{lead}/convert', [\App\Http\Controllers\Crm\CrmLeadController::class, 'convert'])->name('leads.convert');
+        Route::patch('leads/{lead}/student-journey', [\App\Http\Controllers\Crm\CrmLeadController::class, 'updateStudentJourney'])->name('leads.student-journey.update');
+        Route::delete('leads/{lead}', [\App\Http\Controllers\Crm\CrmLeadController::class, 'destroy'])->name('leads.destroy');
+        Route::post('team', [\App\Http\Controllers\Crm\CrmUserController::class, 'store'])->name('team.store');
+        Route::patch('team/{member}/toggle', [\App\Http\Controllers\Crm\CrmUserController::class, 'toggle'])->name('team.toggle');
+    });
+});
+
 /* ───────────────────────── Blog CMS (admin) ───────────────────────── */
 Route::prefix('admin')->group(function () {
     Route::get('login', [BlogCmsController::class, 'showLogin'])->name('admin.login');

@@ -1,0 +1,94 @@
+/* Shared chrome for switching between the two complete CRM design systems. */
+.crm-theme-switcher{
+    --theme-switcher-bg:rgba(255,255,255,.78);
+    --theme-switcher-border:#ddd8c8;
+    --theme-switcher-ink:#445049;
+    --theme-switcher-focus:#175244;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    height:39px;
+    padding:0 8px 0 10px;
+    border:1px solid var(--theme-switcher-border);
+    border-radius:11px;
+    background:var(--theme-switcher-bg);
+    color:var(--theme-switcher-ink);
+    box-shadow:0 2px 8px rgba(21,36,30,.04);
+}
+
+html[data-crm-theme="classic"] .crm-theme-switcher{
+    --theme-switcher-bg:#fff;
+    --theme-switcher-border:#e0e4ec;
+    --theme-switcher-ink:#596378;
+    --theme-switcher-focus:#21147f;
+    border-radius:10px;
+    box-shadow:none;
+}
+
+html[data-crm-theme="orbit"] .crm-theme-switcher{
+    --theme-switcher-bg:rgba(255,255,255,.82);
+    --theme-switcher-border:#d3d5eb;
+    --theme-switcher-ink:#555a7c;
+    --theme-switcher-focus:#6f5ad7;
+    height:42px;
+    padding-left:11px;
+    border-radius:10px;
+    box-shadow:0 5px 16px rgba(53,57,108,.05);
+}
+html[data-crm-theme="orbit"] .crm-theme-switcher-icon{width:22px;height:22px;flex-basis:22px;font-size:16px}
+html[data-crm-theme="orbit"] .crm-theme-switcher-label{font-size:.72rem}
+html[data-crm-theme="orbit"] .crm-theme-switcher select{min-width:96px;font-size:.76rem}
+
+html[data-crm-theme="classic"] .login-visual .crm-login-visual-eyebrow{color:#ff8b70}
+html[data-crm-theme="evergreen"] .login-visual .crm-login-visual-eyebrow{color:#e2bd6a}
+html[data-crm-theme="orbit"] .login-visual .crm-login-visual-eyebrow{color:#ffb188}
+
+.crm-theme-switcher-icon{
+    width:20px;
+    height:20px;
+    display:inline-grid;
+    place-items:center;
+    flex:0 0 20px;
+    font-size:14px;
+    line-height:1;
+}
+
+.crm-theme-switcher-label{
+    font-size:.68rem;
+    font-weight:750;
+    letter-spacing:.045em;
+    text-transform:uppercase;
+}
+
+.crm-theme-switcher select{
+    width:auto;
+    min-width:92px;
+    padding:4px 23px 4px 7px;
+    border:0;
+    border-left:1px solid var(--theme-switcher-border);
+    border-radius:0;
+    outline:0;
+    background:transparent;
+    color:inherit;
+    font:inherit;
+    font-size:.73rem;
+    font-weight:750;
+    cursor:pointer;
+}
+
+.crm-theme-switcher:focus-within{
+    border-color:var(--theme-switcher-focus);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--theme-switcher-focus) 12%,transparent);
+}
+
+@media(max-width:720px){
+    .crm-theme-switcher{padding-left:7px;gap:3px}
+    .crm-theme-switcher-label{display:none}
+    .crm-theme-switcher select{min-width:84px;padding-left:5px}
+}
+
+@media(max-width:480px){
+    .crm-theme-switcher{position:relative;width:39px;padding:0;justify-content:center}
+    .crm-theme-switcher-icon{display:inline-grid}
+    .crm-theme-switcher select{position:absolute;inset:0;width:100%;min-width:0;height:100%;padding:0;border:0;opacity:0}
+}

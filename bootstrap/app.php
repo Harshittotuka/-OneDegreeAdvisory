@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'cms.auth' => \App\Http\Middleware\CmsAuth::class,
+            'crm.auth' => \App\Http\Middleware\CrmAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
