@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('priority', 30)->default('medium')->index();
             $table->string('source', 100)->nullable()->index();
             $table->string('status', 50)->default('new')->index();
-            $table->foreignId('assigned_to')->nullable()->constrained('crm_users')->nullOnDelete()->index();
+            $table->foreignId('assigned_to')->nullable()->constrained('crm_users')->nullOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('crm_users')->nullOnDelete();
             $table->timestamp('follow_up_at')->nullable()->index();
             $table->timestamp('follow_up_completed_at')->nullable();
@@ -64,7 +64,7 @@ return new class extends Migration
 
         Schema::create('crm_lead_activities', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('crm_lead_id')->constrained('crm_leads')->cascadeOnDelete()->index();
+            $table->foreignId('crm_lead_id')->constrained('crm_leads')->cascadeOnDelete();
             $table->foreignId('crm_user_id')->nullable()->constrained('crm_users')->nullOnDelete();
             $table->string('type', 40)->index();
             $table->text('body');
