@@ -36,7 +36,7 @@ class CrmLeadController extends Controller
 
         $data['created_by'] = $user->id;
         $data['assigned_to'] = $user->isSuperAdmin() ? ($data['assigned_to'] ?? null) : $user->id;
-        $data['lead_number'] = 'PENDING-'.str()->uuid();
+        $data['lead_number'] = 'PENDING-'.str()->random(11); // fits varchar(20); overwritten with OD-##### below
 
         $lead = DB::transaction(function () use ($data, $user): CrmLead {
             $lead = CrmLead::query()->create($data);
@@ -261,7 +261,7 @@ class CrmLeadController extends Controller
             }
 
             $lead = CrmLead::query()->create([
-                'lead_number' => 'PENDING-'.str()->uuid(), 'name' => mb_substr($name, 0, 150), 'phone' => $phone,
+                'lead_number' => 'PENDING-'.str()->random(11), 'name' => mb_substr($name, 0, 150), 'phone' => $phone,
                 'email' => $item['email'] ?? null, 'city' => $item['city'] ?? null,
                 'course_interest' => $item['course'] ?? $item['course interest'] ?? null,
                 'country_interest' => $item['country'] ?? $item['country interest'] ?? null,
