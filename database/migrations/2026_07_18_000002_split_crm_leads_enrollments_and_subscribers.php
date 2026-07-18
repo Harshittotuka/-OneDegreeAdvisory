@@ -101,9 +101,6 @@ return new class extends Migration
             }
         }
 
-        if (! app()->runningUnitTests()) {
-            app(\App\Services\LegacyWebsiteLeadImporter::class)->import();
-        }
     }
 
     public function down(): void

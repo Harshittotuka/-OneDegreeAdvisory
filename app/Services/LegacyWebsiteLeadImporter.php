@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PaymentAttempt;
+use Illuminate\Validation\ValidationException;
 
 class LegacyWebsiteLeadImporter
 {
@@ -14,7 +15,7 @@ class LegacyWebsiteLeadImporter
         $counts = ['profiles' => 0, 'newsletters' => 0, 'payments' => 0];
         foreach ($this->jsonRows(storage_path('app/profile-submissions.json')) as $row) {
             $id = trim((string) ($row['id'] ?? ''));
-            $this->leads->capture(
+            $arguments = [
                 (string) ($row['source'] ?? 'website'),
                 (string) ($row['source_label'] ?? 'Website'),
                 isset($row['degree']) ? (string) $row['degree'] : null,
@@ -22,7 +23,12 @@ class LegacyWebsiteLeadImporter
                 (array) ($row['meta'] ?? []),
                 $id !== '' ? 'legacy-profile:'.$id : null,
                 $row['submitted_at'] ?? null,
-            );
+            ];
+            try {
+                $this->leads->capture(...$arguments);
+            } catch (ValidationException) {
+                $this->leads->capture(...$arguments, forceNewLead: true);
+            }
             $counts['profiles']++;
         }
 
@@ -36,7 +42,11 @@ class LegacyWebsiteLeadImporter
         }
 
         PaymentAttempt::query()->whereNull('crm_lead_id')->orderBy('id')->each(function (PaymentAttempt $attempt) use (&$counts): void {
-            $this->leads->capturePayment($attempt);
+            try {
+                $this->leads->capturePayment($attempt);
+            } catch (ValidationException) {
+                $this->leads->capturePayment($attempt, forceNewLead: true);
+            }
             if ($attempt->status === 'paid') {
                 $this->leads->syncPaymentStatus($attempt->fresh());
             }

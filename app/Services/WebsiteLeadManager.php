@@ -23,8 +23,9 @@ class WebsiteLeadManager
         array $meta = [],
         ?string $externalId = null,
         CarbonInterface|string|null $submittedAt = null,
+        bool $forceNewLead = false,
     ): CrmWebsiteSubmission {
-        return DB::transaction(function () use ($source, $sourceLabel, $degree, $sections, $meta, $externalId, $submittedAt): CrmWebsiteSubmission {
+        return DB::transaction(function () use ($source, $sourceLabel, $degree, $sections, $meta, $externalId, $submittedAt, $forceNewLead): CrmWebsiteSubmission {
             if ($externalId !== null && ($existing = CrmWebsiteSubmission::query()->where('external_id', $externalId)->first())) {
                 return $existing;
             }
@@ -32,7 +33,7 @@ class WebsiteLeadManager
             $name = trim((string) ($meta['name'] ?? ''));
             $email = strtolower(trim((string) ($meta['email'] ?? '')));
             $phone = $this->normalisePhone((string) ($meta['phone'] ?? ''));
-            $lead = $this->findLead($phone, $email);
+            $lead = $forceNewLead ? null : $this->findLead($phone, $email);
 
             if (! $lead) {
                 $lead = CrmLead::query()->create([
@@ -110,16 +111,16 @@ class WebsiteLeadManager
         );
     }
 
-    public function capturePayment(PaymentAttempt $attempt): CrmLead
+    public function capturePayment(PaymentAttempt $attempt, bool $forceNewLead = false): CrmLead
     {
-        return DB::transaction(function () use ($attempt): CrmLead {
+        return DB::transaction(function () use ($attempt, $forceNewLead): CrmLead {
             if ($attempt->crm_lead_id && $attempt->lead) {
                 return $attempt->lead;
             }
 
             $phone = $this->normalisePhone((string) $attempt->customer_phone);
             $email = strtolower(trim((string) $attempt->customer_email));
-            $lead = $this->findLead($phone, $email);
+            $lead = $forceNewLead ? null : $this->findLead($phone, $email);
 
             if (! $lead) {
                 $lead = CrmLead::query()->create([
