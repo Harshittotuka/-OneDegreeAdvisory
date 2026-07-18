@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link id="crmThemeStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm.css') }}" data-classic-href="{{ asset('assets/crm/crm-classic.css') }}" data-evergreen-href="{{ asset('assets/crm/crm.css') }}" data-orbit-href="{{ asset('assets/crm/crm-orbit.css') }}">
+    <link id="crmThemeStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm.css') }}?v={{ filemtime(public_path('assets/crm/crm.css')) }}" data-classic-href="{{ asset('assets/crm/crm-classic.css') }}?v={{ filemtime(public_path('assets/crm/crm-classic.css')) }}" data-evergreen-href="{{ asset('assets/crm/crm.css') }}?v={{ filemtime(public_path('assets/crm/crm.css')) }}" data-orbit-href="{{ asset('assets/crm/crm-orbit.css') }}?v={{ filemtime(public_path('assets/crm/crm-orbit.css')) }}">
     <script>
         (() => {
             let theme = 'evergreen';
@@ -35,11 +35,17 @@
             document.documentElement.dataset.crmTheme = theme;
             const stylesheet = document.getElementById('crmThemeStylesheet');
             const selectedHref = theme === 'classic' ? stylesheet.dataset.classicHref : (theme === 'orbit' ? stylesheet.dataset.orbitHref : stylesheet.dataset.evergreenHref);
-            if (stylesheet.href !== selectedHref) stylesheet.href = selectedHref;
+            if (stylesheet.href !== selectedHref) {
+                stylesheet.dataset.crmThemeLoading = 'true';
+                const finishThemeLoad = () => delete stylesheet.dataset.crmThemeLoading;
+                stylesheet.addEventListener('load', finishThemeLoad, { once: true });
+                stylesheet.addEventListener('error', finishThemeLoad, { once: true });
+                stylesheet.href = selectedHref;
+            }
         })();
     </script>
     <noscript><style>html.crm-css-pending body{visibility:visible!important;opacity:1!important}html.crm-css-pending:before{display:none}</style></noscript>
-    <link id="crmThemeSwitcherStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
+    <link id="crmThemeSwitcherStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}?v={{ filemtime(public_path('assets/crm/crm-theme-switcher.css')) }}">
     <link id="crmDashboardStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm-dashboard.css') }}?v={{ filemtime(public_path('assets/crm/crm-dashboard.css')) }}">
     <link id="crmToastStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm-toast.css') }}?v={{ filemtime(public_path('assets/crm/crm-toast.css')) }}">
     <script>
@@ -55,11 +61,21 @@
                 root.classList.remove('crm-css-pending');
                 root.classList.add('crm-css-ready');
             };
-            const ready = link => link.sheet
+            const isReady = link => link.dataset.crmThemeLoading !== 'true' && Boolean(link.sheet);
+            const ready = link => isReady(link)
                 ? Promise.resolve()
                 : new Promise(resolve => {
-                    link.addEventListener('load', resolve, { once: true });
-                    link.addEventListener('error', resolve, { once: true });
+                    let settled = false;
+                    const done = () => {
+                        if (settled) return;
+                        settled = true;
+                        resolve();
+                    };
+                    link.addEventListener('load', done, { once: true });
+                    link.addEventListener('error', done, { once: true });
+                    queueMicrotask(() => {
+                        if (isReady(link)) done();
+                    });
                 });
 
             Promise.all(stylesheets.map(ready)).then(() => requestAnimationFrame(() => requestAnimationFrame(reveal)));

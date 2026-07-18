@@ -24,6 +24,17 @@ class CrmTest extends TestCase
         Mail::fake();
     }
 
+    public function test_login_waits_for_the_selected_theme_stylesheet_before_revealing(): void
+    {
+        $this->get(route('crm.login'))
+            ->assertOk()
+            ->assertSee('class="crm-css-pending"', false)
+            ->assertSee("stylesheet.dataset.crmThemeLoading = 'true'", false)
+            ->assertSee("link.dataset.crmThemeLoading !== 'true'", false)
+            ->assertSee('assets/crm/crm.css?v=', false)
+            ->assertSee('assets/crm/crm-theme-switcher.css?v=', false);
+    }
+
     public function test_super_admin_can_request_and_verify_phone_otp(): void
     {
         config()->set('crm.super_admin.name', 'CRM Owner');
