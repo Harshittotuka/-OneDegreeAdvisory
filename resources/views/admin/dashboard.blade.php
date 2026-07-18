@@ -237,6 +237,9 @@
       <a class="dsh-act" href="{{ route('admin.unlinked-pages.index') }}">
         <span class="dsh-ico" style="--c:#6e6b7b;--cb:#f0f0f5"><i data-lucide="unlink"></i></span> Unlinked pages
       </a>
+      <a class="dsh-act" href="{{ route('admin.pdf-shortlisting.index') }}">
+        <span class="dsh-ico" style="--c:#d34232;--cb:#fce9e7"><i data-lucide="files"></i></span> PDF shortlisting
+      </a>
       @if(session('cms_super_admin'))
       <a class="dsh-act" href="{{ route('admin.country-visibility.index') }}">
         <span class="dsh-ico" style="--c:#3f6fd6;--cb:#eaf1fe"><i data-lucide="eye"></i></span> Country visibility

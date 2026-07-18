@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
+use App\Http\Controllers\Admin\PdfShortlistingController;
 use App\Http\Controllers\Admin\TestPrepCompareCmsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
@@ -195,6 +196,10 @@ Route::prefix('admin')->group(function () {
 
     Route::middleware('cms.auth')->group(function () {
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
+        Route::get('pdf-shortlisting', [PdfShortlistingController::class, 'index'])->name('admin.pdf-shortlisting.index');
+        Route::post('pdf-shortlisting', [PdfShortlistingController::class, 'generate'])
+            ->middleware('throttle:10,1')
+            ->name('admin.pdf-shortlisting.generate');
         Route::get('blog', [BlogCmsController::class, 'index'])->name('admin.blog.index');
         Route::get('blog/create', [BlogCmsController::class, 'create'])->name('admin.blog.create');
         Route::post('blog', [BlogCmsController::class, 'store'])->name('admin.blog.store');
