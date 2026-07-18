@@ -6712,7 +6712,7 @@ html[data-color-theme] .site-socials .site-social {
     font-size: 2.18rem;
   }
 
-  .nav-dropdown-badge {
+  .nav-dropdown-badge:not(.nav-dropdown-badge-link) {
     display: none;
   }
 

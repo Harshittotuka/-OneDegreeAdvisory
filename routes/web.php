@@ -23,6 +23,8 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SopController;
+use App\Http\Controllers\VisaMockAssessmentController;
+use App\Http\Controllers\VisaMockBatchAssessmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -106,6 +108,12 @@ Route::get('/visa-mock-interview', [PageController::class, 'visaMock'])->name('v
 Route::post('/visa-mock-interview/lead', [PageController::class, 'visaMockLead'])
     ->middleware('throttle:15,1')
     ->name('visa-mock.lead');
+Route::post('/visa-mock-interview/assess', VisaMockAssessmentController::class)
+    ->middleware('throttle:60,1')
+    ->name('visa-mock.assess');
+Route::post('/visa-mock-interview/assess-batch', VisaMockBatchAssessmentController::class)
+    ->middleware('throttle:10,1')
+    ->name('visa-mock.assess-batch');
 
 // Statement of Purpose — SOP / admissions-writing studio landing page (Student
 // Hub). The "book a strategy call" form POSTs to ::lead, which records a lead in

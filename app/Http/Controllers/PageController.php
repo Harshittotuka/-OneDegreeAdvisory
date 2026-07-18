@@ -354,11 +354,10 @@ class PageController extends Controller
     }
 
     /**
-     * AI Visa Mock Interview — a self-contained, browser-based mock-interview
-     * tool under the Student Hub (/visa-mock-interview). Everything (camera/mic,
-     * transcription, scoring, report) runs client-side; the only server contact
-     * is the lead capture below. Rendered on the shared site layout so the
-     * navbar/footer match the rest of the site.
+     * AI Visa Mock Interview — a browser-first mock-interview tool under the
+     * Student Hub. Video mode provides a live practice preview while answer
+     * transcripts are reviewed by our locally hosted Ollama service through
+     * a separate throttled endpoint.
      */
     public function visaMock(): View
     {
@@ -366,7 +365,7 @@ class PageController extends Controller
             'activeNav'       => 'new-tabs',
             'bodyClass'       => 'vmi-page-body',
             'pageTitle'       => 'AI Visa Mock Interview — Free Practice & Feedback',
-            'pageDescription' => 'Practise your student-visa interview with an AI assessor: real embassy-style questions, live camera and voice review, and an instant readiness report. Free 10-question round.',
+            'pageDescription' => 'Practise your student-visa interview with an AI assessor: real embassy-style questions, video or text answers, and a detailed readiness report. Free 10-question round.',
             'mainId'          => 'main',
         ]);
     }

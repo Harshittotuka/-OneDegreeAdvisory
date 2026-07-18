@@ -9,9 +9,9 @@
      The whole page is scoped under #vmi-page so its generic class names never
      collide with the global styles.css / stripe-nav.css.
 
-     Everything runs client-side (camera/mic, transcription, scoring, report).
-     The only server contact is the "unlock the full interview" popup: the free
-     round is capped at 10 questions and unlocking more posts a lead to
+     Video mode provides a live camera preview and voice transcription. Answer
+     transcripts are assessed by the site's AI assessment service. The
+     free round is capped at 10 questions and unlocking more posts a lead to
      /visa-mock-interview/lead (stored in the shared profile-submissions store,
      source "visa-mock", viewable at /admin → Leads → Visa Mock Interview). --}}
 @extends('layouts.app')
@@ -218,6 +218,8 @@
   #vmi-page .vmi-pill[data-locked]:hover{border-color:var(--gold);opacity:.85;}
   #vmi-page .vmi-pill.vmi-pill--mode{flex-direction:row;min-width:0;flex:1;gap:8px;font-size:14px;padding:13px 16px;}
   #vmi-page .vmi-pill.vmi-pill--mode i{width:18px;height:18px;}
+  #vmi-page .vmi-context-input{width:100%;border:1.6px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);padding:13px 14px;font:600 14px/1.3 var(--font-body);outline:none;transition:border-color .16s ease,box-shadow .16s ease;}
+  #vmi-page .vmi-context-input:focus{border-color:var(--navy-soft);box-shadow:0 0 0 4px rgba(58,43,176,.1);}
 
   /* ---------- Unlock banner ---------- */
   #vmi-page .vmi-unlock{margin-top:22px;position:relative;overflow:hidden;border-radius:16px;padding:18px 20px;
@@ -336,10 +338,62 @@
   #vmi-page .rt-needs{background:#fdeaea;color:var(--bad);}
   #vmi-page .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   @media(max-width:680px){#vmi-page .two-col{grid-template-columns:1fr;}#vmi-page .score-row{grid-template-columns:1fr 1fr;}}
+  #vmi-page .report-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 16px;}
+  #vmi-page .report-stat{min-height:132px;padding:20px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#fff,#f7f8fc);box-shadow:var(--shadow-card);}
+  #vmi-page .report-stat__icon{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;margin-bottom:14px;background:#eceeff;color:var(--navy);}
+  #vmi-page .report-stat__icon i{width:18px;height:18px;}
+  #vmi-page .report-stat__label{display:block;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+  #vmi-page .report-stat__value{display:block;margin-top:4px;color:var(--navy-deep);font-size:25px;font-weight:850;letter-spacing:-.03em;line-height:1.1;}
+  #vmi-page .report-stat__note{display:block;margin-top:7px;color:var(--muted);font-size:11px;line-height:1.45;}
+  #vmi-page .report-section-note{color:var(--muted);font-size:12.5px;line-height:1.55;margin:-5px 0 16px;}
+  #vmi-page .report-distribution__bar{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--line);margin:8px 0 17px;}
+  #vmi-page .report-distribution__bar span{display:block;height:100%;}
+  #vmi-page .report-distribution__bar .is-strong{background:var(--good);}
+  #vmi-page .report-distribution__bar .is-developing{background:var(--warn);}
+  #vmi-page .report-distribution__bar .is-focus{background:var(--bad);}
+  #vmi-page .report-distribution__legend{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  #vmi-page .report-distribution__legend span{font-size:11px;color:var(--muted);line-height:1.35;}
+  #vmi-page .report-distribution__legend b{display:block;margin-top:3px;color:var(--navy-deep);font-size:18px;}
+  #vmi-page .report-distribution__legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+  #vmi-page .report-distribution__legend .is-strong{background:var(--good);}
+  #vmi-page .report-distribution__legend .is-developing{background:var(--warn);}
+  #vmi-page .report-distribution__legend .is-focus{background:var(--bad);}
+  #vmi-page .report-insights{display:grid;gap:13px;}
+  #vmi-page .report-insight{padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#f8f9fc;}
+  #vmi-page .report-insight span{display:block;color:var(--muted);font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+  #vmi-page .report-insight strong{display:block;margin-top:4px;color:var(--navy-deep);font-size:13.5px;line-height:1.45;}
+  #vmi-page .report-insight small{display:block;margin-top:4px;color:var(--muted);font-size:11px;line-height:1.4;}
+  #vmi-page .report-category-list{display:grid;gap:12px;}
+  #vmi-page .report-category{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,2fr) 56px;gap:14px;align-items:center;}
+  #vmi-page .report-category__name strong{display:block;color:var(--navy-deep);font-size:13px;line-height:1.35;}
+  #vmi-page .report-category__name small{color:var(--muted);font-size:10.5px;}
+  #vmi-page .report-category__track{height:9px;border-radius:99px;background:#e8eaf2;overflow:hidden;}
+  #vmi-page .report-category__track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--navy-soft),var(--navy));}
+  #vmi-page .report-category__score{text-align:right;color:var(--navy-deep);font-size:14px;font-weight:850;}
+  #vmi-page .report-answer-review{display:grid;gap:10px;}
+  #vmi-page .report-answer{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;}
+  #vmi-page .report-answer summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:17px 18px;cursor:pointer;background:#fafbfe;}
+  #vmi-page .report-answer summary::-webkit-details-marker{display:none;}
+  #vmi-page .report-answer summary:hover{background:#f5f6fb;}
+  #vmi-page .report-answer__title small{display:block;color:var(--muted);font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+  #vmi-page .report-answer__title strong{display:block;color:var(--navy-deep);font-size:13.5px;line-height:1.4;}
+  #vmi-page .report-answer__score{min-width:56px;text-align:center;padding:7px 9px;border-radius:10px;background:#edf0ff;color:var(--navy);font-size:13px;font-weight:850;}
+  #vmi-page .report-answer__body{padding:18px;border-top:1px solid var(--line);}
+  #vmi-page .report-answer__response{padding:13px 14px;border-radius:12px;background:#f7f8fc;color:var(--ink);font-size:12.5px;line-height:1.6;margin-bottom:14px;}
+  #vmi-page .report-answer__response b{display:block;margin-bottom:4px;color:var(--muted);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;}
+  #vmi-page .report-answer__feedback{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #vmi-page .report-answer__feedback div{padding:12px 13px;border-radius:12px;border:1px solid var(--line);font-size:12px;line-height:1.55;}
+  #vmi-page .report-answer__feedback b{display:block;margin-bottom:4px;color:var(--navy-deep);font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+  #vmi-page .report-answer__sample{margin-top:12px;padding:13px 14px;border-left:3px solid var(--orange);background:#fff8f5;border-radius:0 12px 12px 0;font-size:12px;line-height:1.6;}
+  #vmi-page .report-answer__sample b{display:block;margin-bottom:4px;color:var(--orange-deep);font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+  #vmi-page .report-method{display:flex;gap:13px;align-items:flex-start;padding:16px 18px;border-radius:16px;background:#f4f5fb;border:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:16px;}
+  #vmi-page .report-method i{flex:0 0 auto;width:18px;height:18px;color:var(--navy);margin-top:2px;}
+  @media(max-width:760px){#vmi-page .report-stats{grid-template-columns:repeat(2,minmax(0,1fr));}#vmi-page .report-category{grid-template-columns:1fr 52px;}#vmi-page .report-category__track{grid-column:1/-1;grid-row:2;}#vmi-page .report-answer__feedback{grid-template-columns:1fr;}}
+  @media(max-width:430px){#vmi-page .report-stats{grid-template-columns:1fr;}#vmi-page .report-distribution__legend{grid-template-columns:1fr;}}
   #vmi-page ul.plain{margin:0;padding-left:20px;}
   #vmi-page ul.plain li{margin-bottom:9px;font-size:14.5px;line-height:1.55;}
   #vmi-page ul.plain li::marker{color:var(--orange);}
-  #vmi-page #report-sample-answers p,#vmi-page #report-plan p{margin-bottom:12px;}
+  #vmi-page #report-plan p{margin-bottom:12px;}
   #vmi-page .footer-note{text-align:center;color:var(--muted);font-size:12.5px;margin-top:30px;line-height:1.6;}
 
   #vmi-page .spinner{width:16px;height:16px;border:2.5px solid rgba(26,0,136,.25);border-top-color:var(--navy);border-radius:50%;animation:vmiSpin .7s linear infinite;}
@@ -464,6 +518,7 @@
   #vmi-page .vmi-analyze__core i{width:40px;height:40px;}
   #vmi-page .vmi-analyze__inner h2{font-family:var(--font-head);font-weight:700;font-size:34px;margin:0 0 8px;}
   #vmi-page .vmi-analyze__inner > p{color:rgba(255,255,255,.72);font-size:14.5px;margin:0 auto 24px;max-width:380px;}
+  #vmi-page .vmi-analyze__time{display:inline-flex;align-items:center;justify-content:center;min-height:34px;margin:-8px auto 22px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.88);font-size:12.5px;font-weight:750;letter-spacing:.01em;}
   #vmi-page .vmi-analyze__steps{list-style:none;margin:0 auto 22px;padding:0;text-align:left;max-width:340px;display:flex;flex-direction:column;gap:11px;}
   #vmi-page .vmi-analyze__steps li{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;color:rgba(255,255,255,.45);transition:color .3s ease;}
   #vmi-page .vmi-analyze__steps li .tick{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
@@ -832,6 +887,7 @@
   #vmi-page .vmi-analyze__spin{background:conic-gradient(var(--orange) 0 26%,rgba(20,24,64,.08) 0 100%);}
   #vmi-page .vmi-analyze__inner h2{color:var(--navy-deep);}
   #vmi-page .vmi-analyze__inner > p{color:var(--muted);}
+  #vmi-page .vmi-analyze__time{background:#fff;border-color:var(--line);color:var(--navy-deep);box-shadow:var(--shadow-card);}
   #vmi-page .vmi-analyze__steps li{color:var(--muted);}
   #vmi-page .vmi-analyze__steps li .tick{background:#fff;border:1px solid var(--line);}
   #vmi-page .vmi-analyze__steps li.is-active{color:var(--navy-deep);}
@@ -877,6 +933,66 @@
 
   /* -- Report: gentler score ring, no big glow -- */
   #vmi-page .score-ring{filter:none;}
+
+  /* ---------- Report layout + alignment refinements (2026-07) ---------- */
+  /* Report spans the full content width */
+  #vmi-page #screen-report{max-width:none;margin-left:0;margin-right:0;}
+  /* Uniform vertical rhythm between EVERY top-level block (the .two-col rows
+     previously had no bottom margin, so sections collided). */
+  #vmi-page #screen-report > .card,
+  #vmi-page #screen-report > .two-col,
+  #vmi-page #screen-report > .report-stats,
+  #vmi-page #screen-report > .report-method{margin-bottom:18px;}
+  /* Two-column rows: equal-height cards sharing one gutter, no leftover per-card margin */
+  #vmi-page #screen-report .two-col{gap:18px;align-items:stretch;}
+  #vmi-page #screen-report .two-col > .card{margin-bottom:0;}
+  /* Readiness header: even spacing, and stop long copy from squashing the ring */
+  #vmi-page .badge-wrap{gap:32px;align-items:center;}
+  #vmi-page .badge-wrap__body{min-width:0;}
+  /* Consistent gutters for stat tiles */
+  #vmi-page .report-stats{gap:16px;}
+  /* Balanced, centred action buttons under the report */
+  #vmi-page #screen-report > .actions{justify-content:center;margin-top:26px;}
+
+  /* ---------- Step tracker redesign (2026-07) ---------- */
+  #vmi-page .vmi-steps{gap:8px;padding:15px 22px;border-radius:20px;border:1px solid rgba(223,226,238,.9);
+    background:linear-gradient(180deg,#ffffff,#f7f8fd);box-shadow:0 18px 46px -34px rgba(20,24,64,.55);backdrop-filter:none;margin-bottom:30px;}
+  /* Steps size to their content; connectors stretch to fill the space between */
+  #vmi-page .vmi-steps li{flex:0 1 auto;gap:12px;}
+  #vmi-page .vmi-steps .vmi-step__bar{flex:1 1 24px;height:4px;border-radius:99px;background:#e6e9f2;min-width:18px;}
+  #vmi-page .vmi-steps .vmi-step__bar::after{background:linear-gradient(90deg,var(--navy),var(--orange));border-radius:99px;}
+  #vmi-page .vmi-steps .vmi-step__bar.is-filled::after{width:100%;}
+  /* Default (upcoming) step */
+  #vmi-page .vmi-steps li .vmi-step__dot{width:44px;height:44px;border-radius:14px;background:#eef0f7;color:var(--muted);position:relative;
+    transition:transform .35s cubic-bezier(.2,.9,.3,1.2),background .3s ease,box-shadow .3s ease,color .3s ease;}
+  #vmi-page .vmi-steps li .vmi-step__txt b{font-size:13px;font-weight:800;color:var(--navy-deep);}
+  #vmi-page .vmi-steps li .vmi-step__txt small{font-size:11px;color:var(--muted);}
+  /* Completed step: navy fill + a green completion check badge */
+  #vmi-page .vmi-steps li.is-done .vmi-step__dot{background:linear-gradient(135deg,var(--navy-soft),var(--navy-deep));color:#fff;box-shadow:0 10px 22px -12px rgba(16,18,59,.6);}
+  #vmi-page .vmi-steps li.is-done .vmi-step__dot::after{content:"";position:absolute;right:-4px;top:-4px;width:18px;height:18px;border-radius:50%;
+    background-color:var(--good);border:2px solid #fff;background-repeat:no-repeat;background-position:center;background-size:10px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");}
+  /* Current step: orange gradient with a soft focus ring */
+  #vmi-page .vmi-steps li.is-active .vmi-step__dot{background:linear-gradient(135deg,var(--orange),var(--orange-deep));color:#fff;
+    box-shadow:0 12px 26px -10px rgba(255,94,50,.75),0 0 0 4px rgba(255,94,50,.14);transform:translateY(-2px) scale(1.04);}
+  #vmi-page .vmi-steps li.is-active .vmi-step__txt b{color:var(--navy-deep);}
+
+  /* ---------- Floating "new interview" mic button (navy theme, centre-right edge) ---------- */
+  #vmi-page .vmi-restart-fab{position:fixed;right:24px;top:50%;bottom:auto;transform:translateY(-50%);z-index:81;display:inline-flex;align-items:center;gap:11px;
+    padding:13px 22px 13px 14px;border-radius:999px;border:none;cursor:pointer;color:#fff;font-family:var(--font-body);
+    font-size:13.5px;font-weight:800;letter-spacing:.01em;background:linear-gradient(135deg,var(--navy),var(--navy-deep));
+    box-shadow:0 18px 40px -14px rgba(16,18,59,.55),0 4px 14px -8px rgba(16,2,88,.4);
+    transition:transform .25s cubic-bezier(.2,.9,.3,1.2),box-shadow .25s ease;}
+  /* Mic glyph in a soft disc with a live "listening" pulse ring */
+  #vmi-page .vmi-restart-fab__mic{position:relative;flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18);}
+  #vmi-page .vmi-restart-fab__mic i{width:16px;height:16px;}
+  #vmi-page .vmi-restart-fab__mic::before{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.55);animation:vmiMicPulse 2s ease-out infinite;}
+  @keyframes vmiMicPulse{0%{transform:scale(1);opacity:.7;}70%{transform:scale(1.6);opacity:0;}100%{opacity:0;}}
+  #vmi-page .vmi-restart-fab:hover{transform:translateY(-50%) translateX(-4px);box-shadow:0 24px 50px -14px rgba(16,18,59,.62),0 6px 16px -8px rgba(16,2,88,.42);}
+  #vmi-page .vmi-restart-fab:active{transform:translateY(-50%) translateX(-1px) scale(.99);}
+  #vmi-page .vmi-restart-fab.hidden{display:none;}
+  @media(max-width:560px){#vmi-page .vmi-restart-fab{right:14px;padding:11px;gap:0;}#vmi-page .vmi-restart-fab > span:last-child{display:none;}}
+  @media(prefers-reduced-motion:reduce){#vmi-page .vmi-restart-fab{transition:none;}#vmi-page .vmi-restart-fab:hover{transform:translateY(-50%);}#vmi-page .vmi-restart-fab__mic::before{animation:none;}}
 </style>
 @endpush
 
@@ -922,7 +1038,7 @@
               </div>
               <div class="vmi-console__footer">
                 <span><i data-lucide="mic"></i> Listening</span>
-                <span><i data-lucide="scan-face"></i> Presence active</span>
+                <span><i data-lucide="message-square-text"></i> Transcript active</span>
               </div>
             </div>
             <div class="vmi-signal-card vmi-signal-card--score"><span>Readiness</span><b>88<small>/100</small></b><i data-lucide="trending-up"></i></div>
@@ -997,6 +1113,12 @@
             <button type="button" class="vmi-pill vmi-pill--mode" data-mode="text"><i data-lucide="keyboard"></i> Text only</button>
           </div>
 
+          <label class="vmi-field-label" for="in-destination" style="margin-top:22px;">Target country <span style="text-transform:none;font-weight:600;color:var(--muted);">(optional, improves answer accuracy)</span></label>
+          <input class="vmi-context-input" id="in-destination" type="text" maxlength="120" list="vmi-destinations" placeholder="For example: United Kingdom">
+          <datalist id="vmi-destinations">
+            <option value="United Kingdom"><option value="United States"><option value="Canada"><option value="Australia"><option value="Ireland"><option value="Germany"><option value="New Zealand"><option value="France"><option value="Italy"><option value="Netherlands">
+          </datalist>
+
           <div class="vmi-unlock" id="vmi-unlock-cta">
             <span class="vmi-unlock__ic"><i data-lucide="headset"></i></span>
             <div class="vmi-unlock__body">
@@ -1012,7 +1134,7 @@
             <span class="card__ic"><i data-lucide="camera"></i></span>
             <div>
               <h2>Camera &amp; microphone check</h2>
-              <p>Everything stays on your device — your video and audio are never uploaded. Analysis runs entirely in your browser.</p>
+              <p>The camera provides a live practice preview and the microphone creates your transcript. Raw video and audio are not saved; the AI assessor reviews only your submitted answers.</p>
             </div>
           </div>
           <div class="perm-row"><span class="perm-dot" id="dot-cam"></span><span id="txt-cam">Camera not tested yet</span></div>
@@ -1031,7 +1153,7 @@
 
         <div class="actions vmi-start-row" data-reveal>
           <button class="btn btn-primary btn-lg btn-start" id="btn-start-interview" disabled><i data-lucide="play"></i> Start mock interview</button>
-          <span style="align-self:center;color:var(--muted);font-size:13px;">Takes about 5–10 minutes · fully private</span>
+          <span style="align-self:center;color:var(--muted);font-size:13px;">Takes about 5–10 minutes · raw video is not stored</span>
         </div>
       </div>
 
@@ -1091,7 +1213,7 @@
             <div class="card qbox">
               <div class="qbox__head">
                 <span class="ic"><i data-lucide="message-square-text"></i></span>
-                <span><b>Your response</b><small>Speak your answer, or switch to typing.</small></span>
+                <span><b>Your response</b><small id="answer-mode-copy">Speak your answer, or switch to typing.</small></span>
               </div>
               <div class="mode-toggle" id="mode-toggle">
                 <button class="mode-btn active" id="mode-btn-speak" type="button"><i data-lucide="mic"></i> Speak</button>
@@ -1117,10 +1239,6 @@
                 <button class="btn btn-ghost" id="btn-skip">Skip</button>
               </div>
 
-              <div id="loading-feedback" class="loading-row hidden">
-                <div class="spinner"></div>
-                Saving your answer…
-              </div>
             </div>
           </section>
         </div>
@@ -1150,13 +1268,14 @@
           </div>
           <h2>Analysing your interview</h2>
           <p>Your assessor is reviewing every answer and building your readiness report…</p>
+          <div class="vmi-analyze__time" id="vmi-analysis-time">Calculating estimated completion time…</div>
           <ul class="vmi-analyze__steps">
             <li data-astep="transcribe"><span class="tick"><i data-lucide="check"></i></span> Reviewing your answers &amp; transcripts</li>
             <li data-astep="comm"><span class="tick"><i data-lucide="check"></i></span> Scoring communication &amp; delivery</li>
-            <li data-astep="body"><span class="tick"><i data-lucide="check"></i></span> Assessing body language &amp; presence</li>
             <li data-astep="compile"><span class="tick"><i data-lucide="check"></i></span> Compiling your visa-readiness report</li>
           </ul>
           <div class="vmi-analyze__bar"><span></span></div>
+          <button class="btn btn-primary hidden" id="btn-retry-ai-analysis" type="button" style="margin:22px auto 0;">Retry AI analysis</button>
         </div>
       </div>
 
@@ -1191,16 +1310,37 @@
           </div>
         </div>
 
+        <div class="report-stats" id="report-stats" data-reveal></div>
+
+        <div class="two-col">
+          <div class="card" data-reveal>
+            <h3>Answer quality distribution</h3>
+            <p class="report-section-note">Shows how consistently your answers met interview expectations.</p>
+            <div id="report-distribution"></div>
+          </div>
+          <div class="card" data-reveal>
+            <h3>Executive insights</h3>
+            <p class="report-section-note">The most important results from this practice session.</p>
+            <div class="report-insights" id="report-executive"></div>
+          </div>
+        </div>
+
         <div class="card" data-reveal>
           <h3>Communication assessment</h3>
           <p style="color:var(--muted);font-size:13px;margin-top:-6px;">Language · Grammar · Fluency · Pronunciation · Confidence · Tone · Clarity · Crispness</p>
           <div class="score-row" id="report-communication"></div>
         </div>
 
-        <div class="card hidden" id="report-bodylanguage-card" data-reveal>
-          <h3>Body language assessment</h3>
-          <p style="color:var(--muted);font-size:13px;margin-top:-6px;">Eye contact · Facial expressions · Posture · Overall presentation (camera-based heuristic)</p>
-          <div class="score-row" id="report-bodylanguage"></div>
+        <div class="card" data-reveal>
+          <h3>Knowledge and answer quality</h3>
+          <p class="report-section-note">Relevance and subject knowledge demonstrated in your submitted answers.</p>
+          <div class="score-row" id="report-content"></div>
+        </div>
+
+        <div class="card" data-reveal>
+          <h3>Performance by interview category</h3>
+          <p class="report-section-note">Category averages help you prioritise the topics that need further preparation.</p>
+          <div class="report-category-list" id="report-categories"></div>
         </div>
 
         <div class="two-col">
@@ -1225,8 +1365,9 @@
         </div>
 
         <div class="card" data-reveal>
-          <h3>Recommended sample answers</h3>
-          <div id="report-sample-answers" style="font-size:14.5px;line-height:1.7;"></div>
+          <h3>Complete answer review</h3>
+          <p class="report-section-note">Open any question to review your response, feedback, and a stronger answer structure.</p>
+          <div class="report-answer-review" id="report-answer-review"></div>
         </div>
 
         <div class="card" data-reveal>
@@ -1244,14 +1385,13 @@
           <p id="report-summary" style="font-size:14.5px;line-height:1.7;margin:0;"></p>
         </div>
 
-        <div class="card" data-reveal>
-          <h3>Score breakdown</h3>
-          <div class="score-row" id="report-breakdown"></div>
+        <div class="report-method" data-reveal>
+          <i data-lucide="info"></i>
+          <span>Scores are practice indicators based on answer relevance, clarity, consistency, demonstrated knowledge, and available delivery signals. They are not a prediction or guarantee of a visa decision.</span>
         </div>
 
         <div class="actions">
           <button class="btn btn-primary" id="btn-download-pdf"><i data-lucide="download"></i> Download PDF report</button>
-          <button class="btn btn-navy" id="btn-download-cert"><i data-lucide="award"></i> Download certificate</button>
           <button class="btn btn-ghost" id="btn-restart"><i data-lucide="rotate-ccw"></i> New mock interview</button>
         </div>
       </div>
@@ -1333,6 +1473,12 @@
       </div>
     </div>
 
+    {{-- Floating restart — revealed on the report so a new run is always one tap away.
+         Sits above the site contact FAB and carries a mic motif for the voice interview. --}}
+    <button type="button" id="vmi-restart-fab" class="vmi-restart-fab hidden" aria-label="Start a new mock interview">
+      <span class="vmi-restart-fab__mic"><i data-lucide="mic"></i></span><span>New interview</span>
+    </button>
+
   </div>{{-- /#vmi-page --}}
 </main>
 
@@ -1341,8 +1487,12 @@
 <script>
   window.VMI_CONFIG = {
     leadUrl: @json(route('visa-mock.lead')),
+    assessBatchUrl: @json(route('visa-mock.assess-batch')),
     csrf: (document.querySelector('meta[name="csrf-token"]') || {}).content || @json(csrf_token()),
-    questionAudioBase: @json(asset('assets/audio/visa-mock-interview'))
+    questionAudioBase: @json(asset('assets/audio/visa-mock-interview')),
+    // True when the fast cloud assessor (Groq) is configured; drives the
+    // completion-time estimate shown while analysing.
+    fastAssessor: @json((bool) config('services.visa_mock_ai.groq.key'))
   };
 </script>
 
@@ -1390,17 +1540,16 @@ const PREFERS_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-redu
    ============================================================ */
 const state = {
   mode:"video",
+  destination:"",
   queue:[], qIndex:0, totalPlanned:10,
   unlocked:false, leadSubmitted:false, requestedLength:"",
   stream:null, streamReleased:false, audioCtx:null, analyser:null, sourceNode:null, rafId:null,
   recognition:null, recognitionReady:false, recognitionRunning:false,
   recognizing:false, wantRestart:false, transcript:"", finalTranscript:"",
-  recStartTime:0, timerInterval:null,
+  recStartTime:0, recordedDurationSec:0, questionStartedAt:0, timerInterval:null,
   volumeSamples:[],
   confidenceSamples:[],
-  frames:[],
-  frameInterval:null,
-  frameAttempts:0, frameHits:0,
+  analysisRunning:false,
   results:[],
   answerMode:"speak",
   interviewActive:false
@@ -1424,8 +1573,8 @@ function fmtTime(sec){
    FRIENDLY ERROR BANNER
    ============================================================ */
 function showRecError(message, level){
-  // Most notices are benign (a fallback is always offered) → soft amber. Only
-  // truly blocking cases (mic denied / no device) use the stronger red style.
+  // Most device notices are benign because Text mode remains available. Only
+  // truly blocking cases, including an unavailable AI assessor, use red.
   const isError = level === "error";
   let banner = $("rec-error-banner");
   if(!banner){
@@ -1549,7 +1698,7 @@ $("btn-test-devices").addEventListener("click", async () => {
   const hasAudio = stream.getAudioTracks().length > 0;
 
   if(hasVideo){ dotCam.classList.add("ok"); txtCam.textContent = "Camera working"; }
-  else { dotCam.classList.add("bad"); txtCam.textContent = "No camera detected or camera permission was skipped — you can still continue with voice/text only, but visual feedback (eye contact, body language) won't be available."; }
+  else { dotCam.classList.add("bad"); txtCam.textContent = "No camera detected or camera permission was skipped — you can still continue with voice or text only."; }
 
   if(hasAudio){ dotMic.classList.add("ok"); txtMic.textContent = "Microphone working"; }
   else { dotMic.classList.add("bad"); txtMic.textContent = "Microphone blocked — allow it in your browser and retry for accurate voice scoring."; }
@@ -1669,13 +1818,14 @@ function runInterviewSetup(onCovered){
 $("btn-start-interview").addEventListener("click", async () => {
   if(state.interviewActive) return;
   state.mode = $("in-mode").value;
+  state.destination = ($("in-destination").value || "").trim();
   let wanted = parseInt($("in-count").value,10) || FREE_LIMIT;
   if(!state.unlocked && wanted > FREE_LIMIT) wanted = FREE_LIMIT;
   state.totalPlanned = wanted;
   state.queue = buildQueue(state.totalPlanned);
   state.qIndex = 0;
   state.results = [];
-
+  state.analysisRunning = false;
   state.interviewActive = true;
   document.documentElement.classList.add("vmi-lock");
   setAvatarState("idle");
@@ -1693,7 +1843,13 @@ $("btn-start-interview").addEventListener("click", async () => {
     showRecError("Camera/microphone connection was lost — you can still answer using Text mode below, or refresh and re-test your devices.");
   }
 
-  setAnswerMode("speak");
+  const cameraPip = document.querySelector("#vmi-page .vmi-cam-pip");
+  if(cameraPip) cameraPip.classList.toggle("hidden", state.mode === "text");
+  $("mode-btn-speak").classList.toggle("hidden", state.mode === "text");
+  $("answer-mode-copy").textContent = state.mode === "text"
+    ? "Type a clear, complete answer. Voice delivery metrics are intentionally omitted."
+    : "Speak your answer, or switch to typing.";
+  setAnswerMode(state.mode === "text" ? "type" : "speak");
   await preparing;
   loadQuestion();
 });
@@ -2002,6 +2158,7 @@ function typeQuestion(text){
   }, 24);
 }
 function presentQuestion(item){
+  state.questionStartedAt = Date.now();
   const ic = CATEGORY_ICONS[item.cat] || "folder";
   $("q-category").innerHTML = '<i data-lucide="'+ic+'"></i> '+item.cat;
   if(window.lucide) try{ window.lucide.createIcons(); }catch(e){}
@@ -2038,15 +2195,12 @@ function resetAnswerUI(){
   if(state.recognition && state.recognitionRunning){
     try{ state.recognition.stop(); }catch(e){}
   }
-  clearInterval(state.frameInterval);
-
   state.finalTranscript = "";
   state.transcript = "";
-  state.frames = [];
+  state.recStartTime = 0;
+  state.recordedDurationSec = 0;
   state.volumeSamples = [];
   state.confidenceSamples = [];
-  state.frameAttempts = 0;
-  state.frameHits = 0;
   clearRecError();
   $("transcript-box").textContent = "Your spoken answer will appear here as you talk…";
   $("transcript-box").classList.add("empty");
@@ -2179,9 +2333,6 @@ function startRecording(){
   state.finalTranscript = "";
   state.volumeSamples = [];
   state.confidenceSamples = [];
-  state.frames = [];
-  state.frameAttempts = 0;
-  state.frameHits = 0;
   hide($("btn-record")); show($("btn-stop")); show($("rec-badge"));
   stopInterviewerAudio();
   clearInterval(state.typeTimer);
@@ -2204,8 +2355,6 @@ function startRecording(){
     $("timer-badge").textContent = fmtTime((Date.now()-state.recStartTime)/1000);
   },250);
 
-  captureFrame();
-  state.frameInterval = setInterval(captureFrame, 2500);
 }
 
 function stopRecording(){
@@ -2215,32 +2364,14 @@ function stopRecording(){
   setAvatarState("idle");
   $("transcript-box").classList.remove("is-live");
   clearInterval(state.timerInterval);
-  clearInterval(state.frameInterval);
+  if(state.recStartTime) state.recordedDurationSec = (Date.now()-state.recStartTime)/1000;
   if(state.recognition){
     try{ state.recognition.stop(); }catch(e){}
   }
-  captureFrame();
   const finalText = (state.finalTranscript || $("transcript-box").textContent || "").trim();
   if(finalText && finalText !== "Listening…"){
     $("btn-submit-answer").disabled = finalText.length < 3;
   }
-}
-
-function captureFrame(){
-  if(state.mode === "video") state.frameAttempts++;
-  try{
-    const video = $("live-video");
-    if(!video.videoWidth) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = 320; canvas.height = 240;
-    const ctx = canvas.getContext("2d");
-    ctx.translate(canvas.width,0); ctx.scale(-1,1);
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg",0.6);
-    state.frames.push(dataUrl.split(",")[1]);
-    if(state.frames.length > 4) state.frames.shift();
-    if(state.mode === "video") state.frameHits++;
-  }catch(e){ console.warn("frame capture failed", e); }
 }
 
 /* ============================================================
@@ -2273,82 +2404,28 @@ function computeLocalMetrics(transcript, durationSec){
     ? state.confidenceSamples.reduce((a,b)=>a+b,0)/state.confidenceSamples.length : 0;
   const pronunciationScore = avgConfidence > 0
     ? clamp(round1(avgConfidence*10), 2, 10)
-    : clamp(round1(paceScore*0.5 + fillerScore*0.5), 2, 10);
-
-  const cameraPresenceScore = (state.mode === "video" && state.frameAttempts > 0)
-    ? clamp(round1((state.frameHits/state.frameAttempts)*10), 2, 10)
     : null;
 
   return {
     wordCount, durationSec: Math.round(durationSec), wpm: Math.round(wpm),
     fillerCount: fillerMatches.length, fillerScore: round1(fillerScore),
     paceScore: round1(paceScore), energyScore: round1(energyScore), dynamismScore: round1(dynamismScore),
-    pronunciationScore, cameraPresenceScore
+    pronunciationScore, hasVoiceMetrics: state.answerMode === "speak" && state.volumeSamples.length >= 8
   };
 }
 function round1(n){ return Math.round(n*10)/10; }
 
 /* ============================================================
-   VISUAL FRAME ANALYSIS
-   ============================================================ */
-function frameToLuminanceGrid(b64){
-  return new Promise(resolve=>{
-    try{
-      const img = new Image();
-      img.onload = ()=>{
-        try{
-          const c = document.createElement("canvas");
-          c.width = 8; c.height = 6;
-          const ctx = c.getContext("2d");
-          ctx.drawImage(img,0,0,8,6);
-          const data = ctx.getImageData(0,0,8,6).data;
-          const grid = [];
-          for(let i=0;i<data.length;i+=4){
-            grid.push(0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2]);
-          }
-          resolve(grid);
-        }catch(e){ resolve(null); }
-      };
-      img.onerror = ()=> resolve(null);
-      img.src = "data:image/jpeg;base64," + b64;
-    }catch(e){ resolve(null); }
-  });
-}
-
-async function computeVisualMetrics(frames){
-  if(!frames || frames.length < 2) return null;
-  const grids = [];
-  for(const b64 of frames){
-    const g = await frameToLuminanceGrid(b64);
-    if(g) grids.push(g);
-  }
-  if(grids.length < 2) return null;
-
-  const diffs = [];
-  for(let i=1;i<grids.length;i++){
-    let sum = 0;
-    for(let c=0;c<grids[i].length;c++) sum += Math.abs(grids[i][c]-grids[i-1][c]);
-    diffs.push(sum/grids[i].length);
-  }
-  const avgMovement = diffs.reduce((a,b)=>a+b,0)/diffs.length;
-
-  const avgLum = grids.map(g=> g.reduce((a,b)=>a+b,0)/g.length);
-  const meanLum = avgLum.reduce((a,b)=>a+b,0)/avgLum.length;
-  const lumVariance = Math.sqrt(avgLum.reduce((a,b)=>a+Math.pow(b-meanLum,2),0)/avgLum.length);
-
-  return { avgMovement, lumVariance, frameCount: grids.length };
-}
-
-/* ============================================================
-   SUBMIT ANSWER -> LOCAL ASSESSMENT
+   CAPTURE ANSWER -> AI ASSESSMENT RUNS AFTER THE FINAL QUESTION
    ============================================================ */
 $("btn-submit-answer").addEventListener("click", submitAnswer);
 $("btn-skip").addEventListener("click", ()=>{
   state.qIndex++;
   loadQuestion();
 });
+$("btn-retry-ai-analysis").addEventListener("click", finishInterview);
 
-async function submitAnswer(){
+function submitAnswer(){
   const item = state.queue[state.qIndex];
   let answerText;
   if(state.answerMode === "type"){
@@ -2359,306 +2436,98 @@ async function submitAnswer(){
   }
   if(!answerText || answerText.length < 3) return;
 
-  const durationSec = state.recStartTime ? (Date.now()-state.recStartTime)/1000 : answerText.split(" ").length/2.3;
+  const durationSec = state.recordedDurationSec || (state.recStartTime
+    ? (Date.now()-state.recStartTime)/1000
+    : state.questionStartedAt
+      ? (Date.now()-state.questionStartedAt)/1000
+      : answerText.split(" ").length/2.3);
   const localMetrics = computeLocalMetrics(answerText, durationSec);
-  if(state.mode === "video"){
-    try{ localMetrics.visualMetrics = await computeVisualMetrics(state.frames); }
-    catch(e){ console.warn("visual metrics failed", e); localMetrics.visualMetrics = null; }
-  }
 
-  $("btn-submit-answer").disabled = true;
-  show($("loading-feedback"));
-
-  let result;
-  try{
-    await new Promise(r=>setTimeout(r, 300));
-    result = assessAnswerLocally(item, answerText, localMetrics);
-  }catch(e){
-    console.error("Local assessment failed", e);
-    result = minimalSafeAssessment(localMetrics);
-  }
-
-  const combined = mergeScores(result, localMetrics);
+  clearRecError();
   state.results.push({
-    category: item.cat, question: item.q, answer: answerText,
-    scores: combined.scores, feedback: combined.feedback, overall: combined.overall
+    category:item.cat, question:item.q, answer:answerText,
+    scores:null, feedback:null, overall:null,
+    local:localMetrics, assessmentEngine:"pending-ai"
   });
-
   state.qIndex++;
-  hide($("loading-feedback"));
   loadQuestion();
 }
 
-/* ============================================================
-   LOCAL ANSWER ASSESSOR
-   ============================================================ */
-const STOPWORDS = new Set("a an the is are was were am be been being to of in on at for with and or but if then so because as it its this that these those i you he she we they my your his her our their what which who whom will would can could should shall may might do does did have has had not no yes very really just also about into from by up down out over under again further here there when where why how all each few more most other some such only own same than too".split(" "));
-const HEDGE_PHRASES = ["i think","i guess","maybe","probably","not sure","i don't know","i dont know","kind of","sort of","i suppose","perhaps","i hope so","hopefully"];
-const VAGUE_WORDS = ["stuff","things","whatever","somehow","somewhat"];
-const REHEARSED_PHRASES = ["since my childhood","i have always dreamed","ever since i was young","my passion for","from a young age","i always wanted to"];
-const COUNTRY_NAMES = ["uk","united kingdom","england","scotland","usa","united states","america","canada","australia","germany","ireland","new zealand","france","italy","netherlands","singapore","japan"];
-const CATEGORY_KEYWORDS = {
-  "Personal & Academic Background": ["study","degree","graduated","school","college","subject","interest","academic"],
-  "University & Course Related": ["university","course","program","degree","campus","semester","module","faculty","ranking"],
-  "Country Knowledge": COUNTRY_NAMES.concat(["city","climate","culture","language","opportunity","cost of living"]),
-  "Financial Questions": ["scholarship","loan","sponsor","income","tuition","fees","savings","bank","fund","sponsorship"],
-  "Accommodation & Travel": ["accommodation","hostel","apartment","flight","ticket","stay","dormitory","housing","booking"],
-  "Future Plans & Intentions": ["career","job","work","return","home country","graduate","industry"]
-};
-const STRENGTH_TIPS = {
-  language:"Your vocabulary and word choice came across as natural and varied.",
-  grammar:"Your sentences were grammatically clean.",
-  fluency:"You kept a steady, natural speaking pace.",
-  pronunciation:"Your speech came through clear and easy to follow.",
-  confidence:"You answered assertively without much hedging.",
-  clarity:"Your answer was easy to follow and well structured.",
-  crispness:"You kept the answer to a good, focused length.",
-  relevance:"You stayed directly on-topic for this question.",
-  eyeContact:"You maintained a steady, visible presence on camera.",
-  facialExpressions:"You came across as engaged and present on camera.",
-  posture:"You held a steady, visible position in frame.",
-  courseKnowledge:"You showed solid knowledge of your course.",
-  universityKnowledge:"You showed solid knowledge of your university.",
-  countryKnowledge:"You showed good awareness of your destination country.",
-  financialAwareness:"You were specific and clear about your finances."
-};
-const IMPROVE_TIPS = {
-  language:"Try widening your vocabulary rather than repeating the same few words.",
-  grammar:"Watch your sentence structure — re-read answers aloud to catch grammar slips.",
-  fluency:"Aim for a steadier pace — not too rushed, not too slow (110-150 words/min is ideal).",
-  pronunciation:"Slow down slightly and articulate key words clearly, especially names and numbers.",
-  confidence:"Cut hedging phrases like 'I think' or 'maybe' — state your answer directly.",
-  clarity:"Structure your answer as: direct answer, one supporting reason, then stop.",
-  crispness:"Keep answers tighter — aim for 30-45 seconds without losing key details.",
-  relevance:"Make sure you're directly answering what was asked, not drifting to a related topic.",
-  eyeContact:"Stay centred and visible in frame, looking toward the camera lens.",
-  facialExpressions:"Stay visible and engaged on camera rather than looking away or off-screen.",
-  posture:"Sit centred in frame with a steady, upright position throughout your answer.",
-  courseKnowledge:"Mention specific modules or how the course connects to your goals.",
-  universityKnowledge:"Reference something specific about the university (ranking, faculty, research).",
-  countryKnowledge:"Add one concrete fact about the country or city — cost of living, transport, a landmark.",
-  financialAwareness:"State exact figures — tuition, living costs, and funding source — with confidence."
-};
-const BETTER_ANSWER_HINTS = {
-  "Personal & Academic Background":"A strong answer names your specific degree, one achievement, and ties it to why you chose this course.",
-  "University & Course Related":"A strong answer names the university, one specific reason (ranking, faculty, facility), and the exact course/duration.",
-  "Country Knowledge":"A strong answer names the city, one cultural or practical fact, and why it suits your studies.",
-  "Financial Questions":"A strong answer states the exact tuition amount, funding source, and who is sponsoring you.",
-  "Accommodation & Travel":"A strong answer names where you'll stay, who arranged it, and your booked travel dates.",
-  "Future Plans & Intentions":"A strong answer states your post-study plan and how it connects to your home country's job market."
-};
-const OFFICER_TIPS = {
-  "Personal & Academic Background":"Officers want consistency — make sure this matches what's on your SOP.",
-  "University & Course Related":"Know your course code, duration, and start date cold.",
-  "Country Knowledge":"Showing genuine research into the country reassures the officer this is a real study intent.",
-  "Financial Questions":"Round, confident figures (not vague ranges) reassure officers you're not bluffing.",
-  "Accommodation & Travel":"Have your booking reference or offer letter ready to mention.",
-  "Future Plans & Intentions":"A clear return/career plan is one of the strongest signals of genuine student intent."
-};
-
-function tokenize(text){ return (text.toLowerCase().match(/[a-z']+/g) || []); }
-function sentenceSplit(text){ return text.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(Boolean); }
-function countPhraseHits(lowerText, phrases){
-  let n = 0;
-  phrases.forEach(p=>{ if(lowerText.includes(p)) n++; });
-  return n;
-}
-
-function scoreGrammar(answerText){
-  let score = 9;
-  sentenceSplit(answerText).forEach(s=>{
-    const first = s.trim()[0];
-    if(first && /[a-z]/.test(first)) score -= 0.4;
-    if(tokenize(s).length > 40) score -= 0.6;
-  });
-  const repeatMatches = answerText.match(/\b(\w+)\s+\1\b/gi) || [];
-  score -= repeatMatches.length * 0.8;
-  const loneI = (answerText.match(/\bi\b/g)||[]).length;
-  if(loneI>0) score -= Math.min(loneI*0.3, 1.5);
-  return clamp(round1(score), 2, 9.8);
-}
-
-function scoreClarity(answerText, wordCount){
-  const sentences = sentenceSplit(answerText);
-  const sCount = Math.max(sentences.length,1);
-  const avgLen = wordCount / sCount;
-  let score = 8;
-  if(avgLen > 28) score -= 2; else if(avgLen > 22) score -= 1;
-  else if(avgLen < 5 && sCount>1) score -= 1;
-  score -= countPhraseHits(answerText.toLowerCase(), VAGUE_WORDS) * 0.6;
-  return clamp(round1(score), 2, 9.5);
-}
-
-function scoreCrispness(wordCount, durationSec){
-  let score = 8;
-  if(wordCount < 12) score -= 3;
-  else if(wordCount < 20) score -= 1;
-  else if(wordCount > 130) score -= 3;
-  else if(wordCount > 90) score -= 1.5;
-  if(durationSec > 75) score -= 1;
-  return clamp(round1(score), 2, 9.5);
-}
-
-function scoreConfidence(answerText, wordCount){
-  const hedgeHits = countPhraseHits(answerText.toLowerCase(), HEDGE_PHRASES);
-  let score = 8 - hedgeHits*1.1;
-  if(wordCount < 8) score -= 1.5;
-  return clamp(round1(score), 2, 9.5);
-}
-
-function scoreRelevance(item, answerText){
-  const qWords = tokenize(item.q).filter(w=>!STOPWORDS.has(w) && w.length>2);
-  const aWords = new Set(tokenize(answerText));
-  let ratio = 0.5;
-  if(qWords.length){
-    const hits = qWords.filter(w=>aWords.has(w)).length;
-    ratio = hits/qWords.length;
+async function requestAiBatchAssessment(results){
+  if(!CFG.assessBatchUrl) throw new Error("The assessment service is not configured.");
+  const controller = "AbortController" in window ? new AbortController() : null;
+  const timer = controller ? setTimeout(function(){ controller.abort(); }, 600000) : null;
+  try{
+    const response = await fetch(CFG.assessBatchUrl, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Accept":"application/json",
+        "X-Requested-With":"XMLHttpRequest",
+        "X-CSRF-TOKEN":CFG.csrf || ""
+      },
+      signal:controller ? controller.signal : undefined,
+      body:JSON.stringify({
+        answers:results.map(function(result){
+          return {
+            question:result.question,
+            answer:result.answer,
+            category:result.category,
+            mode:state.mode,
+            destination:state.destination || null,
+            metrics:{
+              wordCount:result.local.wordCount,
+              durationSec:result.local.durationSec,
+              wpm:result.local.wpm,
+              fillerCount:result.local.fillerCount
+            }
+          };
+        })
+      })
+    });
+    if(!response.ok){
+      const errorPayload = await response.json().catch(function(){ return {}; });
+      throw new Error(errorPayload.message || "The assessment service is temporarily unavailable. Please retry shortly.");
+    }
+    const payload = await response.json();
+    if(!payload || !payload.ok || !Array.isArray(payload.assessments) || payload.assessments.length !== results.length){
+      throw new Error("The assessment service returned an incomplete report. Please retry the analysis.");
+    }
+    return payload;
+  }catch(error){
+    if(error && error.name === "AbortError"){
+      throw new Error("Report generation exceeded ten minutes. Please retry the analysis.");
+    }
+    throw error;
+  }finally{
+    if(timer) clearTimeout(timer);
   }
-  let score = 4 + ratio*6;
-  const lower = answerText.toLowerCase();
-  const catHits = (CATEGORY_KEYWORDS[item.cat]||[]).filter(k=>lower.includes(k)).length;
-  score += Math.min(catHits*0.4, 1.5);
-  return clamp(round1(score), 2, 9.8);
-}
-
-function scoreLanguage(answerText, wordCount){
-  const words = tokenize(answerText);
-  const ttr = wordCount>0 ? new Set(words).size/wordCount : 0;
-  return clamp(round1(5 + ttr*6), 2, 9.5);
-}
-
-function scoreKnowledgeField(field, answerText){
-  const lower = answerText.toLowerCase();
-  const hasNumber = /\d/.test(answerText);
-  const hasCurrency = /[₹$£€]/.test(answerText);
-  const properNouns = (answerText.match(/\b[A-Z][a-zA-Z]{2,}\b/g) || []).filter(w=>!["I","The","A","An"].includes(w));
-  let score = 5;
-  if(field==="financialAwareness"){
-    if(hasNumber || hasCurrency) score += 2.5;
-    if(/scholarship|loan|sponsor|saving/.test(lower)) score += 1;
-  } else if(field==="universityKnowledge" || field==="courseKnowledge"){
-    if(properNouns.length>=1) score += 2;
-    if(/ranking|module|faculty|research|campus/.test(lower)) score += 1.5;
-  } else if(field==="countryKnowledge"){
-    if(COUNTRY_NAMES.some(c=>lower.includes(c))) score += 1.5;
-    if(/city|climate|culture|language|cost of living/.test(lower)) score += 2;
-  }
-  return clamp(round1(score), 2, 9.5);
-}
-
-function knowledgeFieldsForCategory(cat){
-  if(cat==="University & Course Related") return ["courseKnowledge","universityKnowledge"];
-  if(cat==="Country Knowledge") return ["countryKnowledge"];
-  if(cat==="Financial Questions") return ["financialAwareness"];
-  return [];
-}
-
-function assessAnswerLocally(item, answerText, localMetrics){
-  const wordCount = localMetrics.wordCount, durationSec = localMetrics.durationSec;
-  const lower = answerText.toLowerCase();
-
-  const language = scoreLanguage(answerText, wordCount);
-  const grammar = scoreGrammar(answerText);
-  const fluency = round1(clamp(localMetrics.paceScore,2,10));
-  const confidence = scoreConfidence(answerText, wordCount);
-  const clarity = scoreClarity(answerText, wordCount);
-  const crispness = scoreCrispness(wordCount, durationSec);
-  const relevance = scoreRelevance(item, answerText);
-
-  const fields = knowledgeFieldsForCategory(item.cat);
-  const scores = {
-    language, grammar, fluency, confidence,
-    pronunciation:null,
-    eyeContact:null, facialExpressions:null, posture:null, overallPresentation:null, tone:null,
-    clarity, crispness, relevance,
-    courseKnowledge: fields.includes("courseKnowledge") ? scoreKnowledgeField("courseKnowledge", answerText) : null,
-    universityKnowledge: fields.includes("universityKnowledge") ? scoreKnowledgeField("universityKnowledge", answerText) : null,
-    countryKnowledge: fields.includes("countryKnowledge") ? scoreKnowledgeField("countryKnowledge", answerText) : null,
-    financialAwareness: fields.includes("financialAwareness") ? scoreKnowledgeField("financialAwareness", answerText) : null
-  };
-  const numericVals = Object.values(scores).filter(v=>typeof v==="number");
-  scores.overall = round1(numericVals.reduce((a,b)=>a+b,0)/numericVals.length);
-
-  const trackedForFeedback = {language, grammar, fluency, confidence, clarity, crispness, relevance};
-  fields.forEach(f=>{ if(scores[f]!=null) trackedForFeedback[f] = scores[f]; });
-  const entries = Object.entries(trackedForFeedback);
-  const strongest = entries.reduce((a,b)=> b[1]>a[1] ? b : a);
-  const weakest = entries.reduce((a,b)=> b[1]<a[1] ? b : a);
-
-  const fillerRegex = /\b(um+|uh+|like|you know|basically|actually|so yeah)\b/gi;
-  const fillerCount = (answerText.match(fillerRegex)||[]).length;
-  const hedgeHits = countPhraseHits(lower, HEDGE_PHRASES);
-
-  let mistakes = "";
-  if(fillerCount >= 3) mistakes = "You used "+fillerCount+" filler words (um, like, actually) — try pausing silently instead.";
-  else if(hedgeHits >= 2) mistakes = "You hedged your answer several times (e.g. \"I think\", \"maybe\") — sound more certain.";
-  else if(wordCount < 6) mistakes = "This answer was too short to give the officer much to evaluate — aim for at least 3-4 full sentences.";
-  else if(wordCount < 15) mistakes = "Your answer was quite brief for this question — visa officers expect a fuller response.";
-  else if(relevance < 5) mistakes = "This answer drifted from what was actually asked — make sure you're directly addressing the question.";
-  else if(clarity < 5) mistakes = "This answer was a little hard to follow — try structuring it with a clear beginning, middle, and end.";
-  else if(scores.confidence != null && scores.confidence < 5) mistakes = "This answer came across as uncertain — state your points more directly and avoid trailing off.";
-
-  return {
-    scores,
-    good: STRENGTH_TIPS[strongest[0]] || "You answered the question directly.",
-    improve: IMPROVE_TIPS[weakest[0]] || "Keep practicing to sharpen this answer.",
-    mistakes,
-    betterAnswer: BETTER_ANSWER_HINTS[item.cat] || "Try to include one specific detail (a name, number, or fact) to make your answer more convincing.",
-    officerTip: OFFICER_TIPS[item.cat] || "Keep answers under 45 seconds and lead with the most important fact first.",
-    scripted: REHEARSED_PHRASES.some(p=>lower.includes(p))
-  };
-}
-
-function minimalSafeAssessment(localMetrics){
-  return {
-    scores:{
-      language:6, grammar:6, fluency:round1(clamp(localMetrics.paceScore,2,10)), confidence:6,
-      pronunciation:null,
-      eyeContact:null, facialExpressions:null, posture:null, overallPresentation:null, tone:null,
-      clarity:6, crispness:6, relevance:6,
-      courseKnowledge:null, universityKnowledge:null, countryKnowledge:null, financialAwareness:null, overall:6
-    },
-    good:"You answered the question directly.",
-    improve:"Keep practicing to sharpen this answer.",
-    mistakes:"",
-    betterAnswer:"Try to include one specific detail (a name, number, or fact) to make your answer more convincing.",
-    officerTip:"Keep answers under 45 seconds and lead with the most important fact first.",
-    scripted:false
-  };
 }
 
 function mergeScores(ai, local){
   const s = Object.assign({}, ai.scores);
-  s.fluency = s.fluency!=null ? round1((s.fluency*0.6 + local.paceScore*0.4)) : local.paceScore;
-  s.confidence = s.confidence!=null ? round1((s.confidence*0.6 + local.energyScore*0.4)) : local.energyScore;
-  s.tone = s.tone!=null ? round1((s.tone*0.7 + local.dynamismScore*0.3)) : null;
-  s.language = s.language!=null ? round1((s.language*0.85 + local.fillerScore*0.15)) : local.fillerScore;
-  s.pronunciation = local.pronunciationScore!=null ? round1(local.pronunciationScore) : null;
-
-  if(local.cameraPresenceScore!=null){
-    const evidence = local.cameraPresenceScore;
-    const vm = local.visualMetrics;
-
-    if(vm && vm.frameCount >= 2){
-      const idealMovement = 14;
-      const engagementScore = clamp(round1(10 - Math.abs(vm.avgMovement - idealMovement)/4), 2, 10);
-      const stabilityScore = clamp(round1(10 - vm.lumVariance/6), 2, 10);
-
-      s.eyeContact = clamp(round1(evidence*0.5 + stabilityScore*0.5), 2, 10);
-      s.facialExpressions = clamp(round1(engagementScore*0.7 + local.dynamismScore*0.3), 2, 10);
-      s.posture = clamp(round1(stabilityScore*0.7 + evidence*0.3), 2, 10);
-    } else {
-      s.eyeContact = clamp(round1(evidence*0.7), 2, 8);
-      s.facialExpressions = clamp(round1(evidence*0.6 + local.dynamismScore*0.2), 2, 8);
-      s.posture = clamp(round1(evidence*0.7), 2, 8);
-    }
-    s.overallPresentation = round1((s.eyeContact + s.facialExpressions + s.posture)/3);
+  if(local.hasVoiceMetrics){
+    s.fluency = s.fluency!=null ? round1((s.fluency*0.6 + local.paceScore*0.4)) : local.paceScore;
+    s.confidence = s.confidence!=null ? round1((s.confidence*0.72 + local.energyScore*0.28)) : local.energyScore;
+    s.tone = s.tone!=null ? round1((s.tone*0.7 + local.dynamismScore*0.3)) : local.dynamismScore;
+    s.pronunciation = local.pronunciationScore!=null ? round1(local.pronunciationScore) : null;
+  }else{
+    s.fluency = state.mode === "text" ? null : (s.fluency ?? null);
+    s.tone = null;
+    s.pronunciation = null;
   }
+  s.language = s.language!=null ? round1((s.language*0.85 + local.fillerScore*0.15)) : local.fillerScore;
 
-  const numericVals = Object.entries(s)
-    .filter(([k,v])=> typeof v === "number" && k!=="overallPresentation")
-    .map(([,v])=>v);
-  const overall = s.overall!=null ? s.overall : round1(numericVals.reduce((a,b)=>a+b,0)/numericVals.length);
+  const contentFields = ["language","grammar","confidence","clarity","crispness","relevance","courseKnowledge","universityKnowledge","countryKnowledge","financialAwareness"];
+  const contentValues = contentFields.map(k=>s[k]).filter(v=>typeof v === "number");
+  const contentOverall = typeof s.overall === "number"
+    ? s.overall
+    : (contentValues.length ? contentValues.reduce((a,b)=>a+b,0)/contentValues.length : 0);
+  const deliveryValues = [s.fluency,s.tone,s.pronunciation].filter(v=>typeof v === "number");
+  const overall = deliveryValues.length
+    ? round1(contentOverall*0.76 + (deliveryValues.reduce((a,b)=>a+b,0)/deliveryValues.length)*0.24)
+    : round1(contentOverall);
+  s.overall = overall;
 
   return {scores:s, overall, feedback:ai, local};
 }
@@ -2683,56 +2552,276 @@ function chipHtml(k, v){
    FINISH INTERVIEW -> BUILD FINAL REPORT
    ============================================================ */
 const COMMUNICATION_FIELDS = ["language","grammar","fluency","pronunciation","confidence","tone","clarity","crispness"];
-const BODY_LANGUAGE_FIELDS = ["eyeContact","facialExpressions","posture","overallPresentation"];
+const CONTENT_FIELDS = ["relevance","courseKnowledge","universityKnowledge","countryKnowledge","financialAwareness"];
+let analysisEstimateTimer = null;
 
-/* Play the "analysing" transition, checking off each stage, before the report
-   is revealed. Resolves when the animation finishes. */
-function runAnalyzing(){
-  return new Promise(function(resolve){
-    const overlay = $("vmi-analyzing");
-    if(!overlay){ resolve(); return; }
-    show($("screen-interview")); // keep immersive bg until overlay covers it
-    overlay.classList.remove("hidden");
+function reportStatHtml(icon, label, value, note){
+  return '<div class="report-stat">'+
+    '<span class="report-stat__icon"><i data-lucide="'+icon+'"></i></span>'+
+    '<span class="report-stat__label">'+escapeHtml(label)+'</span>'+
+    '<strong class="report-stat__value">'+escapeHtml(value)+'</strong>'+
+    '<small class="report-stat__note">'+escapeHtml(note)+'</small>'+
+  '</div>';
+}
 
-    const all = Array.prototype.slice.call(overlay.querySelectorAll("[data-astep]"));
-    all.forEach(function(s){
-      s.classList.remove("is-active","is-done");
-      // Body-language stage is only meaningful in video mode.
-      s.style.display = (s.getAttribute("data-astep") === "body" && state.mode !== "video") ? "none" : "";
-    });
-    const steps = all.filter(function(s){ return s.style.display !== "none"; });
-    const per = PREFERS_REDUCED ? 140 : 720;
-    const bar = overlay.querySelector(".vmi-analyze__bar span");
-    if(bar){ bar.style.transition = "none"; bar.style.width = "0%";
-      requestAnimationFrame(function(){ bar.style.transition = "width " + (per*steps.length) + "ms cubic-bezier(.4,0,.2,1)"; bar.style.width = "100%"; });
-    }
-    if(window.lucide) try{ window.lucide.createIcons(); }catch(e){}
-
-    let i = 0;
-    (function tick(){
-      if(i > 0){ steps[i-1].classList.remove("is-active"); steps[i-1].classList.add("is-done"); }
-      if(i >= steps.length){ setTimeout(resolve, PREFERS_REDUCED ? 80 : 420); return; }
-      steps[i].classList.add("is-active");
-      i++;
-      setTimeout(tick, per);
-    })();
+function buildReportAnalytics(results, plannedQuestions){
+  const answered = results.length;
+  const planned = Math.max(answered, plannedQuestions || answered);
+  const totalWords = results.reduce((sum,result)=>sum+(Number(result.local && result.local.wordCount)||0),0);
+  const totalDuration = results.reduce((sum,result)=>sum+(Number(result.local && result.local.durationSec)||0),0);
+  const fillerTotal = results.reduce((sum,result)=>sum+(Number(result.local && result.local.fillerCount)||0),0);
+  const scores = results.map(result=>Number(result.overall)||0);
+  const scoreMean = scores.length ? scores.reduce((sum,score)=>sum+score,0)/scores.length : 0;
+  const deviation = scores.length
+    ? Math.sqrt(scores.reduce((sum,score)=>sum+Math.pow(score-scoreMean,2),0)/scores.length)
+    : 0;
+  const consistency = deviation<=0.7 ? "Highly consistent" : deviation<=1.3 ? "Generally consistent" : "Variable performance";
+  const distribution = {strong:0, developing:0, focus:0};
+  results.forEach(result=>{
+    if(result.overall>=7.5) distribution.strong++;
+    else if(result.overall>=5.5) distribution.developing++;
+    else distribution.focus++;
   });
+
+  const categories = {};
+  results.forEach(result=>{
+    const name = result.category || "Other questions";
+    if(!categories[name]) categories[name] = [];
+    categories[name].push(Number(result.overall)||0);
+  });
+  const categoryPerformance = Object.entries(categories).map(([name,scoresInCategory])=>({
+    name,
+    count:scoresInCategory.length,
+    average:round1(scoresInCategory.reduce((sum,score)=>sum+score,0)/scoresInCategory.length)
+  })).sort((a,b)=>b.average-a.average);
+  const rankedAnswers = results.slice().sort((a,b)=>b.overall-a.overall);
+
+  return {
+    answered,
+    planned,
+    coveragePct:planned ? Math.round((answered/planned)*100) : 0,
+    totalWords,
+    avgWords:answered ? Math.round(totalWords/answered) : 0,
+    avgDuration:answered ? Math.round(totalDuration/answered) : 0,
+    fillerTotal,
+    deviation:round1(deviation),
+    consistency,
+    distribution,
+    categoryPerformance,
+    strongestAnswer:rankedAnswers[0] || null,
+    priorityAnswer:rankedAnswers[rankedAnswers.length-1] || null
+  };
+}
+
+function renderReportAnalytics(analytics){
+  $("report-stats").innerHTML = [
+    reportStatHtml("list-checks","Answer coverage",analytics.answered+" / "+analytics.planned,analytics.coveragePct+"% of planned questions completed"),
+    reportStatHtml("timer","Average response",fmtTime(analytics.avgDuration),"Measured from question display to submission"),
+    reportStatHtml("align-left","Average answer length",analytics.avgWords+" words","Average detail per completed response"),
+    reportStatHtml("file-text","Total words",String(analytics.totalWords),"Across all submitted answers"),
+    reportStatHtml("message-circle-more","Filler words",String(analytics.fillerTotal),"Lower is generally better"),
+    reportStatHtml("activity","Score consistency",analytics.consistency,"Score deviation ±"+analytics.deviation)
+  ].join("");
+
+  const total = Math.max(1, analytics.answered);
+  const strongPct = Math.round((analytics.distribution.strong/total)*100);
+  const developingPct = Math.round((analytics.distribution.developing/total)*100);
+  const focusPct = Math.max(0,100-strongPct-developingPct);
+  $("report-distribution").innerHTML =
+    '<div class="report-distribution__bar" role="img" aria-label="'+analytics.distribution.strong+' strong, '+analytics.distribution.developing+' developing, and '+analytics.distribution.focus+' answers needing focus">'+
+      '<span class="is-strong" style="width:'+strongPct+'%"></span>'+
+      '<span class="is-developing" style="width:'+developingPct+'%"></span>'+
+      '<span class="is-focus" style="width:'+focusPct+'%"></span>'+
+    '</div>'+
+    '<div class="report-distribution__legend">'+
+      '<span><i class="is-strong"></i>Strong (7.5–10)<b>'+analytics.distribution.strong+'</b></span>'+
+      '<span><i class="is-developing"></i>Developing (5.5–7.4)<b>'+analytics.distribution.developing+'</b></span>'+
+      '<span><i class="is-focus"></i>Needs focus (0–5.4)<b>'+analytics.distribution.focus+'</b></span>'+
+    '</div>';
+
+  const strongest = analytics.strongestAnswer;
+  const priority = analytics.priorityAnswer;
+  const leadingCategory = analytics.categoryPerformance[0] || null;
+  $("report-executive").innerHTML = [
+    strongest ? '<div class="report-insight"><span>Strongest answer</span><strong>'+escapeHtml(strongest.question)+'</strong><small>'+strongest.overall.toFixed(1)+'/10 · '+escapeHtml((strongest.feedback && strongest.feedback.good) || "Strong overall response")+'</small></div>' : '',
+    priority ? '<div class="report-insight"><span>Priority answer</span><strong>'+escapeHtml(priority.question)+'</strong><small>'+priority.overall.toFixed(1)+'/10 · '+escapeHtml((priority.feedback && priority.feedback.improve) || "Add more specific supporting detail")+'</small></div>' : '',
+    leadingCategory ? '<div class="report-insight"><span>Leading category</span><strong>'+escapeHtml(leadingCategory.name)+'</strong><small>'+leadingCategory.average.toFixed(1)+'/10 across '+leadingCategory.count+' answer'+(leadingCategory.count===1?'':'s')+'</small></div>' : ''
+  ].join("");
+
+  $("report-categories").innerHTML = analytics.categoryPerformance.map(category=>
+    '<div class="report-category">'+
+      '<div class="report-category__name"><strong>'+escapeHtml(category.name)+'</strong><small>'+category.count+' answer'+(category.count===1?'':'s')+'</small></div>'+
+      '<div class="report-category__track"><span style="width:'+clamp(category.average*10,0,100)+'%"></span></div>'+
+      '<div class="report-category__score">'+category.average.toFixed(1)+'</div>'+
+    '</div>'
+  ).join("") || '<p class="report-section-note">No category data is available.</p>';
+}
+
+function renderAnswerReview(results){
+  $("report-answer-review").innerHTML = results.map((result,index)=>{
+    const feedback = result.feedback || {};
+    return '<details class="report-answer"'+(index===0?' open':'')+'>'+
+      '<summary><span class="report-answer__title"><small>Question '+(index+1)+' · '+escapeHtml(result.category || "Interview question")+'</small><strong>'+escapeHtml(result.question)+'</strong></span><span class="report-answer__score">'+result.overall.toFixed(1)+'/10</span></summary>'+
+      '<div class="report-answer__body">'+
+        '<div class="report-answer__response"><b>Your response</b>'+escapeHtml(result.answer)+'</div>'+
+        '<div class="report-answer__feedback">'+
+          '<div><b>What worked</b>'+escapeHtml(feedback.good || "The response addressed the question.")+'</div>'+
+          '<div><b>Improve next</b>'+escapeHtml(feedback.improve || feedback.mistakes || "Add one specific supporting detail.")+'</div>'+
+        '</div>'+
+        '<div class="report-answer__sample"><b>Stronger answer structure</b>'+escapeHtml(feedback.betterAnswer || "Give a direct answer, add one verifiable detail, and connect it to your study plan.")+'</div>'+
+      '</div>'+
+    '</details>';
+  }).join("") || '<p class="report-section-note">No completed answers are available.</p>';
+}
+
+function formatAnalysisTime(seconds){
+  const total = Math.max(1, Math.ceil(seconds));
+  const minutes = Math.floor(total/60);
+  const remainder = total%60;
+  if(minutes && remainder) return minutes+" min "+remainder+" sec";
+  if(minutes) return minutes+" min";
+  return total+" sec";
+}
+
+function stopAnalysisEstimate(message){
+  if(analysisEstimateTimer){
+    clearInterval(analysisEstimateTimer);
+    analysisEstimateTimer = null;
+  }
+  const timeLabel = $("vmi-analysis-time");
+  if(timeLabel && message) timeLabel.textContent = message;
+}
+
+function startAnalysisEstimate(answerCount){
+  stopAnalysisEstimate();
+  const timeLabel = $("vmi-analysis-time");
+  if(!timeLabel) return;
+  // The cloud assessor answers in a couple of seconds; the on-server fallback
+  // is far slower, so the estimate depends on which one is the primary.
+  const fast = !!CFG.fastAssessor;
+  const perAnswer = fast ? 1.4 : 13;
+  const base = fast ? 3 : 8;
+  const floor = fast ? 4 : 20;
+  const estimatedSeconds = Math.max(floor, Math.round(answerCount*perAnswer + base));
+  const startedAt = Date.now();
+  const deadline = startedAt+(estimatedSeconds*1000);
+  const refresh = function(){
+    const now = Date.now();
+    const remaining = Math.ceil((deadline-now)/1000);
+    const elapsed = Math.max(0, Math.floor((now-startedAt)/1000));
+    if(remaining>0){
+      timeLabel.textContent = "Approximately "+formatAnalysisTime(remaining)+" remaining";
+    } else {
+      // Ran past the estimate — usually the on-server fallback is finishing the job.
+      timeLabel.textContent = "Still working… "+formatAnalysisTime(elapsed)+" elapsed";
+    }
+  };
+  refresh();
+  analysisEstimateTimer = setInterval(refresh, 1000);
+}
+
+function startAnalyzing(){
+  const overlay = $("vmi-analyzing");
+  if(!overlay) return;
+  show($("screen-interview"));
+  show(overlay);
+  hide($("btn-retry-ai-analysis"));
+  overlay.querySelector("h2").textContent = "Analysing your interview";
+  overlay.querySelector("p").textContent = "Your AI assessor is preparing to review every saved answer…";
+  stopAnalysisEstimate("Calculating estimated completion time…");
+  overlay.querySelectorAll("[data-astep]").forEach(function(step){
+    step.classList.remove("is-active","is-done");
+  });
+  const first = overlay.querySelector('[data-astep="transcribe"]');
+  if(first) first.classList.add("is-active");
+  const bar = overlay.querySelector(".vmi-analyze__bar span");
+  if(bar){ bar.style.transition = "width .45s ease"; bar.style.width = "0%"; }
+  if(window.lucide) try{ window.lucide.createIcons(); }catch(e){}
+}
+
+function updateAnalyzingProgress(message, percent){
+  const overlay = $("vmi-analyzing");
+  if(!overlay) return;
+  overlay.querySelector("p").textContent = message;
+  const bar = overlay.querySelector(".vmi-analyze__bar span");
+  if(bar) bar.style.width = clamp(percent, 0, 100)+"%";
+}
+
+async function assessSavedAnswers(){
+  const pending = state.results.filter(function(result){ return result.assessmentEngine !== "ai-batch"; });
+  if(!pending.length){
+    updateAnalyzingProgress("All answered questions are already analysed. Building your report…", 100);
+    stopAnalysisEstimate("Finalising your report…");
+    return;
+  }
+
+  startAnalysisEstimate(pending.length);
+  updateAnalyzingProgress("Submitting "+pending.length+" answers for a comprehensive assessment…", 12);
+  const payload = await requestAiBatchAssessment(pending);
+  const assessments = payload.assessments;
+  stopAnalysisEstimate(payload.assessor ? "Assessed by "+payload.assessor : "Finalising your report…");
+  updateAnalyzingProgress((payload.assessor ? "Assessed by "+payload.assessor+". Merging" : "AI review complete. Merging")+" communication and delivery results…", 88);
+
+  pending.forEach(function(result, index){
+    const combined = mergeScores(assessments[index], result.local);
+    result.scores = combined.scores;
+    result.feedback = combined.feedback;
+    result.overall = combined.overall;
+    result.assessmentEngine = "ai-batch";
+  });
+
+  const overlay = $("vmi-analyzing");
+  if(overlay){
+    overlay.querySelector("p").textContent = "All "+state.results.length+" answers have been assessed. Preparing your report…";
+    overlay.querySelectorAll("[data-astep]").forEach(function(step){
+      if(step.style.display !== "none"){
+        step.classList.remove("is-active");
+        step.classList.add("is-done");
+      }
+    });
+    const bar = overlay.querySelector(".vmi-analyze__bar span");
+    if(bar) bar.style.width = "100%";
+  }
 }
 
 async function finishInterview(){
+  if(state.analysisRunning) return;
+  state.analysisRunning = true;
   state.interviewActive = false;
   stopInterviewerAudio();
   clearInterval(state.typeTimer);
   releaseMediaStream();
 
-  await runAnalyzing();
+  startAnalyzing();
+  try{
+    await assessSavedAnswers();
+    await new Promise(function(resolve){ setTimeout(resolve, PREFERS_REDUCED ? 50 : 350); });
+  }catch(error){
+    console.error("End-of-interview AI analysis failed", error);
+    stopAnalysisEstimate("Analysis paused. Your completed answers remain saved.");
+    const overlay = $("vmi-analyzing");
+    if(overlay){
+      overlay.querySelector("h2").textContent = "AI analysis paused";
+      overlay.querySelector("p").textContent = (error && error.message ? error.message : "The assessment service could not complete the report.")+" Your completed answers remain saved; retry will continue from the remaining answers.";
+    }
+    show($("btn-retry-ai-analysis"));
+    state.analysisRunning = false;
+    return;
+  }
 
   document.documentElement.classList.remove("vmi-lock");
   hide($("screen-interview"));
   $("vmi-analyzing").classList.add("hidden");
+  // The landing hero is not relevant on the results view — hide it so the report
+  // stands alone. "New mock interview" does a full reload, which restores it.
+  var vmiHero = document.querySelector(".vmi-hero");
+  if(vmiHero) vmiHero.style.display = "none";
+  var restartFab = document.getElementById("vmi-restart-fab");
+  if(restartFab) restartFab.classList.remove("hidden");
   show($("screen-report"));
   window.scrollTo({top:0, behavior:"smooth"});
-  $("report-sub").textContent = state.results.length+" questions answered — single assessment report";
+  $("report-sub").textContent = state.results.length+" questions answered"+(state.destination ? " for "+state.destination : "")+" — assessment complete";
+  state.analysisRunning = false;
 
   const allFieldTotals = {};
   const mistakeGroups = {};
@@ -2761,7 +2850,7 @@ async function finishInterview(){
   const overallScore100 = Math.round(overallAvg*10);
 
   const sorted = Object.entries(fieldAverages)
-    .filter(([k])=> k!=="overall" && k!=="overallPresentation")
+    .filter(([k])=> k!=="overall")
     .sort((a,b)=>b[1]-a[1]);
   const strongest = sorted.slice(0,3);
   const weakest = sorted.slice(-3).reverse();
@@ -2776,24 +2865,24 @@ async function finishInterview(){
       ? "You're on the right track, but a few areas need sharpening before the real interview."
       : "Meaningful practice is recommended before your actual visa interview.";
 
+  const analytics = buildReportAnalytics(state.results, state.totalPlanned);
+  renderReportAnalytics(analytics);
+  renderAnswerReview(state.results);
+
   $("report-communication").innerHTML = COMMUNICATION_FIELDS
     .filter(k=>fieldAverages[k]!=null)
     .map(k=>chipHtml(k, fieldAverages[k]))
     .join("") || "<p>Not enough data yet.</p>";
 
-  const hasBodyData = state.mode === "video" && BODY_LANGUAGE_FIELDS.some(k=>fieldAverages[k]!=null);
-  if(hasBodyData){
-    show($("report-bodylanguage-card"));
-    $("report-bodylanguage").innerHTML = BODY_LANGUAGE_FIELDS
-      .filter(k=>fieldAverages[k]!=null)
-      .map(k=>chipHtml(k, fieldAverages[k]))
-      .join("");
-  } else {
-    hide($("report-bodylanguage-card"));
-  }
+  $("report-content").innerHTML = CONTENT_FIELDS
+    .filter(k=>fieldAverages[k]!=null)
+    .map(k=>chipHtml(k, fieldAverages[k]))
+    .join("") || '<p class="report-section-note">No knowledge-specific scores were available for this question set.</p>';
 
-  $("report-strong").innerHTML = strongest.map(([k,v])=>'<li><strong>'+labelFor(k)+'</strong> — averaging '+v+'/10</li>').join("") || "<li>Not enough data yet.</li>";
-  $("report-weak").innerHTML = weakest.map(([k,v])=>'<li><strong>'+labelFor(k)+'</strong> — averaging '+v+'/10</li>').join("") || "<li>Not enough data yet.</li>";
+  const aiStrengths = Array.from(new Set(state.results.map(r=>r.feedback && r.feedback.good).filter(Boolean))).slice(0,3);
+  const aiImprovements = Array.from(new Set(state.results.map(r=>r.feedback && r.feedback.improve).filter(Boolean))).slice(0,4);
+  $("report-strong").innerHTML = strongest.map(([k,v])=>'<li><strong>'+labelFor(k)+'</strong> — averaging '+v+'/10</li>').join("")+aiStrengths.map(t=>'<li>'+escapeHtml(t)+'</li>').join("") || "<li>Not enough data yet.</li>";
+  $("report-weak").innerHTML = weakest.map(([k,v])=>'<li><strong>'+labelFor(k)+'</strong> — averaging '+v+'/10</li>').join("")+aiImprovements.map(t=>'<li>'+escapeHtml(t)+'</li>').join("") || "<li>Not enough data yet.</li>";
 
   $("report-mistakes").innerHTML = mistakes.length
     ? mistakes.slice(0,6).map(m=>'<li>'+escapeHtml(m)+'</li>').join("")
@@ -2807,12 +2896,6 @@ async function finishInterview(){
       }).join("")
     : "<li>No question stood out as needing extra practice — solid, consistent performance throughout.</li>";
 
-  $("report-sample-answers").innerHTML = weakQuestions.length
-    ? weakQuestions.slice(0,6).map(r=>
-        '<p><strong>'+escapeHtml(r.question)+'</strong><br>'+escapeHtml(r.feedback.betterAnswer || "Include one specific detail (a name, number, or fact) to strengthen this answer.")+'</p>'
-      ).join("")
-    : "<p>No weak answers to revisit — nice work.</p>";
-
   const askedQs = new Set(state.results.map(r=>r.question));
   const weakCats = weakestFive.map(w=>categoryForField(w[0])).filter(Boolean);
   const practicePool = [];
@@ -2823,10 +2906,6 @@ async function finishInterview(){
   });
   $("report-practice").innerHTML = (practicePool.slice(0,6).length ? practicePool.slice(0,6) : QUESTION_BANK[0].items.slice(0,4))
     .map(q=>'<li>'+escapeHtml(q)+'</li>').join("");
-
-  $("report-breakdown").innerHTML = Object.entries(fieldAverages)
-    .filter(([k])=>k!=="overall")
-    .map(([k,v])=>chipHtml(k, v)).join("");
 
   $("report-plan").innerHTML = buildPlan(weakestFive, overallScore100);
 
@@ -2844,7 +2923,7 @@ async function finishInterview(){
     "Focus your next practice sessions on the weakest areas above, use the recommended sample answers as a guide, "+
     "and work through the suggested practice questions to build consistency before your real interview.";
 
-  state._reportData = {overallScore100, fieldAverages, strongest, weakest, mistakes, overallAvg, readinessPct};
+  state._reportData = {overallScore100, fieldAverages, strongest, weakest, mistakes, overallAvg, readinessPct, analytics};
 
   if(window.lucide) try{ window.lucide.createIcons(); }catch(e){}
   if(overallScore100 >= 75) setTimeout(celebrate, 450);
@@ -2854,8 +2933,6 @@ function categoryForField(field){
   const map = {
     courseKnowledge:"University & Course Related", universityKnowledge:"University & Course Related",
     countryKnowledge:"Country Knowledge", financialAwareness:"Financial Questions",
-    eyeContact:"Personal & Academic Background", facialExpressions:"Personal & Academic Background",
-    posture:"Personal & Academic Background", overallPresentation:"Personal & Academic Background",
     tone:"Personal & Academic Background", confidence:"Personal & Academic Background",
     pronunciation:"Personal & Academic Background",
     clarity:"Future Plans & Intentions", crispness:"Future Plans & Intentions", relevance:"Future Plans & Intentions"
@@ -2866,8 +2943,7 @@ function categoryForField(field){
 function labelFor(key){
   const labels = {
     language:"Language", grammar:"Grammar", fluency:"Fluency", pronunciation:"Pronunciation",
-    confidence:"Confidence", eyeContact:"Eye contact", facialExpressions:"Facial expressions",
-    posture:"Posture", overallPresentation:"Overall presentation", tone:"Tone", clarity:"Clarity",
+    confidence:state.mode === "video" ? "Delivery confidence" : "Answer confidence", tone:"Tone", clarity:"Clarity",
     crispness:"Crispness", relevance:"Relevance", courseKnowledge:"Course knowledge",
     universityKnowledge:"University knowledge", countryKnowledge:"Country knowledge",
     financialAwareness:"Financial awareness"
@@ -2930,9 +3006,6 @@ function buildPlan(weakestFive, score100){
       confidence:"Rehearse answers without a script, then say them again from memory — confidence comes from familiarity, not memorization.",
       clarity:"Structure answers as: direct answer first, then one supporting reason, then stop — avoid rambling.",
       crispness:"Time yourself — aim to answer most questions in under 30-40 seconds.",
-      eyeContact:"Practice in front of a mirror or your camera looking at the lens, not the screen.",
-      facialExpressions:"Stay visible, centred, and engaged on camera throughout each answer.",
-      posture:"Sit upright, keep hands visible and relaxed, and avoid crossing arms during practice sessions.",
       tone:"Vary your pitch slightly on key facts (fees, dates, university name) instead of speaking in a flat monotone.",
       relevance:"Before answering, silently repeat the question to yourself so your answer stays on-topic.",
       grammar:"Read your answers back after typing them once, fixing tense and article (a/the) errors.",
@@ -2947,11 +3020,12 @@ function buildPlan(weakestFive, score100){
 }
 
 /* ============================================================
-   DOWNLOADS: PDF report + certificate
+   DOWNLOAD: PDF report
    ============================================================ */
 $("btn-download-pdf").addEventListener("click", downloadPdfReport);
-$("btn-download-cert").addEventListener("click", downloadCertificate);
 $("btn-restart").addEventListener("click", ()=>{ releaseMediaStream(); location.reload(); });
+const restartFabEl = document.getElementById("vmi-restart-fab");
+if(restartFabEl) restartFabEl.addEventListener("click", ()=>{ releaseMediaStream(); location.reload(); });
 
 function downloadPdfReport(){
   const jsPDF = window.jspdf && window.jspdf.jsPDF;
@@ -2972,6 +3046,23 @@ function downloadPdfReport(){
   doc.text("Questions answered: "+state.results.length, 14, y); y+=7;
   doc.setFont(undefined,"normal"); doc.setFontSize(11);
   doc.text("Overall score: "+d.overallScore100+" / 100", 14, y); y+=10;
+
+  const analytics = d.analytics;
+  if(analytics){
+    doc.setFont(undefined,"bold"); doc.text("Session statistics:", 14, y); y+=6;
+    doc.setFont(undefined,"normal"); doc.setFontSize(10);
+    doc.text("Completion: "+analytics.answered+" / "+analytics.planned+" ("+analytics.coveragePct+"%)", 18, y); y+=5;
+    doc.text("Average response: "+fmtTime(analytics.avgDuration)+" | Average length: "+analytics.avgWords+" words | Total words: "+analytics.totalWords, 18, y); y+=5;
+    doc.text("Filler words: "+analytics.fillerTotal+" | Consistency: "+analytics.consistency+" (deviation "+analytics.deviation+")", 18, y); y+=9;
+
+    doc.setFont(undefined,"bold"); doc.setFontSize(11); doc.text("Category performance:", 14, y); y+=6;
+    doc.setFont(undefined,"normal"); doc.setFontSize(10);
+    analytics.categoryPerformance.forEach(category=>{
+      doc.text("- "+category.name+": "+category.average.toFixed(1)+"/10 ("+category.count+" answer"+(category.count===1?"":"s")+")", 18, y);
+      y+=5;
+    });
+    y+=4;
+  }
 
   doc.setFont(undefined,"bold"); doc.text("Strongest areas:", 14, y); y+=6;
   doc.setFont(undefined,"normal");
@@ -2995,42 +3086,6 @@ function downloadPdfReport(){
   });
 
   doc.save("OneDegreeAdvisory_Visa_Interview_Report.pdf");
-}
-
-function downloadCertificate(){
-  const canvas = document.createElement("canvas");
-  canvas.width = 1200; canvas.height = 800;
-  const ctx = canvas.getContext("2d");
-  const grad = ctx.createLinearGradient(0,0,1200,800);
-  grad.addColorStop(0,"#1a0088"); grad.addColorStop(1,"#100258");
-  ctx.fillStyle = grad; ctx.fillRect(0,0,1200,800);
-
-  ctx.strokeStyle = "rgba(255,94,50,.6)"; ctx.lineWidth = 4;
-  ctx.strokeRect(40,40,1120,720);
-
-  ctx.fillStyle = "#ff5e32"; ctx.font = "bold 30px Arial"; ctx.textAlign="center";
-  ctx.fillText("ONE DEGREE ADVISORY", 600, 130);
-  ctx.fillStyle = "#fff"; ctx.font = "20px Arial";
-  ctx.fillText("AI Visa Mock Interview — Certificate of Practice", 600, 165);
-
-  ctx.font = "bold 46px Arial"; ctx.fillStyle="#fff";
-  ctx.fillText("Visa Ready Score", 600, 320);
-  ctx.font = "bold 120px Arial"; ctx.fillStyle="#ff5e32";
-  const score = state._reportData ? state._reportData.overallScore100 : 0;
-  ctx.fillText(score+"", 600, 460);
-  ctx.font = "22px Arial"; ctx.fillStyle="rgba(255,255,255,.8)";
-  ctx.fillText("out of 100", 600, 495);
-
-  ctx.font = "22px Arial"; ctx.fillStyle="#fff";
-  ctx.fillText(state.results.length+" questions answered — Student Visa Interview Practice", 600, 570);
-  ctx.font = "16px Arial"; ctx.fillStyle="rgba(255,255,255,.6)";
-  ctx.fillText(new Date().toLocaleDateString(), 600, 610);
-  ctx.fillText("This certificate reflects AI-assessed mock interview practice, not an official visa outcome.", 600, 660);
-
-  const link = document.createElement("a");
-  link.download = "OneDegreeAdvisory_Visa_Ready_Certificate.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
 }
 
 /* ============================================================
@@ -3255,7 +3310,7 @@ if(btnExit){
     stopInterviewerAudio();
     state.recognizing = false; state.wantRestart = false; state.interviewActive = false;
     if(state.recognition){ try{ state.recognition.stop(); }catch(e){} }
-    clearInterval(state.timerInterval); clearInterval(state.frameInterval); clearInterval(state.typeTimer);
+    clearInterval(state.timerInterval); clearInterval(state.typeTimer);
     document.documentElement.classList.remove("vmi-lock");
     hide($("screen-interview"));
     show($("screen-setup"));
