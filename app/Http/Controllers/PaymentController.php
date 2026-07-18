@@ -7,8 +7,10 @@ use App\Mail\PaymentThankYouMail;
 use App\Models\PaymentAttempt;
 use App\Services\PaymentBlockResolver;
 use App\Services\RazorpayGateway;
+use App\Services\WebsiteLeadManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Throwable;
@@ -18,6 +20,7 @@ class PaymentController extends Controller
     public function __construct(
         private PaymentBlockResolver $blocks,
         private RazorpayGateway $gateway,
+        private WebsiteLeadManager $leads,
     ) {}
 
     /**
@@ -52,21 +55,26 @@ class PaymentController extends Controller
 
         $token = Str::random(64);
 
-        $attempt = PaymentAttempt::create([
-            'request_token' => $token,
-            'session_hash' => $this->sessionHash($request),
-            'page_slug' => $validated['page_slug'],
-            'block_id' => $validated['block_id'],
-            'option_index' => (int) $validated['option_index'],
-            'item_name' => $resolved['item_name'],
-            'amount' => $resolved['amount'],
-            'currency' => $resolved['currency'],
-            'theme_color' => $resolved['theme_color'],
-            'customer_name' => trim($validated['name']),
-            'customer_email' => strtolower(trim($validated['email'])),
-            'customer_phone' => trim((string) ($validated['phone'] ?? '')) ?: null,
-            'status' => 'order_creating',
-        ]);
+        $attempt = DB::transaction(function () use ($request, $resolved, $token, $validated): PaymentAttempt {
+            $attempt = PaymentAttempt::create([
+                'request_token' => $token,
+                'session_hash' => $this->sessionHash($request),
+                'page_slug' => $validated['page_slug'],
+                'block_id' => $validated['block_id'],
+                'option_index' => (int) $validated['option_index'],
+                'item_name' => $resolved['item_name'],
+                'amount' => $resolved['amount'],
+                'currency' => $resolved['currency'],
+                'theme_color' => $resolved['theme_color'],
+                'customer_name' => trim($validated['name']),
+                'customer_email' => strtolower(trim($validated['email'])),
+                'customer_phone' => trim((string) ($validated['phone'] ?? '')) ?: null,
+                'status' => 'order_creating',
+            ]);
+            $this->leads->capturePayment($attempt);
+
+            return $attempt;
+        });
 
         try {
             $order = $this->gateway->createOrder([
@@ -83,6 +91,7 @@ class PaymentController extends Controller
         } catch (Throwable $e) {
             report($e);
             $attempt->update(['status' => 'order_failed', 'failure_reason' => 'Razorpay order creation failed.']);
+            $this->leads->syncPaymentStatus($attempt->fresh());
 
             return response()->json(['message' => 'The payment could not be started. Please try again shortly.'], 503);
         }
@@ -92,6 +101,7 @@ class PaymentController extends Controller
             'status' => 'order_created',
             'failure_reason' => null,
         ]);
+        $this->leads->syncPaymentStatus($attempt->fresh());
 
         return response()->json([
             'token' => $token,
@@ -139,6 +149,7 @@ class PaymentController extends Controller
             'paid_at' => now(),
             'failure_reason' => null,
         ]);
+        $this->leads->syncPaymentStatus($attempt->fresh());
 
         // First (and only) transition to paid for this attempt — notify now.
         $this->sendPaymentEmails($attempt->fresh());
@@ -207,6 +218,7 @@ class PaymentController extends Controller
                     'paid_at' => $attempt->paid_at ?: now(),
                     'failure_reason' => null,
                 ]);
+                $this->leads->syncPaymentStatus($attempt->fresh());
                 // Only notify if confirm() didn't already send for this payment.
                 if (! $alreadyPaid) {
                     $this->sendPaymentEmails($attempt->fresh());
@@ -216,6 +228,7 @@ class PaymentController extends Controller
                     'status' => 'payment_failed',
                     'failure_reason' => mb_substr((string) ($payment['error_description'] ?? 'Razorpay reported a failed payment.'), 0, 500),
                 ]);
+                $this->leads->syncPaymentStatus($attempt->fresh());
             }
         }
 

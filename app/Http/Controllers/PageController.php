@@ -10,8 +10,7 @@ use App\Support\AboutContent;
 use App\Support\BlogContent;
 use App\Support\HeroContent;
 use App\Support\MbbsCountryContent;
-use App\Support\NewsletterStore;
-use App\Support\ProfileSubmissionStore;
+use App\Services\WebsiteLeadManager;
 use App\Support\StudyLocationContent;
 use App\Support\TestPrepCompareStore;
 use App\Services\RazorpayGateway;
@@ -69,7 +68,7 @@ class PageController extends Controller
      * send the visitor a thank-you confirmation. Responds with JSON for the
      * AJAX submit, or redirects back with a flash message as a no-JS fallback.
      */
-    public function submitContact(Request $request): JsonResponse|RedirectResponse
+    public function submitContact(Request $request, WebsiteLeadManager $leads): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:120'],
@@ -83,16 +82,21 @@ class PageController extends Controller
         ]);
         $data['consent'] = $request->boolean('consent');
 
+        $contactAnswers = [];
+        foreach (['city' => 'City', 'residence' => 'Resident country', 'destination' => 'Preferred destination', 'level' => 'Academic level', 'message' => 'Message'] as $key => $label) {
+            $value = trim((string) ($data[$key] ?? ''));
+            if ($value !== '') $contactAnswers[] = ['label' => $label, 'value' => [Str::limit($value, 1800, '')]];
+        }
+        $leads->capture('contact', 'Contact / Profile Review', $data['level'] ?? null, [[
+            'eyebrow' => 'Website enquiry', 'title' => 'Contact request', 'answers' => $contactAnswers,
+        ]], ['name' => $data['name'], 'email' => $data['email'], 'phone' => $data['phone']]);
+
         try {
             Mail::mailer(config('site.forms.contact.mailer'))
                 ->to(config('site.forms.contact.to'))
                 ->send(new ContactEnquiryMail($data));
         } catch (\Throwable $e) {
             report($e);
-
-            return $this->formResponse($request, false,
-                'We could not send your enquiry just now. Please email us directly at '.config('site.contact.email').'.',
-                'Something went wrong');
         }
 
         // Confirmation to the visitor is best-effort — its failure never blocks success.
@@ -107,7 +111,7 @@ class PageController extends Controller
         $firstName = Str::of($data['name'])->trim()->explode(' ')->first() ?: 'there';
 
         return $this->formResponse($request, true,
-            'Your enquiry is on its way to the One Degree Advisory team. Check your inbox for a confirmation email.',
+            'Your enquiry is safely recorded and the One Degree Advisory team will follow up with you shortly.',
             "Thank you, {$firstName}!");
     }
 
@@ -115,7 +119,7 @@ class PageController extends Controller
      * Handle the Careers application form: notify the careers mailbox and send
      * the applicant a thank-you confirmation.
      */
-    public function submitCareer(Request $request): JsonResponse|RedirectResponse
+    public function submitCareer(Request $request, WebsiteLeadManager $leads): JsonResponse|RedirectResponse
     {
         // A resume can arrive as an uploaded file OR a link — at least one is
         // required. The PHP upload ceiling is 2 MB, so the file rule matches.
@@ -160,16 +164,21 @@ class PageController extends Controller
             'consent'     => true,
         ];
 
+        $careerAnswers = [];
+        foreach (['role' => 'Role applied for', 'experience' => 'Experience', 'linkedin' => 'LinkedIn', 'resume_link' => 'Resume link', 'message' => 'Application message'] as $key => $label) {
+            $value = trim((string) ($data[$key] ?? ''));
+            if ($value !== '') $careerAnswers[] = ['label' => $label, 'value' => [Str::limit($value, 1800, '')]];
+        }
+        $leads->capture('careers', 'Careers Application', $data['role'], [[
+            'eyebrow' => 'Careers', 'title' => 'Job application', 'answers' => $careerAnswers,
+        ]], ['name' => $data['name'], 'email' => $data['email'], 'phone' => $data['phone']]);
+
         try {
             Mail::mailer(config('site.forms.careers.mailer'))
                 ->to(config('site.forms.careers.to'))
                 ->send(new CareerApplicationMail($data));
         } catch (\Throwable $e) {
             report($e);
-
-            return $this->formResponse($request, false,
-                'We could not submit your application just now. Please email us directly at Smita@onedegreeadvisory.com.',
-                'Something went wrong');
         }
 
         try {
@@ -183,7 +192,7 @@ class PageController extends Controller
         $firstName = Str::of($data['name'])->trim()->explode(' ')->first() ?: 'there';
 
         return $this->formResponse($request, true,
-            "Your application has reached our partners. Check your inbox for a confirmation — if there's a fit, we'll be in touch within ten working days.",
+            "Your application is safely recorded. If there's a fit, we'll be in touch within ten working days.",
             "Thank you, {$firstName}!");
     }
 
@@ -197,14 +206,14 @@ class PageController extends Controller
      * College Admissions" and "Stay in the loop"). Duplicate addresses are
      * ignored; the visitor sees the same friendly confirmation either way.
      */
-    public function subscribeNewsletter(Request $request, NewsletterStore $subscribers): JsonResponse|RedirectResponse
+    public function subscribeNewsletter(Request $request, WebsiteLeadManager $leads): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             'email'  => ['required', 'email', 'max:190'],
             'source' => ['nullable', 'string', 'max:80'],
         ]);
 
-        $subscribers->add($data['email'], $data['source'] ?? 'Blog');
+        $leads->captureNewsletter($data['email'], $data['source'] ?? 'Blog newsletter');
 
         return $this->formResponse(
             $request,
@@ -374,10 +383,10 @@ class PageController extends Controller
      * Capture a "unlock the full interview" lead from the mock-interview page.
      * The popup POSTs here through a small fetch handler that expects a JSON
      * {ok, title, message} back. The lead is stored in the shared
-     * ProfileSubmissionStore (source = "visa-mock") in the same
-     * section → question → answer shape the admin viewer / exports expect.
+     * CRM (source = "visa-mock") in the same section → question → answer
+     * shape used by CRM card, table and export views.
      */
-    public function visaMockLead(Request $request, ProfileSubmissionStore $submissions): JsonResponse
+    public function visaMockLead(Request $request, WebsiteLeadManager $leads): JsonResponse
     {
         $validated = $request->validate([
             'name'  => 'required|string|max:120',
@@ -416,7 +425,7 @@ class PageController extends Controller
             'answers' => $answers,
         ]];
 
-        $submissions->add(
+        $leads->capture(
             'visa-mock',
             'Visa Mock Interview',
             null,

@@ -6,12 +6,9 @@ use App\Http\Controllers\Admin\CountryVisibilityController;
 use App\Http\Controllers\Admin\CountryDataSyncController;
 use App\Http\Controllers\Admin\DestinationsLayoutController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\EnrollmentsController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
-use App\Http\Controllers\Admin\NewsletterController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
-use App\Http\Controllers\Admin\ProfileSubmissionsController;
 use App\Http\Controllers\Admin\TestPrepCompareCmsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
@@ -75,7 +72,7 @@ Route::post('/global-career-library/ensure', [CareerLibraryController::class, 'e
     ->middleware('throttle:15,1')
     ->name('career-library.ensure');
 // Contact-details capture that gates viewing a career report. Stored as a lead
-// in the shared profile-submissions store (source = career-library).
+// as a classified CRM lead (source = career-library).
 Route::post('/global-career-library/lead', [CareerLibraryController::class, 'lead'])
     ->middleware('throttle:15,1')
     ->name('career-library.lead');
@@ -89,7 +86,7 @@ Route::match(['get', 'post'], '/profiler', \App\Modules\StudentProfiler\StudentP
 
 // Loan & Acco — Education-Loan + Student-Accommodation landing page (Student
 // Hub). Both enquiry forms POST to ::lead, which records a lead in the shared
-// profile-submissions store (source = loan-acco).
+// CRM lead record (source = loan-acco).
 Route::get('/loan-accommodation', [LoanAccoController::class, 'index'])->name('loan-acco.index');
 Route::post('/loan-accommodation/lead', [LoanAccoController::class, 'lead'])
     ->middleware('throttle:15,1')
@@ -103,7 +100,7 @@ Route::get('/visa', [PageController::class, 'visa'])->name('visa');
 // AI Visa Mock Interview — a self-contained, browser-based mock-interview tool
 // (Student Hub). The free round is capped at 10 questions; unlocking the full
 // interview opens a popup that captures contact details, recorded as a lead in
-// the shared profile-submissions store (source = "visa-mock").
+// the CRM lead pipeline (source = "visa-mock").
 Route::get('/visa-mock-interview', [PageController::class, 'visaMock'])->name('visa-mock');
 Route::post('/visa-mock-interview/lead', [PageController::class, 'visaMockLead'])
     ->middleware('throttle:15,1')
@@ -117,7 +114,7 @@ Route::post('/visa-mock-interview/assess-batch', VisaMockBatchAssessmentControll
 
 // Statement of Purpose — SOP / admissions-writing studio landing page (Student
 // Hub). The "book a strategy call" form POSTs to ::lead, which records a lead in
-// the shared profile-submissions store (source = sop).
+// the CRM lead pipeline (source = sop).
 Route::get('/statement-of-purpose', [SopController::class, 'index'])->name('sop.index');
 Route::post('/statement-of-purpose/lead', [SopController::class, 'lead'])
     ->middleware('throttle:15,1')
@@ -160,6 +157,16 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
         Route::get('/', [\App\Http\Controllers\Crm\CrmDashboardController::class, 'index'])->name('dashboard');
         Route::post('logout', [\App\Http\Controllers\Crm\CrmAuthController::class, 'logout'])->name('logout');
         Route::get('leads/export', [\App\Http\Controllers\Crm\CrmDashboardController::class, 'export'])->name('leads.export');
+        Route::get('website-leads/export/csv', [\App\Http\Controllers\Crm\CrmWebsiteLeadController::class, 'exportCsv'])->name('website.export.csv');
+        Route::get('website-leads/export/excel', [\App\Http\Controllers\Crm\CrmWebsiteLeadController::class, 'exportExcel'])->name('website.export.excel');
+        Route::get('website-leads/{submission}/download', [\App\Http\Controllers\Crm\CrmWebsiteLeadController::class, 'download'])->name('website.download');
+        Route::delete('website-leads/{submission}', [\App\Http\Controllers\Crm\CrmWebsiteLeadController::class, 'destroy'])->name('website.destroy');
+        Route::get('enrollments/export', [\App\Http\Controllers\Crm\CrmEnrollmentController::class, 'export'])->name('enrollments.export');
+        Route::patch('enrollments/{attempt}', [\App\Http\Controllers\Crm\CrmEnrollmentController::class, 'update'])->name('enrollments.update');
+        Route::delete('enrollments/{attempt}', [\App\Http\Controllers\Crm\CrmEnrollmentController::class, 'destroy'])->name('enrollments.destroy');
+        Route::get('subscribers/export', [\App\Http\Controllers\Crm\CrmSubscriberController::class, 'export'])->name('subscribers.export');
+        Route::patch('subscribers/{subscriber}', [\App\Http\Controllers\Crm\CrmSubscriberController::class, 'update'])->name('subscribers.update');
+        Route::delete('subscribers/{subscriber}', [\App\Http\Controllers\Crm\CrmSubscriberController::class, 'destroy'])->name('subscribers.destroy');
         Route::post('leads/import', [\App\Http\Controllers\Crm\CrmLeadController::class, 'import'])->name('leads.import');
         Route::post('leads', [\App\Http\Controllers\Crm\CrmLeadController::class, 'store'])->name('leads.store');
         Route::put('leads/{lead}', [\App\Http\Controllers\Crm\CrmLeadController::class, 'update'])->name('leads.update');
@@ -175,24 +182,19 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
 });
 
 /* ───────────────────────── Blog CMS (admin) ───────────────────────── */
+// Content Studio dashboard has a clean URL; authentication is unchanged.
+Route::get('/cms', [DashboardController::class, 'index'])
+    ->middleware('cms.auth')
+    ->name('admin.dashboard');
+
 Route::prefix('admin')->group(function () {
+    Route::redirect('cms', '/cms', 301);
     Route::get('login', [BlogCmsController::class, 'showLogin'])->name('admin.login');
     Route::post('login', [BlogCmsController::class, 'login'])->name('admin.login.attempt');
     Route::post('logout', [BlogCmsController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('cms.auth')->group(function () {
-        Route::get('/', fn () => redirect()->route('admin.portal'));
-        // Portal picker shown after login: CMS (content) or Admin (enrollments).
-        Route::get('portal', fn () => view('admin.portal'))->name('admin.portal');
-        Route::get('cms', [DashboardController::class, 'index'])->name('admin.dashboard');
-
-        // Admin portal — dashboard + enrollments / payments.
-        Route::get('panel', [EnrollmentsController::class, 'overview'])->name('admin.overview');
-        Route::get('enrollments', [EnrollmentsController::class, 'index'])->name('admin.enrollments.index');
-        Route::get('enrollments/test-prep', [EnrollmentsController::class, 'testPrep'])->name('admin.enrollments.test-prep');
-        Route::patch('enrollments/{attempt}/status', [EnrollmentsController::class, 'updateStatus'])->name('admin.enrollments.status');
-        Route::delete('enrollments/{attempt}', [EnrollmentsController::class, 'destroy'])->name('admin.enrollments.destroy');
-
+        Route::get('/', fn () => redirect()->route('admin.dashboard'));
         Route::get('blog', [BlogCmsController::class, 'index'])->name('admin.blog.index');
         Route::get('blog/create', [BlogCmsController::class, 'create'])->name('admin.blog.create');
         Route::post('blog', [BlogCmsController::class, 'store'])->name('admin.blog.store');
@@ -277,25 +279,6 @@ Route::prefix('admin')->group(function () {
         Route::get('destinations-layout', [DestinationsLayoutController::class, 'edit'])->name('admin.destinations-layout.index');
         Route::post('destinations-layout', [DestinationsLayoutController::class, 'update'])->name('admin.destinations-layout.update');
         Route::post('destinations-layout/reset', [DestinationsLayoutController::class, 'reset'])->name('admin.destinations-layout.reset');
-
-        /* ── Student Profiler submissions (from /profiler) ── */
-        Route::get('submissions', [ProfileSubmissionsController::class, 'index'])->name('admin.submissions.index'); // → Student Profiler tab
-        Route::get('submissions/student-profiler', [ProfileSubmissionsController::class, 'profiler'])->name('admin.submissions.profiler');
-        Route::get('submissions/loan-acco', [ProfileSubmissionsController::class, 'loanAcco'])->name('admin.submissions.loan-acco');
-        Route::get('submissions/statement-of-purpose', [ProfileSubmissionsController::class, 'sop'])->name('admin.submissions.sop');
-        Route::get('submissions/visa-mock', [ProfileSubmissionsController::class, 'visaMock'])->name('admin.submissions.visa-mock');
-        Route::get('submissions/export', [ProfileSubmissionsController::class, 'export'])->name('admin.submissions.export');
-        Route::get('submissions/export-excel', [ProfileSubmissionsController::class, 'exportExcel'])->name('admin.submissions.export-excel');
-        Route::post('submissions/delete', [ProfileSubmissionsController::class, 'destroy'])->name('admin.submissions.destroy');
-        Route::get('submissions/{id}/download', [ProfileSubmissionsController::class, 'download'])
-            ->where('id', '[A-Za-z0-9-]+')->name('admin.submissions.download');
-        Route::get('submissions/{id}', [ProfileSubmissionsController::class, 'show'])
-            ->where('id', '[A-Za-z0-9-]+')->name('admin.submissions.show');
-
-        /* ── Newsletter subscribers (collected from the blog signup forms) ── */
-        Route::get('newsletter', [NewsletterController::class, 'index'])->name('admin.newsletter.index');
-        Route::get('newsletter/export', [NewsletterController::class, 'export'])->name('admin.newsletter.export');
-        Route::post('newsletter/delete', [NewsletterController::class, 'destroy'])->name('admin.newsletter.destroy');
 
         Route::get('unlinked-pages', [UnlinkedPagesController::class, 'index'])->name('admin.unlinked-pages.index');
 

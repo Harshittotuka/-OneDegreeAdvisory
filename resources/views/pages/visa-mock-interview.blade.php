@@ -12,8 +12,8 @@
      Video mode provides a live camera preview and voice transcription. Answer
      transcripts are assessed by the site's AI assessment service. The
      free round is capped at 10 questions and unlocking more posts a lead to
-     /visa-mock-interview/lead (stored in the shared profile-submissions store,
-     source "visa-mock", viewable at /admin → Leads → Visa Mock Interview). --}}
+     /visa-mock-interview/lead (stored as a classified CRM lead with source
+     "visa-mock", viewable in CRM → Leads). --}}
 @extends('layouts.app')
 
 @push('head')

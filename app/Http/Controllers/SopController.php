@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\ProfileSubmissionStore;
+use App\Services\WebsiteLeadManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,12 +13,11 @@ use Illuminate\Support\Str;
  * landing page under the Student Hub (/statement-of-purpose). It renders on the
  * shared site layout (layouts.app), so its navbar, footer and success/fail form
  * popup match the rest of the site. The "book a strategy call" form POSTs here
- * and is recorded as a lead in the shared ProfileSubmissionStore (source = "sop"),
- * viewable at /admin/submissions → Statement of Purpose.
+ * and is recorded as a CRM website lead (source = "sop").
  */
 class SopController extends Controller
 {
-    public function __construct(private ProfileSubmissionStore $submissions)
+    public function __construct(private WebsiteLeadManager $leads)
     {
     }
 
@@ -72,7 +71,7 @@ class SopController extends Controller
             'answers' => $answers,
         ]];
 
-        $this->submissions->add(
+        $this->leads->capture(
             'sop',
             'Statement of Purpose',
             $eyebrow, // shown in the admin "Degree" column as the requested service

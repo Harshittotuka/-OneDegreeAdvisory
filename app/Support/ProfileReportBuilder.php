@@ -4,7 +4,7 @@ namespace App\Support;
 
 /**
  * Turns a completed Student Profiler submission (the human-readable snapshot
- * produced by ProfileSubmissionStore::snapshot()) into a single $data array
+ * produced by WebsiteSubmissionData::snapshot()) into a single $data array
  * that the team-notification / applicant thank-you emails and the attached
  * PDF report render.
  *
@@ -89,7 +89,7 @@ class ProfileReportBuilder
      * @param  string       $source         "profiler" | "evaluator"
      * @param  string       $sourceLabel    Friendly source name (e.g. "Student Profiler")
      * @param  string|null  $degreeLabel    Target degree label for the profiler (null for the evaluator)
-     * @param  array        $sections       Snapshot from ProfileSubmissionStore::snapshot()
+     * @param  array        $sections       Snapshot from WebsiteSubmissionData::snapshot()
      * @param  array        $meta           { name, email, phone }
      * @param  int|null     $questionTotal  Reserved (formerly fed the weightage heuristic,
      *                                      which the report no longer shows); kept so existing

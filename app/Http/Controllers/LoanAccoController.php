@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\ProfileSubmissionStore;
+use App\Services\WebsiteLeadManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,12 +13,11 @@ use Illuminate\Support\Str;
  * page under the Student Hub (/loan-accommodation). It renders on the shared
  * site layout (layouts.app), so its navbar, footer and success/fail form popup
  * are identical to the rest of the site. Both enquiry forms POST here and are
- * recorded as leads in the shared ProfileSubmissionStore (source = "loan-acco"),
- * viewable at /admin/submissions → Loan & Acco.
+ * recorded as CRM website leads (source = "loan-acco").
  */
 class LoanAccoController extends Controller
 {
-    public function __construct(private ProfileSubmissionStore $submissions)
+    public function __construct(private WebsiteLeadManager $leads)
     {
     }
 
@@ -108,7 +107,7 @@ class LoanAccoController extends Controller
             'answers' => $answers,
         ]];
 
-        $this->submissions->add(
+        $this->leads->capture(
             'loan-acco',
             'Loan & Acco',
             $eyebrow, // shown in the admin "Degree" column as the enquiry type

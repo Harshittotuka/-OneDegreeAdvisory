@@ -27,14 +27,24 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
+        if ($request->input('status') === 'converted') {
+            return back()->withErrors(['status' => 'Use “Convert to Student” from the Student tab to enroll this lead.'], 'leadCreate')->withInput();
+        }
         $data = $this->validatedLead($request, $user, 'leadCreate');
-        $data['phone'] = $this->normalisePhone($data['phone']);
+        $data['phone'] = $this->normalisePhone((string) ($data['phone'] ?? '')) ?: null;
+        $data['email'] = $this->normaliseEmail((string) ($data['email'] ?? '')) ?: null;
 
-        if (CrmLead::withTrashed()->where('phone', $data['phone'])->exists()) {
+        if ($data['phone'] && CrmLead::withTrashed()->where('phone', $data['phone'])->exists()) {
             return back()->withErrors(['phone' => 'A lead with this phone number already exists.'], 'leadCreate')->withInput();
+        }
+        if ($data['email'] && CrmLead::withTrashed()->whereRaw('LOWER(email) = ?', [$data['email']])->exists()) {
+            return back()->withErrors(['email' => 'A lead with this email address already exists.'], 'leadCreate')->withInput();
         }
 
         $data['created_by'] = $user->id;
+        $data['lead_origin'] = 'manual';
+        $data['lead_type'] = $data['lead_type'] ?? 'general';
+        $data['source'] = trim((string) ($data['source'] ?? '')) ?: 'Manual creation';
         $data['assigned_to'] = $user->isSuperAdmin() ? ($data['assigned_to'] ?? null) : $user->id;
         $data['lead_number'] = 'PENDING-'.str()->random(11); // fits varchar(20); overwritten with OD-##### below
 
@@ -58,15 +68,28 @@ class CrmLeadController extends Controller
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
         $this->guardLead($lead, $user);
-        $data = $this->validatedLead($request, $user);
-        $data['phone'] = $this->normalisePhone($data['phone']);
+        if (! $lead->is_student && $lead->status !== 'converted' && $request->input('status') === 'converted') {
+            return back()->withErrors(['status' => 'Use “Convert to Student” from the Student tab to enroll this lead.'])->withInput();
+        }
+        $data = $this->validatedLead($request, $user, null, $lead);
+        $data['phone'] = $this->normalisePhone((string) ($data['phone'] ?? '')) ?: null;
+        $data['email'] = $this->normaliseEmail((string) ($data['email'] ?? '')) ?: null;
         if (! $user->isSuperAdmin()) {
             unset($data['assigned_to']);
         }
 
-        $duplicate = CrmLead::withTrashed()->where('phone', $data['phone'])->whereKeyNot($lead->id)->exists();
+        $phoneChanged = $data['phone'] !== ($this->normalisePhone((string) $lead->phone) ?: null);
+        $duplicate = $phoneChanged && $data['phone'] && CrmLead::withTrashed()->where('phone', $data['phone'])->whereKeyNot($lead->id)->exists();
         if ($duplicate) {
             return back()->withErrors(['phone' => 'Another lead already uses this phone number.'])->withInput();
+        }
+        $emailChanged = $data['email'] !== ($this->normaliseEmail((string) $lead->email) ?: null);
+        $duplicateEmail = $emailChanged && $data['email'] && CrmLead::withTrashed()
+            ->whereRaw('LOWER(email) = ?', [$data['email']])
+            ->whereKeyNot($lead->id)
+            ->exists();
+        if ($duplicateEmail) {
+            return back()->withErrors(['email' => 'Another lead already uses this email address.'])->withInput();
         }
 
         $before = $lead->getAttributes();
@@ -254,7 +277,9 @@ class CrmLeadController extends Controller
             $item = array_combine($header, array_slice($row, 0, count($header))) ?: [];
             $phone = $this->normalisePhone((string) ($item['phone'] ?? $item['mobile'] ?? $item['phone number'] ?? ''));
             $name = trim((string) ($item['name'] ?? $item['full name'] ?? $item['student name'] ?? ''));
-            if (strlen($phone) !== 10 || $name === '' || CrmLead::withTrashed()->where('phone', $phone)->exists()) {
+            $email = $this->normaliseEmail((string) ($item['email'] ?? ''));
+            $duplicateEmail = $email !== '' && CrmLead::withTrashed()->whereRaw('LOWER(email) = ?', [$email])->exists();
+            if (strlen($phone) !== 10 || $name === '' || CrmLead::withTrashed()->where('phone', $phone)->exists() || $duplicateEmail) {
                 $skipped++;
 
                 continue;
@@ -262,12 +287,14 @@ class CrmLeadController extends Controller
 
             $lead = CrmLead::query()->create([
                 'lead_number' => 'PENDING-'.str()->random(11), 'name' => mb_substr($name, 0, 150), 'phone' => $phone,
-                'email' => $item['email'] ?? null, 'city' => $item['city'] ?? null,
+                'email' => $email ?: null, 'city' => $item['city'] ?? null,
                 'course_interest' => $item['course'] ?? $item['course interest'] ?? null,
                 'country_interest' => $item['country'] ?? $item['country interest'] ?? null,
                 'category' => array_key_exists((string) ($item['category'] ?? ''), CrmOptions::CATEGORIES) ? $item['category'] : null,
                 'priority' => array_key_exists((string) ($item['priority'] ?? ''), CrmOptions::PRIORITIES) ? $item['priority'] : 'medium',
-                'source' => $item['source'] ?? 'CSV import', 'status' => 'new',
+                'source' => $item['source'] ?? 'CSV import', 'lead_origin' => 'import',
+                'lead_type' => array_key_exists((string) ($item['lead type'] ?? $item['type'] ?? ''), CrmOptions::LEAD_TYPES) ? ($item['lead type'] ?? $item['type']) : 'general',
+                'status' => 'new',
                 'assigned_to' => $user->isSuperAdmin() ? ($data['assigned_to'] ?? null) : $user->id, 'created_by' => $user->id,
             ]);
             $lead->update(['lead_number' => 'OD-'.str_pad((string) (10000 + $lead->id), 5, '0', STR_PAD_LEFT)]);
@@ -285,16 +312,23 @@ class CrmLeadController extends Controller
         return back()->with('status', "Imported {$created} lead(s); skipped {$skipped} invalid or duplicate row(s).");
     }
 
-    private function validatedLead(Request $request, CrmUser $user, ?string $errorBag = null): array
+    private function validatedLead(Request $request, CrmUser $user, ?string $errorBag = null, ?CrmLead $lead = null): array
     {
+        $allowedStatuses = array_keys(CrmOptions::pipelineStatuses());
+        if ($lead?->is_student) {
+            $allowedStatuses = ['converted'];
+        } elseif ($lead?->status === 'converted') {
+            $allowedStatuses[] = 'converted';
+        }
         $rules = [
             'name' => ['required', 'string', 'max:150'],
-            'phone' => ['required', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:190'], 'city' => ['nullable', 'string', 'max:120'],
+            'phone' => ['nullable', 'required_without:email', 'string', 'max:30'],
+            'email' => ['nullable', 'required_without:phone', 'email', 'max:190'], 'city' => ['nullable', 'string', 'max:120'],
             'course_interest' => ['nullable', 'string', 'max:180'], 'country_interest' => ['nullable', 'string', 'max:120'],
             'category' => ['nullable', Rule::in(array_keys(CrmOptions::CATEGORIES))],
+            'lead_type' => ['nullable', Rule::in(array_keys(CrmOptions::LEAD_TYPES))],
             'priority' => ['required', Rule::in(array_keys(CrmOptions::PRIORITIES))],
-            'source' => ['nullable', 'string', 'max:100'], 'status' => ['required', Rule::in(array_keys(CrmOptions::STATUSES))],
+            'source' => ['nullable', 'string', 'max:100'], 'status' => ['required', Rule::in($allowedStatuses)],
             'assigned_to' => [$user->isSuperAdmin() ? 'nullable' : 'prohibited', Rule::exists('crm_users', 'id')->where(fn ($q) => $q->where('role', 'counsellor')->where('is_active', true))],
             'follow_up_at' => ['nullable', 'date'],
             'student_stage' => ['nullable', Rule::in(array_keys(CrmOptions::STUDENT_STAGES))],
@@ -310,6 +344,11 @@ class CrmLeadController extends Controller
     private function normalisePhone(string $phone): string
     {
         return substr((string) preg_replace('/\D+/', '', $phone), -10);
+    }
+
+    private function normaliseEmail(string $email): string
+    {
+        return strtolower(trim($email));
     }
 
     private function guardLead(CrmLead $lead, CrmUser $user): void

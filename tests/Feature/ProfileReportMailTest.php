@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Mail\ProfileReportTeamMail;
 use App\Mail\ProfileReportThankYouMail;
 use Illuminate\Support\Facades\Mail;
-use Tests\Concerns\PreservesProfileSubmissions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -15,23 +15,7 @@ use Tests\TestCase;
  */
 class ProfileReportMailTest extends TestCase
 {
-    use PreservesProfileSubmissions;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->backupSubmissions();
-        $path = storage_path('app/profile-submissions.json');
-        if (is_file($path)) {
-            @unlink($path);
-        }
-    }
-
-    protected function tearDown(): void
-    {
-        $this->restoreSubmissions();
-        parent::tearDown();
-    }
+    use RefreshDatabase;
 
     public function test_profiler_submit_sends_team_and_student_emails(): void
     {

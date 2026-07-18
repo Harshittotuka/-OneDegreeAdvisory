@@ -57,7 +57,7 @@ class SuperAdminCmsTest extends TestCase
     public function test_super_admin_password_logs_in_and_unlocks_about(): void
     {
         $this->post('/admin/login', ['password' => config('site.super_admin_password')])
-            ->assertRedirect(route('admin.portal'));
+            ->assertRedirect(route('admin.dashboard'));
 
         $this->assertTrue(session('cms_authenticated'));
         $this->assertTrue(session('cms_super_admin'));
@@ -77,7 +77,7 @@ class SuperAdminCmsTest extends TestCase
     public function test_standard_password_logs_in_but_about_stays_locked(): void
     {
         $this->post('/admin/login', ['password' => config('site.cms_password')])
-            ->assertRedirect(route('admin.portal'));
+            ->assertRedirect(route('admin.dashboard'));
 
         $this->assertTrue(session('cms_authenticated'));
         $this->assertNotTrue(session('cms_super_admin'));
@@ -143,24 +143,32 @@ class SuperAdminCmsTest extends TestCase
             ->assertSee('/services/test-preparation', false);
     }
 
-    public function test_newsletter_subscribers_live_in_admin_portal_not_cms(): void
+    public function test_legacy_lead_admin_routes_are_removed_from_content_studio(): void
     {
         $this->withSession(['cms_authenticated' => true]);
 
-        $this->get(route('admin.newsletter.index'))
-            ->assertOk()
-            ->assertSee('Newsletter subscribers')
-            ->assertSee('portal-admin', false)
-            ->assertSee('Admin Portal')
-            ->assertSee('Student Profiler')
-            ->assertDontSee('<div class="cms-nav-label">Coming soon</div>', false)
-            ->assertDontSee('Settings')
-            ->assertDontSee('Content Studio')
-            ->assertDontSee('Home Page');
-
         $this->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertDontSee(route('admin.newsletter.index'), false);
+            ->assertSee('Content Studio')
+            ->assertSee(route('crm.login'), false)
+            ->assertDontSee('/admin/newsletter', false)
+            ->assertDontSee('/admin/submissions', false)
+            ->assertDontSee('/admin/enrollments', false);
+    }
+
+    public function test_content_studio_dashboard_uses_the_clean_cms_url(): void
+    {
+        $this->get('/cms')->assertRedirect(route('admin.login'));
+
+        $this->withSession(['cms_authenticated' => true])
+            ->get('/cms')
+            ->assertOk()
+            ->assertSee('Content Studio');
+
+        $this->assertSame(url('/cms'), route('admin.dashboard'));
+        $this->get('/admin/cms')
+            ->assertStatus(301)
+            ->assertRedirect('/cms');
     }
 
     public function test_cms_sidebar_groups_tabs_by_section(): void

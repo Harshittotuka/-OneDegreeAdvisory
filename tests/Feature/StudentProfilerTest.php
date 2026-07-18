@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Support\ProfileSubmissionStore;
-use Tests\Concerns\PreservesProfileSubmissions;
+use App\Models\CrmWebsiteSubmission;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -14,29 +14,7 @@ use Tests\TestCase;
  */
 class StudentProfilerTest extends TestCase
 {
-    use PreservesProfileSubmissions;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // Start every test from a clean slate, then restore the real file after.
-        $this->backupSubmissions();
-        $path = storage_path('app/profile-submissions.json');
-        if (is_file($path)) {
-            @unlink($path);
-        }
-    }
-
-    protected function tearDown(): void
-    {
-        $this->restoreSubmissions();
-        parent::tearDown();
-    }
-
-    private function store(): ProfileSubmissionStore
-    {
-        return new ProfileSubmissionStore();
-    }
+    use RefreshDatabase;
 
     private function profilerField(array $config, string $degree, string $key): array
     {
@@ -74,7 +52,7 @@ class StudentProfilerTest extends TestCase
 
         $this->assertNull(session('profiler.degree'));
         $this->assertNull(session('profiler.answers'));
-        $this->assertCount(0, $this->store()->all());
+        $this->assertDatabaseCount('crm_website_submissions', 0);
     }
 
     public function test_wizard_always_starts_fresh(): void
@@ -121,10 +99,10 @@ class StudentProfilerTest extends TestCase
         $this->assertArrayNotHasKey('score', (array) $res->json());
 
         // The completed profile is recorded once.
-        $rows = $this->store()->all();
-        $this->assertCount(1, $rows);
-        $this->assertSame('profiler', $rows[0]['source']);
-        $this->assertSame('masters', $rows[0]['degree']);
+        $submission = CrmWebsiteSubmission::query()->sole();
+        $this->assertSame('profiler', $submission->source);
+        $this->assertSame('masters', $submission->degree);
+        $this->assertNotNull($submission->lead);
     }
 
     public function test_submit_with_invalid_degree_records_nothing(): void
@@ -136,7 +114,7 @@ class StudentProfilerTest extends TestCase
             'answers' => ['x' => 'y'],
         ])->assertOk()->assertJson(['ok' => true]);
 
-        $this->assertCount(0, $this->store()->all());
+        $this->assertDatabaseCount('crm_website_submissions', 0);
     }
 
     public function test_reset_action_returns_ok(): void
@@ -144,6 +122,6 @@ class StudentProfilerTest extends TestCase
         $this->post('/profiler', ['action' => 'reset'])
             ->assertOk()->assertJson(['ok' => true]);
 
-        $this->assertCount(0, $this->store()->all());
+        $this->assertDatabaseCount('crm_website_submissions', 0);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CrmLead;
 use App\Models\PaymentAttempt;
 use App\Services\PaymentBlockResolver;
 use Illuminate\Http\Client\Request as HttpRequest;
@@ -154,5 +155,31 @@ class PaymentFlowTest extends TestCase
 
         $this->assertSame('paid', $attempt->fresh()->status);
         $this->assertSame('pay_webhook123', $attempt->fresh()->razorpay_payment_id);
+    }
+
+    public function test_identity_conflict_rolls_back_checkout_before_creating_a_payment_order(): void
+    {
+        CrmLead::query()->create([
+            'lead_number' => 'OD-10001', 'name' => 'Phone Owner', 'phone' => '9876543210',
+            'email' => 'phone@example.test', 'priority' => 'medium', 'status' => 'new',
+        ]);
+        CrmLead::query()->create([
+            'lead_number' => 'OD-10002', 'name' => 'Email Owner', 'phone' => '9876543211',
+            'email' => 'email@example.test', 'priority' => 'medium', 'status' => 'new',
+        ]);
+        $this->mock(PaymentBlockResolver::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('resolve')->once()->andReturn([
+                'item_name' => 'Explorer', 'amount' => 5_499_900, 'currency' => 'INR', 'theme_color' => '#F05A28',
+            ]);
+        });
+        Http::fake();
+
+        $this->postJson(route('payments.order'), [
+            'page_slug' => 'europe', 'block_id' => 'europe-payment', 'option_index' => 0,
+            'name' => 'Conflict', 'phone' => '9876543210', 'email' => 'email@example.test',
+        ])->assertUnprocessable()->assertJsonValidationErrors('contact');
+
+        $this->assertDatabaseCount('payment_attempts', 0);
+        Http::assertNothingSent();
     }
 }

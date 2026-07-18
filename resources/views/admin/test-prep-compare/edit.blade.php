@@ -80,8 +80,6 @@
   .tpc-actions .btn-save:hover{transform:translateY(-2px); box-shadow:0 12px 26px -8px rgba(102,108,255,.75);}
   .tpc-actions .btn-preview{background:transparent; border-color:transparent; color:var(--muted); padding:12px 14px;}
   .tpc-actions .btn-preview:hover{background:var(--teal-soft); color:var(--teal-dark);}
-  body.portal-admin .tpc-actions .btn-save{box-shadow:0 8px 20px -8px rgba(249,115,22,.7);}
-  body.portal-admin .tpc-actions .btn-save:hover{box-shadow:0 12px 26px -8px rgba(249,115,22,.75);}
   /* Extra room so the last fields clear the floating bar. */
   #tpc-form{padding-bottom:52px;}
   @media (max-width:880px){

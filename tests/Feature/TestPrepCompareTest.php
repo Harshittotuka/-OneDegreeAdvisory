@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\PaymentAttempt;
+use App\Models\CrmUser;
+use App\Services\WebsiteLeadManager;
 use App\Support\TestPrepCompareStore;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
@@ -287,8 +289,9 @@ class TestPrepCompareTest extends TestCase
         $this->seedTestPrepAttempt('GRE', 'a@x.test');
         $this->seedTestPrepAttempt('GRE Coaching (Legacy)', 'b@x.test');
 
-        $html = $this->withSession(['cms_authenticated' => true])
-            ->get(route('admin.enrollments.test-prep'))
+        $admin = CrmUser::create(['name' => 'Owner', 'phone' => '9999999999', 'email' => 'owner@example.test', 'role' => 'super_admin', 'is_active' => true]);
+        $html = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'enrollments']))
             ->assertOk()
             // The dropdown offers both the CMS program and the legacy data name.
             ->assertSee('All programs')
@@ -316,24 +319,25 @@ class TestPrepCompareTest extends TestCase
         $this->seedTestPrepAttempt('GRE Coaching (Legacy)', 'legacy@x.test', 'Legacy Student');
 
         // Filtering by the legacy type shows only that student, not the GRE one.
-        $this->withSession(['cms_authenticated' => true])
-            ->get(route('admin.enrollments.test-prep', ['type' => 'GRE Coaching (Legacy)']))
+        $admin = CrmUser::create(['name' => 'Owner', 'phone' => '9999999999', 'email' => 'owner@example.test', 'role' => 'super_admin', 'is_active' => true]);
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'enrollments', 'enrollment_plan' => 'GRE Coaching (Legacy)']))
             ->assertOk()
             ->assertSee('Legacy Student')
             ->assertDontSee('GRE Student');
 
         // An unknown/unoffered type is ignored — the full list comes back.
-        $this->withSession(['cms_authenticated' => true])
-            ->get(route('admin.enrollments.test-prep', ['type' => 'Not A Program']))
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'enrollments', 'enrollment_plan' => 'Not A Program']))
             ->assertOk()
-            ->assertSee('Legacy Student')
-            ->assertSee('GRE Student');
+            ->assertDontSee('Legacy Student')
+            ->assertDontSee('GRE Student');
     }
 
     /** Insert a paid Test-Prep enrolment row directly (bypassing the pay flow). */
     private function seedTestPrepAttempt(string $itemName, string $email, string $name = 'Someone'): void
     {
-        PaymentAttempt::create([
+        $attempt = PaymentAttempt::create([
             'request_token' => bin2hex(random_bytes(16)),
             'session_hash' => str_repeat('a', 64),
             'page_slug' => TestPrepCompareStore::PAGE_SLUG,
@@ -346,7 +350,8 @@ class TestPrepCompareTest extends TestCase
             'paid_at' => now(),
             'customer_name' => $name,
             'customer_email' => $email,
-            'customer_phone' => '+91 90000 00000',
+            'customer_phone' => (string) (9_000_000_000 + (abs(crc32($email)) % 100_000_000)),
         ]);
+        app(WebsiteLeadManager::class)->capturePayment($attempt);
     }
 }

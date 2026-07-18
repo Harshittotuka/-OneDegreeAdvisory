@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\CareerLibraryStore;
-use App\Support\ProfileSubmissionStore;
+use App\Services\WebsiteLeadManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +18,7 @@ class CareerLibraryController extends Controller
 {
     public function __construct(
         private CareerLibraryStore $store,
-        private ProfileSubmissionStore $submissions,
+        private WebsiteLeadManager $leads,
     ) {
     }
 
@@ -116,7 +116,7 @@ class CareerLibraryController extends Controller
     /**
      * Capture a visitor's contact details before they view a career report.
      * The report page shows a blocking form; on submit this records the lead
-     * (into the shared profile-submissions store, source "career-library") and
+     * (into the CRM lead pipeline, source "career-library") and
      * the front-end unlocks the page for the rest of the session.
      */
     public function lead(Request $request): JsonResponse
@@ -139,8 +139,8 @@ class CareerLibraryController extends Controller
         $country = trim((string) ($validated['country'] ?? ''));
         $language = trim((string) ($validated['language'] ?? ''));
 
-        // A human-readable snapshot in the same shape ProfileSubmissionStore uses
-        // for the profiler/evaluator, so the admin viewer + exports render it the
+        // A human-readable snapshot in the same shape the CRM uses for the
+        // profiler/evaluator, so its card, table and exports render it the
         // same way (section → question → answer).
         $answers = [
             ['label' => 'Name', 'value' => [$name]],
@@ -163,7 +163,7 @@ class CareerLibraryController extends Controller
             'answers' => $answers,
         ]];
 
-        $this->submissions->add(
+        $this->leads->capture(
             'career-library',
             'Trending Career',
             null,

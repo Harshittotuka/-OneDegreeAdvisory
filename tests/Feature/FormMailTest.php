@@ -7,10 +7,14 @@ use App\Mail\CareerThankYouMail;
 use App\Mail\ContactEnquiryMail;
 use App\Mail\ContactThankYouMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use RuntimeException;
 use Tests\TestCase;
 
 class FormMailTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_contact_form_sends_team_and_visitor_emails(): void
     {
         Mail::fake();
@@ -39,6 +43,7 @@ class FormMailTest extends TestCase
             return $mail->hasTo($payload['email'])
                 && $mail->data['name'] === $payload['name'];
         });
+        $this->assertDatabaseHas('crm_leads', ['email' => $payload['email'], 'lead_origin' => 'website']);
     }
 
     public function test_career_form_sends_team_and_applicant_emails(): void
@@ -71,6 +76,27 @@ class FormMailTest extends TestCase
             return $mail->hasTo($payload['email'])
                 && $mail->data['role'] === $payload['role'];
         });
+        $this->assertDatabaseHas('crm_leads', ['email' => $payload['email'], 'lead_origin' => 'website']);
+    }
+
+    public function test_contact_and_career_leads_are_retained_when_email_delivery_fails(): void
+    {
+        Mail::shouldReceive('mailer')->times(4)->andThrow(new RuntimeException('SMTP offline'));
+
+        $this->postJson('/contact', [
+            'name' => 'Offline Contact', 'email' => 'offline-contact@example.com', 'phone' => '9000000001',
+            'level' => 'Postgraduate', 'consent' => '1',
+        ])->assertOk()->assertJsonPath('ok', true);
+
+        $this->postJson('/careers', [
+            'name' => 'Offline Applicant', 'email' => 'offline-career@example.com', 'phone' => '9000000002',
+            'role' => 'Counsellor', 'experience' => '2 years', 'message' => 'Application details',
+            'resume_link' => 'https://example.com/resume.pdf', 'consent' => '1',
+        ])->assertOk()->assertJsonPath('ok', true);
+
+        $this->assertDatabaseHas('crm_leads', ['email' => 'offline-contact@example.com', 'lead_type' => 'general']);
+        $this->assertDatabaseHas('crm_leads', ['email' => 'offline-career@example.com', 'lead_type' => 'general']);
+        $this->assertDatabaseCount('crm_website_submissions', 2);
     }
 
     public function test_mail_doctor_accepts_complete_smtp_configuration(): void

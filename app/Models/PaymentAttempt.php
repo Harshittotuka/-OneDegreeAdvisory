@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PaymentAttempt extends Model
 {
     protected $fillable = [
+        'crm_lead_id',
         'request_token',
         'session_hash',
         'page_slug',
@@ -25,6 +27,11 @@ class PaymentAttempt extends Model
         'failure_reason',
         'paid_at',
     ];
+
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(CrmLead::class, 'crm_lead_id');
+    }
 
     protected $hidden = [
         'session_hash',

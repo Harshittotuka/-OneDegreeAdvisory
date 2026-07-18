@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <title>CRM sign in · One Degree Advisory</title>
-    <style>html.crm-css-pending body{visibility:hidden}</style>
+    <style>html.crm-css-pending{background:#17182a}html.crm-css-pending body{visibility:hidden!important;opacity:0!important}html.crm-css-pending:before{content:"Loading CRM…";position:fixed;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.72);font:600 13px/1.4 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,21 +20,36 @@
             document.documentElement.dataset.crmTheme = theme;
             const stylesheet = document.getElementById('crmThemeStylesheet');
             const selectedHref = theme === 'classic' ? stylesheet.dataset.classicHref : (theme === 'orbit' ? stylesheet.dataset.orbitHref : stylesheet.dataset.evergreenHref);
-            const reveal = () => document.documentElement.classList.remove('crm-css-pending');
-
-            if (stylesheet.href === selectedHref) {
-                reveal();
-                return;
-            }
-
-            stylesheet.addEventListener('load', reveal, { once: true });
-            stylesheet.addEventListener('error', reveal, { once: true });
-            stylesheet.href = selectedHref;
+            if (stylesheet.href !== selectedHref) stylesheet.href = selectedHref;
         })();
     </script>
-    <noscript><style>html.crm-css-pending body{visibility:visible}</style></noscript>
-    <link rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/crm/crm-toast.css') }}?v={{ filemtime(public_path('assets/crm/crm-toast.css')) }}">
+    <noscript><style>html.crm-css-pending body{visibility:visible!important;opacity:1!important}html.crm-css-pending:before{display:none}</style></noscript>
+    <link id="crmThemeSwitcherStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm-theme-switcher.css') }}">
+    <link id="crmToastStylesheet" rel="stylesheet" href="{{ asset('assets/crm/crm-toast.css') }}?v={{ filemtime(public_path('assets/crm/crm-toast.css')) }}">
+    <script>
+        (() => {
+            const root = document.documentElement;
+            const stylesheets = ['crmThemeStylesheet', 'crmThemeSwitcherStylesheet', 'crmToastStylesheet']
+                .map(id => document.getElementById(id))
+                .filter(Boolean);
+            let revealed = false;
+            const reveal = () => {
+                if (revealed) return;
+                revealed = true;
+                root.classList.remove('crm-css-pending');
+                root.classList.add('crm-css-ready');
+            };
+            const ready = link => link.sheet
+                ? Promise.resolve()
+                : new Promise(resolve => {
+                    link.addEventListener('load', resolve, { once: true });
+                    link.addEventListener('error', resolve, { once: true });
+                });
+
+            Promise.all(stylesheets.map(ready)).then(() => requestAnimationFrame(() => requestAnimationFrame(reveal)));
+            window.setTimeout(reveal, 5000);
+        })();
+    </script>
 </head>
 <body>
 @include('crm.partials.toasts', [

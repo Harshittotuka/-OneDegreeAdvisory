@@ -14,7 +14,7 @@ class CrmLead extends Model
 
     protected $fillable = [
         'lead_number', 'name', 'phone', 'email', 'city', 'course_interest', 'country_interest',
-        'category', 'priority', 'source', 'status', 'assigned_to', 'created_by', 'follow_up_at',
+        'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'created_by', 'follow_up_at',
         'follow_up_completed_at', 'last_contacted_at', 'tags', 'profile', 'is_student',
         'student_stage', 'student_category', 'enrollment_amount', 'enrollment_date',
         'payment_reference', 'conversion_remarks',
@@ -42,6 +42,16 @@ class CrmLead extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(CrmLeadActivity::class)->latest();
+    }
+
+    public function websiteSubmissions(): HasMany
+    {
+        return $this->hasMany(CrmWebsiteSubmission::class)->latest('submitted_at');
+    }
+
+    public function paymentAttempts(): HasMany
+    {
+        return $this->hasMany(PaymentAttempt::class, 'crm_lead_id');
     }
 
     public function scopeVisibleTo(Builder $query, CrmUser $user): Builder

@@ -452,3 +452,45 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 }
 
 @media(prefers-reduced-motion:reduce){.crm-leaflet-marker-shell span::after{animation:none}}
+
+/* Unified website lead and enrollment workspaces. */
+.crm-source-workspace{overflow:visible}.crm-source-filters{grid-template-columns:minmax(240px,1fr) minmax(190px,260px) auto}.crm-submission-grid{padding:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.crm-submission-card{padding:16px;border:1px solid var(--line,#ddd);border-radius:16px;background:var(--card,#fff)}.crm-submission-card-head,.crm-submission-person,.crm-submission-actions{display:flex;align-items:center;gap:10px}.crm-submission-card-head{justify-content:space-between}.crm-submission-card-head time{color:var(--muted,#777);font-size:.68rem}.source-pill,.submission-type{display:inline-flex;padding:4px 9px;border-radius:999px;background:var(--pine-soft,#eef6f0);color:var(--pine,#175244);font-size:.65rem;font-weight:800}.crm-submission-person{margin:14px 0}.crm-submission-person>div{min-width:0;flex:1}.crm-submission-person a{font-weight:800;color:inherit}.crm-submission-person small{display:block;margin-top:3px;color:var(--muted,#777);font-size:.65rem;overflow:hidden;text-overflow:ellipsis}.crm-submission-answers{margin-top:13px;border-top:1px solid var(--line,#ddd);border-bottom:1px solid var(--line,#ddd);padding:10px 0}.crm-submission-answers summary,.crm-submission-history summary{cursor:pointer;font-size:.7rem;font-weight:800}.crm-answer-section{margin-top:12px}.crm-answer-section>b{display:block;color:var(--pine,#175244);font-size:.66rem;text-transform:uppercase}.crm-answer-section p{display:grid;grid-template-columns:minmax(90px,35%) 1fr;gap:10px;margin:7px 0;font-size:.65rem}.crm-answer-section p span{color:var(--muted,#777)}.crm-answer-section p strong{font-weight:650}.crm-submission-actions{margin-top:13px;flex-wrap:wrap}.crm-submission-actions form{margin-left:auto}.crm-submission-grid.is-table{display:block}.crm-submission-grid.is-table .crm-submission-card{margin-bottom:9px;border-radius:10px}.crm-submission-grid.is-table .crm-submission-person{margin-bottom:5px}.crm-submission-history details{padding:11px 0;border-bottom:1px solid var(--line,#ddd)}.crm-submission-history summary{display:flex;justify-content:space-between;align-items:center;gap:10px}.crm-submission-history summary span small{display:block;margin-top:3px;color:var(--muted,#777);font-weight:500}.crm-submission-history summary a{font-size:.62rem}.crm-payment-actions,.crm-payment-actions form{display:flex;align-items:center;gap:6px}.crm-payment-actions select{min-width:145px;padding:7px}.crm-payment-actions>form:last-child{margin-left:4px}
+@media(max-width:900px){.crm-submission-grid{grid-template-columns:1fr}.crm-source-filters{grid-template-columns:1fr}.crm-payment-actions,.crm-payment-actions form{align-items:stretch;flex-direction:column}}
+
+/* Clear CRM classification for leads, enrollments and subscribers. */
+.lead-type-pill,.source-page-pill,.subscriber-status{display:inline-flex;width:max-content;max-width:100%;padding:4px 8px;border-radius:999px;font-size:.61rem;font-weight:800;line-height:1.2}
+.lead-type-pill{background:var(--pine-soft,#eef6f0);color:var(--pine,#175244)}
+.source-page-pill{background:var(--soft,#f3f4f7);color:var(--navy,#21147f)}
+.subscriber-status.is-active{background:#e8f7ed;color:#18713b}.subscriber-status.is-unsubscribed{background:#f1f2f5;color:#6c7280}
+.subscriber-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:16px 20px;border-bottom:1px solid var(--line,#e3e5ea)}
+.subscriber-summary>div{padding:14px 16px;border:1px solid var(--line,#e3e5ea);border-radius:13px;background:var(--soft,#f7f8fa)}
+.subscriber-summary strong,.subscriber-summary span{display:block}.subscriber-summary strong{font-size:1.25rem;color:var(--navy,#21147f)}.subscriber-summary span{margin-top:3px;color:var(--muted,#707789);font-size:.66rem;font-weight:700}
+.crm-subscriber-filters,.crm-enrollment-filters{grid-template-columns:minmax(250px,1fr) minmax(160px,220px) minmax(170px,240px) auto}
+.lead-classification-filters{grid-template-columns:minmax(230px,1.4fr) repeat(6,minmax(125px,.65fr))!important}
+.lead-classification-filters>*,.crm-subscriber-filters>*,.crm-enrollment-filters>*{display:block!important}
+.lead-classification-filters>input[type="hidden"],.crm-subscriber-filters>input[type="hidden"],.crm-enrollment-filters>input[type="hidden"]{display:none!important}
+.subscriber-email{color:inherit;font-weight:800}.subscriber-actions,.subscriber-actions form{display:flex;align-items:center;gap:6px}
+.payment-reference,.payment-failure{display:block;margin-top:5px;font-size:.58rem;overflow-wrap:anywhere}.payment-reference{color:var(--muted,#707789)}.payment-failure{color:#b23a35;font-weight:700}
+.enrollment-table th,.enrollment-table td,.subscriber-table th,.subscriber-table td{vertical-align:middle}
+@media(max-width:1180px){.lead-classification-filters{grid-template-columns:repeat(3,minmax(0,1fr))!important}.lead-classification-filters .search-wrap{grid-column:1/-1}}
+@media(max-width:900px){.crm-subscriber-filters,.crm-enrollment-filters{grid-template-columns:1fr}.subscriber-summary{grid-template-columns:1fr}.subscriber-actions{align-items:stretch;flex-direction:column}}
+@media(max-width:640px){.lead-classification-filters{grid-template-columns:1fr!important}.lead-classification-filters .search-wrap{grid-column:auto}}
+
+/* Semantic navigation icons shared by Classic, Evergreen and Orbit. */
+.nav-dashboard{--nav-accent:#4f9cf9}.nav-leads{--nav-accent:#ff6b7a}.nav-enrollments{--nav-accent:#2bb673}.nav-subscriptions{--nav-accent:#b76cf2}.nav-followups{--nav-accent:#e2a72e}.nav-students{--nav-accent:#7d72e8}.nav-audit{--nav-accent:#36a9b8}.nav-team{--nav-accent:#ef7cab}
+.crm-app .nav-icon{flex:0 0 auto;width:30px;height:30px;border:1px solid color-mix(in srgb,var(--nav-accent) 30%,transparent);border-radius:9px;background:color-mix(in srgb,var(--nav-accent) 13%,transparent);color:var(--nav-accent);transition:background .2s,color .2s,box-shadow .2s,transform .2s}
+.crm-app .nav-icon svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.crm-app .nav-link:hover .nav-icon{background:color-mix(in srgb,var(--nav-accent) 22%,transparent);transform:translateY(-1px)}
+.crm-app .nav-link.active .nav-icon{border-color:var(--nav-accent);background:var(--nav-accent);color:#fff;box-shadow:0 6px 15px color-mix(in srgb,var(--nav-accent) 32%,transparent);animation:none}
+.crm-app .nav-text{min-width:0}
+.crm-app .logout-btn{width:36px;height:36px;display:grid;place-items:center;border-radius:10px}
+.crm-app .logout-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+html[data-crm-theme="orbit"] .crm-app .nav-link{gap:5px}
+html[data-crm-theme="orbit"] .crm-app .nav-icon{width:32px;height:32px;border-radius:10px}
+html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
+@media(max-width:840px){html[data-crm-theme="orbit"] .crm-app .nav-link{gap:11px}}
+
+/* Keep pipeline status and enrollment as two unmistakable actions. */
+.field-help{display:block;margin-top:6px;color:var(--muted,#737b8c);font-size:.61rem;line-height:1.4}
+.locked-conversion-status{min-height:45px;padding:10px 12px;border:1px solid color-mix(in srgb,#2bb673 34%,var(--line,#dde2e8));border-radius:10px;background:color-mix(in srgb,#2bb673 9%,var(--card,#fff))}
+.locked-conversion-status strong,.locked-conversion-status span{display:block}.locked-conversion-status strong{color:#198354;font-size:.72rem}.locked-conversion-status span{margin-top:3px;color:var(--muted,#737b8c);font-size:.61rem}

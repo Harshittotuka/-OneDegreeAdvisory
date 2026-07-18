@@ -150,34 +150,6 @@
     }
     .cms-powered:hover span::after { opacity: .7; transform: scaleX(1); }
 
-    /* ── Admin portal: rich royal-orange theme ── */
-    body.portal-admin {
-      --teal: #f97316; --teal-dark: #c2410c; --teal-soft: #fff1e6;
-    }
-    body.portal-admin .cms-wrap a:not(.btn) { color: var(--teal-dark); }
-    body.portal-admin .btn-primary { color: #fff; box-shadow: 0 8px 18px rgba(249, 115, 22, .30); }
-    body.portal-admin .btn-primary:hover { background: var(--teal-dark); }
-    body.portal-admin .cms-side-brand .mark {
-      background: linear-gradient(135deg, #f97316, #fdba74);
-      box-shadow: 0 8px 20px rgba(249, 115, 22, .40);
-    }
-    body.portal-admin .cms-side-brand.is-super span { color: #c2410c; }
-    body.portal-admin .cms-nav-item.is-active {
-      background: linear-gradient(72deg, #ea580c 0%, #f97316 55%, #fb923c 100%);
-      box-shadow: 0 6px 16px rgba(234, 88, 12, .44);
-    }
-    body.portal-admin .cms-nav-item:not(.is-active):hover { background: #fff4ea; }
-    body.portal-admin .cms-side-foot .cms-switch { background: #fff1e6; color: #c2410c; border-color: #fed0a8; }
-    body.portal-admin .cms-side-foot .cms-switch:hover { background: #ffe3cb; }
-    body.portal-admin .cms-side-foot button:hover { background: #fff1e6; color: #c2410c; border-color: #fed0a8; }
-    body.portal-admin .cms-topbar a.cms-viewsite:hover { color: #c2410c; background: #fff1e6; }
-    body.portal-admin .cms-flash { border-color: #fed0a8; }
-    body.portal-admin input:focus, body.portal-admin textarea:focus, body.portal-admin select:focus {
-      border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, .16);
-    }
-    body.portal-admin .cms-toast { border-left-color: #f97316; }
-    body.portal-admin .cms-toast i { color: #f97316; }
-
     /* Accent-bearing chrome eases between themes on switch / load. */
     .cms-side-brand .mark, .cms-nav-item, .cms-side-foot .cms-switch, .btn-primary { transition:
       background .35s ease, box-shadow .35s ease, color .2s ease, border-color .2s ease, transform .12s ease; }
@@ -215,32 +187,11 @@
   </style>
   @stack('head')
 </head>
-<body class="{{ ($portal ?? 'cms') === 'admin' ? 'portal-admin' : '' }}">
+<body>
   @php
     $current = \Illuminate\Support\Facades\Route::currentRouteName() ?? '';
     $isSuper = (bool) session('cms_super_admin');
-    $portal = $portal ?? 'cms';
-
-    if ($portal === 'admin') :
-      $brandSub = $isSuper ? 'Super Admin · Admin Portal' : 'Admin Portal';
-      $navGroups = [
-        ['label' => '', 'items' => [
-          ['label' => 'Dashboard', 'icon' => 'layout-dashboard', 'route' => 'admin.overview', 'match' => 'admin.overview'],
-        ]],
-        ['label' => 'Payments', 'items' => [
-          ['label' => 'Enrollments', 'icon' => 'users', 'route' => 'admin.enrollments.index', 'match' => 'admin.enrollments.index'],
-          ['label' => 'Test Prep', 'icon' => 'graduation-cap', 'route' => 'admin.enrollments.test-prep', 'match' => 'admin.enrollments.test-prep'],
-        ]],
-        ['label' => 'Leads', 'items' => [
-          ['label' => 'Subscribers', 'icon' => 'mail', 'route' => 'admin.newsletter.index', 'match' => 'admin.newsletter'],
-          ['label' => 'Student Profiler', 'icon' => 'clipboard-list', 'route' => 'admin.submissions.profiler', 'match' => 'admin.submissions.profiler'],
-          ['label' => 'Loan & Acco', 'icon' => 'wallet', 'route' => 'admin.submissions.loan-acco', 'match' => 'admin.submissions.loan-acco'],
-          ['label' => 'Statement of Purpose', 'icon' => 'feather', 'route' => 'admin.submissions.sop', 'match' => 'admin.submissions.sop'],
-          ['label' => 'Visa Mock Interview', 'icon' => 'video', 'route' => 'admin.submissions.visa-mock', 'match' => 'admin.submissions.visa-mock'],
-        ]],
-      ];
-    else :
-      $brandSub = $isSuper ? 'Super Admin · Content Studio' : 'Content Studio';
+    $brandSub = $isSuper ? 'Super Admin · Content Studio' : 'Content Studio';
       $pageItems = [
         ['label' => 'Home Page', 'icon' => 'panel-top', 'route' => 'admin.home-hero.live', 'match' => 'admin.home-hero'],
         ['label' => 'Test Prep', 'icon' => 'bar-chart-3', 'route' => 'admin.test-prep-compare.index', 'match' => 'admin.test-prep-compare'],
@@ -276,7 +227,6 @@
         ['label' => 'Country Data Sync', 'items' => $countrySyncItems],
         ['label' => 'Layout', 'items' => $layoutItems],
       ];
-    endif;
   @endphp
 
   <div class="cms-shell" id="cms-shell">
@@ -308,7 +258,7 @@
       </nav>
 
       <div class="cms-side-foot">
-        <a class="cms-switch" href="{{ route('admin.portal') }}"><i data-lucide="grid-2x2" style="width:16px;height:16px;"></i> Switch portal</a>
+        <a class="cms-switch" href="{{ route('crm.login') }}"><i data-lucide="contact-round" style="width:16px;height:16px;"></i> Open CRM</a>
         <form method="POST" action="{{ route('admin.logout') }}">
           @csrf
           <button type="submit"><i data-lucide="log-out" style="width:16px;height:16px;"></i> Log out</button>

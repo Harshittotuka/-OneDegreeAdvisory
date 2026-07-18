@@ -106,6 +106,37 @@ class CrmTest extends TestCase
         $this->assertDatabaseHas('crm_leads', ['name' => 'Short Mobile Lead', 'phone' => '123']);
     }
 
+    public function test_manual_leads_cannot_duplicate_an_existing_email_address(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        CrmLead::query()->create([
+            'lead_number' => 'OD-10001', 'name' => 'Existing Lead', 'phone' => '9876500001',
+            'email' => 'student@example.com', 'priority' => 'medium', 'status' => 'new',
+        ]);
+
+        $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.leads.store'), [
+            'name' => 'Duplicate Email', 'phone' => '9876500002', 'email' => 'STUDENT@example.com',
+            'priority' => 'medium', 'status' => 'new',
+        ])->assertSessionHasErrors(['email'], errorBag: 'leadCreate');
+
+        $this->assertDatabaseCount('crm_leads', 1);
+    }
+
+    public function test_an_existing_duplicate_email_does_not_block_unrelated_lead_edits(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Legacy One', '9876500011');
+        $lead->update(['email' => 'legacy@example.com']);
+        $this->leadFor($admin, 'Legacy Two', '9876500012')->update(['email' => 'legacy@example.com']);
+
+        $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
+            'name' => 'Legacy One Updated', 'phone' => $lead->phone, 'email' => 'legacy@example.com',
+            'priority' => 'high', 'status' => 'interested',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('crm_leads', ['id' => $lead->id, 'name' => 'Legacy One Updated', 'priority' => 'high']);
+    }
+
     public function test_dashboard_renders_partial_navigation_hooks(): void
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
@@ -268,6 +299,31 @@ class CrmTest extends TestCase
         $this->assertSame('doc_complete', $lead->fresh()->student_stage);
         $this->assertSame(30000, $lead->fresh()->enrollment_amount);
         $this->assertSame(3, CrmLeadActivity::query()->where('crm_lead_id', $lead->id)->count());
+    }
+
+    public function test_converted_status_cannot_bypass_student_conversion(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Conversion Path Lead', '9876500088');
+
+        $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
+            'name' => $lead->name,
+            'phone' => $lead->phone,
+            'priority' => 'medium',
+            'lead_type' => 'general',
+            'status' => 'converted',
+        ])->assertSessionHasErrors(['status']);
+
+        $lead->refresh();
+        $this->assertSame('new', $lead->status);
+        $this->assertFalse($lead->is_student);
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('Pipeline status')
+            ->assertSee('Convert to student')
+            ->assertSee('Enrollment is completed later from the Student tab.');
     }
 
     public function test_csv_import_skips_duplicate_phone_numbers_and_export_downloads_visible_leads(): void

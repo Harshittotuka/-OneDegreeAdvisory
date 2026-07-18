@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\CrmAuditLog;
 use App\Models\CrmLead;
+use App\Models\CrmSubscriber;
 use App\Models\CrmUser;
+use App\Models\PaymentAttempt;
 use App\Support\CrmOptions;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -28,12 +30,16 @@ class CrmDashboardController extends Controller
         if ($request->query('view') === 'audit') {
             abort_unless($user->isSuperAdmin(), 403);
         }
-        $allowedViews = ['dashboard', 'leads', 'followups', 'students'];
+        $allowedViews = ['dashboard', 'leads', 'enrollments', 'followups', 'students'];
         if ($user->isSuperAdmin()) {
-            $allowedViews[] = 'audit';
+            $allowedViews = [...$allowedViews, 'subscriptions', 'audit'];
         }
-        $view = in_array($request->query('view'), $allowedViews, true)
-            ? $request->query('view') : 'dashboard';
+        $requestedView = match ($request->query('view')) {
+            'website' => 'leads',
+            'subscribers' => 'subscriptions',
+            default => $request->query('view'),
+        };
+        $view = in_array($requestedView, $allowedViews, true) ? $requestedView : 'dashboard';
         $followUpLayout = $view === 'followups' && in_array($request->query('layout'), ['table', 'calendar'], true)
             ? $request->query('layout') : 'table';
 
@@ -57,7 +63,7 @@ class CrmDashboardController extends Controller
 
         $dashboard = $this->dashboardData($base, $stats, $todayStart, $todayEnd, $view === 'dashboard');
 
-        $leads = CrmLead::query()->visibleTo($user)->with('assignee')->withCount('activities');
+        $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'websiteSubmissions'])->withCount('activities');
         if ($view === 'followups') {
             $leads->whereNotNull('follow_up_at')->whereNull('follow_up_completed_at')->orderBy('follow_up_at');
         } elseif ($view === 'students') {
@@ -102,10 +108,29 @@ class CrmDashboardController extends Controller
             $auditLogs = $auditQuery->paginate(30)->withQueryString();
         }
 
+        $enrollmentQuery = PaymentAttempt::query()->with(['lead.assignee'])->latest();
+        if (! $user->isSuperAdmin()) {
+            $enrollmentQuery->whereHas('lead', fn (Builder $lead) => $lead->visibleTo($user));
+        }
+        $enrollmentCount = (clone $enrollmentQuery)->count();
+        if ($request->filled('payment_status')) $enrollmentQuery->where('status', $request->query('payment_status'));
+        if ($request->filled('enrollment_source')) $enrollmentQuery->where('page_slug', $request->query('enrollment_source'));
+        if ($request->filled('enrollment_plan')) $enrollmentQuery->where('item_name', $request->query('enrollment_plan'));
+        if ($enrollmentSearch = trim((string) $request->query('search'))) {
+            $enrollmentQuery->where(fn (Builder $q) => $q->where('customer_name', 'like', "%{$enrollmentSearch}%")->orWhere('customer_email', 'like', "%{$enrollmentSearch}%")->orWhere('customer_phone', 'like', "%{$enrollmentSearch}%")->orWhere('item_name', 'like', "%{$enrollmentSearch}%")->orWhere('razorpay_payment_id', 'like', "%{$enrollmentSearch}%"));
+        }
+
+        $subscriberQuery = CrmSubscriber::query()->latest('subscribed_at');
+        if ($user->isSuperAdmin()) {
+            CrmSubscriberController::applyFilters($subscriberQuery, $request);
+        } else {
+            $subscriberQuery->whereRaw('1 = 0');
+        }
+
         $selectedLead = null;
         if ($request->filled('lead')) {
             $selectedLead = CrmLead::query()->visibleTo($user)
-                ->with(['assignee', 'activities.user'])->find($request->integer('lead'));
+                ->with(['assignee', 'activities.user', 'websiteSubmissions'])->find($request->integer('lead'));
         }
 
         return view('crm.dashboard', [
@@ -122,10 +147,27 @@ class CrmDashboardController extends Controller
             'view' => $view,
             'followUpLayout' => $followUpLayout,
             'statuses' => CrmOptions::STATUSES,
+            'pipelineStatuses' => CrmOptions::pipelineStatuses(),
             'priorities' => CrmOptions::PRIORITIES,
             'categories' => CrmOptions::CATEGORIES,
+            'leadOrigins' => CrmOptions::LEAD_ORIGINS,
+            'leadTypes' => CrmOptions::LEAD_TYPES,
+            'leadSources' => CrmLead::query()->visibleTo($user)->whereNotNull('source')->distinct()->orderBy('source')->pluck('source'),
             'studentStages' => CrmOptions::STUDENT_STAGES,
             'studentCategories' => CrmOptions::STUDENT_CATEGORIES,
+            'enrollments' => $enrollmentQuery->paginate(20, ['*'], 'enrollment_page')->withQueryString(),
+            'enrollmentCount' => $enrollmentCount,
+            'enrollmentSources' => PaymentAttempt::query()->distinct()->orderBy('page_slug')->pluck('page_slug'),
+            'enrollmentPlans' => collect(app(\App\Support\TestPrepCompareStore::class)->get()['programs'] ?? [])
+                ->pluck('name')->merge(PaymentAttempt::query()->whereNotNull('crm_lead_id')->pluck('item_name'))
+                ->map(fn ($name) => trim((string) $name))->filter()->unique(fn ($name) => mb_strtolower($name))->sort()->values(),
+            'paymentStatuses' => \App\Http\Controllers\Crm\CrmEnrollmentController::STATUSES,
+            'subscribers' => $subscriberQuery->paginate(30, ['*'], 'subscriber_page')->withQueryString(),
+            'subscriberCount' => $user->isSuperAdmin() ? CrmSubscriber::query()->count() : 0,
+            'subscriberActiveCount' => $user->isSuperAdmin() ? CrmSubscriber::query()->where('status', 'active')->count() : 0,
+            'subscriberSources' => $user->isSuperAdmin()
+                ? CrmSubscriber::query()->whereNotNull('source')->distinct()->orderBy('source')->pluck('source')
+                : collect(),
         ]);
     }
 
@@ -310,11 +352,11 @@ class CrmDashboardController extends Controller
 
         return response()->streamDownload(function () use ($rows): void {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created']);
+            fputcsv($out, ['Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created']);
             foreach ($rows as $lead) {
                 fputcsv($out, [
                     $lead->lead_number, $lead->name, $lead->phone, $lead->email, $lead->city,
-                    $lead->course_interest, $lead->country_interest, $lead->category, $lead->priority,
+                    $lead->course_interest, $lead->country_interest, $lead->category, $lead->lead_type, $lead->lead_origin, $lead->priority,
                     $lead->source, $lead->status, $lead->assignee?->name,
                     $lead->follow_up_at?->format('Y-m-d H:i'), $lead->created_at->format('Y-m-d H:i'),
                 ]);
@@ -341,6 +383,28 @@ class CrmDashboardController extends Controller
         }
         if (array_key_exists((string) $request->query('category'), CrmOptions::CATEGORIES)) {
             $query->where('category', $request->query('category'));
+        }
+        if ($request->filled('source')) {
+            $query->where('source', $request->query('source'));
+        }
+        if (array_key_exists((string) $request->query('lead_origin'), CrmOptions::LEAD_ORIGINS)) {
+            $query->where('lead_origin', $request->query('lead_origin'));
+        }
+        if (array_key_exists((string) $request->query('lead_type'), CrmOptions::LEAD_TYPES)) {
+            $leadType = (string) $request->query('lead_type');
+            $submissionSource = [
+                'student_profiler' => 'profiler',
+                'loan_accommodation' => 'loan-acco',
+                'statement_of_purpose' => 'sop',
+                'visa_mock_interview' => 'visa-mock',
+                'career_library' => 'career-library',
+            ][$leadType] ?? null;
+            $query->where(function (Builder $typeQuery) use ($leadType, $submissionSource): void {
+                $typeQuery->where('lead_type', $leadType);
+                if ($submissionSource !== null) {
+                    $typeQuery->orWhereHas('websiteSubmissions', fn (Builder $submission) => $submission->where('source', $submissionSource));
+                }
+            });
         }
         if ($user->isSuperAdmin() && $request->filled('assigned_to')) {
             $query->where('assigned_to', $request->integer('assigned_to'));

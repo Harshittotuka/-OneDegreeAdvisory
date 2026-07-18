@@ -4,7 +4,8 @@ namespace App\Modules\StudentProfiler;
 
 use App\Support\ProfileReportBuilder;
 use App\Support\ProfileReportNotifier;
-use App\Support\ProfileSubmissionStore;
+use App\Services\WebsiteLeadManager;
+use App\Support\WebsiteSubmissionData;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,14 +21,14 @@ use Illuminate\Support\Facades\View;
  *
  * Progress is NOT cached: nothing is persisted to the session while filling in
  * the wizard, and the page always renders fresh. Only a completed profile is
- * recorded (on submit) via the ProfileSubmissionStore.
+ * recorded (on submit) as a CRM website submission.
  *
  *   GET  /profiler  → renders the wizard (always a fresh start)
  *   POST /profiler  → JSON endpoint: action = submit records; save/reset are no-ops
  */
 class StudentProfilerController
 {
-    public function __construct()
+    public function __construct(private WebsiteLeadManager $leads)
     {
         View::addNamespace('student-profiler', __DIR__ . '/views');
     }
@@ -76,9 +77,9 @@ class StudentProfilerController
         // Record the completed profile as a human-readable snapshot for the
         // admin panel — no scoring is performed.
         if ($degree) {
-            $sections = ProfileSubmissionStore::snapshot($config['sections'][$degree] ?? [], $answers);
+            $sections = WebsiteSubmissionData::snapshot($config['sections'][$degree] ?? [], $answers);
 
-            (new ProfileSubmissionStore())->add(
+            $this->leads->capture(
                 'profiler',
                 'Student Profiler',
                 $degree,
