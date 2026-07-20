@@ -61,6 +61,12 @@
           <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
         </button>
 
+        <button @class(['stripe-nav-link', 'stripe-nav-trigger', 'has-active' => ($activeNav ?? null) === 'fit-assessment'])
+                type="button" data-stripe-trigger="fit-assessment" aria-haspopup="true" aria-expanded="false" aria-controls="stripe-sec-fit-assessment">
+          <span>Fit Assessment</span>
+          <i class="nav-trigger-chevron" data-lucide="chevron-down"></i>
+        </button>
+
         <a @class(['stripe-nav-link', 'is-active' => ($activeNav ?? null) === 'career-library']) href="{{ route('career-library.index') }}">Trending Careers</a>
 
       </div>
@@ -164,15 +170,10 @@
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">New</span>
-                    <span class="course-menu-count">6 tools</span>
+                    <span class="course-menu-count">5 tools</span>
                   </div>
 
                   <div class="course-menu-grid course-menu-grid--hub">
-                    <a class="course-menu-card" href="{{ route('profiler') }}">
-                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="user-plus"></i></span>
-                      <span class="course-menu-copy"><strong>Build My Profile</strong><small>Map academics, scores &amp; goals</small></span>
-                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-                    </a>
                     <a class="course-menu-card" href="{{ route('services.test-prep') }}">
                       <span class="course-icon course-icon--mba" aria-hidden="true"><i data-lucide="book-open-check"></i></span>
                       <span class="course-menu-copy"><strong>Test Preparation</strong><small>IELTS, TOEFL, SAT, GRE &amp; GMAT prep</small></span>
@@ -198,6 +199,31 @@
                       <span class="course-menu-copy"><strong>Statement of Purpose</strong><small>Human-written SOPs, LORs, resumes &amp; essays</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {{-- ============ Fit Assessment ============ --}}
+            <div class="stripe-flyout-section nav-dropdown--courses" id="stripe-sec-fit-assessment" data-stripe-section="fit-assessment" role="region" aria-label="Fit Assessment">
+              <div class="nav-dropdown-shell">
+                <div class="nav-dropdown-main course-menu">
+                  <div class="nav-dropdown-topline course-menu-topline">
+                    <span class="nav-dropdown-badge">New</span>
+                    <span class="course-menu-count">2 tools</span>
+                  </div>
+
+                  <div class="course-menu-grid course-menu-grid--hub course-menu-grid--fit">
+                    <a class="course-menu-card" href="{{ route('profiler') }}">
+                      <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="user-plus"></i></span>
+                      <span class="course-menu-copy"><strong>Evaluate your profile</strong><small>Map academics, scores &amp; goals</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </a>
+                    <button class="course-menu-card" type="button" data-students-hub-trigger data-feature="personality-assessment">
+                      <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="brain"></i></span>
+                      <span class="course-menu-copy"><strong>Evaluate your personality</strong><small>Discover your strengths &amp; work style</small></span>
+                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+                    </button>
                   </div>
                 </div>
               </div>

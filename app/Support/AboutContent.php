@@ -107,7 +107,7 @@ class AboutContent
                             'reverse' => true,
                             'eyebrow' => 'Why We Do It',
                             'heading' => 'Because academic journeys feel overwhelming — and most advice is built to sell, not to fit.',
-                            'body' => 'Countless options. Unexpected costs. Counsellors paid by the school they steer you to. We started One Degree because the conversation around studying abroad had grown loud, transactional, and quietly unfair to families. We wanted a desk where the advice is independent — and accountable.',
+                            'body' => 'Countless options. Unexpected costs. Advice that answers to commissions, not to you. We started One Degree because the conversation around studying abroad had grown loud, transactional, and quietly unfair to families. We wanted a desk where the advice is independent — and accountable.',
                             'image' => 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&h=720&q=82',
                             'image_alt' => 'Student reviewing study-abroad plans',
                             'tag_icon' => 'heart-handshake',

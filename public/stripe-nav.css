@@ -275,6 +275,12 @@
   width: min(560px, calc(100vw - 32px));
 }
 
+/* Fit Assessment holds just two, longer-titled cards. Pin a comfortable width
+   (without it the shrink-to-fit section collapses and clips the labels). */
+.stripe-flyout-section[data-stripe-section="fit-assessment"] {
+  width: min(560px, calc(100vw - 32px));
+}
+
 .stripe-flyout-section[data-stripe-section="services"] {
   width: min(340px, calc(100vw - 32px));
 }
@@ -390,6 +396,16 @@
 .stripe-flyout .course-menu-card--mbbs:hover .course-menu-arrow {
   background: #8b560f;
   color: #ffffff;
+}
+
+/* Fit Assessment cards carry longer titles ("Evaluate your personality").
+   Let the title wrap instead of truncating, and let rows grow to fit. */
+.stripe-flyout .course-menu-grid--fit {
+  grid-auto-rows: minmax(66px, auto);
+}
+
+.stripe-flyout .course-menu-grid--fit .course-menu-copy strong {
+  white-space: normal;
 }
 
 /* ---- "Study Abroad" nested menu — reveals as a SECOND COLUMN in the card ----

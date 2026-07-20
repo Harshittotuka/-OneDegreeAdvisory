@@ -387,6 +387,16 @@ ready(() => {
           { icon: "sparkles", label: "Standout projects" },
         ],
       },
+      "personality-assessment": {
+        kicker: "Know how you work",
+        title: "Personality Assessment",
+        desc: "A guided assessment that surfaces your strengths, working style, and best-fit paths — so your applications play to what makes you, you.",
+        features: [
+          { icon: "brain", label: "Strengths profile" },
+          { icon: "compass", label: "Work-style insights" },
+          { icon: "target", label: "Best-fit matches" },
+        ],
+      },
     };
 
     const populateComingSoon = (trigger) => {

@@ -1468,10 +1468,12 @@ button {
   position: absolute;
   inset: 0;
   opacity: 0;
-  background: rgba(6, 6, 8, 0.8);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  transition: opacity 220ms ease;
+  background:
+    radial-gradient(120% 90% at 50% 30%, rgba(11, 43, 67, 0.55), transparent 62%),
+    rgba(7, 25, 34, 0.74);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: opacity 260ms ease;
 }
 
 .students-hub-overlay.is-open .students-hub-backdrop {
@@ -1484,19 +1486,22 @@ button {
   display: grid;
   grid-template-columns: 1fr;
   justify-items: center;
-  width: min(500px, 100%);
+  width: min(486px, 100%);
   overflow: hidden;
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  border-radius: 10px;
-  padding: 40px 36px 36px;
-  background: #131119;
-  color: #ffffff;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  border-radius: 22px;
+  padding: 46px 40px 38px;
+  background:
+    radial-gradient(130% 80% at 50% -12%, rgba(199, 146, 74, 0.14), transparent 58%),
+    linear-gradient(180deg, #fffdf7 0%, #fbf5e8 100%);
+  color: var(--ink);
+  box-shadow:
+    0 44px 96px rgba(7, 25, 34, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   opacity: 0;
   transform: translateY(16px) scale(0.985);
   transition:
-    opacity 180ms ease,
-    transform 260ms var(--students-hub-ease);
+    opacity 200ms ease,
+    transform 300ms var(--students-hub-ease);
 }
 
 .students-hub-overlay.is-open .students-hub-dialog {
@@ -1504,9 +1509,37 @@ button {
   transform: translateY(0) scale(1);
 }
 
-.students-hub-dialog::before,
+/* Shimmering gold hairline frame — the royal edge. */
+.students-hub-dialog::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--hero-gold-gradient);
+  background-size: 220% 100%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  animation: students-hub-sheen 8s linear infinite;
+}
+
+/* Gold coronet bar centred on the top edge. */
 .students-hub-dialog::after {
-  display: none;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 128px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 0 0 4px 4px;
+  background: var(--hero-gold-gradient);
+  background-size: 220% 100%;
+  animation: students-hub-sheen 8s linear infinite;
 }
 
 .students-hub-close {
@@ -1517,16 +1550,18 @@ button {
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(199, 146, 74, 0.32);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  transition: background 180ms ease, transform 180ms ease;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--navy);
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .students-hub-close:hover,
 .students-hub-close:focus-visible {
-  background: rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border-color: rgba(199, 146, 74, 0.6);
+  color: var(--teal-dark);
   transform: translateY(-1px);
 }
 
@@ -1537,6 +1572,7 @@ button {
 
 .students-hub-copy {
   min-width: 0;
+  width: 100%;
   text-align: center;
 }
 
@@ -1544,12 +1580,16 @@ button {
   position: relative;
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
+  width: 78px;
+  height: 78px;
   margin: 0 auto 20px;
-  border: 1px solid rgba(212, 175, 55, 0.32);
-  border-radius: 12px;
-  background: rgba(212, 175, 55, 0.06);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 36%, #ffffff 0%, #fbf1dc 72%);
+  box-shadow:
+    0 0 0 1.5px rgba(199, 146, 74, 0.58),
+    0 0 0 7px rgba(199, 146, 74, 0.08),
+    0 12px 26px rgba(124, 83, 25, 0.2);
+  animation: students-hub-glow 3.6s ease-in-out infinite;
 }
 
 .students-hub-ai-mark::before,
@@ -1562,26 +1602,27 @@ button {
   place-items: center;
   border: 0;
   background: transparent;
-  color: #d4af37;
+  color: #9a6f18;
   box-shadow: none;
 }
 
 .students-hub-chip svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 1.9;
+  width: 26px;
+  height: 26px;
+  stroke-width: 1.8;
 }
 
 .students-hub-kicker {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
-  color: #d4af37;
+  margin-bottom: 12px;
+  color: #97701f;
+  font-family: "Jost", "Manrope", system-ui, sans-serif;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
 }
 
@@ -1591,53 +1632,114 @@ button {
 }
 
 .students-hub-dialog h2 {
-  margin: 0 auto 14px;
+  margin: 0 auto 4px;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(2.05rem, 4vw, 2.8rem);
+  font-size: clamp(2.05rem, 4vw, 2.75rem);
   font-weight: 700;
-  line-height: 1.06;
-  color: #ffffff;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+  text-wrap: balance;
+}
+
+/* Royal flourish: a gold hairline with a centred diamond. */
+.students-hub-flourish {
+  position: relative;
+  display: block;
+  width: 148px;
+  height: 12px;
+  margin: 12px auto 16px;
+}
+
+.students-hub-flourish::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(199, 146, 74, 0.65) 22%, rgba(199, 146, 74, 0.65) 78%, transparent);
+}
+
+.students-hub-flourish::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--hero-gold-gradient);
+  background-size: 220% 100%;
+  box-shadow: 0 0 0 4px #fbf5e8, 0 0 0 5px rgba(199, 146, 74, 0.28);
+  animation: students-hub-sheen 8s linear infinite;
 }
 
 .students-hub-dialog p {
-  max-width: 440px;
+  max-width: 420px;
   margin: 0 auto;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.98rem;
+  color: var(--muted);
+  font-size: 1rem;
   line-height: 1.65;
 }
 
 .students-hub-features {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
-  margin-top: 26px;
+  gap: 9px;
+  width: 100%;
+  margin-top: 28px;
 }
 
 .students-hub-features span {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  border: 1px solid rgba(212, 175, 55, 0.16);
-  border-radius: 8px;
-  padding: 0 14px;
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.88rem;
-  font-weight: 700;
-  transition: background 220ms ease, border-color 220ms ease, transform 220ms ease;
+  gap: 11px;
+  min-height: 46px;
+  border: 1px solid rgba(199, 146, 74, 0.3);
+  border-radius: 11px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--navy);
+  font-family: "Jost", "Manrope", system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 220ms ease, border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
 }
 
-.students-hub-overlay.is-open .students-hub-features span {
-  animation: none;
+.students-hub-features span:hover {
+  background: #ffffff;
+  border-color: rgba(199, 146, 74, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(124, 83, 25, 0.12);
 }
 
 .students-hub-features svg {
-  width: 17px;
-  height: 17px;
-  color: #d4af37;
-  stroke-width: 2.2;
+  width: 18px;
+  height: 18px;
+  color: #a9791d;
+  stroke-width: 2.1;
+}
+
+@keyframes students-hub-sheen {
+  to { background-position: 220% 0; }
+}
+
+@keyframes students-hub-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1.5px rgba(199, 146, 74, 0.58),
+      0 0 0 7px rgba(199, 146, 74, 0.07),
+      0 12px 26px rgba(124, 83, 25, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1.5px rgba(199, 146, 74, 0.72),
+      0 0 0 10px rgba(199, 146, 74, 0.12),
+      0 14px 30px rgba(124, 83, 25, 0.24);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1650,6 +1752,13 @@ button {
 
   .students-hub-dialog {
     transform: none;
+  }
+
+  .students-hub-dialog::before,
+  .students-hub-dialog::after,
+  .students-hub-ai-mark,
+  .students-hub-flourish::after {
+    animation: none;
   }
 }
 

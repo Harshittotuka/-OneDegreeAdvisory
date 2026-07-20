@@ -141,6 +141,7 @@
             AI-powered student tools
           </span>
           <h2 id="students-hub-title">Students Hub is coming soon</h2>
+          <span class="students-hub-flourish" aria-hidden="true"></span>
           <p id="students-hub-desc">A smarter space for profile insights, best-fit university shortlists, application planning, and progress tracking.</p>
 
           <div class="students-hub-features" aria-label="Students Hub preview features">
