@@ -40,7 +40,7 @@
       </div>
 
       <aside class="va-hero-collage" aria-hidden="true">
-        <div class="va-hero-photo va-hero-photo--lg" style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=900&h=1100&q=82');"></div>
+        <div class="va-hero-photo va-hero-photo--lg" style="background-image: url('https://images.unsplash.com/photo-1627556704302-624286467c65?auto=format&fit=crop&w=900&h=1100&q=82');"></div>
         <div class="va-hero-photo va-hero-photo--sm" style="background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=600&h=600&q=82');"></div>
         <div class="va-hero-badge">
           <i data-lucide="graduation-cap"></i>

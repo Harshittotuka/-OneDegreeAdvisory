@@ -211,6 +211,38 @@
     gap: 10px 16px;
   }
 
+  .odp-dest-topbar {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .odp-dest-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid var(--file-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--file-blue);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .odp-dest-back:hover {
+    background: linear-gradient(135deg, #f8f5ff, #fff4ef);
+    transform: translateX(-2px);
+    box-shadow: 0 3px 12px rgba(43, 31, 168, 0.12);
+  }
+
+  .odp-dest-back-arrow {
+    font-size: 15px;
+    line-height: 1;
+  }
+
   .odp-dest-item {
     display: flex;
     min-width: 80px;
@@ -223,13 +255,19 @@
     border: 1px solid var(--file-line);
     border-radius: 12px;
     background: linear-gradient(135deg, #f8f5ff, #fff4ef);
-    cursor: default;
+    cursor: pointer;
+    text-decoration: none;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .odp-dest-item:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 14px rgba(43, 31, 168, 0.13);
+  }
+
+  .odp-dest-item:focus-visible {
+    outline: 2px solid var(--file-blue);
+    outline-offset: 2px;
   }
 
   .odp-dest-flag {
