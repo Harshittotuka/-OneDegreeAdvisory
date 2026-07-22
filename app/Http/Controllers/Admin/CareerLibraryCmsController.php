@@ -49,12 +49,19 @@ class CareerLibraryCmsController extends Controller
             'contact_phone' => 'nullable|string|max:40',
             'next_steps_url' => 'nullable|url|max:300',
             'report_year' => 'nullable|string|max:8',
+            'lead_gate_delay' => 'nullable|integer|min:0|max:600',
+            'lead_gate_lock_minutes' => 'nullable|integer|min:0|max:1440',
         ]);
 
         $settings = array_map(fn ($v) => (string) ($v ?? ''), $validated);
         // Checkbox — absent means off. Kept out of the string cast above so it
         // stays a real boolean for the store.
         $settings['detail_pages_enabled'] = $request->boolean('detail_pages_enabled');
+        // Reading window before the lead popup, in seconds. Kept as an int so the
+        // store's clamp/normalisation gets a number, not a string.
+        $settings['lead_gate_delay'] = (int) $request->input('lead_gate_delay', 18);
+        // How long the reading window is remembered on-device, in minutes.
+        $settings['lead_gate_lock_minutes'] = (int) $request->input('lead_gate_lock_minutes', 30);
 
         $this->store->updateSettings($settings);
 

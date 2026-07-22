@@ -294,6 +294,13 @@ class CareerLibraryStore
             'contact_phone' => $text($settingsIn, 'contact_phone', $defaults['contact_phone'], 40),
             'next_steps_url' => $text($settingsIn, 'next_steps_url', $defaults['next_steps_url'], 300),
             'report_year' => $text($settingsIn, 'report_year', $defaults['report_year'], 8),
+            // Seconds a visitor may read a career report before the lead-capture
+            // popup appears (0 = show it immediately). Clamped to a sane range.
+            'lead_gate_delay' => max(0, min(600, (int) ($settingsIn['lead_gate_delay'] ?? $defaults['lead_gate_delay']))),
+            // Minutes the reading window is remembered on the visitor's device
+            // (per page), so a refresh doesn't hand out a fresh countdown — the
+            // page re-opens locked until this expires. 0 = don't remember.
+            'lead_gate_lock_minutes' => max(0, min(1440, (int) ($settingsIn['lead_gate_lock_minutes'] ?? $defaults['lead_gate_lock_minutes']))),
             // When false, the full career report pages are blocked and visitors
             // only ever see the enquiry popup on the landing page. When true,
             // submitting the popup takes them on to the report.
@@ -483,6 +490,8 @@ class CareerLibraryStore
             'contact_phone' => '8451825015',
             'next_steps_url' => url('/contact'),
             'report_year' => '2026',
+            'lead_gate_delay' => 18,
+            'lead_gate_lock_minutes' => 30,
             'detail_pages_enabled' => false,
         ];
     }

@@ -104,6 +104,16 @@
         <input type="url" name="next_steps_url" value="{{ $settings['next_steps_url'] }}" maxlength="300">
         <p class="hint">All four cards on a career page link here.</p>
       </div>
+      <div class="field" style="margin:0;">
+        <label>Reading time before popup (seconds)</label>
+        <input type="number" name="lead_gate_delay" value="{{ $settings['lead_gate_delay'] }}" min="0" max="600" step="1">
+        <p class="hint">Visitors read the report for this long, then the enquiry popup appears (blurring it). Set 0 to show it immediately.</p>
+      </div>
+      <div class="field" style="margin:0;">
+        <label>Keep page locked for (minutes)</label>
+        <input type="number" name="lead_gate_lock_minutes" value="{{ $settings['lead_gate_lock_minutes'] }}" min="0" max="1440" step="1">
+        <p class="hint">Remembered on the visitor's device, so refreshing doesn't restart the countdown — the page re-opens locked until this expires. E.g. 60, 30 or 10. Set 0 to reset on every refresh.</p>
+      </div>
     </div>
 
     <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; margin:18px 0 0; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:#fafbfc;">
@@ -113,9 +123,10 @@
       <span>
         <strong style="display:block; font-size:.9rem;">Show full career report pages</strong>
         <span style="color:var(--muted); font-size:.8rem; line-height:1.5;">
-          When <b>on</b>, submitting the enquiry popup takes the visitor to the full career report.
-          When <b>off</b>, the report pages are blocked (direct links bounce back to the explorer) and
-          visitors only see the “our team will reach out” confirmation.
+          When <b>on</b>, clicking a career opens its full report right away; the enquiry popup
+          appears after the reading time set above (blurring the report until they submit).
+          When <b>off</b>, the report pages are blocked (direct links bounce back to the explorer)
+          and clicking a career shows the enquiry popup immediately instead.
         </span>
       </span>
     </label>

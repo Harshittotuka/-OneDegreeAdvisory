@@ -172,6 +172,7 @@
     const SETTINGS = @json($jsSettings);
 
     const LEAD_URL = @json(route('career-library.lead'));
+    const ENSURE_URL = @json(route('career-library.ensure'));
     const DETAIL_ENABLED = @json((bool) ($settings['detail_pages_enabled'] ?? false));
     const CSRF = @json(csrf_token());
     const INITIAL_ERROR = @json($jsError);
@@ -187,22 +188,52 @@
     };
 
     // --- ACTION HANDLERS ---
-    // Clicking a trending card or submitting the search no longer navigates to
-    // the report. It opens the lead-capture popup on this page; the report only
-    // opens afterwards when the CMS has "detail pages" switched on.
+    // With detail pages ON, clicking a career (or submitting the search) opens
+    // its full report straight away; the lead-capture popup appears there after
+    // the CMS reading window. With detail pages OFF, there is no report to show,
+    // so we fall back to the immediate lead-capture popup on this page.
     window.handleSearchSubmit = (e) => {
         e.preventDefault();
         const form = e.target;
-        openLeadGate({
+        const ctx = {
             career: (form.careerName.value || '').trim(),
             country: (form.country.value || 'India').trim() || 'India',
             language: 'English',
-        });
+        };
+        DETAIL_ENABLED ? goToReport(ctx) : openLeadGate(ctx);
     };
 
     window.exploreTrendingCareer = (careerName) => {
-        openLeadGate({ career: careerName, country: 'India', language: 'English' });
+        const ctx = { career: careerName, country: 'India', language: 'English' };
+        DETAIL_ENABLED ? goToReport(ctx) : openLeadGate(ctx);
     };
+
+    // Resolve a career to its report URL (server validates it's curated and
+    // handles the country/language fallback) and navigate there. If it isn't in
+    // the library yet, surface the same error the search flow shows.
+    async function goToReport(ctx) {
+        try {
+            const res = await fetch(ENSURE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    careerName: ctx.career || '',
+                    country: ctx.country || 'India',
+                    language: ctx.language || 'English',
+                }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.ok && data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                const msg = (data && data.error) || 'That career is not available yet.';
+                updateState({ error: msg, data: null, loading: false });
+                showToast(msg);
+            }
+        } catch (err) {
+            showToast('Something went wrong. Please try again.');
+        }
+    }
 
     // --- LEAD CAPTURE POPUP ---
     // A single blurred-backdrop popup captures name/email/phone, records the
@@ -351,6 +382,16 @@
             }
         });
     }
+
+    // Arriving back here after submitting on a report page: show the thank-you
+    // confirmation popup (the report itself is never unlocked).
+    try {
+        if (sessionStorage.getItem('cl_show_thanks') === '1') {
+            sessionStorage.removeItem('cl_show_thanks');
+            openLeadGate({});
+            showLeadSuccess(null);
+        }
+    } catch (e) {}
 
     window.resetSearch = () => {
         updateState({ data: null, error: null, loading: false });

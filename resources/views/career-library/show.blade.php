@@ -703,23 +703,28 @@
 
     @unless ($live)
     // --- LEAD GATE ---
-    // Hide the career report behind a contact form until the visitor submits
-    // their details (recorded server-side). Once submitted we set a session
-    // flag so it isn't shown again for other careers this visit.
+    // The career report renders and stays readable for a short preview window;
+    // after it elapses the contact form pops up (blurring the report behind it).
+    // The report is NEVER unlocked — on submit we record the lead server-side,
+    // then send the visitor back to the main Trending Career page where a
+    // thank-you confirmation is shown.
     (function () {
-        const GATE_KEY = 'cl_lead_captured';
+        // How long the visitor gets to read before the gate appears. Set in the
+        // CMS (Career Library → Page settings), stored in seconds.
+        const GATE_DELAY_MS = {{ (int) ($settings['lead_gate_delay'] ?? 18) * 1000 }};
+        // How long (ms) the reading window is remembered on this device, per
+        // page. Refreshing then resumes the countdown instead of restarting it,
+        // and once it's elapsed the page re-opens locked until this expires.
+        const LOCK_MS = {{ (int) ($settings['lead_gate_lock_minutes'] ?? 30) }} * 60000;
+        const LOCK_KEY = 'cl_gate_lock:' + location.pathname;
         const gate = document.getElementById('cl-lead-gate');
         const form = document.getElementById('cl-lead-form');
         if (!gate || !form) return;
 
         const LEAD_URL = @json(route('career-library.lead'));
+        const INDEX_URL = @json(route('career-library.index'));
         const CSRF = @json(csrf_token());
         const CONTEXT = @json($jsLeadContext);
-
-        // Already captured this session → never gate again.
-        let captured = false;
-        try { captured = sessionStorage.getItem(GATE_KEY) === '1'; } catch (e) {}
-        if (captured) return;
 
         const submitBtn = document.getElementById('cl-lead-submit');
         const errorEl = document.getElementById('cl-lead-error');
@@ -731,18 +736,39 @@
             if (first) setTimeout(() => first.focus(), 50);
         }
 
-        function closeGate() {
-            gate.classList.remove('is-open');
-            document.body.style.overflow = '';
-        }
-
         function showError(msg) {
             if (!errorEl) return;
             errorEl.textContent = msg;
             errorEl.classList.add('is-shown');
         }
 
-        openGate();
+        // Persist when the preview started (per page) so a refresh resumes the
+        // countdown rather than granting a fresh one. When the remembered start
+        // is older than the reading window the page opens locked immediately;
+        // after LOCK_MS the record expires and a fresh preview is allowed.
+        function readStart() {
+            if (LOCK_MS <= 0) return null; // locking disabled → always fresh
+            try {
+                const start = parseInt(localStorage.getItem(LOCK_KEY) || '', 10);
+                if (!start || (Date.now() - start) > LOCK_MS) return null; // none / expired
+                return start;
+            } catch (e) { return null; }
+        }
+
+        let start = readStart();
+        if (start === null) {
+            start = Date.now();
+            try { if (LOCK_MS > 0) localStorage.setItem(LOCK_KEY, String(start)); } catch (e) {}
+        }
+
+        const remaining = Math.max(0, GATE_DELAY_MS - (Date.now() - start));
+        if (remaining <= 0) {
+            openGate();
+        } else {
+            // Let the visitor read the report first; the gate appears after the
+            // remaining preview window, then blurs the background until they submit.
+            setTimeout(openGate, remaining);
+        }
 
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -779,8 +805,11 @@
 
                 if (!res.ok) throw new Error('Request failed');
 
-                try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) {}
-                closeGate();
+                // Never unlock the report. Flag the thank-you and send the
+                // visitor back to the main Trending Career page, where the
+                // confirmation popup is shown.
+                try { sessionStorage.setItem('cl_show_thanks', '1'); } catch (e) {}
+                window.location.href = INDEX_URL;
             } catch (err) {
                 submitBtn.disabled = false;
                 if (label) label.textContent = prev;
