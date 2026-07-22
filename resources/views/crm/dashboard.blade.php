@@ -122,10 +122,23 @@
             </nav>
         @endif
         <div class="sidebar-bottom">
-            <div class="side-user">
-                <span class="avatar">{{ $initials($crmUser->name) }}</span>
-                <span class="side-user-info"><strong>{{ $crmUser->name }}</strong><span>{{ $crmUser->isSuperAdmin() ? 'Super admin' : 'Counsellor' }}</span></span>
-                <form method="post" action="{{ route('crm.logout') }}" data-transition-form data-transition-label="Signing you out securely…">@csrf<button class="logout-btn" title="Sign out" aria-label="Sign out">@include('crm.partials.nav-icon',['name'=>'logout'])</button></form>
+            <div class="side-user-wrap" data-user-menu>
+                <div class="user-menu" data-user-menu-panel role="menu">
+                    <div class="user-menu-row">
+                        <span class="user-menu-label">Design</span>
+                        <select class="user-menu-select" data-crm-theme-switcher aria-label="CRM design">
+                            <option value="classic">Classic</option>
+                            <option value="evergreen">Evergreen</option>
+                            <option value="orbit">Orbit</option>
+                        </select>
+                    </div>
+                    <form method="post" action="{{ route('crm.logout') }}" data-transition-form data-transition-label="Signing you out securely…">@csrf<button type="submit" class="user-menu-item" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'logout'])</span>Sign out</button></form>
+                </div>
+                <button type="button" class="side-user-trigger" data-user-menu-toggle aria-haspopup="true" aria-expanded="false">
+                    <span class="avatar">{{ $initials($crmUser->name) }}</span>
+                    <span class="side-user-info"><strong>{{ $crmUser->name }}</strong><span>{{ $crmUser->isSuperAdmin() ? 'Super admin' : 'Counsellor' }}</span></span>
+                    <span class="side-user-caret" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></span>
+                </button>
             </div>
         </div>
     </aside>
@@ -137,15 +150,6 @@
                 <div class="page-title"><h1>{{ $currentTitle[0] }}</h1><p>{{ $isListView ? $currentTitle[1].' · '.number_format($leads->total()).' record'.($leads->total() === 1 ? '' : 's').' in this view' : $currentTitle[1] }}</p></div>
             </div>
             <div class="top-actions">
-                <label class="crm-theme-switcher" for="crmThemeSwitcher" title="Switch CRM design">
-                    <span class="crm-theme-switcher-icon" aria-hidden="true">&#9680;</span>
-                    <span class="crm-theme-switcher-label">Design</span>
-                    <select id="crmThemeSwitcher" data-crm-theme-switcher aria-label="CRM design">
-                        <option value="classic">Classic</option>
-                        <option value="evergreen">Evergreen</option>
-                        <option value="orbit">Orbit</option>
-                    </select>
-                </label>
                 <button class="icon-btn" id="notificationToggle" aria-label="Follow-up notifications"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>@if($notifications->count())<span class="count-dot">{{ $notifications->count() }}</span>@endif</button>
                 <span class="top-actions-sep" aria-hidden="true"></span>
                 @if($view === 'followups')

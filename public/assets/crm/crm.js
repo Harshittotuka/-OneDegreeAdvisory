@@ -576,6 +576,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const userMenuToggle = target.closest('[data-user-menu-toggle]');
+        if (userMenuToggle) {
+            event.stopPropagation();
+            const wrap = userMenuToggle.closest('[data-user-menu]');
+            const open = wrap?.classList.toggle('is-open');
+            userMenuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            return;
+        }
+
         const toastClose = target.closest('[data-toast-close]');
         if (toastClose) {
             dismissToast(toastClose.closest('[data-toast]'));
@@ -621,6 +630,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const notices = document.getElementById('notificationPopover');
         if (notices && !notices.contains(target)) notices.classList.add('hidden');
+
+        const openUserMenu = document.querySelector('[data-user-menu].is-open');
+        if (openUserMenu && !openUserMenu.contains(target)) {
+            openUserMenu.classList.remove('is-open');
+            openUserMenu.querySelector('[data-user-menu-toggle]')?.setAttribute('aria-expanded', 'false');
+        }
 
         if (target.classList.contains('overlay')) closeModal(target);
     });
@@ -728,6 +743,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
+            const openUserMenu = document.querySelector('[data-user-menu].is-open');
+            if (openUserMenu) {
+                openUserMenu.classList.remove('is-open');
+                openUserMenu.querySelector('[data-user-menu-toggle]')?.setAttribute('aria-expanded', 'false');
+            }
             const expandedDrawer = document.querySelector('#leadDrawer.is-expanded');
             if (expandedDrawer) {
                 setDrawerExpanded(false);

@@ -512,7 +512,7 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 @media(max-width:640px){.lead-classification-filters{grid-template-columns:1fr!important}.lead-classification-filters .search-wrap{grid-column:auto}}
 
 /* Semantic navigation icons shared by Classic, Evergreen and Orbit. */
-.nav-dashboard{--nav-accent:#4f9cf9}.nav-leads{--nav-accent:#ff6b7a}.nav-enrollments{--nav-accent:#2bb673}.nav-subscriptions{--nav-accent:#b76cf2}.nav-followups{--nav-accent:#e2a72e}.nav-students{--nav-accent:#7d72e8}.nav-audit{--nav-accent:#36a9b8}.nav-team{--nav-accent:#ef7cab}
+.nav-dashboard{--nav-accent:#4f9cf9}.nav-leads{--nav-accent:#ff6b7a}.nav-enrollments{--nav-accent:#2bb673}.nav-subscriptions{--nav-accent:#b76cf2}.nav-followups{--nav-accent:#e2a72e}.nav-students{--nav-accent:#7d72e8}.nav-shortlisting{--nav-accent:#d67d3e}.nav-audit{--nav-accent:#36a9b8}.nav-team{--nav-accent:#ef7cab}
 .crm-app .nav-icon{flex:0 0 auto;width:30px;height:30px;border:1px solid color-mix(in srgb,var(--nav-accent) 30%,transparent);border-radius:9px;background:color-mix(in srgb,var(--nav-accent) 13%,transparent);color:var(--nav-accent);transition:background .2s,color .2s,box-shadow .2s,transform .2s}
 .crm-app .nav-icon svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .crm-app .nav-link:hover .nav-icon{background:color-mix(in srgb,var(--nav-accent) 22%,transparent);transform:translateY(-1px)}
@@ -520,6 +520,22 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 .crm-app .nav-text{min-width:0}
 .crm-app .logout-btn{width:36px;height:36px;display:grid;place-items:center;border-radius:10px}
 .crm-app .logout-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* Sidebar account menu — click the name to reveal the theme switcher + sign out. */
+.crm-app .side-user-wrap{position:relative}
+.crm-app .side-user-trigger{display:flex;align-items:center;gap:10px;width:100%;padding:16px 8px 0;border:0;border-top:1px solid rgba(244,239,223,.12);background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:left;border-radius:0}
+.crm-app .side-user-trigger:hover .side-user-info strong{color:var(--gold,#d9a441)}
+.crm-app .side-user-caret{margin-left:auto;flex:0 0 auto;display:grid;place-items:center;color:rgba(244,239,223,.55);transition:transform .18s}
+.crm-app .side-user-wrap.is-open .side-user-caret{transform:rotate(180deg);color:rgba(244,239,223,.9)}
+.crm-app .user-menu{position:absolute;left:0;right:0;bottom:calc(100% + 10px);display:none;flex-direction:column;gap:4px;padding:8px;background:var(--card,#fff);border:1px solid var(--line,#e4e4ee);border-radius:14px;box-shadow:0 16px 38px rgba(2,6,23,.30);z-index:60}
+.crm-app .side-user-wrap.is-open .user-menu{display:flex}
+.crm-app .user-menu form{margin:0}
+.crm-app .user-menu-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 8px 8px;border-bottom:1px solid var(--line-soft,#eef0f4);margin-bottom:4px}
+.crm-app .user-menu-label{font-size:.78rem;font-weight:700;color:var(--muted,#64748b)}
+.crm-app .user-menu-select{font:inherit;font-size:.82rem;padding:6px 10px;border:1px solid var(--line,#e4e4ee);border-radius:9px;background:var(--card,#fff);color:var(--ink,#1b2620);cursor:pointer}
+.crm-app .user-menu-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:9px;background:transparent;color:var(--ink,#1b2620);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;text-align:left}
+.crm-app .user-menu-item:hover{background:var(--line-soft,#f1f5f9)}
+.crm-app .user-menu-item-icon{display:grid;place-items:center;width:20px;height:20px;flex:0 0 auto;color:var(--muted,#64748b)}
+.crm-app .user-menu-item-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 html[data-crm-theme="orbit"] .crm-app .nav-link{gap:5px}
 html[data-crm-theme="orbit"] .crm-app .nav-icon{width:32px;height:32px;border-radius:10px}
 html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
