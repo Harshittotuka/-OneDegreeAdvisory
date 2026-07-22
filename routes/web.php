@@ -37,6 +37,9 @@ Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::permanentRedirect('/contact.html', '/contact');
 Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
 
+Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('privacy');
+Route::permanentRedirect('/privacy-policy.html', '/privacy-policy');
+
 Route::post('/newsletter', [PageController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
 
 Route::prefix('payments')->name('payments.')->group(function (): void {

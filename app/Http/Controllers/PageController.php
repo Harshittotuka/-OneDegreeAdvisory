@@ -63,6 +63,11 @@ class PageController extends Controller
         return view('pages.contact');
     }
 
+    public function privacyPolicy(): View
+    {
+        return view('pages.privacy-policy');
+    }
+
     /**
      * Handle the Contact / Home enquiry form: notify the admissions team and
      * send the visitor a thank-you confirmation. Responds with JSON for the

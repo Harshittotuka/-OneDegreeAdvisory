@@ -70,7 +70,10 @@
                 </div>
               </div>
 
-              
+              <p class="contact-privacy-note">
+                <i data-lucide="shield-check" aria-hidden="true"></i>
+                <span>Your details are handled per our <a href="{{ route('privacy') }}">Privacy Policy</a>.</span>
+              </p>
 
               <div class="contact-response-card">
                 <strong>Average response time</strong>

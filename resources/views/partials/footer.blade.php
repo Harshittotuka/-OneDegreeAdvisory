@@ -19,10 +19,9 @@
     <div>
       <h2>Quick Links</h2>
       <a href="{{ route('home') }}#top">Home</a>
-      <a href="{{ route('home') }}#destinations">Destinations</a>
       <a href="{{ route('about') }}">About</a>
       <a href="{{ route('careers') }}">Careers</a>
-      <a href="{{ route('contact') }}">Contact</a>
+      <a href="{{ route('career-library.index') }}">Trending Career</a>
     </div>
 
     <div>
@@ -48,6 +47,9 @@
   </div>
   <div class="container footer-bottom">
     <span>&copy; {{ date('Y') }} {{ config('site.name') }}. All rights reserved.</span>
-    <a href="#top">Back to top</a>
+    <span class="footer-legal-links">
+      <a href="{{ route('privacy') }}">Privacy Policy</a>
+      <a href="#top">Back to top</a>
+    </span>
   </div>
 </footer>
