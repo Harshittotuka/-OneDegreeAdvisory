@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\CrmUser;
 use App\Services\CrmAuditLogger;
-use App\Services\CrmNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class CrmUserController extends Controller
 {
-    public function store(Request $request, CrmNotifier $notifier, CrmAuditLogger $auditLogger): RedirectResponse
+    public function store(Request $request, CrmAuditLogger $auditLogger): RedirectResponse
     {
         /** @var CrmUser $admin */
         $admin = $request->attributes->get('crm_user');
@@ -41,21 +40,11 @@ class CrmUserController extends Controller
         ]);
 
         $roleLabel = $member->isSuperAdmin() ? 'super admin' : 'counsellor';
-        $recipients = CrmUser::query()->where('role', 'super_admin')->where('is_active', true)->get()->push($member)->unique('id');
-        $notifier->sendToUsers(
-            $recipients,
-            'CRM '.$roleLabel.' account created',
-            'New CRM team account',
-            $member->name.' now has '.$roleLabel.' access to the One Degree CRM.',
-            ['Name' => $member->name, 'Role' => ucfirst($roleLabel), 'Mobile' => '+91 '.$member->phone, 'Email' => $member->email, 'Created by' => $admin->name],
-            route('crm.login'),
-            'Open CRM login',
-        );
 
         return back()->with('status', ucfirst($roleLabel).' created. They can now sign in with their phone and receive the OTP on their registered email.');
     }
 
-    public function update(Request $request, CrmUser $member, CrmNotifier $notifier, CrmAuditLogger $auditLogger): RedirectResponse
+    public function update(Request $request, CrmUser $member, CrmAuditLogger $auditLogger): RedirectResponse
     {
         /** @var CrmUser $admin */
         $admin = $request->attributes->get('crm_user');
@@ -74,20 +63,10 @@ class CrmUserController extends Controller
             'changes' => ['before' => $before, 'after' => $member->only(['name', 'email'])],
         ]);
 
-        $recipients = CrmUser::query()->where('role', 'super_admin')->where('is_active', true)->get()->push($member)->unique('id');
-        $notifier->sendToUsers(
-            $recipients,
-            'CRM team account updated: '.$member->name,
-            'CRM account updated',
-            $admin->name.' updated your One Degree CRM account details.',
-            ['Name' => $member->name, 'Email' => $member->email, 'Role' => $member->isSuperAdmin() ? 'Super admin' : 'Counsellor'],
-            route('crm.dashboard'),
-        );
-
         return back()->with('status', $member->name.'\'s account details were updated.');
     }
 
-    public function toggle(Request $request, CrmUser $member, CrmNotifier $notifier, CrmAuditLogger $auditLogger): RedirectResponse
+    public function toggle(Request $request, CrmUser $member, CrmAuditLogger $auditLogger): RedirectResponse
     {
         /** @var CrmUser $admin */
         $admin = $request->attributes->get('crm_user');
@@ -106,19 +85,39 @@ class CrmUserController extends Controller
         ]);
 
         $roleLabel = $member->isSuperAdmin() ? 'Super admin' : 'Counsellor';
-        $recipients = CrmUser::query()->where('role', 'super_admin')->where('is_active', true)->get()->push($member)->unique('id');
-        $notifier->sendToUsers(
-            $recipients,
-            'Your One Degree CRM access was '.($member->is_active ? 'restored' : 'disabled'),
-            'CRM access '.($member->is_active ? 'restored' : 'disabled'),
-            $admin->name.' '.($member->is_active ? 'restored' : 'disabled').' your One Degree CRM access.',
-            ['Account' => $member->name, 'Role' => $roleLabel, 'Status' => $member->is_active ? 'Active' : 'Disabled'],
-            $member->is_active ? route('crm.login') : null,
-            'Open CRM login',
-            true,
-        );
 
         return back()->with('status', $roleLabel.' access '.($member->is_active ? 'restored.' : 'disabled.'));
+    }
+
+    public function destroy(Request $request, CrmUser $member, CrmAuditLogger $auditLogger): RedirectResponse
+    {
+        /** @var CrmUser $admin */
+        $admin = $request->attributes->get('crm_user');
+        abort_unless($admin->isSuperAdmin() && $admin->id !== $member->id, 403);
+
+        if ($member->isSuperAdmin() && CrmUser::query()->where('role', 'super_admin')->count() <= 1) {
+            return back()->withErrors(['team' => 'At least one super admin must remain in the CRM.']);
+        }
+
+        $roleLabel = $member->isSuperAdmin() ? 'Super admin' : 'Counsellor';
+        $name = $member->name;
+        // Leads owned or created by this member are automatically unassigned (nullOnDelete).
+        $reassigned = $member->leads()->count();
+
+        $auditLogger->record($request, $admin, 'team_member_deleted', 'Deleted CRM team member '.$name.'.', [
+            'subject_type' => 'team_member',
+            'subject_id' => $member->id,
+            'subject_label' => $name,
+            'changes' => ['before' => $member->only(['name', 'phone', 'email', 'role', 'is_active']), 'leads_unassigned' => $reassigned],
+        ]);
+
+        $member->delete();
+
+        $note = $reassigned > 0
+            ? ' '.$reassigned.' lead(s) they owned are now unassigned.'
+            : '';
+
+        return back()->with('status', $roleLabel.' '.$name.' was removed from the CRM.'.$note);
     }
 
     private function normalisePhone(string $phone): string

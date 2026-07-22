@@ -2,6 +2,7 @@
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
     $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Enrollments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Upcoming and overdue conversations'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it']];
     $currentTitle = $titles[$view];
+    $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit'], true);
     $filterQuery = request()->except(['page', 'lead']);
     $calendarQuery = request()->except(['page', 'lead', 'month']);
     $followUpLayoutQuery = request()->except(['page', 'lead', 'layout', 'month']);
@@ -12,6 +13,12 @@
         if (is_array($value)) return (string) json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         return (string) $value;
     };
+    // Leads-table milestone cell (derived from status). Content is trusted markup, render with {!! !!}.
+    $milestone = static function (bool $done, ?\Carbon\Carbon $date = null): string {
+        if (! $done) return '<span class="lead-ms lead-ms-no">—</span>';
+        $sub = $date ? '<span class="subtext">'.e($date->format('d M Y')).'</span>' : '';
+        return '<span class="lead-ms lead-ms-yes">✓ Yes</span>'.$sub;
+    };
 @endphp
 <!doctype html>
 <html lang="en" class="crm-css-pending">
@@ -21,6 +28,7 @@
     <meta name="robots" content="noindex,nofollow">
     <title>{{ $currentTitle[0] }} · One Degree CRM</title>
     <style>html.crm-css-pending{background:#17182a}html.crm-css-pending body{visibility:hidden!important;opacity:0!important}html.crm-css-pending:before{content:"Loading CRM…";position:fixed;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.72);font:600 13px/1.4 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}</style>
+    <style>.lead-ms{display:inline-flex;align-items:center;gap:.3em;font-weight:600;white-space:nowrap}.lead-ms-yes{color:#0f9d58}.lead-ms-no{opacity:.35}td.lead-remark{max-width:300px;white-space:normal;vertical-align:top}td.lead-remark .subtext{display:block;margin-top:2px}.lead-remark-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -125,7 +133,7 @@
         <header class="topbar">
             <div style="display:flex;align-items:center;gap:11px">
                 <button class="icon-btn mobile-toggle" id="menuToggle" aria-label="Open menu">☰</button>
-                <div class="page-title"><h1>{{ $currentTitle[0] }}</h1><p>{{ $currentTitle[1] }}</p></div>
+                <div class="page-title"><h1>{{ $currentTitle[0] }}</h1><p>{{ $isListView ? $currentTitle[1].' · '.number_format($leads->total()).' record'.($leads->total() === 1 ? '' : 's').' in this view' : $currentTitle[1] }}</p></div>
             </div>
             <div class="top-actions">
                 <label class="crm-theme-switcher" for="crmThemeSwitcher" title="Switch CRM design">
@@ -137,7 +145,18 @@
                         <option value="orbit">Orbit</option>
                     </select>
                 </label>
-                <button class="icon-btn" id="notificationToggle" aria-label="Follow-up notifications">♢ @if($notifications->count())<span class="count-dot">{{ $notifications->count() }}</span>@endif</button>
+                <button class="icon-btn" id="notificationToggle" aria-label="Follow-up notifications"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>@if($notifications->count())<span class="count-dot">{{ $notifications->count() }}</span>@endif</button>
+                <span class="top-actions-sep" aria-hidden="true"></span>
+                @if($view === 'followups')
+                    <div class="followup-view-switch" role="group" aria-label="Follow-up display">
+                        <a @class(['active' => $followUpLayout === 'table']) href="{{ route('crm.dashboard', array_merge($followUpLayoutQuery, ['view' => 'followups', 'layout' => 'table'])) }}" aria-pressed="{{ $followUpLayout === 'table' ? 'true' : 'false' }}"><span aria-hidden="true">&#9776;</span> Table</a>
+                        <a @class(['active' => $followUpLayout === 'calendar']) href="{{ route('crm.dashboard', array_merge($followUpLayoutQuery, ['view' => 'followups', 'layout' => 'calendar', 'month' => request('month', now()->format('Y-m'))])) }}" aria-pressed="{{ $followUpLayout === 'calendar' ? 'true' : 'false' }}"><span aria-hidden="true">&#9638;</span> Calendar</a>
+                    </div>
+                @endif
+                @if($isListView)
+                    <button class="btn btn-outline" data-modal-open="importModal">⇧ <span>Import Excel / CSV</span></button>
+                    <a class="btn btn-outline" href="{{ route('crm.leads.export', $filterQuery) }}" data-native-navigation>⇩ <span>Export</span></a>
+                @endif
                 <button class="btn btn-primary" data-modal-open="leadModal">＋ <span>Add lead</span></button>
             </div>
             <div class="popover hidden" id="notificationPopover">
@@ -303,20 +322,6 @@
                 </section>
             @else
             <section class="workspace">
-                <div class="workspace-head">
-                    <div class="workspace-title"><h2>{{ $currentTitle[0] }}</h2><p>{{ number_format($leads->total()) }} record{{ $leads->total() === 1 ? '' : 's' }} in this view</p></div>
-                    <div class="action-row">
-                        @if($view === 'followups')
-                            <div class="followup-view-switch" role="group" aria-label="Follow-up display">
-                                <a @class(['active' => $followUpLayout === 'table']) href="{{ route('crm.dashboard', array_merge($followUpLayoutQuery, ['view' => 'followups', 'layout' => 'table'])) }}" aria-pressed="{{ $followUpLayout === 'table' ? 'true' : 'false' }}"><span aria-hidden="true">&#9776;</span> Table</a>
-                                <a @class(['active' => $followUpLayout === 'calendar']) href="{{ route('crm.dashboard', array_merge($followUpLayoutQuery, ['view' => 'followups', 'layout' => 'calendar', 'month' => request('month', now()->format('Y-m'))])) }}" aria-pressed="{{ $followUpLayout === 'calendar' ? 'true' : 'false' }}"><span aria-hidden="true">&#9638;</span> Calendar</a>
-                            </div>
-                        @endif
-                        <button class="btn btn-outline" data-modal-open="importModal">⇧ <span>Import Excel / CSV</span></button>
-                        <a class="btn btn-outline" href="{{ route('crm.leads.export', $filterQuery) }}" data-native-navigation>⇩ <span>Export</span></a>
-                        <button class="btn btn-primary" data-modal-open="leadModal">＋ <span>Add lead</span></button>
-                    </div>
-                </div>
                 <form @class(['filters', 'lead-classification-filters' => $view === 'leads']) method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
                     <input type="hidden" name="view" value="{{ $view }}">
                     @if($view === 'followups')<input type="hidden" name="layout" value="{{ $followUpLayout }}">@endif
@@ -328,6 +333,7 @@
                     <select class="control" name="lead_type"><option value="">All enquiry types</option>@foreach($leadTypes as $key=>$label)<option value="{{ $key }}" @selected(request('lead_type')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="source"><option value="">All specific sources</option>@foreach($leadSources as $source)<option value="{{ $source }}" @selected(request('source')===$source)>{{ $source }}</option>@endforeach</select>
                     <select class="control" name="category"><option value="">All study categories</option>@foreach($categories as $key=>$label)<option value="{{ $key }}" @selected(request('category')===$key)>{{ $label }}</option>@endforeach</select>
+                    @if($view === 'students')<select class="control" name="student_stage"><option value="">All journey stages</option>@foreach($studentStages as $key=>$label)<option value="{{ $key }}" @selected(request('student_stage')===$key)>{{ $label }}</option>@endforeach</select>@endif
                     @if($crmUser->isSuperAdmin())<select class="control" name="assigned_to"><option value="">All counsellors</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected((string)request('assigned_to')===(string)$person->id)>{{ $person->name }}</option>@endforeach</select>@else<span></span>@endif
                 </form>
 
@@ -393,7 +399,33 @@
                 @if($leads->count())
                     <div class="table-wrap">
                         <table>
-                            <thead><tr><th>Lead</th><th>Type &amp; source</th><th>Status</th><th>Interest</th>@if($crmUser->isSuperAdmin())<th>Owner</th>@endif<th>Follow-up</th><th>Updated</th><th></th></tr></thead>
+                        @if($view === 'leads')
+                            <thead><tr><th>Serial No</th><th>Lead Received</th><th>Student Name</th><th>Phone number</th><th>Contacted</th><th>Counselling Done</th><th>Shortlisting sent</th><th>Enrolled</th><th>Remarks by One Degree</th><th></th></tr></thead>
+                            <tbody>
+                            @foreach($leads as $lead)
+                                @php
+                                    $openUrl = request()->fullUrlWithQuery(['lead' => $lead->id]);
+                                    $isContacted = $lead->last_contacted_at || in_array($lead->status, ['call_back','follow_up','interested','not_interested','converted'], true);
+                                    $isCounselled = $lead->follow_up_completed_at || $lead->is_student || in_array($lead->status, ['interested','converted'], true);
+                                    $isEnrolled = $lead->is_student || $lead->status === 'converted';
+                                    $latestActivity = $lead->latestActivity;
+                                @endphp
+                                <tr data-crm-href="{{ $openUrl }}" tabindex="0">
+                                    <td>{{ $leads->firstItem() + $loop->index }}</td>
+                                    <td>{{ $lead->created_at->format('d M Y') }}<span class="subtext">{{ $lead->created_at->format('g:i A') }}</span></td>
+                                    <td><div class="lead-primary"><span class="lead-avatar">{{ $initials($lead->name) }}</span><span class="lead-name"><strong>{{ $lead->name }}</strong><span>{{ $lead->lead_number }}</span></span></div></td>
+                                    <td>{{ $lead->phone ? '+91 '.$lead->phone : '—' }}</td>
+                                    <td>{!! $milestone((bool) $isContacted, $lead->last_contacted_at) !!}</td>
+                                    <td>{!! $milestone((bool) $isCounselled, $lead->follow_up_completed_at) !!}</td>
+                                    <td><span class="lead-ms lead-ms-no" title="Tracked manually — no CRM field for this yet">—</span></td>
+                                    <td>{!! $milestone((bool) $isEnrolled, $lead->enrollment_date) !!}</td>
+                                    <td @class(['lead-remark', 'has-remark-pop' => $latestActivity])@if($latestActivity) data-remark-full="{{ $latestActivity->body }}" data-remark-time="{{ $latestActivity->created_at->format('d M Y, g:i A') }}"@endif>@if($latestActivity)<span class="lead-remark-text">{{ \Illuminate\Support\Str::limit($latestActivity->body, 90) }}</span><span class="subtext">{{ $latestActivity->created_at->diffForHumans() }}</span>@else<span class="subtext">No activity yet</span>@endif</td>
+                                    <td><a class="row-open" href="{{ $openUrl }}" aria-label="Open {{ $lead->name }}">→</a></td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        @else
+                            <thead><tr><th>Lead</th><th>Type &amp; source</th><th>{{ $view === 'students' ? 'Journey stage' : 'Status' }}</th><th>Category</th>@if($crmUser->isSuperAdmin())<th>Owner</th>@endif<th>Follow-up</th><th>Updated</th><th></th></tr></thead>
                             <tbody>
                             @foreach($leads as $lead)
                                 @php
@@ -403,8 +435,13 @@
                                 <tr data-crm-href="{{ $openUrl }}" tabindex="0">
                                     <td><div class="lead-primary"><span class="lead-avatar">{{ $initials($lead->name) }}</span><span class="lead-name"><strong>{{ $lead->name }}</strong><span>{{ $lead->lead_number }}@if($lead->phone) · +91 {{ $lead->phone }}@elseif($lead->email) · {{ $lead->email }}@endif</span></span></div></td>
                                     <td><span class="lead-type-pill">{{ $leadTypes[$lead->lead_type] ?? 'General enquiry' }}</span><span class="subtext">{{ $leadOrigins[$lead->lead_origin] ?? ucfirst($lead->lead_origin) }} · {{ $lead->source ?: 'Source not set' }}</span></td>
-                                    <td><span class="badge status-{{ $lead->status }}">{{ $lead->status === 'converted' && !$lead->is_student ? 'Conversion incomplete' : ($statuses[$lead->status] ?? ucfirst($lead->status)) }}</span><span class="priority {{ $lead->priority }}">{{ $priorities[$lead->priority] ?? $lead->priority }}</span></td>
-                                    <td>{{ $lead->course_interest ?: ($categories[$lead->category] ?? '—') }}<span class="subtext">{{ $lead->country_interest ?: $lead->city }}</span></td>
+                                    @if($view === 'students')
+                                        @php $alertStage = in_array($lead->student_stage, ['visa_rejected', 'dropped'], true); @endphp
+                                        <td><span class="badge {{ $alertStage ? 'status-dropped' : 'status-converted' }}">{{ $studentStages[$lead->student_stage] ?? 'Journey not started' }}</span><span class="priority {{ $lead->priority }}">{{ $priorities[$lead->priority] ?? $lead->priority }}</span></td>
+                                    @else
+                                        <td><span class="badge status-{{ $lead->status }}">{{ $lead->status === 'converted' && !$lead->is_student ? 'Conversion incomplete' : ($statuses[$lead->status] ?? ucfirst($lead->status)) }}</span><span class="priority {{ $lead->priority }}">{{ $priorities[$lead->priority] ?? $lead->priority }}</span></td>
+                                    @endif
+                                    <td>{{ $categories[$lead->category] ?? '—' }}<span class="subtext">{{ $lead->course_interest ?: ($lead->country_interest ?: $lead->city) }}</span></td>
                                     @if($crmUser->isSuperAdmin())<td>@if($lead->assignee)<span class="owner"><span class="avatar">{{ $initials($lead->assignee->name) }}</span>{{ $lead->assignee->name }}</span>@else<span class="subtext">Unassigned</span>@endif</td>@endif
                                     <td><span class="follow-date {{ $followClass }}">{{ $lead->follow_up_at ? $lead->follow_up_at->format('d M, g:i A') : 'Not scheduled' }}</span>@if($lead->follow_up_completed_at)<span class="subtext">Completed</span>@endif</td>
                                     <td>{{ $lead->updated_at->diffForHumans(null, true) }}<span class="subtext">{{ $lead->activities_count }} activities</span></td>
@@ -412,6 +449,7 @@
                                 </tr>
                             @endforeach
                             </tbody>
+                        @endif
                         </table>
                     </div>
                     @if($leads->hasPages())<div class="pagination-wrap">{{ $leads->onEachSide(1)->links() }}</div>@endif
@@ -468,36 +506,51 @@
     <div class="modal team-management-modal">
         <div class="modal-head"><div><h2>Team management</h2><p>Create counsellors or super admins and control their CRM access.</p></div><button class="close-btn" data-modal-close>×</button></div>
         <div class="modal-body">
-            <div class="team-list">
-                @foreach($team as $member)
-                    <div class="team-member {{ $member->isSuperAdmin() ? 'role-super-admin' : 'role-counsellor' }}">
-                        <span class="avatar">{{ $initials($member->name) }}</span>
-                        <span class="team-member-info">
-                            <span class="team-member-title"><strong>{{ $member->name }}</strong>@if($member->id === $crmUser->id)<em>You</em>@endif</span>
-                            <span class="team-member-role {{ $member->isSuperAdmin() ? 'is-super-admin' : 'is-counsellor' }}">
-                                @if($member->isSuperAdmin())
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.8 8.1 7 10 4.2-1.9 7-5.3 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
-                                    Super admin
-                                @else
-                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg>
-                                    Counsellor
-                                @endif
-                            </span>
-                            <span class="team-member-contact">{{ $member->email ?: 'Email not added' }}</span>
-                            <span class="team-member-contact">+91 {{ $member->phone }}</span>
-                        </span>
-                        <span class="state {{ $member->is_active ? '' : 'off' }}">{{ $member->is_active ? 'Active' : 'Disabled' }}</span>
-                        @if($member->id !== $crmUser->id)<form method="post" action="{{ route('crm.team.toggle',$member) }}" data-ajax-preserve-modal="teamModal">@csrf @method('PATCH')<button class="btn btn-ghost" type="submit" title="{{ $member->is_active ? 'Disable access' : 'Restore access' }}">{{ $member->is_active ? '⊘' : '↻' }}</button></form>@endif
-                        <details class="team-member-edit">
-                            <summary>Edit name or email</summary>
-                            <form method="post" action="{{ route('crm.team.update',$member) }}" data-ajax-preserve-modal="teamModal">@csrf @method('PATCH')
-                                <label><span>Name</span><input name="name" value="{{ $member->name }}" required></label>
-                                <label><span>Email address</span><input type="email" name="email" value="{{ $member->email }}" placeholder="name@example.com" required></label>
-                                <button class="btn btn-outline" type="submit">Save changes</button>
-                            </form>
-                        </details>
+            @php
+                $superAdmins = $team->filter->isSuperAdmin()->values();
+                $counsellors = $team->reject->isSuperAdmin()->values();
+            @endphp
+            <div class="team-toolbar" data-team-toolbar>
+                <label class="team-search">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="search" placeholder="Search by name, email or mobile…" data-team-search-input aria-label="Search team members" autocomplete="off">
+                </label>
+                <div class="team-filter" role="group" aria-label="Filter team members">
+                    <button type="button" class="team-filter-chip is-active" data-team-filter="all">All <span class="chip-count">{{ $team->count() }}</span></button>
+                    <button type="button" class="team-filter-chip" data-team-filter="super-admin">Super admins <span class="chip-count">{{ $superAdmins->count() }}</span></button>
+                    <button type="button" class="team-filter-chip" data-team-filter="counsellor">Counsellors <span class="chip-count">{{ $counsellors->count() }}</span></button>
+                </div>
+            </div>
+            <div class="team-groups" data-team-scroll>
+                <section class="team-group" data-role="super-admin" data-team-group>
+                    <header class="team-group-head">
+                        <span class="team-group-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.8 8.1 7 10 4.2-1.9 7-5.3 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                        <span class="team-group-heading"><strong>Super admins</strong><small>Full CRM, team &amp; audit-log access</small></span>
+                        <span class="team-group-count">{{ $superAdmins->count() }}</span>
+                    </header>
+                    <div class="team-list">
+                        @forelse($superAdmins as $member)
+                            @include('crm.partials.team-member', ['member' => $member])
+                        @empty
+                            <p class="team-group-empty">No super admins yet.</p>
+                        @endforelse
                     </div>
-                @endforeach
+                </section>
+                <section class="team-group" data-role="counsellor" data-team-group>
+                    <header class="team-group-head">
+                        <span class="team-group-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.6-4 2.7-6 6.5-6s5.9 2 6.5 6"/></svg></span>
+                        <span class="team-group-heading"><strong>Counsellors</strong><small>Work only their assigned leads</small></span>
+                        <span class="team-group-count">{{ $counsellors->count() }}</span>
+                    </header>
+                    <div class="team-list">
+                        @forelse($counsellors as $member)
+                            @include('crm.partials.team-member', ['member' => $member])
+                        @empty
+                            <p class="team-group-empty">No counsellors yet. Add one below.</p>
+                        @endforelse
+                    </div>
+                </section>
+                <p class="team-no-results" data-team-no-results hidden>No team members match your search.</p>
             </div>
             <form class="team-create-form" method="post" action="{{ route('crm.team.store') }}" data-ajax-preserve-modal="teamModal">@csrf
                 <div class="team-create-heading"><h3>Add a team member</h3><p>They can sign in using the mobile number below.</p></div>
@@ -654,7 +707,6 @@
                     </div>
                 @endif
                 @if($selectedLead->follow_up_at && !$selectedLead->follow_up_completed_at)<form id="completeFollowup" method="post" action="{{ route('crm.leads.follow-up.complete',$selectedLead) }}">@csrf</form>@endif
-                @if($crmUser->isSuperAdmin())<details class="danger-zone"><summary>Lead administration</summary><div><span><strong>Move lead to trash</strong><small>The lead can be recovered from the database if required.</small></span><form method="post" action="{{ route('crm.leads.destroy',$selectedLead) }}" onsubmit="return confirm('Move this lead to trash?')">@csrf @method('DELETE')<button class="btn btn-danger btn-compact" type="submit">Delete lead</button></form></div></details>@endif
             </div>
 
             <div class="tab-panel" data-panel="timeline">

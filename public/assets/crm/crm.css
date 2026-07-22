@@ -142,7 +142,9 @@ button{cursor:pointer}
 /* ---------------- App shell ---------------- */
 .crm-app{min-height:100vh;view-transition-name:crm-app}
 .shell{min-height:100vh;display:grid;grid-template-columns:284px minmax(0,1fr)}
-.sidebar{position:sticky;top:14px;height:calc(100vh - 28px);margin:14px 0 14px 14px;border-radius:26px;background:linear-gradient(170deg,#0a2820 0%,#123c31 58%,#174a3b 100%);color:#f2ecda;padding:26px 16px 20px;display:flex;flex-direction:column;box-shadow:0 22px 55px rgba(15,42,34,.28),inset 0 0 0 1px rgba(217,164,65,.1);overflow:hidden}
+.sidebar{position:sticky;top:14px;height:calc(100vh - 28px);margin:14px 0 14px 14px;border-radius:26px;background:linear-gradient(170deg,#0a2820 0%,#123c31 58%,#174a3b 100%);color:#f2ecda;padding:26px 16px 20px;display:flex;flex-direction:column;box-shadow:0 22px 55px rgba(15,42,34,.28),inset 0 0 0 1px rgba(217,164,65,.1);overflow:hidden auto;scrollbar-width:thin;scrollbar-color:rgba(244,239,223,.28) transparent}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(244,239,223,.22);border-radius:3px}
 .sidebar:before{content:"";position:absolute;width:230px;height:230px;border:1px solid rgba(217,164,65,.12);border-radius:50%;right:-105px;top:-120px;pointer-events:none}
 .sidebar:after{content:"";position:absolute;width:150px;height:150px;border:1px dashed rgba(244,239,223,.1);border-radius:50%;left:-70px;bottom:70px;pointer-events:none}
 .sidebar>*{position:relative;z-index:1}
@@ -165,8 +167,9 @@ button{cursor:pointer}
 .side-user-info{min-width:0;flex:1}
 .side-user-info strong{display:block;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .side-user-info span{display:block;color:rgba(244,239,223,.5);font-size:.67rem;margin-top:2px}
-.logout-btn{border:0;background:transparent;color:rgba(244,239,223,.55);font-size:1rem;padding:5px;border-radius:8px}
-.logout-btn:hover{color:#fdf9ec;background:rgba(244,239,223,.1)}
+.logout-btn{flex:0 0 auto;width:35px;height:35px;display:grid;place-items:center;border:1px solid rgba(244,239,223,.22);background:rgba(244,239,223,.08);color:rgba(244,239,223,.92);padding:0;border-radius:10px;cursor:pointer;transition:background .16s,color .16s,border-color .16s,transform .16s}
+.logout-btn:hover{color:#0a2820;background:var(--gold);border-color:var(--gold);transform:translateY(-1px)}
+.logout-btn:active{transform:translateY(0)}
 
 /* ---------------- Topbar & content ---------------- */
 .main{min-width:0}
@@ -176,6 +179,13 @@ button{cursor:pointer}
 .top-actions{display:flex;align-items:center;gap:9px}
 .icon-btn{position:relative;width:41px;height:41px;border:1px solid #d4ceba;border-radius:999px;background:#fffdf7;display:grid;place-items:center;color:#5c665e}
 .icon-btn:hover{background:var(--pine-tint);border-color:var(--pine);color:var(--pine)}
+/* Merged topbar: align every action control to one height + group chrome from actions */
+.top-actions>*{flex:0 0 auto}
+.top-actions .icon-btn{width:40px;height:40px}
+.top-actions .crm-theme-switcher{height:40px}
+.top-actions .btn{height:40px;padding-top:0;padding-bottom:0}
+.top-actions .followup-view-switch{height:40px}
+.top-actions-sep{width:1px;height:24px;background:var(--line);opacity:.75;margin:0 3px}
 .count-dot{position:absolute;right:-4px;top:-5px;background:var(--brass);color:#fff;min-width:18px;height:18px;border:2px solid var(--paper);border-radius:10px;display:grid;place-items:center;font-size:.6rem;font-weight:800}
 .mobile-toggle{display:none}
 .content{padding:28px 32px 60px;max-width:1560px;margin:auto}
@@ -659,6 +669,8 @@ body.crm-ajax-loading:before{content:"";position:fixed;z-index:2000;top:0;left:-
     .stats{grid-template-columns:repeat(2,1fr)}
     .workspace-head{align-items:flex-start}
     .action-row .btn span{display:none}
+    .top-actions{flex-wrap:wrap;justify-content:flex-end}
+    .top-actions .btn-outline span{display:none}
     .filters{grid-template-columns:1fr 1fr}
     .filters .search-wrap{grid-column:1/-1}
     .popover{right:14px;top:62px;width:min(360px,calc(100vw - 28px))}

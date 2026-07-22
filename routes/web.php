@@ -175,10 +175,10 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
         Route::post('leads/{lead}/follow-up/complete', [\App\Http\Controllers\Crm\CrmLeadController::class, 'completeFollowUp'])->name('leads.follow-up.complete');
         Route::post('leads/{lead}/convert', [\App\Http\Controllers\Crm\CrmLeadController::class, 'convert'])->name('leads.convert');
         Route::patch('leads/{lead}/student-journey', [\App\Http\Controllers\Crm\CrmLeadController::class, 'updateStudentJourney'])->name('leads.student-journey.update');
-        Route::delete('leads/{lead}', [\App\Http\Controllers\Crm\CrmLeadController::class, 'destroy'])->name('leads.destroy');
         Route::post('team', [\App\Http\Controllers\Crm\CrmUserController::class, 'store'])->name('team.store');
         Route::patch('team/{member}', [\App\Http\Controllers\Crm\CrmUserController::class, 'update'])->name('team.update');
         Route::patch('team/{member}/toggle', [\App\Http\Controllers\Crm\CrmUserController::class, 'toggle'])->name('team.toggle');
+        Route::delete('team/{member}', [\App\Http\Controllers\Crm\CrmUserController::class, 'destroy'])->name('team.destroy');
     });
 });
 

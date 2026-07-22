@@ -185,6 +185,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => map.invalidateSize(), 100);
     };
 
+    const markScrollableTables = () => {
+        document.querySelectorAll('.table-wrap').forEach((wrap) => {
+            const scrollable = wrap.scrollWidth > wrap.clientWidth + 1 || wrap.scrollHeight > wrap.clientHeight + 1;
+            wrap.classList.toggle('is-scrollable', scrollable);
+        });
+    };
+
     const initialiseApp = ({modal = null, tab = null, drawerScroll = null, windowScroll = null, drawerExpanded = null} = {}) => {
         setCrmTheme(document.documentElement.dataset.crmTheme, false);
         document.querySelectorAll('[data-open-on-load]').forEach((overlay) => openModal(overlay.id));
@@ -200,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initialiseDrawerChrome();
         initialiseDashboardMap();
         initialiseToasts();
+        markScrollableTables();
     };
 
     const dismissToast = (toast) => {
@@ -513,6 +521,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const teamFilterChip = target.closest('.team-filter-chip');
+        if (teamFilterChip) {
+            teamFilterChip.parentElement?.querySelectorAll('.team-filter-chip').forEach((chip) => chip.classList.toggle('is-active', chip === teamFilterChip));
+            applyTeamFilter();
+            return;
+        }
+
         const modalButton = target.closest('[data-modal-open]');
         if (modalButton) {
             event.preventDefault();
@@ -635,8 +650,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const applyTeamFilter = () => {
+        const toolbar = document.querySelector('[data-team-toolbar]');
+        if (!toolbar) return;
+        const query = (toolbar.querySelector('[data-team-search-input]')?.value || '').trim().toLowerCase();
+        const role = toolbar.querySelector('.team-filter-chip.is-active')?.dataset.teamFilter || 'all';
+        let visible = 0;
+        document.querySelectorAll('[data-team-member]').forEach((member) => {
+            const matchesRole = role === 'all' || member.dataset.teamRole === role;
+            const matchesQuery = !query || (member.dataset.teamSearch || '').includes(query);
+            const show = matchesRole && matchesQuery;
+            member.hidden = !show;
+            if (show) visible++;
+        });
+        document.querySelectorAll('[data-team-group]').forEach((group) => {
+            const roleMatch = role === 'all' || role === group.dataset.role;
+            const hasMembers = !!group.querySelector('[data-team-member]');
+            const anyVisible = !!group.querySelector('[data-team-member]:not([hidden])');
+            group.hidden = !roleMatch || (hasMembers && !anyVisible);
+        });
+        const noResults = document.querySelector('[data-team-no-results]');
+        if (noResults) noResults.hidden = !(visible === 0 && query !== '');
+    };
+
     document.addEventListener('input', (event) => {
         const input = event.target;
+        if (input.matches('[data-team-search-input]')) applyTeamFilter();
         if (input.matches('[data-timeline-form] textarea')) {
             const count = input.closest('form')?.querySelector('[data-comment-count]');
             if (count) count.textContent = `${input.value.length} / 3000`;
@@ -669,6 +708,107 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.querySelector('[data-crm-app]')) loadCrmPage(window.location.href, {historyMode: 'none', preserveScroll: true});
     });
     window.addEventListener('pageshow', resetTransition);
+    window.addEventListener('resize', markScrollableTables);
+
+    // Remark cell hover overlay — shows the full activity note in a floating card.
+    const remarkPop = document.createElement('div');
+    remarkPop.className = 'remark-pop';
+    remarkPop.setAttribute('role', 'tooltip');
+    remarkPop.hidden = true;
+    document.body.appendChild(remarkPop);
+    let remarkHideTimer = null;
+
+    const hideRemark = () => { remarkPop.hidden = true; };
+
+    const showRemark = (cell) => {
+        const body = cell.dataset.remarkFull;
+        if (!body) return;
+        remarkPop.innerHTML = '';
+        const text = document.createElement('p');
+        text.className = 'remark-pop-body';
+        text.textContent = body;
+        remarkPop.appendChild(text);
+        if (cell.dataset.remarkTime) {
+            const meta = document.createElement('span');
+            meta.className = 'remark-pop-meta';
+            meta.textContent = cell.dataset.remarkTime;
+            remarkPop.appendChild(meta);
+        }
+        remarkPop.hidden = false;
+        const rect = cell.getBoundingClientRect();
+        const pop = remarkPop.getBoundingClientRect();
+        const margin = 10;
+        let top = rect.top - pop.height - margin;
+        remarkPop.dataset.placement = 'top';
+        if (top < 12) { top = rect.bottom + margin; remarkPop.dataset.placement = 'bottom'; }
+        let left = rect.left + (rect.width / 2) - (pop.width / 2);
+        left = Math.max(12, Math.min(left, window.innerWidth - pop.width - 12));
+        remarkPop.style.top = `${Math.round(top)}px`;
+        remarkPop.style.left = `${Math.round(left)}px`;
+    };
+
+    document.addEventListener('mouseover', (event) => {
+        const cell = event.target.closest?.('[data-remark-full]');
+        if (!cell) return;
+        clearTimeout(remarkHideTimer);
+        showRemark(cell);
+    });
+    document.addEventListener('mouseout', (event) => {
+        const cell = event.target.closest?.('[data-remark-full]');
+        if (!cell) return;
+        const next = event.relatedTarget;
+        if (next && cell.contains(next)) return;
+        remarkHideTimer = setTimeout(hideRemark, 90);
+    });
+    document.addEventListener('scroll', hideRemark, true);
+    document.addEventListener('mousedown', hideRemark);
+
+    // Click-and-hold drag scrolling for overflowing tables.
+    let tableDrag = null;
+    const DRAG_THRESHOLD = 5;
+    document.addEventListener('mousedown', (event) => {
+        if (event.button !== 0) return;
+        const wrap = event.target.closest?.('.table-wrap');
+        if (!wrap) return;
+        // never hijack a press on an interactive control (links, buttons, edit toggles…)
+        if (event.target.closest('a,button,input,select,textarea,label,summary')) return;
+        const scrollable = wrap.scrollWidth > wrap.clientWidth || wrap.scrollHeight > wrap.clientHeight;
+        if (!scrollable) return;
+        tableDrag = {
+            wrap,
+            startX: event.pageX,
+            startY: event.pageY,
+            scrollLeft: wrap.scrollLeft,
+            scrollTop: wrap.scrollTop,
+            moved: false,
+        };
+    });
+    document.addEventListener('mousemove', (event) => {
+        if (!tableDrag) return;
+        const dx = event.pageX - tableDrag.startX;
+        const dy = event.pageY - tableDrag.startY;
+        if (!tableDrag.moved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+            tableDrag.moved = true;
+            tableDrag.wrap.classList.add('is-grabbing');
+        }
+        if (tableDrag.moved) {
+            event.preventDefault();
+            tableDrag.wrap.scrollLeft = tableDrag.scrollLeft - dx;
+            tableDrag.wrap.scrollTop = tableDrag.scrollTop - dy;
+        }
+    });
+    document.addEventListener('mouseup', () => {
+        if (!tableDrag) return;
+        const dragged = tableDrag.moved;
+        tableDrag.wrap.classList.remove('is-grabbing');
+        tableDrag = null;
+        if (dragged) {
+            // swallow the click that fires after a drag so rows don't navigate
+            const suppressClick = (event) => { event.stopPropagation(); event.preventDefault(); };
+            document.addEventListener('click', suppressClick, { capture: true, once: true });
+            setTimeout(() => document.removeEventListener('click', suppressClick, { capture: true }), 0);
+        }
+    });
 
     initialiseApp();
 });

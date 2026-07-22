@@ -4,17 +4,45 @@
     --theme-switcher-border:#ddd8c8;
     --theme-switcher-ink:#445049;
     --theme-switcher-focus:#175244;
+    position:relative;
     display:inline-flex;
     align-items:center;
-    gap:7px;
+    gap:8px;
     height:39px;
-    padding:0 8px 0 10px;
+    padding:0 30px 0 11px;
     border:1px solid var(--theme-switcher-border);
-    border-radius:11px;
-    background:var(--theme-switcher-bg);
+    border-radius:12px;
+    background:
+        linear-gradient(135deg,rgba(255,255,255,.35),transparent 60%),
+        var(--theme-switcher-bg);
     color:var(--theme-switcher-ink);
-    box-shadow:0 2px 8px rgba(21,36,30,.04);
+    box-shadow:0 2px 8px rgba(21,36,30,.05);
+    cursor:pointer;
+    transition:transform .18s cubic-bezier(.22,.8,.3,1),box-shadow .2s,border-color .16s;
 }
+.crm-theme-switcher:hover{
+    transform:translateY(-1px);
+    border-color:color-mix(in srgb,var(--theme-switcher-focus) 45%,var(--theme-switcher-border));
+    box-shadow:0 10px 24px color-mix(in srgb,var(--theme-switcher-focus) 16%,transparent);
+}
+/* custom chevron caret that flips when the menu is focused/open */
+.crm-theme-switcher::after{
+    content:"";
+    position:absolute;
+    right:13px;
+    top:50%;
+    width:7px;
+    height:7px;
+    border-right:2px solid currentColor;
+    border-bottom:2px solid currentColor;
+    border-radius:1px;
+    transform:translateY(-70%) rotate(45deg);
+    opacity:.55;
+    pointer-events:none;
+    transition:transform .2s cubic-bezier(.22,.8,.3,1),opacity .16s;
+}
+.crm-theme-switcher:hover::after{opacity:.9}
+.crm-theme-switcher:focus-within::after{transform:translateY(-30%) rotate(225deg);opacity:1}
 
 html[data-crm-theme="classic"] .crm-theme-switcher{
     --theme-switcher-bg:#fff;
@@ -44,14 +72,19 @@ html[data-crm-theme="evergreen"] .login-visual .crm-login-visual-eyebrow{color:#
 html[data-crm-theme="orbit"] .login-visual .crm-login-visual-eyebrow{color:#ffb188}
 
 .crm-theme-switcher-icon{
-    width:20px;
-    height:20px;
+    width:22px;
+    height:22px;
     display:inline-grid;
     place-items:center;
-    flex:0 0 20px;
-    font-size:14px;
+    flex:0 0 22px;
+    font-size:13px;
     line-height:1;
+    border-radius:7px;
+    color:var(--theme-switcher-focus);
+    background:color-mix(in srgb,var(--theme-switcher-focus) 13%,transparent);
+    transition:transform .55s cubic-bezier(.22,.8,.3,1);
 }
+.crm-theme-switcher:hover .crm-theme-switcher-icon{transform:rotate(180deg)}
 
 .crm-theme-switcher-label{
     font-size:.68rem;
@@ -61,9 +94,12 @@ html[data-crm-theme="orbit"] .login-visual .crm-login-visual-eyebrow{color:#ffb1
 }
 
 .crm-theme-switcher select{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
     width:auto;
     min-width:92px;
-    padding:4px 23px 4px 7px;
+    padding:5px 4px 5px 9px;
     border:0;
     border-left:1px solid var(--theme-switcher-border);
     border-radius:0;
@@ -74,6 +110,11 @@ html[data-crm-theme="orbit"] .login-visual .crm-login-visual-eyebrow{color:#ffb1
     font-size:.73rem;
     font-weight:750;
     cursor:pointer;
+}
+.crm-theme-switcher select option{
+    color:#1b241f;
+    background:#fff;
+    font-weight:600;
 }
 
 .crm-theme-switcher:focus-within{
@@ -89,6 +130,7 @@ html[data-crm-theme="orbit"] .login-visual .crm-login-visual-eyebrow{color:#ffb1
 
 @media(max-width:480px){
     .crm-theme-switcher{position:relative;width:39px;padding:0;justify-content:center}
-    .crm-theme-switcher-icon{display:inline-grid}
+    .crm-theme-switcher::after{display:none}
+    .crm-theme-switcher-icon{display:inline-grid;background:transparent}
     .crm-theme-switcher select{position:absolute;inset:0;width:100%;min-width:0;height:100%;padding:0;border:0;opacity:0}
 }

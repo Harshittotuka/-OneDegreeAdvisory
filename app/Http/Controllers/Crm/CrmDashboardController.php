@@ -63,7 +63,7 @@ class CrmDashboardController extends Controller
 
         $dashboard = $this->dashboardData($base, $stats, $todayStart, $todayEnd, $view === 'dashboard');
 
-        $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'websiteSubmissions'])->withCount('activities');
+        $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'websiteSubmissions', 'latestActivity'])->withCount('activities');
         if ($view === 'followups') {
             $leads->whereNotNull('follow_up_at')->whereNull('follow_up_completed_at')->orderBy('follow_up_at');
         } elseif ($view === 'students') {
@@ -383,6 +383,9 @@ class CrmDashboardController extends Controller
         }
         if (array_key_exists((string) $request->query('category'), CrmOptions::CATEGORIES)) {
             $query->where('category', $request->query('category'));
+        }
+        if (array_key_exists((string) $request->query('student_stage'), CrmOptions::STUDENT_STAGES)) {
+            $query->where('student_stage', $request->query('student_stage'));
         }
         if ($request->filled('source')) {
             $query->where('source', $request->query('source'));

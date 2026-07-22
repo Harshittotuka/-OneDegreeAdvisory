@@ -7,7 +7,6 @@ use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
 use App\Models\CrmUser;
 use App\Services\CrmAuditLogger;
-use App\Services\CrmNotifier;
 use App\Support\CrmOptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +18,6 @@ use Illuminate\Validation\Rule;
 class CrmLeadController extends Controller
 {
     public function __construct(
-        private readonly CrmNotifier $notifier,
         private readonly CrmAuditLogger $auditLogger,
     ) {}
 
@@ -191,18 +189,6 @@ class CrmLeadController extends Controller
             'after' => $lead->only(array_keys($before)),
         ]);
 
-        $this->notifyLead(
-            $lead,
-            $user,
-            'CRM conversion: '.$lead->name,
-            'Lead converted to an enrolled student',
-            $user->name.' converted '.$lead->name.' into a student journey.',
-            [
-                'Student stage' => CrmOptions::STUDENT_STAGES[$data['student_stage']],
-                'Enrollment amount' => isset($data['enrollment_amount']) ? 'INR '.number_format((int) $data['enrollment_amount']) : 'Not set',
-            ],
-        );
-
         return back()->with('status', 'Lead converted to an enrolled student.');
     }
 
@@ -241,21 +227,6 @@ class CrmLeadController extends Controller
         }
 
         return back()->with('status', $changes === [] ? 'Student journey is already up to date.' : 'Student journey updated.');
-    }
-
-    public function destroy(Request $request, CrmLead $lead): RedirectResponse
-    {
-        /** @var CrmUser $user */
-        $user = $request->attributes->get('crm_user');
-        abort_unless($user->isSuperAdmin(), 403);
-        $lead->loadMissing('assignee');
-        $this->auditLead($request, $user, $lead, 'lead_deleted', 'Moved '.$lead->name.' to the CRM trash.', [
-            'lead_number' => $lead->lead_number,
-            'owner' => $lead->assignee?->name,
-        ]);
-        $lead->delete();
-
-        return redirect()->route('crm.dashboard')->with('status', 'Lead moved to trash.');
     }
 
     public function import(Request $request): RedirectResponse
@@ -374,30 +345,5 @@ class CrmLeadController extends Controller
             'subject_label' => $lead->lead_number.' · '.$lead->name,
             'changes' => $changes,
         ]);
-    }
-
-    /**
-     * @param  array<string, mixed>  $details
-     * @param  iterable<int, CrmUser>  $extraRecipients
-     */
-    private function notifyLead(
-        CrmLead $lead,
-        CrmUser $actor,
-        string $subject,
-        string $headline,
-        string $message,
-        array $details = [],
-        iterable $extraRecipients = [],
-    ): void {
-        $lead->loadMissing('assignee');
-        $this->notifier->sendToUsers(
-            $this->notifier->leadRecipients($lead, $actor, $extraRecipients),
-            $subject,
-            $headline,
-            $message,
-            [...$this->notifier->leadDetails($lead), ...$details],
-            route('crm.dashboard', ['lead' => $lead->id]),
-            'Open lead',
-        );
     }
 }

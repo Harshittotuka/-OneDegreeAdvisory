@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CrmLead extends Model
@@ -42,6 +43,12 @@ class CrmLead extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(CrmLeadActivity::class)->latest();
+    }
+
+    /** Most recent timeline entry — used for the "Remarks" column on the leads table. */
+    public function latestActivity(): HasOne
+    {
+        return $this->hasOne(CrmLeadActivity::class)->latestOfMany();
     }
 
     public function websiteSubmissions(): HasMany

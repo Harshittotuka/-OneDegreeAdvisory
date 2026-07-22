@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Mail\CrmNotificationMail;
 use App\Mail\CrmOtpMail;
 use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
@@ -224,7 +223,6 @@ class CrmTest extends TestCase
         ])->assertSessionHasNoErrors();
         $counsellor = CrmUser::query()->where('phone', '9876543211')->firstOrFail();
         $this->assertSame('counsellor@example.com', $counsellor->email);
-        Mail::assertSent(CrmNotificationMail::class, fn (CrmNotificationMail $mail): bool => $mail->hasTo('counsellor@example.com'));
         $lead = $this->leadFor($admin, 'Transfer Me', '9876500003');
 
         $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
@@ -251,21 +249,6 @@ class CrmTest extends TestCase
             ->assertSee('Second Admin')
             ->assertSee('second-admin@example.com')
             ->assertSee('Super admin');
-    }
-
-    public function test_follow_up_email_reminders_send_once_for_each_due_window(): void
-    {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
-        $owner = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@example.com', 'role' => 'counsellor', 'is_active' => true]);
-        $lead = $this->leadFor($owner, 'Reminder Email Lead', '9876500088');
-        $lead->update(['follow_up_at' => now()->addDay()->setTime(11, 0)]);
-
-        $this->artisan('crm:send-follow-up-reminders')->assertSuccessful();
-        $this->artisan('crm:send-follow-up-reminders')->assertSuccessful();
-
-        Mail::assertSent(CrmNotificationMail::class, 2);
-        $this->assertDatabaseCount('crm_lead_activities', 1);
-        $this->assertDatabaseHas('crm_lead_activities', ['crm_lead_id' => $lead->id, 'type' => 'reminder_email']);
     }
 
     public function test_follow_up_reminders_appear_one_day_before_and_on_due_day(): void
@@ -352,6 +335,97 @@ class CrmTest extends TestCase
         $export = $this->withSession(['crm_user_id' => $owner->id])->get(route('crm.leads.export'));
         $export->assertOk()->assertDownload();
         $this->assertStringContainsString('Imported Student', $export->streamedContent());
+    }
+
+    public function test_super_admin_can_delete_a_team_member_and_their_leads_are_unassigned(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'role' => 'counsellor', 'is_active' => true]);
+        $lead = $this->leadFor($counsellor, 'Owned Lead', '9876500021');
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->delete(route('crm.team.destroy', $counsellor))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('crm_users', ['id' => $counsellor->id]);
+        $this->assertNull($lead->fresh()->assigned_to);
+        $this->assertDatabaseHas('crm_audit_logs', ['event' => 'team_member_deleted', 'subject_id' => $counsellor->id]);
+    }
+
+    public function test_team_member_cannot_delete_themselves(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->delete(route('crm.team.destroy', $admin))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('crm_users', ['id' => $admin->id]);
+    }
+
+    public function test_super_admin_can_delete_a_peer_super_admin(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $peer = CrmUser::query()->create(['name' => 'Second', 'phone' => '9876543212', 'role' => 'super_admin', 'is_active' => true]);
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->delete(route('crm.team.destroy', $peer))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('crm_users', ['id' => $peer->id]);
+    }
+
+    public function test_counsellor_cannot_delete_team_members(): void
+    {
+        $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'role' => 'counsellor', 'is_active' => true]);
+        $victim = CrmUser::query()->create(['name' => 'Ravi', 'phone' => '9876543212', 'role' => 'counsellor', 'is_active' => true]);
+
+        $this->withSession(['crm_user_id' => $counsellor->id])
+            ->delete(route('crm.team.destroy', $victim))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('crm_users', ['id' => $victim->id]);
+    }
+
+    public function test_enrolled_students_can_be_filtered_by_journey_stage(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $docPending = $this->leadFor($admin, 'Doc Pending Student', '9876500051');
+        $docPending->update(['is_student' => true, 'status' => 'converted', 'student_stage' => 'doc_pending']);
+        $visaGranted = $this->leadFor($admin, 'Visa Granted Student', '9876500052');
+        $visaGranted->update(['is_student' => true, 'status' => 'converted', 'student_stage' => 'visa_granted']);
+
+        // The students view exposes a journey-stage filter and shows the stage column.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'students']))
+            ->assertOk()
+            ->assertSee('name="student_stage"', false)
+            ->assertSee('All journey stages')
+            ->assertSee('<th>Journey stage</th>', false)
+            ->assertSee('<th>Category</th>', false)
+            ->assertSee('Doc Pending Student')
+            ->assertSee('Visa Granted Student')
+            ->assertSee('Visa granted');
+
+        // Filtering by a stage narrows the list to matching students only.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'students', 'student_stage' => 'visa_granted']))
+            ->assertOk()
+            ->assertSee('Visa Granted Student')
+            ->assertDontSee('Doc Pending Student');
+    }
+
+    public function test_lead_workspace_no_longer_offers_a_delete_option(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Undeletable Lead', '9876500031');
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertDontSee('Delete lead')
+            ->assertDontSee('Lead administration')
+            ->assertDontSee('Move lead to trash');
     }
 
     private function leadFor(CrmUser $owner, string $name, string $phone): CrmLead
