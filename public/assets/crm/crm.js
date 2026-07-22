@@ -283,6 +283,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         nextApp.classList.add('is-ajax-rendered');
 
+        // Preserve the focused filter search field (name, value, caret) so live
+        // "search as you type" survives the full-app swap without losing focus.
+        const activeEl = document.activeElement;
+        const activeFilter = activeEl && typeof activeEl.matches === 'function'
+            && activeEl.matches('[data-crm-filter-form] input[type="search"]')
+            ? { name: activeEl.name, value: activeEl.value, start: activeEl.selectionStart, end: activeEl.selectionEnd }
+            : null;
+
         const previousUrl = new URL(window.location.href);
         const nextUrl = new URL(finalUrl, window.location.href);
         const sameLead = previousUrl.searchParams.get('lead') && previousUrl.searchParams.get('lead') === nextUrl.searchParams.get('lead');
@@ -301,6 +309,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (options.historyMode === 'push') history.pushState({}, '', nextUrl.href);
             if (options.historyMode === 'replace') history.replaceState({}, '', nextUrl.href);
             initialiseApp(state);
+            if (activeFilter) {
+                const field = nextApp.querySelector(`input[type="search"][name="${CSS.escape(activeFilter.name)}"]`);
+                if (field) {
+                    // Keep anything typed while the request was in flight; a newer
+                    // value re-triggers the debounced search so results catch up.
+                    if (field.value !== activeFilter.value) {
+                        field.value = activeFilter.value;
+                        field.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    field.focus();
+                    const caret = activeFilter.end ?? field.value.length;
+                    try { field.setSelectionRange(activeFilter.start ?? caret, caret); } catch (e) {}
+                }
+            }
         };
 
         document.body.classList.add('crm-ajax-swap');
@@ -673,8 +695,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (noResults) noResults.hidden = !(visible === 0 && query !== '');
     };
 
+    let filterSearchTimer = null;
     document.addEventListener('input', (event) => {
         const input = event.target;
+        // Live "search as you type" for every server-side CRM filter (leads,
+        // enrollments, subscriptions, audit) — debounced so it filters without
+        // pressing Enter. GET loads abort the previous in-flight request, and
+        // 'replace' history keeps typing from flooding the back button.
+        if (input.matches('[data-crm-filter-form] input[type="search"]')) {
+            const form = input.form;
+            if (form) {
+                clearTimeout(filterSearchTimer);
+                filterSearchTimer = setTimeout(() => {
+                    const destination = new URL(form.action, window.location.href);
+                    destination.search = new URLSearchParams(new FormData(form)).toString();
+                    loadCrmPage(destination.href, { historyMode: 'replace', preserveScroll: true });
+                }, 350);
+            }
+        }
         if (input.matches('[data-team-search-input]')) applyTeamFilter();
         if (input.matches('[data-timeline-form] textarea')) {
             const count = input.closest('form')?.querySelector('[data-comment-count]');

@@ -152,6 +152,6 @@
         <small>One Degree Lead CRM</small>
     </div>
 </div>
-<script src="{{ asset('assets/crm/crm.js') }}" defer></script>
+<script src="{{ asset('assets/crm/crm.js') }}?v={{ filemtime(public_path('assets/crm/crm.js')) }}" defer></script>
 </body>
 </html>
