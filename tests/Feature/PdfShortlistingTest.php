@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\CrmUser;
 use App\Support\SimpleXlsx;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use setasign\Fpdi\Tfpdf\Fpdi;
 use Smalot\PdfParser\Parser;
@@ -11,16 +13,30 @@ use Tests\TestCase;
 
 class PdfShortlistingTest extends TestCase
 {
-    public function test_pdf_shortlisting_page_requires_cms_authentication(): void
+    use RefreshDatabase;
+
+    /** A non-admin CRM user — the tool is available to every signed-in member. */
+    private function counsellor(): CrmUser
     {
-        $this->get(route('admin.pdf-shortlisting.index'))
-            ->assertRedirect(route('admin.login'));
+        return CrmUser::query()->create([
+            'name' => 'Counsellor',
+            'phone' => '9876500000',
+            'email' => 'counsellor@example.com',
+            'role' => 'counsellor',
+            'is_active' => true,
+        ]);
     }
 
-    public function test_authenticated_admin_can_open_pdf_shortlisting_page(): void
+    public function test_pdf_shortlisting_requires_crm_authentication(): void
     {
-        $this->withSession(['cms_authenticated' => true])
-            ->get(route('admin.pdf-shortlisting.index'))
+        $this->post(route('crm.pdf-shortlisting.generate'))
+            ->assertRedirect(route('crm.login'));
+    }
+
+    public function test_any_crm_user_can_open_the_shortlisting_view(): void
+    {
+        $this->withSession(['crm_user_id' => $this->counsellor()->id])
+            ->get(route('crm.dashboard', ['view' => 'shortlisting']))
             ->assertOk()
             ->assertSee("Replace the report's last page", false)
             ->assertSee('Career report PDF')
@@ -29,11 +45,11 @@ class PdfShortlistingTest extends TestCase
 
     public function test_pdf_and_excel_are_required(): void
     {
-        $this->withSession(['cms_authenticated' => true])
-            ->from(route('admin.pdf-shortlisting.index'))
-            ->post(route('admin.pdf-shortlisting.generate'))
-            ->assertRedirect(route('admin.pdf-shortlisting.index'))
-            ->assertSessionHasErrors(['report_pdf', 'shortlist_excel']);
+        $this->withSession(['crm_user_id' => $this->counsellor()->id])
+            ->from(route('crm.dashboard', ['view' => 'shortlisting']))
+            ->post(route('crm.pdf-shortlisting.generate'))
+            ->assertRedirect(route('crm.dashboard', ['view' => 'shortlisting']))
+            ->assertSessionHasErrors(['report_pdf', 'shortlist_excel'], null, 'shortlist');
     }
 
     public function test_it_replaces_only_the_last_page_and_returns_the_download(): void
@@ -59,8 +75,8 @@ class PdfShortlistingTest extends TestCase
             'USA'
         );
 
-        $response = $this->withSession(['cms_authenticated' => true])
-            ->post(route('admin.pdf-shortlisting.generate'), [
+        $response = $this->withSession(['crm_user_id' => $this->counsellor()->id])
+            ->post(route('crm.pdf-shortlisting.generate'), [
                 'report_pdf' => UploadedFile::fake()->createWithContent('career-report.pdf', $source),
                 'shortlist_excel' => UploadedFile::fake()->createWithContent('shortlist.xlsx', $workbook),
             ]);
@@ -95,19 +111,19 @@ class PdfShortlistingTest extends TestCase
     {
         $source = Pdf::loadHTML('<p>REPORT PREPARED FOR<br>Test Student</p>')->setPaper('a4')->output();
 
-        $this->withSession(['cms_authenticated' => true])
-            ->from(route('admin.pdf-shortlisting.index'))
-            ->post(route('admin.pdf-shortlisting.generate'), [
+        $this->withSession(['crm_user_id' => $this->counsellor()->id])
+            ->from(route('crm.dashboard', ['view' => 'shortlisting']))
+            ->post(route('crm.pdf-shortlisting.generate'), [
                 'report_pdf' => UploadedFile::fake()->createWithContent('career-report.pdf', $source),
                 'shortlist_excel' => UploadedFile::fake()->createWithContent(
                     'shortlist.xlsx',
                     SimpleXlsx::build(['Only heading'], [], 'Headings')
                 ),
             ])
-            ->assertRedirect(route('admin.pdf-shortlisting.index'))
+            ->assertRedirect(route('crm.dashboard', ['view' => 'shortlisting']))
             ->assertSessionHasErrors([
                 'merge' => 'Excel format issue: Sheet "Headings" only contains column A; no university option columns were found. Put attribute names in column A and university options in column B onward.',
-            ]);
+            ], null, 'shortlist');
     }
 
     public function test_more_than_eight_university_options_are_allowed(): void
@@ -125,8 +141,8 @@ class PdfShortlistingTest extends TestCase
             'USA'
         );
 
-        $response = $this->withSession(['cms_authenticated' => true])
-            ->post(route('admin.pdf-shortlisting.generate'), [
+        $response = $this->withSession(['crm_user_id' => $this->counsellor()->id])
+            ->post(route('crm.pdf-shortlisting.generate'), [
                 'report_pdf' => UploadedFile::fake()->createWithContent('career-report.pdf', $source),
                 'shortlist_excel' => UploadedFile::fake()->createWithContent('shortlist.xlsx', $workbook),
             ]);

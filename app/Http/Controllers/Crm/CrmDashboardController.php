@@ -30,7 +30,7 @@ class CrmDashboardController extends Controller
         if ($request->query('view') === 'audit') {
             abort_unless($user->isSuperAdmin(), 403);
         }
-        $allowedViews = ['dashboard', 'leads', 'enrollments', 'followups', 'students'];
+        $allowedViews = ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting'];
         if ($user->isSuperAdmin()) {
             $allowedViews = [...$allowedViews, 'subscriptions', 'audit'];
         }

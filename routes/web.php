@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
-use App\Http\Controllers\Admin\PdfShortlistingController;
 use App\Http\Controllers\Admin\TestPrepCompareCmsController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
@@ -175,6 +174,10 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
         Route::post('leads/{lead}/follow-up/complete', [\App\Http\Controllers\Crm\CrmLeadController::class, 'completeFollowUp'])->name('leads.follow-up.complete');
         Route::post('leads/{lead}/convert', [\App\Http\Controllers\Crm\CrmLeadController::class, 'convert'])->name('leads.convert');
         Route::patch('leads/{lead}/student-journey', [\App\Http\Controllers\Crm\CrmLeadController::class, 'updateStudentJourney'])->name('leads.student-journey.update');
+        // Report-production tool (moved from the admin CMS). The GET page is the
+        // dashboard "shortlisting" view; this endpoint does the merge + download.
+        Route::post('pdf-shortlisting', [\App\Http\Controllers\Crm\CrmPdfShortlistingController::class, 'generate'])
+            ->middleware('throttle:10,1')->name('pdf-shortlisting.generate');
         Route::post('team', [\App\Http\Controllers\Crm\CrmUserController::class, 'store'])->name('team.store');
         Route::patch('team/{member}', [\App\Http\Controllers\Crm\CrmUserController::class, 'update'])->name('team.update');
         Route::patch('team/{member}/toggle', [\App\Http\Controllers\Crm\CrmUserController::class, 'toggle'])->name('team.toggle');
@@ -196,10 +199,6 @@ Route::prefix('admin')->group(function () {
 
     Route::middleware('cms.auth')->group(function () {
         Route::get('/', fn () => redirect()->route('admin.dashboard'));
-        Route::get('pdf-shortlisting', [PdfShortlistingController::class, 'index'])->name('admin.pdf-shortlisting.index');
-        Route::post('pdf-shortlisting', [PdfShortlistingController::class, 'generate'])
-            ->middleware('throttle:10,1')
-            ->name('admin.pdf-shortlisting.generate');
         Route::get('blog', [BlogCmsController::class, 'index'])->name('admin.blog.index');
         Route::get('blog/create', [BlogCmsController::class, 'create'])->name('admin.blog.create');
         Route::post('blog', [BlogCmsController::class, 'store'])->name('admin.blog.store');

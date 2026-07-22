@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
 use App\Support\PdfLastPageReplacer;
 use App\Support\PdfStudentName;
 use App\Support\ShortlistingWorkbook;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -14,20 +13,24 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-final class PdfShortlistingController extends Controller
+/**
+ * Report-production tool inside the CRM: replaces a career-report PDF's last
+ * page with a branded, landscape comparison table built from a
+ * university-shortlist Excel. Available to every signed-in CRM user — the GET
+ * page is the dashboard's "shortlisting" view; this controller handles the
+ * upload → merge → download. (Moved here from the admin CMS.)
+ */
+final class CrmPdfShortlistingController extends Controller
 {
-    public function index(): View
-    {
-        return view('admin.pdf-shortlisting.index');
-    }
-
     public function generate(
         Request $request,
         ShortlistingWorkbook $workbook,
         PdfStudentName $studentName,
         PdfLastPageReplacer $replacer,
     ): BinaryFileResponse|RedirectResponse {
-        $validated = $request->validate([
+        // Errors go into the dedicated "shortlist" bag so they render in the
+        // shortlisting view without tripping the CRM's default error toast.
+        $validated = $request->validateWithBag('shortlist', [
             'report_pdf' => ['bail', 'required', 'file', 'mimetypes:application/pdf', 'max:25600'],
             'shortlist_excel' => [
                 'bail',
@@ -62,9 +65,8 @@ final class PdfShortlistingController extends Controller
                 @unlink($outputPath);
             }
 
-            return back()->withErrors([
-                'merge' => $exception->getMessage(),
-            ]);
+            return redirect()->route('crm.dashboard', ['view' => 'shortlisting'])
+                ->withErrors(['merge' => $exception->getMessage()], 'shortlist');
         } catch (\Throwable $exception) {
             if (is_file($outputPath)) {
                 @unlink($outputPath);
@@ -72,9 +74,8 @@ final class PdfShortlistingController extends Controller
 
             report($exception);
 
-            return back()->withErrors([
-                'merge' => 'The files could not be merged. Please check both uploads and try again.',
-            ]);
+            return redirect()->route('crm.dashboard', ['view' => 'shortlisting'])
+                ->withErrors(['merge' => 'The files could not be merged. Please check both uploads and try again.'], 'shortlist');
         }
 
         $slug = Str::slug($name);

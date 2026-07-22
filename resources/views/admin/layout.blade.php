@@ -215,10 +215,6 @@
         ['label' => 'Unlinked Pages', 'icon' => 'unlink', 'route' => 'admin.unlinked-pages.index', 'match' => 'admin.unlinked-pages'],
       ];
 
-      $toolItems = [
-        ['label' => 'PDF Shortlisting', 'icon' => 'files', 'route' => 'admin.pdf-shortlisting.index', 'match' => 'admin.pdf-shortlisting'],
-      ];
-
       if ($isSuper) {
         $layoutItems[] = ['label' => 'Country Visibility', 'icon' => 'eye', 'route' => 'admin.country-visibility.index', 'match' => 'admin.country-visibility', 'super_only' => true];
       }
@@ -229,7 +225,6 @@
         ]],
         ['label' => 'Pages', 'items' => $pageItems],
         ['label' => 'Country Data Sync', 'items' => $countrySyncItems],
-        ['label' => 'Tools', 'items' => $toolItems],
         ['label' => 'Layout', 'items' => $layoutItems],
       ];
   @endphp
