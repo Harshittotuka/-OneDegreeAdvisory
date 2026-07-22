@@ -175,6 +175,12 @@ $iconFor = function (string $fieldLabel, string $opt): string {
     if (str_contains($fl, 'status')) {
         return str_contains($ol, 'complet') ? '✅' : '📖';
     }
+    if (str_contains($fl, 'study mode')) {
+        // How the degree was studied — each mode a DISTINCT glyph.
+        if (str_contains($ol, 'online') || str_contains($ol, 'distance')) return '💻';
+        if (str_contains($ol, 'hybrid') || str_contains($ol, 'blended'))  return '🔀';
+        return '🏫'; // On-Campus (In-Person)
+    }
     if (str_contains($fl, 'ibdp point')) {
         if ($ol === 'n/a') {
             return '➖';

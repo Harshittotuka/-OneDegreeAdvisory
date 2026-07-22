@@ -1,1443 +1,1473 @@
 {
-    "highschool": [
+  "highschool": [
+    {
+      "key": "intake",
+      "eyebrow": "Your goal",
+      "title": "Your study-abroad goal",
+      "subtitle": "Let us start with when you would like to begin.",
+      "fields": [
         {
-            "key": "intake",
-            "eyebrow": "Your goal",
-            "title": "Your study-abroad goal",
-            "subtitle": "Let us start with when you would like to begin.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_c4ca4238",
-                    "label": "Preferred Intake",
-                    "options": [
-                        "Aug - Oct 26",
-                        "Jan - Mar 27",
-                        "Aug - Oct 27",
-                        "Year-Round 27",
-                        "Later"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "academic",
-            "eyebrow": "Academic background",
-            "title": "Your academic background",
-            "subtitle": "Tell us your current class — we’ll ask for your completed results and your expected result.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_hs_current_class",
-                    "label": "Which class are you currently in?",
-                    "options": [
-                        "Class 9",
-                        "Class 10",
-                        "Class 11",
-                        "Class 12"
-                    ],
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_e4da3b7f",
-                    "label": "Subject combinations in {class} or IBDP(* Mandatory)",
-                    "placeholder": "e.g. Physics Chemistry Maths",
-                    "required": true,
-                    "labelClassFrom": "q_hs_current_class"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_1679091c",
-                    "label": "Your board in {class}",
-                    "options": [
-                        "CBSE Board",
-                        "ICSE Board",
-                        "IB Board",
-                        "State Board",
-                        "Other Board"
-                    ],
-                    "labelClassFrom": "q_hs_current_class"
-                },
-                {
-                    "type": "text",
-                    "key": "q_hs_result_c9_actual",
-                    "label": "Class 9 result (%) — actual",
-                    "placeholder": "e.g. 88",
-                    "required": true,
-                    "showIf": {
-                        "key": "q_hs_current_class",
-                        "in": [
-                            "Class 10",
-                            "Class 11",
-                            "Class 12"
-                        ]
-                    }
-                },
-                {
-                    "type": "text",
-                    "key": "q_hs_result_c9_expected",
-                    "label": "Class 9 result (%) — expected",
-                    "placeholder": "e.g. 90",
-                    "required": true,
-                    "showIf": {
-                        "key": "q_hs_current_class",
-                        "equals": "Class 9"
-                    }
-                },
-                {
-                    "type": "text",
-                    "key": "q_hs_result_c10_actual",
-                    "label": "Class 10 result (%) — actual",
-                    "placeholder": "e.g. 88",
-                    "required": true,
-                    "showIf": {
-                        "key": "q_hs_current_class",
-                        "in": [
-                            "Class 11",
-                            "Class 12"
-                        ]
-                    }
-                },
-                {
-                    "type": "text",
-                    "key": "q_hs_result_c10_expected",
-                    "label": "Class 10 result (%) — expected",
-                    "placeholder": "e.g. 90",
-                    "required": true,
-                    "showIf": {
-                        "key": "q_hs_current_class",
-                        "equals": "Class 10"
-                    }
-                },
-                {
-                    "type": "text",
-                    "key": "q_hs_result_c11_actual",
-                    "label": "Class 11 result (%) — actual",
-                    "placeholder": "e.g. 88",
-                    "required": true,
-                    "showIf": {
-                        "key": "q_hs_current_class",
-                        "in": [
-                            "Class 12"
-                        ]
-                    }
-                },
-                {
-                    "type": "text",
-                    "key": "q_hs_result_c11_expected",
-                    "label": "Class 11 result (%) — expected",
-                    "placeholder": "e.g. 90",
-                    "required": true,
-                    "showIf": {
-                        "key": "q_hs_current_class",
-                        "equals": "Class 11"
-                    }
-                },
-                {
-                    "type": "text",
-                    "key": "q_hs_result_c12_expected",
-                    "label": "Class 12 result (%) — expected",
-                    "placeholder": "e.g. 90",
-                    "required": true,
-                    "showIf": {
-                        "key": "q_hs_current_class",
-                        "equals": "Class 12"
-                    }
-                },
-                {
-                    "type": "radio",
-                    "key": "q_8f14e45f",
-                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
-                    "options": [
-                        "24 - 31 points",
-                        "32 - 38 points",
-                        "39 - 45",
-                        "N/A"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_c51ce410",
-                    "label": "Work Experience or internship project",
-                    "options": [
-                        "No",
-                        "0-6 Months",
-                        "6-12 Months",
-                        "12 Months +"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "extracurricular",
-            "eyebrow": "Extracurriculars",
-            "title": "Your extracurriculars & differentiators",
-            "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
-            "fields": [
-                {
-                    "type": "chips",
-                    "key": "q_ec_engaged",
-                    "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "NGO / Social Volunteering",
-                        "Associations / Clubs",
-                        "Competitive Sports",
-                        "Performance Arts",
-                        "Competitions",
-                        "Just Hobbies"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_level",
-                    "label": "What has been your highest level of participation?",
-                    "options": [
-                        "Held Leadership positions",
-                        "Organized Events with major Success",
-                        "Just Participated",
-                        "None of the same"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_current",
-                    "label": "Are you still involved in the same?",
-                    "options": [
-                        "Yes, Heavily",
-                        "Somewhat",
-                        "No, was earlier involved"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_differentiators",
-                    "label": "Which of these differentiators apply to you?",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "International Experience",
-                        "Industrial Exposure",
-                        "Global Olympiad",
-                        "Any Renowned certificate other than academic",
-                        "Publications, Awards, Patents to name",
-                        "Project Monetary Impact"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "tests",
-            "eyebrow": "Test scores",
-            "title": "Your test scores",
-            "subtitle": "English and standardised tests — add what you have.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_aab32389",
-                    "label": "Overall IELTS Score",
-                    "placeholder": "e.g. 7.5"
-                },
-                {
-                    "type": "text",
-                    "key": "q_9bf31c7f",
-                    "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
-                    "placeholder": "e.g. 7.5"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_44f683a8",
-                    "label": "SAT score",
-                    "options": [
-                        "Not Appeared",
-                        "1400-1600",
-                        "1300-1399",
-                        "1200-1300",
-                        "1100-1199",
-                        "920-1099",
-                        "400-919"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "prefs",
-            "eyebrow": "Preferences & budget",
-            "title": "Preferences & budget",
-            "subtitle": "Where you want to study and what you can invest.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_3def184a",
-                    "label": "Any Budget Constraint (Total Cost per Annum)",
-                    "options": [
-                        "No Constraint",
-                        "30-40 Lakhs",
-                        "20-30 Lakhs",
-                        "10-20 Lakhs",
-                        "less than 10 Lakhs"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_069059b7",
-                    "label": "Country Preference (Maximum 2 Country)",
-                    "options": [
-                        "USA",
-                        "Canada",
-                        "UK",
-                        "Australia",
-                        "New Zealand",
-                        "Ireland",
-                        "Germany",
-                        "Rest Europe",
-                        "Malaysia",
-                        "Singapore",
-                        "Other Countries"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_a666587a",
-                    "label": "Previous Visa rejections (if any)",
-                    "options": [
-                        "No",
-                        "Yes"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_b83aac23",
-                    "label": "Travel History (Countries visited/Travelled previously)",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "text",
-                    "key": "q_cd00692c",
-                    "label": "Course Preference(* Mandatory)",
-                    "placeholder": "Type your answer",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_fe73f687",
-                    "label": "Do you have any University/College preference?",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_6da37dd3",
-                    "label": "Are you looking for Undergraduate degree/ diploma or certificate program",
-                    "options": [
-                        "Degree Program",
-                        "Diploma Program",
-                        "Certificate"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "details",
-            "eyebrow": "Final details",
-            "title": "A few final details",
-            "subtitle": "Almost done — just these last bits.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_c042f4db",
-                    "label": "Your Expectations",
-                    "placeholder": "Tell us in a line or two…"
-                }
-            ]
+          "type": "radio",
+          "key": "q_c4ca4238",
+          "label": "Preferred Intake",
+          "options": [
+            "Aug - Oct 26",
+            "Jan - Mar 27",
+            "Aug - Oct 27",
+            "Year-Round 27",
+            "Later"
+          ]
         }
-    ],
-    "bachelors": [
+      ]
+    },
+    {
+      "key": "academic",
+      "eyebrow": "Academic background",
+      "title": "Your academic background",
+      "subtitle": "Tell us your current class — we’ll ask for your completed results and your expected result.",
+      "fields": [
         {
-            "key": "intake",
-            "eyebrow": "Your goal",
-            "title": "Your study-abroad goal",
-            "subtitle": "Let us start with when you would like to begin.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_c4ca4238",
-                    "label": "Preferred Intake",
-                    "options": [
-                        "Aug - Oct 26",
-                        "Jan - Mar 27",
-                        "Aug - Oct 27",
-                        "Year-Round 27",
-                        "Later"
-                    ]
-                }
-            ]
+          "type": "radio",
+          "key": "q_hs_current_class",
+          "label": "Which class are you currently in?",
+          "options": [
+            "Class 9",
+            "Class 10",
+            "Class 11",
+            "Class 12"
+          ],
+          "required": true
         },
         {
-            "key": "academic",
-            "eyebrow": "Academic background",
-            "title": "Your academic background",
-            "subtitle": "Tell us about your Class 12 / school record.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_a87ff679",
-                    "label": "Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)",
-                    "placeholder": "e.g. 88",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_e4da3b7f",
-                    "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
-                    "placeholder": "e.g. Physics Chemistry Maths",
-                    "required": true
-                },
-                {
-                    "type": "radio",
-                    "key": "q_1679091c",
-                    "label": "Your Board in 12th Class",
-                    "options": [
-                        "CBSE Board",
-                        "ICSE Board",
-                        "IB Board",
-                        "State Board",
-                        "Other Board"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_8f14e45f",
-                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
-                    "options": [
-                        "24 - 31 points",
-                        "32 - 38 points",
-                        "39 - 45",
-                        "N/A"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_45c48cce",
-                    "label": "Year of Passing 12th class(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_d3d94468",
-                    "label": "No. of backlogs/repeats (if any) Please mention the exact no of repeats.(* Mandatory)",
-                    "placeholder": "Type your answer",
-                    "required": true
-                },
-                {
-                    "type": "radio",
-                    "key": "q_6512bd43",
-                    "label": "Education Gap (In between studies or after studies)",
-                    "options": [
-                        "No Gaps",
-                        "1 Yr Gap",
-                        "2 Yr Gap",
-                        "3 Yr Gap",
-                        "3 Yr + Gap"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_c51ce410",
-                    "label": "Work Experience or internship project",
-                    "options": [
-                        "No",
-                        "0-6 Months",
-                        "6-12 Months",
-                        "12 Months +"
-                    ]
-                }
-            ]
+          "type": "text",
+          "key": "q_e4da3b7f",
+          "label": "Subject combinations in {class} or IBDP(* Mandatory)",
+          "placeholder": "e.g. Physics Chemistry Maths",
+          "required": true,
+          "labelClassFrom": "q_hs_current_class"
         },
         {
-            "key": "extracurricular",
-            "eyebrow": "Extracurriculars",
-            "title": "Your extracurriculars & differentiators",
-            "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
-            "fields": [
-                {
-                    "type": "chips",
-                    "key": "q_ec_engaged",
-                    "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "NGO / Social Volunteering",
-                        "Associations / Clubs",
-                        "Competitive Sports",
-                        "Performance Arts",
-                        "Competitions",
-                        "Just Hobbies"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_level",
-                    "label": "What has been your highest level of participation?",
-                    "options": [
-                        "Held Leadership positions",
-                        "Organized Events with major Success",
-                        "Just Participated",
-                        "None of the same"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_current",
-                    "label": "Are you still involved in the same?",
-                    "options": [
-                        "Yes, Heavily",
-                        "Somewhat",
-                        "No, was earlier involved"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_differentiators",
-                    "label": "Which of these differentiators apply to you?",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "International Experience",
-                        "Industrial Exposure",
-                        "Global Olympiad",
-                        "Any Renowned certificate other than academic",
-                        "Publications, Awards, Patents to name",
-                        "Project Monetary Impact"
-                    ]
-                }
-            ]
+          "type": "radio",
+          "key": "q_1679091c",
+          "label": "Your board in {class}",
+          "options": [
+            "CBSE Board",
+            "ICSE Board",
+            "IB Board",
+            "State Board",
+            "Other Board"
+          ],
+          "labelClassFrom": "q_hs_current_class"
         },
         {
-            "key": "tests",
-            "eyebrow": "Test scores",
-            "title": "Your test scores",
-            "subtitle": "English and standardised tests — add what you have.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_aab32389",
-                    "label": "Overall IELTS Score",
-                    "placeholder": "e.g. 7.5"
-                },
-                {
-                    "type": "text",
-                    "key": "q_9bf31c7f",
-                    "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
-                    "placeholder": "e.g. 7.5"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_44f683a8",
-                    "label": "SAT score",
-                    "options": [
-                        "Not Appeared",
-                        "1400-1600",
-                        "1300-1399",
-                        "1200-1300",
-                        "1100-1199",
-                        "920-1099",
-                        "400-919"
-                    ]
-                }
+          "type": "text",
+          "key": "q_hs_result_c9_actual",
+          "label": "Class 9 result (%) — actual",
+          "placeholder": "e.g. 88",
+          "required": true,
+          "showIf": {
+            "key": "q_hs_current_class",
+            "in": [
+              "Class 10",
+              "Class 11",
+              "Class 12"
             ]
+          }
         },
         {
-            "key": "prefs",
-            "eyebrow": "Preferences & budget",
-            "title": "Preferences & budget",
-            "subtitle": "Where you want to study and what you can invest.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_3def184a",
-                    "label": "Any Budget Constraint (Total Cost per Annum)",
-                    "options": [
-                        "No Constraint",
-                        "30-40 Lakhs",
-                        "20-30 Lakhs",
-                        "10-20 Lakhs",
-                        "less than 10 Lakhs"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_069059b7",
-                    "label": "Country Preference (Maximum 2 Country)",
-                    "options": [
-                        "USA",
-                        "Canada",
-                        "UK",
-                        "Australia",
-                        "New Zealand",
-                        "Ireland",
-                        "Germany",
-                        "Rest Europe",
-                        "Malaysia",
-                        "Singapore",
-                        "Other Countries"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_a666587a",
-                    "label": "Previous Visa rejections (if any)",
-                    "options": [
-                        "No",
-                        "Yes"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_b83aac23",
-                    "label": "Travel History (Countries visited/Travelled previously)",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "text",
-                    "key": "q_cd00692c",
-                    "label": "Course Preference(* Mandatory)",
-                    "placeholder": "Type your answer",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_fe73f687",
-                    "label": "Do you have any University/College preference?",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_6da37dd3",
-                    "label": "Are you looking for Undergraduate degree/ diploma or certificate program",
-                    "options": [
-                        "Degree Program",
-                        "Diploma Program",
-                        "Certificate"
-                    ]
-                }
-            ]
+          "type": "text",
+          "key": "q_hs_result_c9_expected",
+          "label": "Class 9 result (%) — expected",
+          "placeholder": "e.g. 90",
+          "required": true,
+          "showIf": {
+            "key": "q_hs_current_class",
+            "equals": "Class 9"
+          }
         },
         {
-            "key": "details",
-            "eyebrow": "Final details",
-            "title": "A few final details",
-            "subtitle": "Almost done — just these last bits.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_c042f4db",
-                    "label": "Your Expectations",
-                    "placeholder": "Tell us in a line or two…"
-                }
+          "type": "text",
+          "key": "q_hs_result_c10_actual",
+          "label": "Class 10 result (%) — actual",
+          "placeholder": "e.g. 88",
+          "required": true,
+          "showIf": {
+            "key": "q_hs_current_class",
+            "in": [
+              "Class 11",
+              "Class 12"
             ]
+          }
+        },
+        {
+          "type": "text",
+          "key": "q_hs_result_c10_expected",
+          "label": "Class 10 result (%) — expected",
+          "placeholder": "e.g. 90",
+          "required": true,
+          "showIf": {
+            "key": "q_hs_current_class",
+            "equals": "Class 10"
+          }
+        },
+        {
+          "type": "text",
+          "key": "q_hs_result_c11_actual",
+          "label": "Class 11 result (%) — actual",
+          "placeholder": "e.g. 88",
+          "required": true,
+          "showIf": {
+            "key": "q_hs_current_class",
+            "in": [
+              "Class 12"
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "key": "q_hs_result_c11_expected",
+          "label": "Class 11 result (%) — expected",
+          "placeholder": "e.g. 90",
+          "required": true,
+          "showIf": {
+            "key": "q_hs_current_class",
+            "equals": "Class 11"
+          }
+        },
+        {
+          "type": "text",
+          "key": "q_hs_result_c12_expected",
+          "label": "Class 12 result (%) — expected",
+          "placeholder": "e.g. 90",
+          "required": true,
+          "showIf": {
+            "key": "q_hs_current_class",
+            "equals": "Class 12"
+          }
+        },
+        {
+          "type": "radio",
+          "key": "q_8f14e45f",
+          "label": "Your IBDP point score ( If from IB board or else keep it blank)",
+          "options": [
+            "24 - 31 points",
+            "32 - 38 points",
+            "39 - 45",
+            "N/A"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_c51ce410",
+          "label": "Work Experience or internship project",
+          "options": [
+            "No",
+            "0-6 Months",
+            "6-12 Months",
+            "12 Months +"
+          ]
         }
-    ],
-    "masters": [
+      ]
+    },
+    {
+      "key": "extracurricular",
+      "eyebrow": "Extracurriculars",
+      "title": "Your extracurriculars & differentiators",
+      "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
+      "fields": [
         {
-            "key": "intake",
-            "eyebrow": "Your goal",
-            "title": "Your study-abroad goal",
-            "subtitle": "Let us start with when you would like to begin.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_c74d97b0",
-                    "label": "Preferred Intake",
-                    "options": [
-                        "Aug - Oct 26",
-                        "Jan - Mar 27",
-                        "Aug - Oct 27",
-                        "Year-Round 27",
-                        "Later"
-                    ]
-                }
-            ]
+          "type": "chips",
+          "key": "q_ec_engaged",
+          "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
+          "help": "Select all that apply.",
+          "options": [
+            "NGO / Social Volunteering",
+            "Associations / Clubs",
+            "Competitive Sports",
+            "Performance Arts",
+            "Competitions",
+            "Just Hobbies"
+          ]
         },
         {
-            "key": "academic",
-            "eyebrow": "Academic background",
-            "title": "Your academic background",
-            "subtitle": "Your school and undergraduate record.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_1f0e3dad",
-                    "label": "Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)",
-                    "placeholder": "e.g. 88",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_98f13708",
-                    "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
-                    "placeholder": "e.g. Physics Chemistry Maths",
-                    "required": true
-                },
-                {
-                    "type": "radio",
-                    "key": "q_310dcbbf",
-                    "label": "Your Board in 12th Class",
-                    "options": [
-                        "CBSE Board",
-                        "ICSE Board",
-                        "IB Board",
-                        "State Board",
-                        "Other Board"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_2f2b2656",
-                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
-                    "options": [
-                        "24 - 31 points",
-                        "32 - 38 points",
-                        "39 - 45",
-                        "N/A"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_3c59dc04",
-                    "label": "Graduation (UG) Course you completed/ Pursuing (Full Course Name)",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_b6d767d2",
-                    "label": "Graduation (UG) Duration you pursued",
-                    "options": [
-                        "5 Years",
-                        "4 Years",
-                        "3 Years",
-                        "2 Years",
-                        "Less than 2 Years"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_37693cfc",
-                    "label": "Your overall % or CGPA in Bachelors. If pursuing then expected % or CGPA",
-                    "placeholder": "e.g. 88"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ug_rank",
-                    "label": "What would you say was the rank of your Under Grad university in your country?",
-                    "options": [
-                        "Top 10",
-                        "Between 10-25",
-                        "Between 25-50",
-                        "Below 50"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_819f46e5",
-                    "label": "Year of Passing 12th class(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_04025959",
-                    "label": "Year of Passing graduation(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_1ff1de77",
-                    "label": "No. of backlogs/repeats (if any) - Please specify the exact no of repeats. (* Mandatory)",
-                    "placeholder": "Type your answer",
-                    "required": true
-                },
-                {
-                    "type": "radio",
-                    "key": "q_8e296a06",
-                    "label": "Education Gap (In between studies or after studies)",
-                    "options": [
-                        "No Gaps",
-                        "1 Yr Gap",
-                        "2 Yr Gap",
-                        "3 Yr Gap",
-                        "3 Yr + Gap"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_4e732ced",
-                    "label": "Work Experience or internship project",
-                    "options": [
-                        "No",
-                        "0-6 Months",
-                        "6-12",
-                        "2 years",
-                        "3 years",
-                        "3 years +"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_achievements",
-                    "label": "Do you have any other notable achievements? (You can choose multiple)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "I have received an award / scholarship",
-                        "I have engaged in Academic Projects",
-                        "Research Papers",
-                        "Top 10 rank holder",
-                        "Unconventional background (medicine, law etc)"
-                    ]
-                }
-            ]
+          "type": "radio",
+          "key": "q_ec_level",
+          "label": "What has been your highest level of participation?",
+          "options": [
+            "Held Leadership positions",
+            "Organized Events with major Success",
+            "Just Participated",
+            "None of the same"
+          ]
         },
         {
-            "key": "extracurricular",
-            "eyebrow": "Extracurriculars",
-            "title": "Your extracurriculars & differentiators",
-            "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
-            "fields": [
-                {
-                    "type": "chips",
-                    "key": "q_ec_engaged",
-                    "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "NGO / Social Volunteering",
-                        "Associations / Clubs",
-                        "Competitive Sports",
-                        "Performance Arts",
-                        "Competitions",
-                        "Just Hobbies"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_level",
-                    "label": "What has been your highest level of participation?",
-                    "options": [
-                        "Held Leadership positions",
-                        "Organized Events with major Success",
-                        "Just Participated",
-                        "None of the same"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_current",
-                    "label": "Are you still involved in the same?",
-                    "options": [
-                        "Yes, Heavily",
-                        "Somewhat",
-                        "No, was earlier involved"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_differentiators",
-                    "label": "Which of these differentiators apply to you?",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "International Experience",
-                        "Industrial Exposure",
-                        "Global Olympiad",
-                        "Any Renowned certificate other than academic",
-                        "Publications, Awards, Patents to name",
-                        "Project Monetary Impact"
-                    ]
-                }
-            ]
+          "type": "radio",
+          "key": "q_ec_current",
+          "label": "Are you still involved in the same?",
+          "options": [
+            "Yes, Heavily",
+            "Somewhat",
+            "No, was earlier involved"
+          ]
         },
         {
-            "key": "tests",
-            "eyebrow": "Test scores",
-            "title": "Your test scores",
-            "subtitle": "English and standardised tests — add what you have.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_02e74f10",
-                    "label": "Overall IELTS / ToEFL / PTE Score or Expected",
-                    "placeholder": "e.g. 7.5"
-                },
-                {
-                    "type": "text",
-                    "key": "q_3dd48ab3",
-                    "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
-                    "placeholder": "e.g. 7.5"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_33e75ff0",
-                    "label": "GMAT Score",
-                    "options": [
-                        "Not Appeared",
-                        "700-800",
-                        "600-699",
-                        "500-599",
-                        "450-499",
-                        "300-449"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_6ea9ab1b",
-                    "label": "GRE Score",
-                    "options": [
-                        "Not Appeared",
-                        "310-360",
-                        "300-310",
-                        "286-300",
-                        "279-285",
-                        "200-278"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "prefs",
-            "eyebrow": "Preferences & budget",
-            "title": "Preferences & budget",
-            "subtitle": "Where you want to study and what you can invest.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_34173cb3",
-                    "label": "Any Budget Constraint (Total Cost per Annum)",
-                    "options": [
-                        "No Constraint",
-                        "30-40 Lakhs",
-                        "20-30 Lakhs",
-                        "10-20 Lakhs",
-                        "Less than 10 Lakhs"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_c16a5320",
-                    "label": "Country Preference (Maximum 2 Country)",
-                    "options": [
-                        "USA",
-                        "Canada",
-                        "UK",
-                        "Australia",
-                        "New Zealand",
-                        "Ireland",
-                        "Germany",
-                        "Rest Europe",
-                        "Malaysia",
-                        "Singapore",
-                        "Other Countries"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_6364d3f0",
-                    "label": "Previous Visa rejections (if any)",
-                    "options": [
-                        "No",
-                        "Yes"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_093f65e0",
-                    "label": "Course Preference for post graduation (You would like to study)(* Mandatory)",
-                    "placeholder": "Type your answer",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_03afdbd6",
-                    "label": "Do you have any University/College preference?",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_3ad7c2eb",
-                    "label": "Are you looking for Postgraduate degree/ diploma or certificate program",
-                    "options": [
-                        "Degree",
-                        "Diploma",
-                        "Certificate"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "details",
-            "eyebrow": "Final details",
-            "title": "A few final details",
-            "subtitle": "Almost done — just these last bits.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_e369853d",
-                    "label": "Your Expectations",
-                    "placeholder": "Tell us in a line or two…"
-                }
-            ]
+          "type": "chips",
+          "key": "q_differentiators",
+          "label": "Which of these differentiators apply to you?",
+          "help": "Select all that apply.",
+          "options": [
+            "International Experience",
+            "Industrial Exposure",
+            "Global Olympiad",
+            "Any Renowned certificate other than academic",
+            "Publications, Awards, Patents to name",
+            "Project Monetary Impact"
+          ]
         }
-    ],
-    "doctorate": [
+      ]
+    },
+    {
+      "key": "tests",
+      "eyebrow": "Test scores",
+      "title": "Your test scores",
+      "subtitle": "English and standardised tests — add what you have.",
+      "fields": [
         {
-            "key": "schooling",
-            "eyebrow": "Schooling & intake",
-            "title": "Schooling & intake",
-            "subtitle": "Your goal and your Class 10–12 record.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_1c383cd3",
-                    "label": "Preferred Intake",
-                    "options": [
-                        "Aug - Oct 26",
-                        "Jan - Mar 27",
-                        "Aug - Oct 27",
-                        "Year-Round 27",
-                        "Later"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_19ca14e7",
-                    "label": "Your overall percentage in 10th Class(* Mandatory)",
-                    "placeholder": "e.g. 88",
-                    "required": true
-                },
-                {
-                    "type": "radio",
-                    "key": "q_a5bfc9e0",
-                    "label": "Your current status of 12th Class",
-                    "options": [
-                        "Completed",
-                        "Pursuing"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_a5771bce",
-                    "label": "Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)",
-                    "placeholder": "e.g. 88",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_d67d8ab4",
-                    "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
-                    "placeholder": "e.g. Physics Chemistry Maths",
-                    "required": true
-                },
-                {
-                    "type": "radio",
-                    "key": "q_b3967a0e",
-                    "label": "Your Board in 12th Class",
-                    "options": [
-                        "CBSE Board",
-                        "ICSE Board",
-                        "IB Board",
-                        "State Board",
-                        "Other Board"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_d81f9c1b",
-                    "label": "Your IBDP point score ( If from IB board or else keep it blank)",
-                    "options": [
-                        "24 - 31 points",
-                        "32 - 38 points",
-                        "39 - 45",
-                        "N/A"
-                    ]
-                }
-            ]
+          "type": "text",
+          "key": "q_aab32389",
+          "label": "Overall IELTS Score",
+          "placeholder": "e.g. 7.5"
         },
         {
-            "key": "higher_ed",
-            "eyebrow": "Graduation & post-graduation",
-            "title": "Graduation & post-graduation",
-            "subtitle": "Your UG and PG details.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_d645920e",
-                    "label": "Graduation (UG) Course type you pursued",
-                    "options": [
-                        "Degree",
-                        "Diploma"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_3416a75f",
-                    "label": "Graduation (UG) Duration you pursued",
-                    "options": [
-                        "5 Years",
-                        "4 Years",
-                        "3 Years",
-                        "2 Years",
-                        "Lesser than 2 Years"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_c5ff2543",
-                    "label": "Your current status of graduation",
-                    "options": [
-                        "Completed",
-                        "Pursuing final year"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_a1d0c6e8",
-                    "label": "Your Score in Bachelors (% or CGPA). If pursuing then expected score",
-                    "placeholder": "e.g. 88"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ug_rank",
-                    "label": "What would you say was the rank of your Under Grad university in your country?",
-                    "options": [
-                        "Top 10",
-                        "Between 10-25",
-                        "Between 25-50",
-                        "Below 50"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_17e62166",
-                    "label": "Post Graduation (PG) Course type you pursued",
-                    "options": [
-                        "Degree",
-                        "Diploma"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_f7177163",
-                    "label": "Post Graduation (PG) Duration you pursued",
-                    "options": [
-                        "3 Years",
-                        "2 Years",
-                        "1 Year",
-                        "Lesser than 1 Year"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_0bb4aec1",
-                    "label": "Your current status of Post graduation",
-                    "options": [
-                        "Completed",
-                        "Pursuing final year"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_6c8349cc",
-                    "label": "Your Score in Post Graduation (% or CGPA). If pursuing then expected score",
-                    "placeholder": "e.g. 88"
-                },
-                {
-                    "type": "text",
-                    "key": "q_d9d4f495",
-                    "label": "Project details of Masters",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "chips",
-                    "key": "q_achievements",
-                    "label": "Do you have any other notable achievements? (You can choose multiple)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "I have received an award / scholarship",
-                        "I have engaged in Academic Projects",
-                        "Research Papers",
-                        "Top 10 rank holder",
-                        "Unconventional background (medicine, law etc)"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_a684ecee",
-                    "label": "Country Preference",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "text",
-                    "key": "q_9de6d14f",
-                    "label": "Year of Passed 10th class(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_efe93778",
-                    "label": "Year of Pass 12th class(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_371bce7d",
-                    "label": "Year of Pass graduation(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_138bb069",
-                    "label": "Year of Pass Post graduation(* Mandatory)",
-                    "placeholder": "e.g. 2026",
-                    "required": true
-                }
-            ]
+          "type": "text",
+          "key": "q_9bf31c7f",
+          "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
+          "placeholder": "e.g. 7.5"
         },
         {
-            "key": "experience",
-            "eyebrow": "Experience & gaps",
-            "title": "Experience & gaps",
-            "subtitle": "Backlogs, education gaps and work experience.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_67c6a1e7",
-                    "label": "No. of backlogs/repeats (if any)",
-                    "options": [
-                        "No Backlogs",
-                        "1 Backlogs",
-                        "2 Backlogs",
-                        "3-4 Backlogs",
-                        "More than 5 Backlogs"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_642e92ef",
-                    "label": "Education Gap (In between studies or after studies)",
-                    "options": [
-                        "No Gaps",
-                        "1 Yr Gap",
-                        "2 Yr Gap",
-                        "3 Yr Gap",
-                        "More than 3 Yr Gap"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_f457c545",
-                    "label": "Work Experience or internship project",
-                    "options": [
-                        "No work experience",
-                        "0-6 Months Experience",
-                        "6-12 Months Experience",
-                        "2 Years Experience",
-                        "3 Years Experience",
-                        "more than 3 years Experience"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "extracurricular",
-            "eyebrow": "Extracurriculars",
-            "title": "Your extracurriculars & differentiators",
-            "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
-            "fields": [
-                {
-                    "type": "chips",
-                    "key": "q_ec_engaged",
-                    "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "NGO / Social Volunteering",
-                        "Associations / Clubs",
-                        "Competitive Sports",
-                        "Performance Arts",
-                        "Competitions",
-                        "Just Hobbies"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_level",
-                    "label": "What has been your highest level of participation?",
-                    "options": [
-                        "Held Leadership positions",
-                        "Organized Events with major Success",
-                        "Just Participated",
-                        "None of the same"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_ec_current",
-                    "label": "Are you still involved in the same?",
-                    "options": [
-                        "Yes, Heavily",
-                        "Somewhat",
-                        "No, was earlier involved"
-                    ]
-                },
-                {
-                    "type": "chips",
-                    "key": "q_differentiators",
-                    "label": "Which of these differentiators apply to you?",
-                    "help": "Select all that apply.",
-                    "options": [
-                        "International Experience",
-                        "Industrial Exposure",
-                        "Global Olympiad",
-                        "Any Renowned certificate other than academic",
-                        "Publications, Awards, Patents to name",
-                        "Project Monetary Impact"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "tests",
-            "eyebrow": "Test scores",
-            "title": "Your test scores",
-            "subtitle": "English and standardised tests — add what you have.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_c0c7c76d",
-                    "label": "IELTS / ToEFL / PTE Score",
-                    "options": [
-                        "Not Appeared",
-                        ">7.5 or 110 or 74",
-                        "6.6-7.5 or 89-108 or 59-73",
-                        "6.1-6.5 or 72-88 or 43-49",
-                        "5.5-6 or 69-71 or 35-42"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_8dd48d6a",
-                    "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
-                    "placeholder": "e.g. 7.5"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_2838023a",
-                    "label": "GMAT Score",
-                    "options": [
-                        "Not Appeared",
-                        "700-800",
-                        "600-699",
-                        "500-599",
-                        "450-499",
-                        "300-449"
-                    ]
-                },
-                {
-                    "type": "radio",
-                    "key": "q_9a115815",
-                    "label": "GRE Score",
-                    "options": [
-                        "Not Appeared",
-                        "310-360",
-                        "300-310",
-                        "286-300",
-                        "279-285",
-                        "200-278"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "prefs",
-            "eyebrow": "Preferences & budget",
-            "title": "Preferences & budget",
-            "subtitle": "Where you want to study and what you can invest.",
-            "fields": [
-                {
-                    "type": "radio",
-                    "key": "q_d82c8d16",
-                    "label": "Any Budget Constraint (Total Cost per Annum)",
-                    "options": [
-                        "No budget Constraint",
-                        "30-40 Lakhs",
-                        "20-30 Lakhs",
-                        "10-20 Lakhs",
-                        "Lesser than 10 Lakhs"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_82cec960",
-                    "label": "Country Preference (Maximum 2 Country)",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_b53b3a3d",
-                    "label": "Previous Visa rejections (if any)",
-                    "options": [
-                        "No",
-                        "Yes"
-                    ]
-                },
-                {
-                    "type": "text",
-                    "key": "q_9f61408e",
-                    "label": "Travel History (Countries visited/Travelled previously)",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "text",
-                    "key": "q_072b030b",
-                    "label": "Course Preference you want to pursue(* Mandatory)",
-                    "placeholder": "Type your answer",
-                    "required": true
-                },
-                {
-                    "type": "text",
-                    "key": "q_7f39f831",
-                    "label": "Any Specilaization Preference",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "text",
-                    "key": "q_ea5d2f1c",
-                    "label": "Do you have any University/College preference?",
-                    "placeholder": "Type your answer"
-                },
-                {
-                    "type": "radio",
-                    "key": "q_6c524f9d",
-                    "label": "Are you looking for Postgraduate degree/ diploma or certificate program",
-                    "options": [
-                        "Postgraduate Degree Program",
-                        "Postgraduate Diploma Program",
-                        "Postgraduate Certificate Program"
-                    ]
-                }
-            ]
-        },
-        {
-            "key": "details",
-            "eyebrow": "Final details",
-            "title": "Final details",
-            "subtitle": "Almost done.",
-            "fields": [
-                {
-                    "type": "text",
-                    "key": "q_72b32a1f",
-                    "label": "Your Expectations",
-                    "placeholder": "Tell us in a line or two…"
-                }
-            ]
+          "type": "radio",
+          "key": "q_44f683a8",
+          "label": "SAT score",
+          "options": [
+            "Not Appeared",
+            "1400-1600",
+            "1300-1399",
+            "1200-1300",
+            "1100-1199",
+            "920-1099",
+            "400-919"
+          ]
         }
-    ]
+      ]
+    },
+    {
+      "key": "prefs",
+      "eyebrow": "Preferences & budget",
+      "title": "Preferences & budget",
+      "subtitle": "Where you want to study and what you can invest.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_3def184a",
+          "label": "Any Budget Constraint (Total Cost per Annum)",
+          "options": [
+            "No Constraint",
+            "30-40 Lakhs",
+            "20-30 Lakhs",
+            "10-20 Lakhs",
+            "less than 10 Lakhs"
+          ]
+        },
+        {
+          "type": "chips",
+          "key": "q_069059b7",
+          "label": "Country Preference (Maximum 2 Country)",
+          "options": [
+            "USA",
+            "Canada",
+            "UK",
+            "Australia",
+            "New Zealand",
+            "Ireland",
+            "Germany",
+            "Rest Europe",
+            "Malaysia",
+            "Singapore",
+            "Other Countries"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_a666587a",
+          "label": "Previous Visa rejections (if any)",
+          "options": [
+            "No",
+            "Yes"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_b83aac23",
+          "label": "Travel History (Countries visited/Travelled previously)",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "text",
+          "key": "q_cd00692c",
+          "label": "Course Preference(* Mandatory)",
+          "placeholder": "Type your answer",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_fe73f687",
+          "label": "Do you have any University/College preference?",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "radio",
+          "key": "q_6da37dd3",
+          "label": "Are you looking for Undergraduate degree/ diploma or certificate program",
+          "options": [
+            "Degree Program",
+            "Diploma Program",
+            "Certificate"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "details",
+      "eyebrow": "Final details",
+      "title": "A few final details",
+      "subtitle": "Almost done — just these last bits.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_c042f4db",
+          "label": "Your Expectations",
+          "placeholder": "Tell us in a line or two…"
+        }
+      ]
+    }
+  ],
+  "bachelors": [
+    {
+      "key": "intake",
+      "eyebrow": "Your goal",
+      "title": "Your study-abroad goal",
+      "subtitle": "Let us start with when you would like to begin.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_c4ca4238",
+          "label": "Preferred Intake",
+          "options": [
+            "Aug - Oct 26",
+            "Jan - Mar 27",
+            "Aug - Oct 27",
+            "Year-Round 27",
+            "Later"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "academic",
+      "eyebrow": "Academic background",
+      "title": "Your academic background",
+      "subtitle": "Tell us about your Class 12 / school record.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_a87ff679",
+          "label": "Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)",
+          "placeholder": "e.g. 88",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_e4da3b7f",
+          "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
+          "placeholder": "e.g. Physics Chemistry Maths",
+          "required": true
+        },
+        {
+          "type": "radio",
+          "key": "q_1679091c",
+          "label": "Your Board in 12th Class",
+          "options": [
+            "CBSE Board",
+            "ICSE Board",
+            "IB Board",
+            "State Board",
+            "Other Board"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_8f14e45f",
+          "label": "Your IBDP point score ( If from IB board or else keep it blank)",
+          "options": [
+            "24 - 31 points",
+            "32 - 38 points",
+            "39 - 45",
+            "N/A"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_45c48cce",
+          "label": "Year of Passing 12th class(* Mandatory)",
+          "placeholder": "e.g. 2026",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_d3d94468",
+          "label": "No. of backlogs/repeats (if any) Please mention the exact no of repeats.(* Mandatory)",
+          "placeholder": "Type your answer",
+          "required": true
+        },
+        {
+          "type": "radio",
+          "key": "q_6512bd43",
+          "label": "Education Gap (In between studies or after studies)",
+          "options": [
+            "No Gaps",
+            "1 Yr Gap",
+            "2 Yr Gap",
+            "3 Yr Gap",
+            "3 Yr + Gap"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_c51ce410",
+          "label": "Work Experience or internship project",
+          "options": [
+            "No",
+            "0-6 Months",
+            "6-12 Months",
+            "12 Months +"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "extracurricular",
+      "eyebrow": "Extracurriculars",
+      "title": "Your extracurriculars & differentiators",
+      "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
+      "fields": [
+        {
+          "type": "chips",
+          "key": "q_ec_engaged",
+          "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
+          "help": "Select all that apply.",
+          "options": [
+            "NGO / Social Volunteering",
+            "Associations / Clubs",
+            "Competitive Sports",
+            "Performance Arts",
+            "Competitions",
+            "Just Hobbies"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_ec_level",
+          "label": "What has been your highest level of participation?",
+          "options": [
+            "Held Leadership positions",
+            "Organized Events with major Success",
+            "Just Participated",
+            "None of the same"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_ec_current",
+          "label": "Are you still involved in the same?",
+          "options": [
+            "Yes, Heavily",
+            "Somewhat",
+            "No, was earlier involved"
+          ]
+        },
+        {
+          "type": "chips",
+          "key": "q_differentiators",
+          "label": "Which of these differentiators apply to you?",
+          "help": "Select all that apply.",
+          "options": [
+            "International Experience",
+            "Industrial Exposure",
+            "Global Olympiad",
+            "Any Renowned certificate other than academic",
+            "Publications, Awards, Patents to name",
+            "Project Monetary Impact"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "tests",
+      "eyebrow": "Test scores",
+      "title": "Your test scores",
+      "subtitle": "English and standardised tests — add what you have.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_aab32389",
+          "label": "Overall IELTS Score",
+          "placeholder": "e.g. 7.5"
+        },
+        {
+          "type": "text",
+          "key": "q_9bf31c7f",
+          "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
+          "placeholder": "e.g. 7.5"
+        },
+        {
+          "type": "radio",
+          "key": "q_44f683a8",
+          "label": "SAT score",
+          "options": [
+            "Not Appeared",
+            "1400-1600",
+            "1300-1399",
+            "1200-1300",
+            "1100-1199",
+            "920-1099",
+            "400-919"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "prefs",
+      "eyebrow": "Preferences & budget",
+      "title": "Preferences & budget",
+      "subtitle": "Where you want to study and what you can invest.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_3def184a",
+          "label": "Any Budget Constraint (Total Cost per Annum)",
+          "options": [
+            "No Constraint",
+            "30-40 Lakhs",
+            "20-30 Lakhs",
+            "10-20 Lakhs",
+            "less than 10 Lakhs"
+          ]
+        },
+        {
+          "type": "chips",
+          "key": "q_069059b7",
+          "label": "Country Preference (Maximum 2 Country)",
+          "options": [
+            "USA",
+            "Canada",
+            "UK",
+            "Australia",
+            "New Zealand",
+            "Ireland",
+            "Germany",
+            "Rest Europe",
+            "Malaysia",
+            "Singapore",
+            "Other Countries"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_a666587a",
+          "label": "Previous Visa rejections (if any)",
+          "options": [
+            "No",
+            "Yes"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_b83aac23",
+          "label": "Travel History (Countries visited/Travelled previously)",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "text",
+          "key": "q_cd00692c",
+          "label": "Course Preference(* Mandatory)",
+          "placeholder": "Type your answer",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_fe73f687",
+          "label": "Do you have any University/College preference?",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "radio",
+          "key": "q_6da37dd3",
+          "label": "Are you looking for Undergraduate degree/ diploma or certificate program",
+          "options": [
+            "Degree Program",
+            "Diploma Program",
+            "Certificate"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "details",
+      "eyebrow": "Final details",
+      "title": "A few final details",
+      "subtitle": "Almost done — just these last bits.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_c042f4db",
+          "label": "Your Expectations",
+          "placeholder": "Tell us in a line or two…"
+        }
+      ]
+    }
+  ],
+  "masters": [
+    {
+      "key": "intake",
+      "eyebrow": "Your goal",
+      "title": "Your study-abroad goal",
+      "subtitle": "Let us start with when you would like to begin.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_c74d97b0",
+          "label": "Preferred Intake",
+          "options": [
+            "Aug - Oct 26",
+            "Jan - Mar 27",
+            "Aug - Oct 27",
+            "Year-Round 27",
+            "Later"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "academic",
+      "eyebrow": "Academic background",
+      "title": "Your academic background",
+      "subtitle": "Your school and undergraduate record.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_1f0e3dad",
+          "label": "Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)",
+          "placeholder": "e.g. 88",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_98f13708",
+          "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
+          "placeholder": "e.g. Physics Chemistry Maths",
+          "required": true
+        },
+        {
+          "type": "radio",
+          "key": "q_310dcbbf",
+          "label": "Your Board in 12th Class",
+          "options": [
+            "CBSE Board",
+            "ICSE Board",
+            "IB Board",
+            "State Board",
+            "Other Board"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_2f2b2656",
+          "label": "Your IBDP point score ( If from IB board or else keep it blank)",
+          "options": [
+            "24 - 31 points",
+            "32 - 38 points",
+            "39 - 45",
+            "N/A"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_3c59dc04",
+          "label": "Graduation (UG) Course you completed/ Pursuing (Full Course Name)",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "radio",
+          "key": "q_b6d767d2",
+          "label": "Graduation (UG) Duration you pursued",
+          "options": [
+            "5 Years",
+            "4 Years",
+            "3 Years",
+            "2 Years",
+            "Less than 2 Years"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_masters_bachelors_study_mode",
+          "label": "Bachelor's Study Mode",
+          "options": [
+            "On-Campus (In-Person)",
+            "Online / Distance Learning",
+            "Hybrid / Blended"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_37693cfc",
+          "label": "Your overall % or CGPA in Bachelors. If pursuing then expected % or CGPA",
+          "placeholder": "e.g. 88"
+        },
+        {
+          "type": "radio",
+          "key": "q_ug_rank",
+          "label": "What would you say was the rank of your Under Grad university in your country?",
+          "options": [
+            "Top 10",
+            "Between 10-25",
+            "Between 25-50",
+            "Below 50"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_819f46e5",
+          "label": "Year of Passing 12th class(* Mandatory)",
+          "placeholder": "e.g. 2026",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_04025959",
+          "label": "Year of Passing graduation(* Mandatory)",
+          "placeholder": "e.g. 2026",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_1ff1de77",
+          "label": "No. of backlogs/repeats (if any) - Please specify the exact no of repeats. (* Mandatory)",
+          "placeholder": "Type your answer",
+          "required": true
+        },
+        {
+          "type": "radio",
+          "key": "q_8e296a06",
+          "label": "Education Gap (In between studies or after studies)",
+          "options": [
+            "No Gaps",
+            "1 Yr Gap",
+            "2 Yr Gap",
+            "3 Yr Gap",
+            "3 Yr + Gap"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_4e732ced",
+          "label": "Work Experience or internship project",
+          "options": [
+            "No",
+            "0-6 Months",
+            "6-12",
+            "2 years",
+            "3 years",
+            "3 years +"
+          ]
+        },
+        {
+          "type": "chips",
+          "key": "q_achievements",
+          "label": "Do you have any other notable achievements? (You can choose multiple)",
+          "help": "Select all that apply.",
+          "options": [
+            "I have received an award / scholarship",
+            "I have engaged in Academic Projects",
+            "Research Papers",
+            "Top 10 rank holder",
+            "Unconventional background (medicine, law etc)"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "extracurricular",
+      "eyebrow": "Extracurriculars",
+      "title": "Your extracurriculars & differentiators",
+      "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
+      "fields": [
+        {
+          "type": "chips",
+          "key": "q_ec_engaged",
+          "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
+          "help": "Select all that apply.",
+          "options": [
+            "NGO / Social Volunteering",
+            "Associations / Clubs",
+            "Competitive Sports",
+            "Performance Arts",
+            "Competitions",
+            "Just Hobbies"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_ec_level",
+          "label": "What has been your highest level of participation?",
+          "options": [
+            "Held Leadership positions",
+            "Organized Events with major Success",
+            "Just Participated",
+            "None of the same"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_ec_current",
+          "label": "Are you still involved in the same?",
+          "options": [
+            "Yes, Heavily",
+            "Somewhat",
+            "No, was earlier involved"
+          ]
+        },
+        {
+          "type": "chips",
+          "key": "q_differentiators",
+          "label": "Which of these differentiators apply to you?",
+          "help": "Select all that apply.",
+          "options": [
+            "International Experience",
+            "Industrial Exposure",
+            "Global Olympiad",
+            "Any Renowned certificate other than academic",
+            "Publications, Awards, Patents to name",
+            "Project Monetary Impact"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "tests",
+      "eyebrow": "Test scores",
+      "title": "Your test scores",
+      "subtitle": "English and standardised tests — add what you have.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_02e74f10",
+          "label": "Overall IELTS / ToEFL / PTE Score or Expected",
+          "placeholder": "e.g. 7.5"
+        },
+        {
+          "type": "text",
+          "key": "q_3dd48ab3",
+          "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
+          "placeholder": "e.g. 7.5"
+        },
+        {
+          "type": "radio",
+          "key": "q_33e75ff0",
+          "label": "GMAT Score",
+          "options": [
+            "Not Appeared",
+            "700-800",
+            "600-699",
+            "500-599",
+            "450-499",
+            "300-449"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_6ea9ab1b",
+          "label": "GRE Score",
+          "options": [
+            "Not Appeared",
+            "310-360",
+            "300-310",
+            "286-300",
+            "279-285",
+            "200-278"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "prefs",
+      "eyebrow": "Preferences & budget",
+      "title": "Preferences & budget",
+      "subtitle": "Where you want to study and what you can invest.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_34173cb3",
+          "label": "Any Budget Constraint (Total Cost per Annum)",
+          "options": [
+            "No Constraint",
+            "30-40 Lakhs",
+            "20-30 Lakhs",
+            "10-20 Lakhs",
+            "Less than 10 Lakhs"
+          ]
+        },
+        {
+          "type": "chips",
+          "key": "q_c16a5320",
+          "label": "Country Preference (Maximum 2 Country)",
+          "options": [
+            "USA",
+            "Canada",
+            "UK",
+            "Australia",
+            "New Zealand",
+            "Ireland",
+            "Germany",
+            "Rest Europe",
+            "Malaysia",
+            "Singapore",
+            "Other Countries"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_6364d3f0",
+          "label": "Previous Visa rejections (if any)",
+          "options": [
+            "No",
+            "Yes"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_093f65e0",
+          "label": "Course Preference for post graduation (You would like to study)(* Mandatory)",
+          "placeholder": "Type your answer",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_03afdbd6",
+          "label": "Do you have any University/College preference?",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "radio",
+          "key": "q_3ad7c2eb",
+          "label": "Are you looking for Postgraduate degree/ diploma or certificate program",
+          "options": [
+            "Degree",
+            "Diploma",
+            "Certificate"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "details",
+      "eyebrow": "Final details",
+      "title": "A few final details",
+      "subtitle": "Almost done — just these last bits.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_e369853d",
+          "label": "Your Expectations",
+          "placeholder": "Tell us in a line or two…"
+        }
+      ]
+    }
+  ],
+  "doctorate": [
+    {
+      "key": "schooling",
+      "eyebrow": "Schooling & intake",
+      "title": "Schooling & intake",
+      "subtitle": "Your goal and your Class 10–12 record.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_1c383cd3",
+          "label": "Preferred Intake",
+          "options": [
+            "Aug - Oct 26",
+            "Jan - Mar 27",
+            "Aug - Oct 27",
+            "Year-Round 27",
+            "Later"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_19ca14e7",
+          "label": "Your overall percentage in 10th Class(* Mandatory)",
+          "placeholder": "e.g. 88",
+          "required": true
+        },
+        {
+          "type": "radio",
+          "key": "q_a5bfc9e0",
+          "label": "Your current status of 12th Class",
+          "options": [
+            "Completed",
+            "Pursuing"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_a5771bce",
+          "label": "Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)",
+          "placeholder": "e.g. 88",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_d67d8ab4",
+          "label": "Subject Combinations in 12th class or IBDP(* Mandatory)",
+          "placeholder": "e.g. Physics Chemistry Maths",
+          "required": true
+        },
+        {
+          "type": "radio",
+          "key": "q_b3967a0e",
+          "label": "Your Board in 12th Class",
+          "options": [
+            "CBSE Board",
+            "ICSE Board",
+            "IB Board",
+            "State Board",
+            "Other Board"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_d81f9c1b",
+          "label": "Your IBDP point score ( If from IB board or else keep it blank)",
+          "options": [
+            "24 - 31 points",
+            "32 - 38 points",
+            "39 - 45",
+            "N/A"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "higher_ed",
+      "eyebrow": "Graduation & post-graduation",
+      "title": "Graduation & post-graduation",
+      "subtitle": "Your UG and PG details.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_d645920e",
+          "label": "Graduation (UG) Course type you pursued",
+          "options": [
+            "Degree",
+            "Diploma"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_3416a75f",
+          "label": "Graduation (UG) Duration you pursued",
+          "options": [
+            "5 Years",
+            "4 Years",
+            "3 Years",
+            "2 Years",
+            "Lesser than 2 Years"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_doctorate_bachelors_study_mode",
+          "label": "Bachelor's Study Mode",
+          "options": [
+            "On-Campus (In-Person)",
+            "Online / Distance Learning",
+            "Hybrid / Blended"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_c5ff2543",
+          "label": "Your current status of graduation",
+          "options": [
+            "Completed",
+            "Pursuing final year"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_a1d0c6e8",
+          "label": "Your Score in Bachelors (% or CGPA). If pursuing then expected score",
+          "placeholder": "e.g. 88"
+        },
+        {
+          "type": "radio",
+          "key": "q_ug_rank",
+          "label": "What would you say was the rank of your Under Grad university in your country?",
+          "options": [
+            "Top 10",
+            "Between 10-25",
+            "Between 25-50",
+            "Below 50"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_17e62166",
+          "label": "Post Graduation (PG) Course type you pursued",
+          "options": [
+            "Degree",
+            "Diploma"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_f7177163",
+          "label": "Post Graduation (PG) Duration you pursued",
+          "options": [
+            "3 Years",
+            "2 Years",
+            "1 Year",
+            "Lesser than 1 Year"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_doctorate_masters_study_mode",
+          "label": "Master's Study Mode",
+          "options": [
+            "On-Campus (In-Person)",
+            "Online / Distance Learning",
+            "Hybrid / Blended"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_0bb4aec1",
+          "label": "Your current status of Post graduation",
+          "options": [
+            "Completed",
+            "Pursuing final year"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_6c8349cc",
+          "label": "Your Score in Post Graduation (% or CGPA). If pursuing then expected score",
+          "placeholder": "e.g. 88"
+        },
+        {
+          "type": "text",
+          "key": "q_d9d4f495",
+          "label": "Project details of Masters",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "chips",
+          "key": "q_achievements",
+          "label": "Do you have any other notable achievements? (You can choose multiple)",
+          "help": "Select all that apply.",
+          "options": [
+            "I have received an award / scholarship",
+            "I have engaged in Academic Projects",
+            "Research Papers",
+            "Top 10 rank holder",
+            "Unconventional background (medicine, law etc)"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_a684ecee",
+          "label": "Country Preference",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "text",
+          "key": "q_9de6d14f",
+          "label": "Year of Passed 10th class(* Mandatory)",
+          "placeholder": "e.g. 2026",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_efe93778",
+          "label": "Year of Pass 12th class(* Mandatory)",
+          "placeholder": "e.g. 2026",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_371bce7d",
+          "label": "Year of Pass graduation(* Mandatory)",
+          "placeholder": "e.g. 2026",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_138bb069",
+          "label": "Year of Pass Post graduation(* Mandatory)",
+          "placeholder": "e.g. 2026",
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "experience",
+      "eyebrow": "Experience & gaps",
+      "title": "Experience & gaps",
+      "subtitle": "Backlogs, education gaps and work experience.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_67c6a1e7",
+          "label": "No. of backlogs/repeats (if any)",
+          "options": [
+            "No Backlogs",
+            "1 Backlogs",
+            "2 Backlogs",
+            "3-4 Backlogs",
+            "More than 5 Backlogs"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_642e92ef",
+          "label": "Education Gap (In between studies or after studies)",
+          "options": [
+            "No Gaps",
+            "1 Yr Gap",
+            "2 Yr Gap",
+            "3 Yr Gap",
+            "More than 3 Yr Gap"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_f457c545",
+          "label": "Work Experience or internship project",
+          "options": [
+            "No work experience",
+            "0-6 Months Experience",
+            "6-12 Months Experience",
+            "2 Years Experience",
+            "3 Years Experience",
+            "more than 3 years Experience"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "extracurricular",
+      "eyebrow": "Extracurriculars",
+      "title": "Your extracurriculars & differentiators",
+      "subtitle": "What you have been part of outside the classroom — and what sets your profile apart.",
+      "fields": [
+        {
+          "type": "chips",
+          "key": "q_ec_engaged",
+          "label": "What all of the following have you been engaged in? (last 2 years only, before that has a limited effect)",
+          "help": "Select all that apply.",
+          "options": [
+            "NGO / Social Volunteering",
+            "Associations / Clubs",
+            "Competitive Sports",
+            "Performance Arts",
+            "Competitions",
+            "Just Hobbies"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_ec_level",
+          "label": "What has been your highest level of participation?",
+          "options": [
+            "Held Leadership positions",
+            "Organized Events with major Success",
+            "Just Participated",
+            "None of the same"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_ec_current",
+          "label": "Are you still involved in the same?",
+          "options": [
+            "Yes, Heavily",
+            "Somewhat",
+            "No, was earlier involved"
+          ]
+        },
+        {
+          "type": "chips",
+          "key": "q_differentiators",
+          "label": "Which of these differentiators apply to you?",
+          "help": "Select all that apply.",
+          "options": [
+            "International Experience",
+            "Industrial Exposure",
+            "Global Olympiad",
+            "Any Renowned certificate other than academic",
+            "Publications, Awards, Patents to name",
+            "Project Monetary Impact"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "tests",
+      "eyebrow": "Test scores",
+      "title": "Your test scores",
+      "subtitle": "English and standardised tests — add what you have.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_c0c7c76d",
+          "label": "IELTS / ToEFL / PTE Score",
+          "options": [
+            "Not Appeared",
+            ">7.5 or 110 or 74",
+            "6.6-7.5 or 89-108 or 59-73",
+            "6.1-6.5 or 72-88 or 43-49",
+            "5.5-6 or 69-71 or 35-42"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_8dd48d6a",
+          "label": "Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)",
+          "placeholder": "e.g. 7.5"
+        },
+        {
+          "type": "radio",
+          "key": "q_2838023a",
+          "label": "GMAT Score",
+          "options": [
+            "Not Appeared",
+            "700-800",
+            "600-699",
+            "500-599",
+            "450-499",
+            "300-449"
+          ]
+        },
+        {
+          "type": "radio",
+          "key": "q_9a115815",
+          "label": "GRE Score",
+          "options": [
+            "Not Appeared",
+            "310-360",
+            "300-310",
+            "286-300",
+            "279-285",
+            "200-278"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "prefs",
+      "eyebrow": "Preferences & budget",
+      "title": "Preferences & budget",
+      "subtitle": "Where you want to study and what you can invest.",
+      "fields": [
+        {
+          "type": "radio",
+          "key": "q_d82c8d16",
+          "label": "Any Budget Constraint (Total Cost per Annum)",
+          "options": [
+            "No budget Constraint",
+            "30-40 Lakhs",
+            "20-30 Lakhs",
+            "10-20 Lakhs",
+            "Lesser than 10 Lakhs"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_82cec960",
+          "label": "Country Preference (Maximum 2 Country)",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "radio",
+          "key": "q_b53b3a3d",
+          "label": "Previous Visa rejections (if any)",
+          "options": [
+            "No",
+            "Yes"
+          ]
+        },
+        {
+          "type": "text",
+          "key": "q_9f61408e",
+          "label": "Travel History (Countries visited/Travelled previously)",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "text",
+          "key": "q_072b030b",
+          "label": "Course Preference you want to pursue(* Mandatory)",
+          "placeholder": "Type your answer",
+          "required": true
+        },
+        {
+          "type": "text",
+          "key": "q_7f39f831",
+          "label": "Any Specilaization Preference",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "text",
+          "key": "q_ea5d2f1c",
+          "label": "Do you have any University/College preference?",
+          "placeholder": "Type your answer"
+        },
+        {
+          "type": "radio",
+          "key": "q_6c524f9d",
+          "label": "Are you looking for Postgraduate degree/ diploma or certificate program",
+          "options": [
+            "Postgraduate Degree Program",
+            "Postgraduate Diploma Program",
+            "Postgraduate Certificate Program"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "details",
+      "eyebrow": "Final details",
+      "title": "Final details",
+      "subtitle": "Almost done.",
+      "fields": [
+        {
+          "type": "text",
+          "key": "q_72b32a1f",
+          "label": "Your Expectations",
+          "placeholder": "Tell us in a line or two…"
+        }
+      ]
+    }
+  ]
 }
