@@ -585,6 +585,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const themeOption = target.closest('[data-theme-option]');
+        if (themeOption) {
+            setCrmTheme(themeOption.dataset.themeOption);
+            const wrap = themeOption.closest('[data-user-menu]');
+            wrap?.classList.remove('is-open');
+            wrap?.querySelector('[data-user-menu-toggle]')?.setAttribute('aria-expanded', 'false');
+            return;
+        }
+
         const toastClose = target.closest('[data-toast-close]');
         if (toastClose) {
             dismissToast(toastClose.closest('[data-toast]'));

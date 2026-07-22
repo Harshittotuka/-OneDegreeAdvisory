@@ -124,15 +124,31 @@
         <div class="sidebar-bottom">
             <div class="side-user-wrap" data-user-menu>
                 <div class="user-menu" data-user-menu-panel role="menu">
-                    <div class="user-menu-row">
-                        <span class="user-menu-label">Design</span>
-                        <select class="user-menu-select" data-crm-theme-switcher aria-label="CRM design">
-                            <option value="classic">Classic</option>
-                            <option value="evergreen">Evergreen</option>
-                            <option value="orbit">Orbit</option>
-                        </select>
+                    <div class="user-menu-head">
+                        <span class="user-menu-avatar">{{ $initials($crmUser->name) }}</span>
+                        <span class="user-menu-id"><strong>{{ $crmUser->name }}</strong><span>{{ $crmUser->isSuperAdmin() ? 'Super admin' : 'Counsellor' }}</span></span>
                     </div>
-                    <form method="post" action="{{ route('crm.logout') }}" data-transition-form data-transition-label="Signing you out securely…">@csrf<button type="submit" class="user-menu-item" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'logout'])</span>Sign out</button></form>
+                    <div class="user-menu-sep"></div>
+                    <span class="user-menu-label">Appearance</span>
+                    <div class="theme-switch" role="group" aria-label="CRM theme">
+                        <button type="button" class="theme-opt" data-theme-option="classic">
+                            <span class="theme-swatch" style="--a:#21147f;--b:#f6551d"></span>
+                            <span class="theme-opt-name">Classic</span>
+                            <span class="theme-opt-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
+                        </button>
+                        <button type="button" class="theme-opt" data-theme-option="evergreen">
+                            <span class="theme-swatch" style="--a:#1f7a4d;--b:#d9a441"></span>
+                            <span class="theme-opt-name">Evergreen</span>
+                            <span class="theme-opt-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
+                        </button>
+                        <button type="button" class="theme-opt" data-theme-option="orbit">
+                            <span class="theme-swatch" style="--a:#6c5ce7;--b:#ff7078"></span>
+                            <span class="theme-opt-name">Orbit</span>
+                            <span class="theme-opt-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
+                        </button>
+                    </div>
+                    <div class="user-menu-sep"></div>
+                    <form method="post" action="{{ route('crm.logout') }}" data-transition-form data-transition-label="Signing you out securely…">@csrf<button type="submit" class="user-menu-item user-menu-signout" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'logout'])</span>Sign out</button></form>
                 </div>
                 <button type="button" class="side-user-trigger" data-user-menu-toggle aria-haspopup="true" aria-expanded="false">
                     <span class="avatar">{{ $initials($crmUser->name) }}</span>
