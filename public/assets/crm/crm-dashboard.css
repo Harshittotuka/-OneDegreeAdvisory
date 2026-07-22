@@ -536,6 +536,13 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 .crm-app .user-menu-item:hover{background:var(--line-soft,#f1f5f9)}
 .crm-app .user-menu-item-icon{display:grid;place-items:center;width:20px;height:20px;flex:0 0 auto;color:var(--muted,#64748b)}
 .crm-app .user-menu-item-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* Orbit puts the "sidebar" along the top, so the trigger sits top-right and the
+   account menu must drop DOWN (not up, where it would be off-screen). Scoped to
+   Orbit's horizontal breakpoint; on mobile Orbit is a vertical drawer again. */
+@media(min-width:841px){
+  html[data-crm-theme="orbit"] .crm-app .side-user-trigger{padding:0 0 0 17px;border:0;border-left:1px solid rgba(255,255,255,.12)}
+  html[data-crm-theme="orbit"] .crm-app .user-menu{top:calc(100% + 12px);bottom:auto;left:auto;right:0;min-width:236px}
+}
 html[data-crm-theme="orbit"] .crm-app .nav-link{gap:5px}
 html[data-crm-theme="orbit"] .crm-app .nav-icon{width:32px;height:32px;border-radius:10px}
 html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
