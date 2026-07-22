@@ -165,6 +165,11 @@
     {{-- Shared site navbar — identical to the rest of the site. --}}
     @include('partials.header-stripe', ['activeNav' => 'career-library'])
 
+    {{-- Coming-soon overlay for the navbar's "Evaluate your personality"
+         trigger. The main site drives this via script.js, which we don't load
+         here, so a small self-contained handler (below) powers it instead. --}}
+    @include('partials.students-hub-overlay')
+
     <div id="toast-container" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 space-y-3 flex flex-col items-center">
     </div>
 
@@ -200,6 +205,97 @@
                     if (window.lucide) window.lucide.createIcons();
                 }
             }, 50);
+        })();
+    </script>
+
+    {{-- Self-contained "coming soon" handler for the navbar's Students-Hub
+         triggers (e.g. "Evaluate your personality"). The main site handles this
+         in public/script.js, which this page intentionally doesn't load; this
+         mirrors that behaviour (open/populate/close + Esc) using the same CSS. --}}
+    <script>
+        (function initStudentsHub() {
+            var overlay = document.querySelector('[data-students-hub-overlay]');
+            var triggers = document.querySelectorAll('[data-students-hub-trigger]');
+            if (!overlay || !triggers.length) return;
+
+            var CONTENT = {
+                'personality-assessment': {
+                    kicker: 'Know how you work',
+                    title: 'Personality Assessment',
+                    desc: 'A guided assessment that surfaces your strengths, working style, and best-fit paths — so your applications play to what makes you, you.',
+                    features: [
+                        { icon: 'brain', label: 'Strengths profile' },
+                        { icon: 'compass', label: 'Work-style insights' },
+                        { icon: 'target', label: 'Best-fit matches' }
+                    ]
+                }
+            };
+            var DEFAULT_CONTENT = {
+                kicker: 'AI-powered student tools',
+                title: 'Students Hub',
+                desc: 'A smarter space for profile insights, best-fit university shortlists, application planning, and progress tracking.',
+                features: [
+                    { icon: 'brain', label: 'Profile intelligence' },
+                    { icon: 'target', label: 'Best-fit shortlists' },
+                    { icon: 'list-checks', label: 'Application copilot' }
+                ]
+            };
+
+            var closeEls = overlay.querySelectorAll('[data-students-hub-close]');
+            var closeTimer = null;
+            var lastFocused = null;
+            function renderIcons() { if (window.lucide) window.lucide.createIcons(); }
+
+            function populate(trigger) {
+                var c = (trigger && CONTENT[trigger.dataset.feature]) || DEFAULT_CONTENT;
+                var kicker = overlay.querySelector('.students-hub-kicker');
+                var title = overlay.querySelector('#students-hub-title');
+                var desc = overlay.querySelector('#students-hub-desc');
+                var feats = overlay.querySelector('.students-hub-features');
+                if (kicker) kicker.innerHTML = '<i data-lucide="sparkles" aria-hidden="true"></i>' + c.kicker;
+                if (title) title.textContent = c.title + ' is coming soon';
+                if (desc) desc.textContent = c.desc;
+                if (feats) {
+                    feats.setAttribute('aria-label', c.title + ' preview features');
+                    feats.innerHTML = c.features.map(function (f) {
+                        return '<span><i data-lucide="' + f.icon + '" aria-hidden="true"></i> ' + f.label + '</span>';
+                    }).join('');
+                }
+            }
+
+            function open(trigger) {
+                window.clearTimeout(closeTimer);
+                lastFocused = trigger || document.activeElement;
+                populate(trigger);
+                overlay.hidden = false;
+                overlay.classList.remove('is-closing');
+                document.body.classList.add('student-hub-open');
+                window.requestAnimationFrame(function () {
+                    overlay.classList.add('is-open');
+                    overlay.setAttribute('aria-hidden', 'false');
+                    renderIcons();
+                });
+            }
+
+            function close() {
+                if (!overlay.classList.contains('is-open')) return;
+                window.clearTimeout(closeTimer);
+                overlay.classList.remove('is-open');
+                overlay.classList.add('is-closing');
+                overlay.setAttribute('aria-hidden', 'true');
+                closeTimer = window.setTimeout(function () {
+                    overlay.hidden = true;
+                    overlay.classList.remove('is-closing');
+                    document.body.classList.remove('student-hub-open');
+                    if (lastFocused && document.contains(lastFocused)) lastFocused.focus();
+                }, 260);
+            }
+
+            triggers.forEach(function (t) { t.addEventListener('click', function () { open(t); }); });
+            closeEls.forEach(function (el) { el.addEventListener('click', close); });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('is-open')) { e.preventDefault(); close(); }
+            });
         })();
     </script>
 
