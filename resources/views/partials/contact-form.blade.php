@@ -68,6 +68,6 @@
     <span>Request my free profile review</span>
     <i data-lucide="arrow-up-right"></i>
   </button>
-  <p class="contact-privacy">By submitting, you agree to our <a href="{{ route('privacy') }}">Privacy Policy</a>. We never share your data.</p>
+  <p class="contact-privacy">By submitting, you agree to our <a href="{{ route('privacy') }}">Terms &amp; Conditions</a> and <a href="{{ route('privacy') }}">Privacy Policy</a>. We never share your data.</p>
   <p class="form-status{{ session('form_status') && ! session('form_ok') ? ' form-status--error' : '' }}" role="status" aria-live="polite" data-form-status>{{ session('form_status') }}</p>
 </form>
