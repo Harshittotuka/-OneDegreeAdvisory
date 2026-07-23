@@ -573,7 +573,7 @@
                 <p class="team-no-results" data-team-no-results hidden>No team members match your search.</p>
             </div>
             <form class="team-create-form" method="post" action="{{ route('crm.team.store') }}" data-ajax-preserve-modal="teamModal">@csrf
-                <div class="team-create-heading"><h3>Add a team member</h3><p>They can sign in using the mobile number below.</p></div>
+                <div class="team-create-heading"><h3>Add a team member</h3><p>They can sign in with the mobile number or email address below.</p></div>
                 <div class="form-grid">
                     <div class="field"><label>Name</label><input name="name" required></div>
                     <div class="field"><label>Mobile number</label><input name="phone" inputmode="tel" required></div>

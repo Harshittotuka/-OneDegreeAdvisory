@@ -81,13 +81,13 @@
             </div>
 
             <span class="eyebrow">Secure team access</span>
-            <h1>{{ session('otp_sent') || $errors->has('otp') ? 'Verify your number' : 'Welcome to your CRM' }}</h1>
+            <h1>{{ session('otp_sent') || $errors->has('otp') ? 'Verify your identity' : 'Welcome to your CRM' }}</h1>
             <p class="login-intro">
                 @if(session('otp_sent') || $errors->has('otp'))
                     @php($otpDelivery = (array) session('crm_otp_delivery', []))
                     Enter the six-digit code sent securely to your registered {{ in_array('sms', $otpDelivery, true) && in_array('email', $otpDelivery, true) ? 'email and mobile number' : (in_array('sms', $otpDelivery, true) ? 'mobile number' : 'email address') }}.
                 @else
-                    Sign in using the mobile number registered by your super admin.
+                    Sign in with the mobile number or email address registered by your super admin.
                 @endif
             </p>
 
@@ -102,20 +102,30 @@
                 </form>
                 <div class="login-meta">
                     <span>Code expires in {{ config('crm.otp.ttl_minutes') }} minutes</span>
-                    <a href="{{ route('crm.login') }}" data-transition-link data-transition-label="Changing mobile number…">Use another number</a>
+                    <a href="{{ route('crm.login') }}" data-transition-link data-transition-label="Changing account…">Use another number or email</a>
                 </div>
             @else
                 <form method="post" action="{{ route('crm.otp.request') }}" data-transition-form data-transition-label="Sending your secure OTP…">
                     @csrf
                     <div class="field">
-                        <label for="phone">Registered mobile number</label>
+                        <label for="login">Mobile number or email</label>
                         <div class="input-wrap">
-                            <span class="phone-code">+91</span>
-                            <input id="phone" name="phone" type="tel" value="{{ old('phone') }}" inputmode="tel" autocomplete="tel" placeholder="98765 43210" autofocus required>
+                            <span class="phone-code" data-login-prefix>+91</span>
+                            <input id="login" name="login" type="text" value="{{ old('login') }}" autocomplete="username" placeholder="98765 43210 or name@example.com" autofocus required>
                         </div>
                     </div>
                     <button class="btn btn-navy btn-block" type="submit">Send secure OTP <span aria-hidden="true">→</span></button>
                 </form>
+                <script>
+                    (() => {
+                        const input = document.getElementById('login');
+                        const prefix = document.querySelector('[data-login-prefix]');
+                        if (!input || !prefix) return;
+                        const sync = () => { prefix.style.display = input.value.includes('@') ? 'none' : ''; };
+                        input.addEventListener('input', sync);
+                        sync();
+                    })();
+                </script>
                 <div class="login-meta"><span>Only authorised team members can sign in</span><span>OTP protected</span></div>
             @endif
         </div>

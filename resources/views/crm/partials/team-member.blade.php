@@ -21,14 +21,16 @@
     <span class="state {{ $member->is_active ? '' : 'off' }}">{{ $member->is_active ? 'Active' : 'Disabled' }}</span>
     @if($member->id !== $crmUser->id)
         <div class="team-member-actions">
+            <form method="post" action="{{ route('crm.team.role',$member) }}" data-ajax-preserve-modal="teamModal" onsubmit="return confirm('{{ $member->isSuperAdmin() ? 'Change '.addslashes($member->name).' to counsellor? They will lose team, audit-log and full-CRM access.' : 'Promote '.addslashes($member->name).' to super admin? They will get full team, lead and audit-log access.' }}')">@csrf @method('PATCH')<button class="team-action-btn" type="submit" title="{{ $member->isSuperAdmin() ? 'Change to counsellor' : 'Promote to super admin' }}" aria-label="{{ $member->isSuperAdmin() ? 'Change to counsellor' : 'Promote to super admin' }}">@if($member->isSuperAdmin())<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m0 14-5-5m5 5 5-5"/></svg>@else<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m0-14L7 10m5-5 5 5"/></svg>@endif</button></form>
             <form method="post" action="{{ route('crm.team.toggle',$member) }}" data-ajax-preserve-modal="teamModal">@csrf @method('PATCH')<button class="team-action-btn" type="submit" title="{{ $member->is_active ? 'Disable access' : 'Restore access' }}" aria-label="{{ $member->is_active ? 'Disable access' : 'Restore access' }}">{{ $member->is_active ? '⊘' : '↻' }}</button></form>
             <form method="post" action="{{ route('crm.team.destroy',$member) }}" data-ajax-preserve-modal="teamModal" onsubmit="return confirm('Permanently delete {{ addslashes($member->name) }} from the CRM? Any leads they own will become unassigned. This cannot be undone.')">@csrf @method('DELETE')<button class="team-action-btn is-danger" type="submit" title="Delete team member" aria-label="Delete team member"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7m4 4v6m4-6v6"/></svg></button></form>
         </div>
     @endif
     <details class="team-member-edit">
-        <summary>Edit name or email</summary>
+        <summary>Edit details</summary>
         <form method="post" action="{{ route('crm.team.update',$member) }}" data-ajax-preserve-modal="teamModal">@csrf @method('PATCH')
             <label><span>Name</span><input name="name" value="{{ $member->name }}" required></label>
+            <label><span>Mobile number</span><input name="phone" value="{{ $member->phone }}" inputmode="tel" placeholder="98765 43210" required></label>
             <label><span>Email address</span><input type="email" name="email" value="{{ $member->email }}" placeholder="name@example.com" required></label>
             <button class="btn btn-outline" type="submit">Save changes</button>
         </form>

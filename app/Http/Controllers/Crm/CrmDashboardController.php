@@ -85,6 +85,7 @@ class CrmDashboardController extends Controller
             'leads_imported' => 'Leads imported',
             'team_member_created' => 'Team member created',
             'team_member_updated' => 'Team member updated',
+            'team_member_role_changed' => 'Team role changed',
             'team_member_access_changed' => 'Team access changed',
             'crm_login' => 'CRM login',
             'crm_logout' => 'CRM logout',

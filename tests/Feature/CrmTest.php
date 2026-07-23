@@ -39,7 +39,7 @@ class CrmTest extends TestCase
         config()->set('crm.super_admin.name', 'CRM Owner');
         config()->set('crm.super_admin.phone', '9876543210');
 
-        $request = $this->post(route('crm.otp.request'), ['phone' => '+91 98765 43210']);
+        $request = $this->post(route('crm.otp.request'), ['login' => '+91 98765 43210']);
         $request->assertRedirect()->assertSessionHas('otp_sent')->assertSessionHas('debug_otp');
         $otp = session('debug_otp');
 
@@ -61,8 +61,27 @@ class CrmTest extends TestCase
 
     public function test_unknown_phone_cannot_request_an_otp(): void
     {
-        $this->post(route('crm.otp.request'), ['phone' => '9876543210'])
-            ->assertSessionHasErrors('phone');
+        $this->post(route('crm.otp.request'), ['login' => '9876543210'])
+            ->assertSessionHasErrors('login');
+    }
+
+    public function test_team_member_can_request_an_otp_with_their_email(): void
+    {
+        $user = CrmUser::query()->create(['name' => 'Email Admin', 'phone' => '9876543215', 'email' => 'email-admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        $this->post(route('crm.otp.request'), ['login' => 'EMAIL-ADMIN@example.com'])
+            ->assertRedirect()->assertSessionHas('otp_sent')->assertSessionHas('crm_otp_user_id', $user->id);
+        Mail::assertSent(CrmOtpMail::class, fn (CrmOtpMail $mail): bool => $mail->hasTo($user->email));
+
+        $this->post(route('crm.otp.verify'), ['otp' => session('debug_otp')])
+            ->assertRedirect(route('crm.dashboard'))
+            ->assertSessionHas('crm_user_id', $user->id);
+    }
+
+    public function test_unknown_email_cannot_request_an_otp(): void
+    {
+        $this->post(route('crm.otp.request'), ['login' => 'stranger@example.com'])
+            ->assertSessionHasErrors('login');
     }
 
     public function test_msg91_driver_sends_the_generated_otp_through_the_configured_flow(): void
@@ -248,6 +267,62 @@ class CrmTest extends TestCase
             ->assertSee('Second Admin')
             ->assertSee('second-admin@example.com')
             ->assertSee('Super admin');
+    }
+
+    public function test_super_admin_can_promote_and_demote_a_team_member(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $member = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@example.com', 'role' => 'counsellor', 'is_active' => true]);
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->patch(route('crm.team.role', $member))
+            ->assertSessionHasNoErrors();
+        $this->assertTrue($member->fresh()->isSuperAdmin());
+        $this->assertDatabaseHas('crm_audit_logs', ['event' => 'team_member_role_changed', 'subject_id' => $member->id]);
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->patch(route('crm.team.role', $member))
+            ->assertSessionHasNoErrors();
+        $this->assertFalse($member->fresh()->isSuperAdmin());
+    }
+
+    public function test_role_changes_are_guarded(): void
+    {
+        config()->set('crm.super_admin.phone', '9876543210');
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@example.com', 'role' => 'counsellor', 'is_active' => true]);
+        $peer = CrmUser::query()->create(['name' => 'Second', 'phone' => '9876543212', 'email' => 'second@example.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        // Nobody can change their own role, and counsellors cannot change roles at all.
+        $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.role', $admin))->assertForbidden();
+        $this->withSession(['crm_user_id' => $counsellor->id])->patch(route('crm.team.role', $peer))->assertForbidden();
+
+        // Config-defined super admins cannot be demoted (sync would re-promote them anyway).
+        $this->withSession(['crm_user_id' => $peer->id])
+            ->patch(route('crm.team.role', $admin))
+            ->assertSessionHasErrors('team');
+        $this->assertTrue($admin->fresh()->isSuperAdmin());
+    }
+
+    public function test_super_admin_can_change_a_member_phone_number(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $member = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@example.com', 'role' => 'counsellor', 'is_active' => true]);
+        $other = CrmUser::query()->create(['name' => 'Ravi', 'phone' => '9876543212', 'email' => 'ravi@example.com', 'role' => 'counsellor', 'is_active' => true]);
+
+        $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
+            'name' => 'Asha', 'phone' => '+91 91234 56789', 'email' => 'asha@example.com',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('9123456789', $member->fresh()->phone);
+
+        // Another member's number is rejected, as is a number that is too short.
+        $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
+            'name' => 'Asha', 'phone' => $other->phone, 'email' => 'asha@example.com',
+        ])->assertSessionHasErrors('team');
+        $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
+            'name' => 'Asha', 'phone' => '12345', 'email' => 'asha@example.com',
+        ])->assertSessionHasErrors('team');
+        $this->assertSame('9123456789', $member->fresh()->phone);
     }
 
     public function test_follow_up_reminders_appear_one_day_before_and_on_due_day(): void

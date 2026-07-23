@@ -27,13 +27,22 @@ class CrmAuthController extends Controller
 
     public function requestOtp(Request $request, CrmOtpSender $sender, CrmSuperAdminSync $superAdmins): RedirectResponse
     {
-        $data = $request->validate(['phone' => ['required', 'string', 'max:30']]);
-        $phone = $this->normalisePhone($data['phone']);
+        $data = $request->validate(['login' => ['required', 'string', 'max:190']]);
+        $identifier = trim($data['login']);
         $superAdmins->sync();
-        $user = CrmUser::query()->where('phone', $phone)->where('is_active', true)->first();
 
-        if (! $user) {
-            return back()->withErrors(['phone' => 'This number is not registered for CRM access.'])->withInput();
+        if (str_contains($identifier, '@')) {
+            $user = CrmUser::query()->whereRaw('LOWER(email) = ?', [strtolower($identifier)])->where('is_active', true)->first();
+            if (! $user) {
+                return back()->withErrors(['login' => 'This email address is not registered for CRM access.'])->withInput();
+            }
+            $phone = $user->phone;
+        } else {
+            $phone = $this->normalisePhone($identifier);
+            $user = CrmUser::query()->where('phone', $phone)->where('is_active', true)->first();
+            if (! $user) {
+                return back()->withErrors(['login' => 'This number is not registered for CRM access.'])->withInput();
+            }
         }
 
         CrmOtpCode::query()->where('crm_user_id', $user->id)->whereNull('used_at')->update(['used_at' => now()]);
@@ -51,7 +60,7 @@ class CrmAuthController extends Controller
         } catch (RuntimeException $exception) {
             $record->delete();
 
-            return back()->withErrors(['phone' => $exception->getMessage()])->withInput();
+            return back()->withErrors(['login' => $exception->getMessage()])->withInput();
         }
 
         $request->session()->put('crm_otp_user_id', $user->id);
@@ -88,7 +97,7 @@ class CrmAuthController extends Controller
 
         $user = CrmUser::query()->whereKey($userId)->where('is_active', true)->first();
         if (! $user) {
-            return redirect()->route('crm.login')->withErrors(['phone' => 'Your CRM access is inactive.']);
+            return redirect()->route('crm.login')->withErrors(['login' => 'Your CRM access is inactive.']);
         }
 
         $record->update(['used_at' => now()]);
