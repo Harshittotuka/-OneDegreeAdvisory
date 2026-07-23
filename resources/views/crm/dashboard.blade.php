@@ -114,13 +114,6 @@
             <a class="nav-link nav-students {{ $view === 'students' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'students']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'students'])</span><span class="nav-text">Enrolled students</span></a>
             <a class="nav-link nav-shortlisting {{ $view === 'shortlisting' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'shortlisting']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'shortlisting'])</span><span class="nav-text">PDF shortlisting</span></a>
         </nav>
-        @if($crmUser->isSuperAdmin())
-            <div class="nav-label" style="margin-top:28px">Administration</div>
-            <nav class="nav">
-                <a class="nav-link nav-audit {{ $view === 'audit' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'audit']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'audit'])</span><span class="nav-text">Audit log</span></a>
-                <button class="nav-link nav-team" style="border:0;background:transparent;text-align:left;width:100%" data-modal-open="teamModal"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'team'])</span><span class="nav-text">Team management</span></button>
-            </nav>
-        @endif
         <div class="sidebar-bottom">
             <div class="side-user-wrap" data-user-menu>
                 <div class="user-menu" data-user-menu-panel role="menu">
@@ -129,22 +122,26 @@
                         <span class="user-menu-id"><strong>{{ $crmUser->name }}</strong><span>{{ $crmUser->isSuperAdmin() ? 'Super admin' : 'Counsellor' }}</span></span>
                     </div>
                     <div class="user-menu-sep"></div>
+                    @if($crmUser->isSuperAdmin())
+                        <span class="user-menu-label">Administration</span>
+                        <a class="user-menu-item {{ $view === 'audit' ? 'is-current' : '' }}" href="{{ route('crm.dashboard', ['view' => 'audit']) }}" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'audit'])</span>Audit log</a>
+                        <button type="button" class="user-menu-item" data-modal-open="teamModal" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'team'])</span>Team management</button>
+                        <div class="user-menu-sep"></div>
+                    @endif
                     <span class="user-menu-label">Appearance</span>
-                    <div class="theme-switch" role="group" aria-label="CRM theme">
-                        <button type="button" class="theme-opt" data-theme-option="classic">
+                    <div class="theme-slider" role="group" aria-label="CRM theme">
+                        <span class="theme-slider-thumb" aria-hidden="true"></span>
+                        <button type="button" class="theme-opt" data-theme-option="classic" title="Classic theme">
                             <span class="theme-swatch" style="--a:#21147f;--b:#f6551d"></span>
                             <span class="theme-opt-name">Classic</span>
-                            <span class="theme-opt-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
                         </button>
-                        <button type="button" class="theme-opt" data-theme-option="evergreen">
+                        <button type="button" class="theme-opt" data-theme-option="evergreen" title="Evergreen theme">
                             <span class="theme-swatch" style="--a:#1f7a4d;--b:#d9a441"></span>
                             <span class="theme-opt-name">Evergreen</span>
-                            <span class="theme-opt-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
                         </button>
-                        <button type="button" class="theme-opt" data-theme-option="orbit">
+                        <button type="button" class="theme-opt" data-theme-option="orbit" title="Orbit theme">
                             <span class="theme-swatch" style="--a:#6c5ce7;--b:#ff7078"></span>
                             <span class="theme-opt-name">Orbit</span>
-                            <span class="theme-opt-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
                         </button>
                     </div>
                     <div class="user-menu-sep"></div>

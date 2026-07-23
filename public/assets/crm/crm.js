@@ -553,6 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const modalButton = target.closest('[data-modal-open]');
         if (modalButton) {
             event.preventDefault();
+            const menuWrap = modalButton.closest('[data-user-menu]');
+            menuWrap?.classList.remove('is-open');
+            menuWrap?.querySelector('[data-user-menu-toggle]')?.setAttribute('aria-expanded', 'false');
             openModal(modalButton.dataset.modalOpen);
             return;
         }
@@ -608,6 +611,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const link = target.closest('a[href]');
+        if (link && link.closest('[data-user-menu-panel]')) {
+            const wrap = link.closest('[data-user-menu]');
+            wrap?.classList.remove('is-open');
+            wrap?.querySelector('[data-user-menu-toggle]')?.setAttribute('aria-expanded', 'false');
+        }
         if (link?.matches('[data-transition-link]')) {
             if (event.ctrlKey || event.metaKey || event.shiftKey || link.target === '_blank') return;
             const destination = new URL(link.href, window.location.href);
