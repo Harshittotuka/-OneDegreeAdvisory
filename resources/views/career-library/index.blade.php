@@ -180,6 +180,18 @@
     // --- STATE & UTILS ---
     const appContainer = document.getElementById('app-container');
 
+    // ?error= and the {career} URL segment are untrusted input. Escape them
+    // before they reach innerHTML / an HTML attribute so they cannot inject
+    // markup (reflected XSS).
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
     let currentState = {
         data: null,
         loading: false,
@@ -474,7 +486,7 @@
         html = `
             ${renderSearchForm()}
             <div class="mt-8 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 max-w-lg mx-auto text-center animate-fade-in-up">
-            <p>${error}</p>
+            <p>${escapeHtml(error)}</p>
             </div>
         `;
         }
@@ -507,7 +519,7 @@
                 name="careerName"
                 id="careerInput"
                 autocomplete="off"
-                value="${params.careerName}"
+                value="${escapeHtml(params.careerName)}"
                 placeholder="${SETTINGS.searchPlaceholder}"
                 class="w-full pl-14 pr-4 h-full rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all bg-white/50 focus:bg-white text-slate-800 placeholder:text-slate-400 font-medium text-lg"
                 required
