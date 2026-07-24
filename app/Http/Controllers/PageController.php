@@ -68,6 +68,11 @@ class PageController extends Controller
         return view('pages.privacy-policy');
     }
 
+    public function termsAndConditions(): View
+    {
+        return view('pages.terms-and-conditions');
+    }
+
     /**
      * Handle the Contact / Home enquiry form: notify the admissions team and
      * send the visitor a thank-you confirmation. Responds with JSON for the

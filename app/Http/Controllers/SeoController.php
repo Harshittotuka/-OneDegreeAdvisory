@@ -111,6 +111,8 @@ class SeoController extends Controller
             'mbbs.student' => ['priority' => '0.82', 'changefreq' => 'monthly'],
             'careers' => ['priority' => '0.50', 'changefreq' => 'monthly'],
             'contact' => ['priority' => '0.82', 'changefreq' => 'monthly'],
+            'privacy' => ['priority' => '0.30', 'changefreq' => 'yearly'],
+            'terms' => ['priority' => '0.30', 'changefreq' => 'yearly'],
         ];
     }
 

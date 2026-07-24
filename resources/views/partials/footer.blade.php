@@ -48,6 +48,7 @@
   <div class="container footer-bottom">
     <span>&copy; {{ date('Y') }} {{ config('site.name') }}. All rights reserved.</span>
     <span class="footer-legal-links">
+      <a href="{{ route('terms') }}">Terms &amp; Conditions</a>
       <a href="{{ route('privacy') }}">Privacy Policy</a>
       <a href="#top">Back to top</a>
     </span>

@@ -40,6 +40,10 @@ Route::post('/contact', [PageController::class, 'submitContact'])->name('contact
 Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('privacy');
 Route::permanentRedirect('/privacy-policy.html', '/privacy-policy');
 
+Route::get('/terms-and-conditions', [PageController::class, 'termsAndConditions'])->name('terms');
+Route::permanentRedirect('/terms-and-conditions.html', '/terms-and-conditions');
+Route::permanentRedirect('/terms', '/terms-and-conditions');
+
 Route::post('/newsletter', [PageController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
 
 Route::prefix('payments')->name('payments.')->group(function (): void {
