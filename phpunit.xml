@@ -18,6 +18,11 @@
         </include>
     </source>
     <php>
+        <!-- The PDF suites (dompdf + DejaVu font subsetting) push a full run past
+             the 128M default, and PHPUnit then dies with "Premature end of PHP
+             process" partway through — reporting only the tests that had already
+             passed, which silently hid the rest of the suite. -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

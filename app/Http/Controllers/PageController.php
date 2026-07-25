@@ -339,11 +339,6 @@ class PageController extends Controller
         return view('pages.postgraduate');
     }
 
-    public function llb(): View
-    {
-        return view('pages.llb');
-    }
-
     public function mba(): View
     {
         return view('pages.mba');

@@ -116,13 +116,14 @@ class SitePagesTest extends TestCase
 
     public function test_public_pages_link_to_course_and_service_landing_pages(): void
     {
+        // The Destinations dropdown carries Undergrad / Postgrad / MBA only.
+        // LLB has been removed outright; Doctoral is still live but deliberately
+        // unlinked (listed in the admin "unlinked pages" report).
         $this->get('/')
             ->assertOk()
             ->assertSee(route('courses.ug'), false)
             ->assertSee(route('courses.pg'), false)
-            ->assertSee(route('courses.llb'), false)
-            ->assertSee(route('courses.mba'), false)
-            ->assertSee(route('courses.doctoral'), false);
+            ->assertSee(route('courses.mba'), false);
 
         $this->get('/study-abroad')
             ->assertOk()

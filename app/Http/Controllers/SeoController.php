@@ -105,7 +105,6 @@ class SeoController extends Controller
             'services.test-prep' => ['priority' => '0.78', 'changefreq' => 'monthly'],
             'courses.ug' => ['priority' => '0.74', 'changefreq' => 'monthly'],
             'courses.pg' => ['priority' => '0.74', 'changefreq' => 'monthly'],
-            'courses.llb' => ['priority' => '0.68', 'changefreq' => 'monthly'],
             'courses.mba' => ['priority' => '0.72', 'changefreq' => 'monthly'],
             'courses.doctoral' => ['priority' => '0.68', 'changefreq' => 'monthly'],
             'mbbs.student' => ['priority' => '0.82', 'changefreq' => 'monthly'],

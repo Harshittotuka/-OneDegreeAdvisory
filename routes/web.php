@@ -138,7 +138,6 @@ Route::get('/briefs/{slug}', [BriefPageController::class, 'show'])->where('slug'
 
 Route::get('/courses/undergraduate', [PageController::class, 'undergraduate'])->name('courses.ug');
 Route::get('/courses/postgraduate', [PageController::class, 'postgraduate'])->name('courses.pg');
-Route::get('/courses/llb', [PageController::class, 'llb'])->name('courses.llb');
 Route::get('/courses/mba', [PageController::class, 'mba'])->name('courses.mba');
 Route::get('/courses/doctoral', [PageController::class, 'doctoral'])->name('courses.doctoral');
 

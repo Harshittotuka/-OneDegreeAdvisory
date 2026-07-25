@@ -109,14 +109,21 @@ class TestPrepCompareTest extends TestCase
     public function test_public_page_renders_the_active_style_variant(): void
     {
         foreach (['bars' => 'tpc--bars', 'cards' => 'tpc--cards', 'table' => 'tpc--table', 'stack' => 'tpc--stack'] as $style => $marker) {
-            $this->store()->save(['style' => $style, 'programs' => [['name' => 'IELTS', 'price' => '4000', 'months' => '1', 'visible' => true]]]);
+            // The program name only becomes a popup trigger when the row carries
+            // details (title or tagline) — so the fixture sets one.
+            $this->store()->save(['style' => $style, 'programs' => [[
+                'name' => 'IELTS', 'price' => '4000', 'months' => '1', 'visible' => true,
+                'details' => ['title' => 'IELTS Academic', 'tagline' => 'Four modules, band 0-9.'],
+            ]]]);
 
             $this->get(route('services.test-prep'))
                 ->assertOk()
                 ->assertSee($marker, false)
                 ->assertSee('IELTS')
                 ->assertSee('tpc-program-name-btn', false)
-                ->assertSee('data-tpc-exam="ielts"', false)
+                // data-tpc-exam carries the program's index in the *visible*
+                // list (not an exam slug); one visible program means index 0.
+                ->assertSee('data-tpc-exam="0"', false)
                 ->assertDontSee('Server-verified amount')
                 ->assertDontSee('verified on our server before checkout.');
         }

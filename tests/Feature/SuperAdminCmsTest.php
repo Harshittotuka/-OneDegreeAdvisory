@@ -123,7 +123,12 @@ class SuperAdminCmsTest extends TestCase
             ->assertDontSee('nav-variant--updated', false)
             ->assertDontSee('data-stripe-trigger="services"', false)
             ->assertDontSee('id="stripe-sec-services"', false)
-            ->assertSee('data-stripe-trigger="courses"', false)
+            // The old Courses dropdown is gone too — the nav is now
+            // Destinations / Student Hub / Fit Assessment.
+            ->assertDontSee('data-stripe-trigger="courses"', false)
+            ->assertSee('data-stripe-trigger="destinations"', false)
+            ->assertSee('data-stripe-trigger="new-tabs"', false)
+            ->assertSee('data-stripe-trigger="fit-assessment"', false)
             ->assertSee('/mbbs/student', false);
     }
 

@@ -23,6 +23,7 @@ class UnlinkedPagesController extends Controller
             $this->page('Study-abroad pages', 'Test Preparation', 'services.test-prep', 'No primary-nav item after the Services menu was removed.'),
             $this->page('Study-abroad pages', 'Student Services', 'services.student-services', 'No primary-nav item after the Services menu was removed.'),
             $this->page('Study-abroad pages', 'Admissions Counselling', 'services.admissions-counselling', 'No primary-nav item after the Services menu was removed.'),
+            $this->page('Course pages', 'Doctoral', 'courses.doctoral', 'Live but unlinked — the Destinations dropdown carries Undergrad / Postgrad / MBA only. (LLB was removed outright.)'),
         ];
     }
 

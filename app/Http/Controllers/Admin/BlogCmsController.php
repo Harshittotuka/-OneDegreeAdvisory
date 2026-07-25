@@ -364,7 +364,6 @@ class BlogCmsController extends Controller
             'services.student-services' => 'Services — Student Services',
             'courses.ug' => 'Courses — Undergraduate',
             'courses.pg' => 'Courses — Postgraduate',
-            'courses.llb' => 'Courses — LLB',
             'courses.mba' => 'Courses — MBA',
             'courses.doctoral' => 'Courses — Doctoral',
             'mbbs.student' => 'MBBS — Student',
