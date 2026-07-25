@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>One Degree CRM — Team Guide</title>
+<style>
+  :root {
+    --bg: #FBF9F4;
+    --bg-2: #F3EEE4;
+    --surface: #FFFFFF;
+    --ink: #211C15;
+    --ink-2: #6C6357;
+    --line: #E8DFD0;
+    --line-2: #F0E9DC;
+    --accent: #DD5A12;
+    --accent-ink: #B4470B;
+    --accent-soft: #FBEAD9;
+    --good: #2E7D5B;  --good-soft: #E2F0E9;
+    --warn: #A76D10;  --warn-soft: #F6ECD6;
+    --bad: #B93726;   --bad-soft: #F7E3E0;
+    --info: #2D6CB4;  --info-soft: #E1ECF8;
+    --shadow: 0 1px 2px rgba(33,28,21,.04), 0 8px 24px -16px rgba(33,28,21,.22);
+    --radius: 14px;
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+    --maxw: 1180px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16130E; --bg-2: #1E1A13; --surface: #221D15;
+      --ink: #F3EDE1; --ink-2: #A99F8F; --line: #342C21; --line-2: #2A241B;
+      --accent: #F4823C; --accent-ink: #F9A567; --accent-soft: #33241A;
+      --good: #58B98A; --good-soft: #1B2A22;
+      --warn: #E0A93E; --warn-soft: #2C2413;
+      --bad: #E77A6E; --bad-soft: #2E1B18;
+      --info: #7FB0E8; --info-soft: #172433;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #FBF9F4; --bg-2: #F3EEE4; --surface: #FFFFFF;
+    --ink: #211C15; --ink-2: #6C6357; --line: #E8DFD0; --line-2: #F0E9DC;
+    --accent: #DD5A12; --accent-ink: #B4470B; --accent-soft: #FBEAD9;
+    --good: #2E7D5B; --good-soft: #E2F0E9; --warn: #A76D10; --warn-soft: #F6ECD6;
+    --bad: #B93726; --bad-soft: #F7E3E0; --info: #2D6CB4; --info-soft: #E1ECF8;
+    --shadow: 0 1px 2px rgba(33,28,21,.04), 0 8px 24px -16px rgba(33,28,21,.22);
+  }
+  :root[data-theme="dark"] {
+    --bg: #16130E; --bg-2: #1E1A13; --surface: #221D15;
+    --ink: #F3EDE1; --ink-2: #A99F8F; --line: #342C21; --line-2: #2A241B;
+    --accent: #F4823C; --accent-ink: #F9A567; --accent-soft: #33241A;
+    --good: #58B98A; --good-soft: #1B2A22; --warn: #E0A93E; --warn-soft: #2C2413;
+    --bad: #E77A6E; --bad-soft: #2E1B18; --info: #7FB0E8; --info-soft: #172433;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  img { max-width: 100%; height: auto; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+
+  h1, h2, h3, h4 { text-wrap: balance; line-height: 1.15; margin: 0; }
+  p { margin: 0; }
+  a { color: var(--accent-ink); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  code, .mono { font-family: var(--font-mono); font-size: .88em; }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(120% 120% at 100% 0%, var(--accent-soft) 0%, transparent 55%),
+      var(--bg);
+  }
+  .masthead-inner {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 64px) clamp(20px, 4vw, 48px) clamp(24px, 4vw, 44px);
+    position: relative;
+  }
+  .brand { display: inline-flex; align-items: center; gap: .55rem; font-weight: 700; letter-spacing: -.01em; }
+  .brand .mark {
+    width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+    background: var(--accent); color: #fff; font-size: .9rem; box-shadow: var(--shadow);
+  }
+  .eyebrow {
+    text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 700;
+    color: var(--accent-ink);
+  }
+  .masthead h1 {
+    font-size: clamp(2.1rem, 5vw, 3.3rem); font-weight: 800; letter-spacing: -.025em;
+    margin: .5rem 0 .6rem;
+  }
+  .lede { font-size: clamp(1.05rem, 2vw, 1.22rem); color: var(--ink-2); max-width: 60ch; }
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.4rem; }
+  .chip {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: var(--surface); border: 1px solid var(--line);
+    padding: .42rem .75rem; border-radius: 999px; font-size: .82rem; color: var(--ink-2);
+    box-shadow: var(--shadow);
+  }
+  .chip b { color: var(--ink); font-weight: 650; }
+  .theme-toggle {
+    position: absolute; top: clamp(20px, 4vw, 40px); right: clamp(20px, 4vw, 48px);
+    width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+    font-size: 1.1rem; box-shadow: var(--shadow); line-height: 1;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  /* ---------- Layout ---------- */
+  .shell {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 clamp(20px, 4vw, 48px) 5rem;
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: clamp(24px, 4vw, 56px);
+    align-items: start;
+  }
+  .rail { position: sticky; top: 18px; padding-top: 2.4rem; }
+  .toc summary {
+    display: none; cursor: pointer; font-weight: 700; padding: .7rem .9rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    list-style: none; margin-bottom: .6rem;
+  }
+  .toc summary::-webkit-details-marker { display: none; }
+  .toc nav { display: flex; flex-direction: column; gap: .1rem; }
+  .toc .toc-label {
+    text-transform: uppercase; letter-spacing: .14em; font-size: .68rem; font-weight: 700;
+    color: var(--ink-2); padding: .2rem .7rem; margin-top: .9rem;
+  }
+  .toc a {
+    color: var(--ink-2); font-size: .92rem; padding: .4rem .7rem; border-radius: 8px;
+    border-left: 2px solid transparent; line-height: 1.3;
+  }
+  .toc a:hover { color: var(--ink); background: var(--bg-2); text-decoration: none; }
+  .toc a.active { color: var(--accent-ink); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+
+  main { padding-top: 2.4rem; min-width: 0; }
+
+  section { scroll-margin-top: 20px; margin-bottom: clamp(2.6rem, 5vw, 4rem); }
+  section > h2 {
+    font-size: clamp(1.5rem, 3vw, 2.05rem); font-weight: 750; letter-spacing: -.02em;
+    padding-bottom: .6rem; border-bottom: 1px solid var(--line); margin-bottom: 1.3rem;
+    display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+  }
+  section > h2 .num {
+    font-family: var(--font-mono); font-size: .95rem; color: var(--accent); font-weight: 700;
+  }
+  h3 { font-size: 1.16rem; font-weight: 700; margin: 1.8rem 0 .7rem; letter-spacing: -.01em; }
+  main p { margin: 0 0 1rem; max-width: 68ch; }
+  main ul, main ol { margin: 0 0 1rem; padding-left: 1.3rem; max-width: 66ch; }
+  main li { margin: .3rem 0; }
+  main li::marker { color: var(--accent); }
+
+  .badge-admin {
+    text-transform: uppercase; letter-spacing: .08em; font-size: .62rem; font-weight: 700;
+    color: var(--accent-ink); background: var(--accent-soft); border: 1px solid var(--accent);
+    padding: .2rem .5rem; border-radius: 999px; align-self: center;
+  }
+
+  /* ---------- Cards & callouts ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: clamp(1rem, 2.5vw, 1.5rem); box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 1rem; }
+  .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+  .feature h4 { font-size: 1rem; margin-bottom: .35rem; display: flex; align-items: center; gap: .5rem; }
+  .feature .ic {
+    width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center;
+    background: var(--accent-soft); color: var(--accent-ink); font-size: 1rem; border: 1px solid var(--line);
+  }
+  .feature p { font-size: .92rem; color: var(--ink-2); margin: 0; }
+
+  .note {
+    display: grid; grid-template-columns: auto 1fr; gap: .9rem; align-items: start;
+    border-radius: 12px; padding: 1rem 1.1rem; margin: 1.2rem 0; border: 1px solid var(--line);
+    background: var(--bg-2); font-size: .94rem;
+  }
+  .note .tag {
+    font-weight: 700; font-size: .74rem; text-transform: uppercase; letter-spacing: .08em;
+    padding: .25rem .55rem; border-radius: 7px; white-space: nowrap; color: #fff;
+  }
+  .note.tip { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 35%, transparent); }
+  .note.tip .tag { background: var(--good); }
+  .note.watch { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+  .note.watch .tag { background: var(--warn); }
+  .note p { margin: 0; }
+
+  /* ---------- Steps ---------- */
+  .steps { counter-reset: step; display: grid; gap: .8rem; padding: 0; list-style: none; max-width: 68ch; }
+  .steps li { position: relative; padding-left: 3rem; }
+  .steps li::before {
+    counter-increment: step; content: counter(step);
+    position: absolute; left: 0; top: -.1rem; width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-family: var(--font-mono);
+    display: grid; place-items: center; font-size: .9rem;
+  }
+  .steps li b { display: block; }
+
+  /* ---------- Tables ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; background: var(--surface); }
+  th, td { text-align: left; padding: .7rem .9rem; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+  thead th { background: var(--bg-2); font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-2); font-weight: 700; }
+  tbody tr:last-child td { border-bottom: none; }
+  td .mono { color: var(--ink-2); }
+  .tick { color: var(--good); font-weight: 700; }
+  .cross { color: var(--ink-2); }
+
+  /* ---------- Status pills ---------- */
+  .dot { width: .7rem; height: .7rem; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: .5rem; }
+  .pill {
+    display: inline-flex; align-items: center; padding: .18rem .6rem; border-radius: 999px;
+    font-size: .8rem; font-weight: 600; border: 1px solid transparent; white-space: nowrap;
+  }
+  .t-new    { background: var(--info-soft); color: var(--info); }
+  .t-warm   { background: var(--warn-soft); color: var(--warn); }
+  .t-good   { background: var(--good-soft); color: var(--good); }
+  .t-bad    { background: var(--bad-soft);  color: var(--bad); }
+  .t-muted  { background: var(--bg-2);      color: var(--ink-2); }
+  .t-accent { background: var(--accent-soft); color: var(--accent-ink); }
+
+  /* ---------- Flow diagrams (pure CSS, no library) ---------- */
+  .diagram {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: clamp(16px, 3vw, 28px); margin: 1.2rem 0 .5rem; overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+  .flow { display: flex; align-items: center; gap: .45rem; min-width: min-content; justify-content: center; }
+  .flow-col { display: flex; flex-direction: column; gap: .45rem; }
+  .flow-node {
+    background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px;
+    padding: .6rem .8rem; font-size: .84rem; line-height: 1.32; color: var(--ink);
+    min-width: 128px; max-width: 220px; text-align: center; font-weight: 600; flex: none;
+  }
+  .flow-node.plain { background: var(--surface); border-color: var(--line); font-weight: 600; }
+  .flow-node.muted { background: var(--surface); border-color: var(--line); color: var(--ink-2); font-weight: 500; }
+  .flow-node.hub { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+  .flow-node .n { display: inline-block; font-family: var(--font-mono); color: var(--accent-ink); font-weight: 700; margin-right: .1rem; }
+  .flow-node.hub .n { color: #fff; }
+  .flow-node b { display: block; font-weight: 700; }
+  .flow-node small { display: block; color: var(--ink-2); font-size: .74rem; margin-top: .2rem; font-weight: 500; }
+  .flow-arrow { flex: none; color: var(--accent); font-size: 1.15rem; font-weight: 700; }
+  .flow-arrow.down { transform: rotate(90deg); }
+  .offramp { display: flex; align-items: center; justify-content: center; gap: .5rem; flex-wrap: wrap; margin-top: .9rem; font-size: .82rem; color: var(--ink-2); }
+  .caption { font-size: .84rem; color: var(--ink-2); margin: 0 0 1.2rem; text-align: center; }
+
+  /* ---------- UI Mockups ---------- */
+  .mock {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 1rem; box-shadow: var(--shadow); margin: 1.2rem 0 .5rem;
+  }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .7rem; }
+  .kpi { border: 1px solid var(--line); border-radius: 11px; padding: .8rem .9rem; background: var(--bg); }
+  .kpi .n { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: .78rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; }
+  .kpi.hot .n { color: var(--accent); }
+  .kpi.alert .n { color: var(--bad); }
+
+  .mock-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .mock-table th { background: var(--bg-2); font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); padding: .5rem .6rem; text-align: left; border-bottom: 1px solid var(--line); }
+  .mock-table td { padding: .55rem .6rem; border-bottom: 1px solid var(--line-2); }
+  .mock-table tr:last-child td { border-bottom: none; }
+  .m-check { width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: .7rem; }
+  .m-check.on { background: var(--good); color: #fff; }
+  .m-check.off { border: 1.5px dashed var(--line); color: var(--ink-2); }
+
+  .stream { display: grid; gap: .7rem; }
+  .act { display: grid; grid-template-columns: auto 1fr; gap: .7rem; }
+  .act .m { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: .9rem; border: 1px solid var(--line); }
+  .act .m.conv { background: var(--info-soft); color: var(--info); }
+  .act .m.upd  { background: var(--accent-soft); color: var(--accent-ink); }
+  .act .m.web  { background: var(--bg-2); color: var(--ink-2); }
+  .act .body { border: 1px solid var(--line); border-radius: 10px; padding: .55rem .8rem; background: var(--bg); }
+  .act .body .top { display: flex; justify-content: space-between; gap: 1rem; font-size: .78rem; }
+  .act .body strong { font-size: .9rem; }
+  .act .body .who { color: var(--ink-2); }
+  .act .body p { font-size: .88rem; margin: .25rem 0 0; color: var(--ink); max-width: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; font-size: .82rem; color: var(--ink-2); margin-top: .7rem; }
+
+  footer {
+    max-width: var(--maxw); margin: 0 auto; padding: 2rem clamp(20px, 4vw, 48px) 3rem;
+    border-top: 1px solid var(--line); color: var(--ink-2); font-size: .86rem;
+  }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; gap: 0; }
+    .rail { position: static; padding-top: 1.6rem; }
+    .toc summary { display: block; }
+    .toc[open] summary { margin-bottom: .6rem; }
+    .toc:not([open]) nav { display: none; }
+    .toc nav { max-height: 60vh; overflow-y: auto; padding: .3rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+    main { padding-top: 1rem; }
+    .theme-toggle { top: 16px; right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">🌗</button>
+    <span class="brand"><span class="mark">◇</span> One Degree Advisory</span>
+    <p class="eyebrow" style="margin-top:1.4rem">Team handbook</p>
+    <h1>Using the One Degree CRM</h1>
+    <p class="lede">A plain-language guide to how leads reach us, how you work them, and how a student journey is tracked — from the first enquiry to a granted visa.</p>
+    <div class="chips">
+      <span class="chip">👥 For <b>counsellors</b> &amp; <b>super admins</b></span>
+      <span class="chip">🔑 Sign in with a <b>one-time code</b></span>
+      <span class="chip">🧭 Everything lives at <b>/crm</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="rail">
+    <details class="toc" open>
+      <summary>On this page</summary>
+      <nav id="toc">
+        <span class="toc-label">Getting started</span>
+        <a href="#overview">What the CRM is</a>
+        <a href="#signin">Signing in</a>
+        <a href="#roles">Your access level</a>
+        <span class="toc-label">Everyday work</span>
+        <a href="#sources">Where leads come from</a>
+        <a href="#dashboard">The dashboard</a>
+        <a href="#working">Working a lead</a>
+        <a href="#lifecycle">Statuses explained</a>
+        <a href="#followups">Follow-ups</a>
+        <span class="toc-label">Students</span>
+        <a href="#convert">Becoming a student</a>
+        <a href="#journey">The student journey</a>
+        <span class="toc-label">Admin tools</span>
+        <a href="#enrollments">Enrolments &amp; payments</a>
+        <a href="#subscribers">Newsletter subscribers</a>
+        <a href="#team">Team management</a>
+        <a href="#audit">Audit log</a>
+        <a href="#shortlisting">PDF shortlisting</a>
+        <span class="toc-label">Reference</span>
+        <a href="#tips">Good to know</a>
+      </nav>
+    </details>
+  </aside>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <h2><span class="num">01</span> What the CRM is</h2>
+      <p>The One Degree CRM is the single place where every enquiry — a website form, a phone lead you add by hand, a spreadsheet import, or a course payment — becomes a <b>lead</b> you can track and act on. Each lead keeps its full story: who owns it, every status change, every comment, and eventually the complete student journey.</p>
+      <p>There are two kinds of user, and what you see depends on which one you are:</p>
+      <div class="grid cols-2">
+        <div class="card feature">
+          <h4><span class="ic">🧑‍💼</span> Counsellor</h4>
+          <p>Works their own portfolio of assigned leads — calling, commenting, scheduling follow-ups and converting students. Sees only the leads assigned to them.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">🛡️</span> Super admin</h4>
+          <p>Sees every lead across the whole team, assigns owners, manages the team, and unlocks extra areas: newsletter subscribers, the audit log, and payment management.</p>
+        </div>
+      </div>
+      <div class="note tip">
+        <span class="tag">In short</span>
+        <p>A lead is a person we might help. A student is a lead who enrolled. The CRM keeps both, with everything that happened in between.</p>
+      </div>
+    </section>
+
+    <!-- SIGN IN -->
+    <section id="signin">
+      <h2><span class="num">02</span> Signing in</h2>
+      <p>There are no passwords. You sign in with a <b>one-time code (OTP)</b> that is emailed to your registered address. Just enter your phone number or email, and we send you a fresh 6-digit code.</p>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="flow-node plain">Open the CRM login page</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node plain">Enter your phone number or email</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">A 6-digit code is emailed to you</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node plain">Type the code within 5 minutes</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node hub">You're in</div>
+        </div>
+      </div>
+      <p class="caption">The sign-in flow, start to finish.</p>
+
+      <ol class="steps">
+        <li><b>Enter your phone or email.</b> Either one works, as long as it is registered for you in the CRM.</li>
+        <li><b>Check your email for the code.</b> The code lands in your registered inbox and is valid for 5 minutes.</li>
+        <li><b>Type the 6 digits.</b> You get a few tries; after that, request a fresh code.</li>
+      </ol>
+
+      <div class="note watch">
+        <span class="tag">If you're stuck</span>
+        <p>The code is emailed, not texted. If it doesn't arrive, check spam, then ask a super admin to confirm the email on your account is correct. Only a super admin can add or fix team accounts.</p>
+      </div>
+    </section>
+
+    <!-- ROLES -->
+    <section id="roles">
+      <h2><span class="num">03</span> Your access level <span class="badge-admin">Counsellor vs Super admin</span></h2>
+      <p>Both roles use the same screens; super admins simply see more. Here's who can do what:</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Action</th><th>Counsellor</th><th>Super admin</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>See leads</td><td>Only leads assigned to them</td><td>Every lead, team-wide</td></tr>
+            <tr><td>Add, edit &amp; comment on leads</td><td class="tick">✓ (own leads)</td><td class="tick">✓ (all)</td></tr>
+            <tr><td>Schedule &amp; complete follow-ups</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Convert a lead to a student</td><td class="tick">✓ (own leads)</td><td class="tick">✓</td></tr>
+            <tr><td>Choose who owns a lead</td><td class="cross">— (auto-assigned to self)</td><td class="tick">✓ assigns anyone</td></tr>
+            <tr><td>Import leads from a spreadsheet</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>PDF shortlisting tool</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Newsletter subscribers</td><td class="cross">Hidden</td><td class="tick">✓</td></tr>
+            <tr><td>Manage payments / enrolments</td><td>View own only</td><td class="tick">✓ edit &amp; remove</td></tr>
+            <tr><td>Team management</td><td class="cross">✗</td><td class="tick">✓</td></tr>
+            <tr><td>Audit log</td><td class="cross">✗</td><td class="tick">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SOURCES -->
+    <section id="sources">
+      <h2><span class="num">04</span> Where leads come from</h2>
+      <p>Leads arrive four ways, and they all land in the same list. However a lead arrives, it is saved with a unique reference number like <span class="mono">OD-1042</span> so it's easy to find and quote.</p>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="flow-col">
+            <div class="flow-node">Website forms<small>Contact · Profiler · SOP · Loan · Visa mock · Career library</small></div>
+            <div class="flow-node">Added by hand<small>the New lead button</small></div>
+            <div class="flow-node">Spreadsheet import<small>a CSV of leads</small></div>
+            <div class="flow-node">Course payment<small>Razorpay checkout</small></div>
+          </div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node hub">One Degree CRM</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node plain">Every lead gets an <b>OD-number</b><small>and a status of "New"</small></div>
+        </div>
+      </div>
+      <p class="caption">Four sources, one shared pipeline.</p>
+
+      <div class="grid cols-2">
+        <div class="card feature">
+          <h4><span class="ic">🌐</span> From the website</h4>
+          <p>When someone fills in a form on the public site — contact, profile evaluator, SOP, loan &amp; accommodation, visa mock interview or the career library — a lead is created automatically and the exact answers are attached to it.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">✍️</span> Added by hand</h4>
+          <p>Use <b>New lead</b> to add someone from a call or referral. A name plus a phone <i>or</i> email is enough. Duplicates are blocked so the same person isn't added twice.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">📄</span> Spreadsheet import</h4>
+          <p>Upload a <b>CSV</b> file to add many leads at once. Rows without a valid phone or that already exist are skipped, and you get a count of what was added.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">💳</span> Course payment</h4>
+          <p>When someone pays for a program online, a lead is created (or matched to an existing one) and the payment is recorded against it. A successful payment turns the lead into an enrolled student.</p>
+        </div>
+      </div>
+
+      <div class="note tip">
+        <span class="tag">Smart matching</span>
+        <p>If a website visitor or payer already exists as a lead — matched on phone or email — the new activity is added to their existing record instead of creating a duplicate. A soft-deleted lead is even brought back automatically.</p>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard">
+      <h2><span class="num">05</span> The dashboard</h2>
+      <p>The dashboard opens on a summary of your world. The tiles across the top are your quick pulse — click any tile to jump into that filtered list.</p>
+
+      <div class="mock" aria-label="Example of the summary tiles">
+        <div class="kpi-row">
+          <div class="kpi"><div class="n">248</div><div class="l">Total</div></div>
+          <div class="kpi hot"><div class="n">32</div><div class="l">New</div></div>
+          <div class="kpi"><div class="n">57</div><div class="l">Interested</div></div>
+          <div class="kpi"><div class="n">19</div><div class="l">In follow-up</div></div>
+          <div class="kpi alert"><div class="n">6</div><div class="l">Overdue</div></div>
+          <div class="kpi"><div class="n">41</div><div class="l">Enrolled</div></div>
+        </div>
+      </div>
+      <p class="caption">The summary tiles (example figures).</p>
+
+      <h3>The main areas</h3>
+      <div class="grid cols-3">
+        <div class="card feature"><h4><span class="ic">📊</span> Dashboard</h4><p>Charts, a world map of preferred destinations, monthly enquiry volume, and your action queue.</p></div>
+        <div class="card feature"><h4><span class="ic">📇</span> Leads</h4><p>The full, searchable, filterable list of leads with a progress column for each one.</p></div>
+        <div class="card feature"><h4><span class="ic">📆</span> Follow-ups</h4><p>Everything you owe a call-back on — as a list or a calendar.</p></div>
+        <div class="card feature"><h4><span class="ic">🎓</span> Enrolled students</h4><p>Leads that became students, with their current journey stage.</p></div>
+        <div class="card feature"><h4><span class="ic">💳</span> Enrolments</h4><p>Online course payments and their status.</p></div>
+        <div class="card feature"><h4><span class="ic">📰</span> Subscriptions <span class="badge-admin">Admin</span></h4><p>Newsletter sign-ups from the website.</p></div>
+      </div>
+
+      <h3>The leads list at a glance</h3>
+      <p>Each row shows the lead plus a set of milestone ticks, so you can see how far along someone is without opening them. The last column is the latest note about the lead.</p>
+      <div class="mock" aria-label="Example leads table">
+        <table class="mock-table">
+          <thead>
+            <tr><th>Lead</th><th>Name</th><th>Contacted</th><th>Counselling</th><th>Enrolled</th><th>Latest note</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">OD-10042</td><td>Aarav Mehta</td>
+              <td><span class="m-check on">✓</span></td><td><span class="m-check on">✓</span></td><td><span class="m-check off">–</span></td>
+              <td>Status changed to "Interested".</td>
+            </tr>
+            <tr>
+              <td class="mono">OD-10043</td><td>Sara Khan</td>
+              <td><span class="m-check on">✓</span></td><td><span class="m-check off">–</span></td><td><span class="m-check off">–</span></td>
+              <td>Follow-up set for 28 Jul.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="caption">A lead row with progress ticks (example data).</p>
+
+      <div class="note tip">
+        <span class="tag">Export</span>
+        <p>Use the export button to download the current, filtered list as a spreadsheet — handy for reporting. What you export respects your access level and any filters you've applied.</p>
+      </div>
+    </section>
+
+    <!-- WORKING A LEAD -->
+    <section id="working">
+      <h2><span class="num">06</span> Working a lead</h2>
+      <p>Click any lead to open its workspace — a side panel with three tabs: <b>Details</b>, <b>Timeline</b>, and <b>Student</b>.</p>
+
+      <div class="grid cols-3">
+        <div class="card feature"><h4><span class="ic">📞</span> Quick actions</h4><p>Call, WhatsApp or email the lead in one tap. The WhatsApp option even pre-fills a friendly greeting with your name.</p></div>
+        <div class="card feature"><h4><span class="ic">✏️</span> Details</h4><p>Edit their name, contact, course &amp; country of interest, priority, status and follow-up date. Super admins can also change the owner.</p></div>
+        <div class="card feature"><h4><span class="ic">🕘</span> Timeline</h4><p>The full history: your comments, automatic updates, website submissions and payments — filterable by type.</p></div>
+      </div>
+
+      <h3>The timeline &amp; comments</h3>
+      <p>The timeline is the lead's diary. You add comments to record what happened on a call; the CRM adds its own entries automatically whenever something changes — and those auto-entries now spell out exactly what changed, in plain words.</p>
+
+      <div class="mock" aria-label="Example timeline">
+        <div class="stream">
+          <div class="act">
+            <div class="m web">⇧</div>
+            <div class="body">
+              <div class="top"><strong>Website submission</strong><span class="who">System · 24 Jul, 10:12 AM</span></div>
+              <p>Received a Career Library website submission.</p>
+            </div>
+          </div>
+          <div class="act">
+            <div class="m upd">↻</div>
+            <div class="body">
+              <div class="top"><strong>Lead updated</strong><span class="who">Priya · 24 Jul, 11:05 AM</span></div>
+              <p>Status changed from "New lead" to "Interested". Follow-up set to "28 Jul 2026, 4:30 PM".</p>
+            </div>
+          </div>
+          <div class="act">
+            <div class="m conv">✎</div>
+            <div class="body">
+              <div class="top"><strong>Comment</strong><span class="who">Priya · 24 Jul, 11:06 AM</span></div>
+              <p>Spoke with parent — keen on Canada for a Master's, will share documents on Friday.</p>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--ink-2)"></span> System / website</span>
+          <span><span class="dot" style="background:var(--accent)"></span> Automatic update</span>
+          <span><span class="dot" style="background:var(--info)"></span> Team comment</span>
+        </div>
+      </div>
+      <p class="caption">A lead's timeline — auto-updates describe the exact before → after change.</p>
+
+      <div class="note tip">
+        <span class="tag">New</span>
+        <p>Automatic timeline entries are now descriptive: instead of "Updated status, follow-up", you'll see "<i>Status changed from "New lead" to "Interested". Follow-up set to …</i>" — so the history reads like a story anyone can follow.</p>
+      </div>
+    </section>
+
+    <!-- LIFECYCLE -->
+    <section id="lifecycle">
+      <h2><span class="num">07</span> Statuses explained</h2>
+      <p>A lead's <b>status</b> tells everyone where the conversation stands. You move a lead through these as you work it. The final step — becoming an enrolled student — happens through the Student tab, not by picking a status.</p>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="flow-node">New lead</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">In conversation<small>Not answered · Call back · Follow up</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node t-good" style="background:var(--good-soft);border-color:var(--good);color:var(--good)">Interested</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node hub">Convert to student</div>
+        </div>
+        <div class="offramp">
+          <span class="flow-arrow" style="transform:rotate(90deg)">↳</span>
+          <span>A lead can exit at any point:</span>
+          <span class="pill t-bad">Not interested</span>
+          <span class="pill t-bad">Junk / invalid</span>
+          <span class="pill t-muted">Dropped</span>
+        </div>
+      </div>
+      <p class="caption">The typical path from a new enquiry to an enrolled student.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Status</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill t-new"><span class="dot" style="background:var(--info)"></span>New lead</span></td><td>Just arrived, nobody has worked it yet.</td></tr>
+            <tr><td><span class="pill t-muted"><span class="dot" style="background:var(--ink-2)"></span>Not answered</span></td><td>You tried to reach them but couldn't.</td></tr>
+            <tr><td><span class="pill t-warm"><span class="dot" style="background:var(--warn)"></span>Call back</span></td><td>They asked you to call again later.</td></tr>
+            <tr><td><span class="pill t-warm"><span class="dot" style="background:var(--warn)"></span>Follow up</span></td><td>An active conversation with a next step planned.</td></tr>
+            <tr><td><span class="pill t-good"><span class="dot" style="background:var(--good)"></span>Interested</span></td><td>Qualified and keen — heading toward enrolment.</td></tr>
+            <tr><td><span class="pill t-bad"><span class="dot" style="background:var(--bad)"></span>Not interested</span></td><td>Not proceeding for now.</td></tr>
+            <tr><td><span class="pill t-accent"><span class="dot" style="background:var(--accent)"></span>Enrolled student</span></td><td>Converted — now on the student journey. Set via the Student tab.</td></tr>
+            <tr><td><span class="pill t-bad"><span class="dot" style="background:var(--bad)"></span>Junk / invalid</span></td><td>Spam, a wrong number, or a test entry.</td></tr>
+            <tr><td><span class="pill t-muted"><span class="dot" style="background:var(--ink-2)"></span>Dropped</span></td><td>Was progressing but has since gone cold.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FOLLOW-UPS -->
+    <section id="followups">
+      <h2><span class="num">08</span> Follow-ups</h2>
+      <p>A follow-up is a date and time you plan to next contact a lead. Set one from the Details tab, and it appears in the <b>Follow-ups</b> area and in your reminders.</p>
+      <ul>
+        <li><b>Due today</b> and <b>overdue</b> follow-ups are called out so nothing slips.</li>
+        <li>View them as a <b>list</b> or a <b>calendar</b> to plan your week.</li>
+        <li>When you've made the call, mark the follow-up <b>complete</b> — this also records that the lead was contacted just now.</li>
+      </ul>
+      <div class="note watch">
+        <span class="tag">Note</span>
+        <p>A lead holds one active follow-up at a time. Setting a new date replaces the old one, and completing it clears the slot — so schedule the next step as you close out the current one.</p>
+      </div>
+    </section>
+
+    <!-- CONVERT -->
+    <section id="convert">
+      <h2><span class="num">09</span> Becoming a student</h2>
+      <p>When a lead decides to enrol, open their <b>Student</b> tab and choose <b>Convert to Student</b>. You record the student type, the starting stage, and any enrolment details (amount, date, payment reference, remarks).</p>
+      <p>Converting keeps the entire lead history intact and unlocks stage-by-stage tracking of their admission. A lead that pays online is converted to a student automatically.</p>
+      <div class="note tip">
+        <span class="tag">Why a separate step</span>
+        <p>You can't reach "Enrolled student" just by changing the status — it always goes through Convert, so enrolment details are captured properly every time.</p>
+      </div>
+    </section>
+
+    <!-- JOURNEY -->
+    <section id="journey">
+      <h2><span class="num">10</span> The student journey</h2>
+      <p>Once someone is a student, the Student tab shows an eight-step journey from first documents to a granted visa. Update the current stage as they progress and the timeline records each move.</p>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="flow-node"><span class="n">1</span> Documentation pending</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node"><span class="n">2</span> Documents complete</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node"><span class="n">3</span> Application submitted</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node"><span class="n">4</span> Offer letter received</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node"><span class="n">5</span> Deposit / tuition paid</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node"><span class="n">6</span> Visa in process</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node"><span class="n">7</span> Visa filed</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node hub"><span class="n">8</span> Visa granted</div>
+        </div>
+      </div>
+      <p class="caption">The eight stages of the student journey.</p>
+
+      <p>Two extra states sit outside the straight line and are flagged as <b>needs attention</b>: <span class="pill t-bad">Visa rejected</span> and <span class="pill t-muted">Student dropped</span>. Each stage shows guidance on what to do next, so the whole team knows the plan.</p>
+    </section>
+
+    <!-- ENROLLMENTS -->
+    <section id="enrollments">
+      <h2><span class="num">11</span> Enrolments &amp; payments</h2>
+      <p>The <b>Enrolments</b> area lists online course payments — who paid, for which program, how much, and the payment's status. Counsellors see payments for their own leads; super admins see them all and can edit or remove entries.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Payment status</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill t-good">Paid</span></td><td>Money received — the lead becomes an enrolled student.</td></tr>
+            <tr><td><span class="pill t-warm">Awaiting payment</span></td><td>Checkout opened, payment not yet completed.</td></tr>
+            <tr><td><span class="pill t-warm">Starting payment</span></td><td>The payment is being set up.</td></tr>
+            <tr><td><span class="pill t-bad">Payment failed</span></td><td>The payment attempt didn't go through.</td></tr>
+            <tr><td><span class="pill t-bad">Order failed</span></td><td>The order couldn't be created.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SUBSCRIBERS -->
+    <section id="subscribers">
+      <h2><span class="num">12</span> Newsletter subscribers <span class="badge-admin">Super admin</span></h2>
+      <p>Every newsletter sign-up from the website is collected here with its source and status. Super admins can mark someone <b>active</b> or <b>unsubscribed</b>, remove entries, and export the list. Counsellors don't see this area.</p>
+    </section>
+
+    <!-- TEAM -->
+    <section id="team">
+      <h2><span class="num">13</span> Team management <span class="badge-admin">Super admin</span></h2>
+      <p>Super admins add and manage the people who can use the CRM.</p>
+      <ul>
+        <li><b>Add a member</b> with a name, mobile, email and role (counsellor or super admin). They can sign in immediately with the OTP.</li>
+        <li><b>Edit</b> their details, <b>promote or demote</b> between roles, and <b>disable or restore</b> access.</li>
+        <li><b>Remove</b> a member — any leads they owned simply become unassigned so nothing is lost.</li>
+      </ul>
+      <div class="note watch">
+        <span class="tag">Safeguards</span>
+        <p>You can't change your own role or remove yourself, and at least one super admin must always remain active. A couple of "core" super admins are fixed in the server settings and can't be demoted or deleted from here — that's deliberate, so no one gets locked out.</p>
+      </div>
+    </section>
+
+    <!-- AUDIT -->
+    <section id="audit">
+      <h2><span class="num">14</span> Audit log <span class="badge-admin">Super admin</span></h2>
+      <p>The audit log is a complete, searchable record of important actions across the CRM: sign-ins, lead creation and edits, conversions, follow-up completions, imports, and every team-management change. Each entry shows who did it, when, and — where relevant — what changed. Filter by action type, by person, or search the text. It's the go-to for "who did what, and when?".</p>
+    </section>
+
+    <!-- SHORTLISTING -->
+    <section id="shortlisting">
+      <h2><span class="num">15</span> PDF shortlisting tool</h2>
+      <p>This tool builds a branded university-comparison sheet for a student. Upload the student's report <b>PDF</b> plus a <b>shortlist spreadsheet</b>, and it produces a polished PDF with a comparison table on the final page — ready to send. Available to everyone signed in.</p>
+      <ul>
+        <li>The spreadsheet lists one university per column, with the compared attributes down the first column.</li>
+        <li>The sheet's name is used as the destination country on the table.</li>
+        <li>The student's name is picked up from the report automatically.</li>
+      </ul>
+    </section>
+
+    <!-- TIPS -->
+    <section id="tips">
+      <h2><span class="num">16</span> Good to know</h2>
+      <div class="grid cols-2">
+        <div class="card feature">
+          <h4><span class="ic">📧</span> Your code comes by email</h4>
+          <p>The login code is sent to your registered email, not by SMS. Keep that address current and reachable.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">🧾</span> Import needs a CSV</h4>
+          <p>The importer reads <b>CSV</b> files. If your data is in Excel, choose "Save As → CSV" first, then upload.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">🗑️</span> Tidy up with "Junk"</h4>
+          <p>Leads aren't deleted from the CRM. To clear out spam or test entries, set their status to <b>Junk / invalid</b> so they drop out of your working views.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">🔁</span> No duplicates</h4>
+          <p>The CRM matches people by phone and email, so the same person won't be added twice — new activity attaches to their existing record.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">🎓</span> Enrol via the Student tab</h4>
+          <p>"Enrolled student" is reached through Convert to Student — not by changing the status field.</p>
+        </div>
+        <div class="card feature">
+          <h4><span class="ic">🔒</span> You see your own leads</h4>
+          <p>Counsellors work their assigned portfolio. Need a lead reassigned? Ask a super admin.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <p><strong>One Degree CRM — Team Guide.</strong> An internal reference for counsellors and super admins. Screens and figures shown are examples. For account help or a lead reassignment, contact a super admin.</p>
+</footer>
+
+<script>
+  // Theme toggle — remembers the choice; otherwise follows the device setting.
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    try {
+      var saved = localStorage.getItem('odcrm-theme');
+      if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+    } catch (e) {}
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var current = root.getAttribute('data-theme');
+        if (!current) {
+          current = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        var next = current === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('odcrm-theme', next); } catch (e) {}
+      });
+    }
+  })();
+
+  // Highlight the current section in the "On this page" rail.
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+    var map = {};
+    links.forEach(function (a) {
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) map[id] = a;
+    });
+    var sections = Object.keys(map).map(function (id) { return document.getElementById(id); });
+    if (!('IntersectionObserver' in window) || sections.length === 0) return;
+
+    var current = null;
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) current = e.target.id; });
+      links.forEach(function (a) { a.classList.remove('active'); });
+      if (current && map[current]) map[current].classList.add('active');
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+
+    sections.forEach(function (s) { obs.observe(s); });
+  })();
+</script>
+</body>
+</html>

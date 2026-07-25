@@ -100,7 +100,7 @@ class CrmLeadController extends Controller
 
         $labels = [];
         foreach (array_keys($changes) as $field) {
-            if ($field === 'updated_at') {
+            if (in_array($field, ['updated_at', 'follow_up_completed_at'], true)) {
                 continue;
             }
             $labels[] = match ($field) {
@@ -109,7 +109,8 @@ class CrmLeadController extends Controller
             };
         }
         if ($labels !== []) {
-            $this->activity($lead, $user, 'updated', 'Updated '.implode(', ', $labels).'.', ['before' => $before, 'changes' => $changes]);
+            $story = $this->describeChanges($before, $changes);
+            $this->activity($lead, $user, 'updated', $story ?: 'Updated '.implode(', ', $labels).'.', ['before' => $before, 'changes' => $changes]);
             $lead->unsetRelation('assignee')->load('assignee');
             $this->auditLead($request, $user, $lead, 'lead_updated', 'Updated '.implode(', ', $labels).' for '.$lead->name.'.', [
                 'before' => array_intersect_key($before, $changes),
@@ -215,10 +216,15 @@ class CrmLeadController extends Controller
         $changes = array_keys($dirty);
 
         if ($changes !== []) {
-            $stage = CrmOptions::STUDENT_STAGES[$lead->student_stage];
-            $body = in_array('student_stage', $changes, true)
-                ? 'Student journey advanced to “'.$stage.'”.'
-                : 'Updated student enrolment information.';
+            if (in_array('student_stage', $changes, true)) {
+                $fromStage = CrmOptions::STUDENT_STAGES[$before['student_stage']] ?? null;
+                $toStage = CrmOptions::STUDENT_STAGES[$lead->student_stage];
+                $body = $fromStage
+                    ? 'Student stage changed from “'.$fromStage.'” to “'.$toStage.'”.'
+                    : 'Student stage set to “'.$toStage.'”.';
+            } else {
+                $body = 'Updated student enrolment information.';
+            }
             $this->activity($lead, $user, 'student_stage', $body, ['before' => $before, 'changes' => $dirty]);
             $this->auditLead($request, $user, $lead, 'student_journey_updated', 'Updated the student journey for '.$lead->name.'.', [
                 'before' => array_intersect_key($before, $dirty),
@@ -333,6 +339,74 @@ class CrmLeadController extends Controller
             'crm_lead_id' => $lead->id, 'crm_user_id' => $user->id,
             'type' => $type, 'body' => $body, 'metadata' => $metadata ?: null,
         ]);
+    }
+
+    /**
+     * Turn a set of dirty lead fields into a human sentence for the timeline,
+     * e.g. "Status changed from “New lead” to “Interested”. Owner changed from “Unassigned” to “Priya”."
+     *
+     * @param  array<string, mixed>  $before   Full original attributes
+     * @param  array<string, mixed>  $changes  Dirty fields (field => new value)
+     */
+    private function describeChanges(array $before, array $changes): string
+    {
+        $fields = array_diff(array_keys($changes), ['updated_at', 'follow_up_completed_at']);
+        if ($fields === []) {
+            return '';
+        }
+
+        // Resolve counsellor names for any owner change in one query.
+        $userNames = [];
+        if (in_array('assigned_to', $fields, true)) {
+            $ids = array_filter([$before['assigned_to'] ?? null, $changes['assigned_to'] ?? null]);
+            $userNames = $ids === []
+                ? []
+                : CrmUser::query()->whereKey($ids)->pluck('name', 'id')->all();
+        }
+
+        $labels = [
+            'assigned_to' => 'Owner', 'follow_up_at' => 'Follow-up', 'course_interest' => 'Course',
+            'country_interest' => 'Country', 'student_stage' => 'Student stage', 'lead_type' => 'Lead type',
+            'status' => 'Status', 'priority' => 'Priority', 'category' => 'Category', 'source' => 'Source',
+            'city' => 'City', 'name' => 'Name', 'phone' => 'Phone', 'email' => 'Email',
+        ];
+
+        $format = function (string $field, $value) use ($userNames): string {
+            if ($value === null || $value === '') {
+                return '';
+            }
+            return match ($field) {
+                'status' => CrmOptions::STATUSES[$value] ?? (string) $value,
+                'priority' => CrmOptions::PRIORITIES[$value] ?? (string) $value,
+                'category' => CrmOptions::CATEGORIES[$value] ?? (string) $value,
+                'lead_type' => CrmOptions::LEAD_TYPES[$value] ?? (string) $value,
+                'student_stage' => CrmOptions::STUDENT_STAGES[$value] ?? (string) $value,
+                'assigned_to' => $userNames[$value] ?? 'counsellor #'.$value,
+                'follow_up_at' => \Illuminate\Support\Carbon::parse($value)->format('d M Y, g:i A'),
+                'phone' => '+91 '.$value,
+                default => (string) $value,
+            };
+        };
+
+        $sentences = [];
+        foreach ($fields as $field) {
+            $label = $labels[$field] ?? ucfirst(str_replace('_', ' ', $field));
+            $old = $format($field, $before[$field] ?? null);
+            $new = $format($field, $changes[$field] ?? null);
+
+            if ($new === '' && $old === '') {
+                continue;
+            }
+            $sentences[] = match (true) {
+                $old === '' => $field === 'assigned_to'
+                    ? 'Assigned to “'.$new.'”.'
+                    : $label.' set to “'.$new.'”.',
+                $new === '' => $label.' cleared (was “'.$old.'”).',
+                default => $label.' changed from “'.$old.'” to “'.$new.'”.',
+            };
+        }
+
+        return implode(' ', $sentences);
     }
 
     /** @param array<string, mixed> $changes */
