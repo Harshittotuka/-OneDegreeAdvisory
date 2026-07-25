@@ -68,7 +68,7 @@
                 <span class="pl-content">
                     <span class="pl-icon" style="background:#fce9e7;color:#d34232;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2.5v5h5"/><path d="M8.5 13h7M8.5 16.5h7"/></svg></span>
                     <h3>Career report PDF</h3>
-                    <p>Choose or drop one PDF<br>Maximum size: 25 MB</p>
+                    <p>Choose or drop one PDF<br>Maximum size: 50 MB</p>
                     <span class="pl-name" data-file-name></span>
                 </span>
             </label>
@@ -80,7 +80,7 @@
                 <span class="pl-content">
                     <span class="pl-icon" style="background:#e5f7ed;color:#238c56;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></span>
                     <h3>University shortlist Excel</h3>
-                    <p>Choose or drop one .xlsx file<br>Maximum size: 5 MB</p>
+                    <p>Choose or drop one .xlsx file<br>Maximum size: 10 MB</p>
                     <span class="pl-name" data-file-name></span>
                 </span>
             </label>

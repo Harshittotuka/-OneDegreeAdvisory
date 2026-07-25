@@ -31,23 +31,23 @@ final class CrmPdfShortlistingController extends Controller
         // Errors go into the dedicated "shortlist" bag so they render in the
         // shortlisting view without tripping the CRM's default error toast.
         $validated = $request->validateWithBag('shortlist', [
-            'report_pdf' => ['bail', 'required', 'file', 'mimetypes:application/pdf', 'max:25600'],
+            'report_pdf' => ['bail', 'required', 'file', 'mimetypes:application/pdf', 'max:51200'],
             'shortlist_excel' => [
                 'bail',
                 'required',
                 'file',
                 'extensions:xlsx',
                 'mimetypes:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,application/octet-stream',
-                'max:5120',
+                'max:10240',
             ],
         ], [
             'report_pdf.required' => 'Choose the PDF report to update.',
             'report_pdf.mimetypes' => 'The report must be a valid PDF file.',
-            'report_pdf.max' => 'The PDF must be 25 MB or smaller.',
+            'report_pdf.max' => 'The PDF must be 50 MB or smaller.',
             'shortlist_excel.required' => 'Choose the Excel shortlist.',
             'shortlist_excel.extensions' => 'The shortlist must be an Excel Workbook (.xlsx), not an .xls or .csv file.',
             'shortlist_excel.mimetypes' => 'The file could not be recognized as a valid .xlsx workbook. Open it in Excel, choose Save As > Excel Workbook (.xlsx), and try again.',
-            'shortlist_excel.max' => 'The Excel file must be 5 MB or smaller.',
+            'shortlist_excel.max' => 'The Excel file must be 10 MB or smaller.',
         ]);
 
         $reportPath = $validated['report_pdf']->getRealPath();
