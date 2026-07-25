@@ -47,6 +47,8 @@
         </div>
       </section>
 
+      @include('partials.home.quick-links')
+
       @include('partials.home.method-compass')
 
       <section class="audience-section" aria-labelledby="audience-title">

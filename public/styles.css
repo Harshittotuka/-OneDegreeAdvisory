@@ -3038,6 +3038,155 @@ textarea:focus {
   line-height: 1.55;
 }
 
+/* ============================================================
+   IMPORTANT LINKS — Student Hub quick-link row (home page)
+   Sits between the signal strip and the One Degree Method band.
+   Compact icon-over-label cards; the icon tile itself is styled by
+   the UNIFIED ICON-TILE SYSTEM at the end of this file, so only
+   layout lives here.
+   ============================================================ */
+.quick-links {
+  padding: 0 0 84px;
+}
+
+/* Small diamond rule under the heading: two hairlines either side of a
+   rotated square (the <i> child, not a Lucide slot). */
+.ql-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 14px 0 16px;
+}
+
+.ql-divider::before,
+.ql-divider::after {
+  content: "";
+  width: 34px;
+  height: 1px;
+  background: var(--line);
+}
+
+.ql-divider i {
+  width: 7px;
+  height: 7px;
+  background: var(--teal-dark);
+  transform: rotate(45deg);
+  opacity: 0.85;
+}
+
+.ql-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ql-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 252, 252, 0.9));
+  box-shadow: 0 10px 28px rgba(7, 25, 34, 0.05);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+/* Soft dome behind the label, echoing the reference layout. */
+.ql-card::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -46%;
+  width: 116%;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--teal-dark) 9%, transparent), transparent 68%);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+}
+
+.ql-card:hover {
+  transform: translateY(-6px);
+  border-color: color-mix(in srgb, var(--teal-dark) 30%, transparent);
+  box-shadow: 0 20px 44px rgba(7, 25, 34, 0.11);
+}
+
+.ql-card:hover::after {
+  opacity: 1;
+}
+
+.ql-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  background: var(--aqua);
+  color: var(--teal-dark);
+  transition: transform 0.28s ease, background 0.28s ease;
+}
+
+.ql-card__icon i,
+.ql-card__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.ql-card strong,
+.ql-card small {
+  position: relative;
+  z-index: 1;
+}
+
+.ql-card strong {
+  font-size: 0.98rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.ql-card small {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1024px) {
+  .ql-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .quick-links {
+    padding-bottom: 60px;
+  }
+
+  .ql-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .ql-card {
+    padding: 20px 12px 18px;
+  }
+
+  .ql-card small {
+    display: none;
+  }
+}
+
 .audience-section {
   padding: 92px 0;
   background:
@@ -25032,7 +25181,8 @@ html[data-color-theme] :is(
   .mbc-factcard__icon,
   .mbc-benefit__icon,
   .mbc-daily__icon,
-  .mbc-quote
+  .mbc-quote,
+  .ql-card__icon
 ) {
   width: 52px;
   height: 52px;
@@ -25062,7 +25212,8 @@ html[data-color-theme] :is(
   .mbc-factcard__icon,
   .mbc-benefit__icon,
   .mbc-daily__icon,
-  .mbc-quote
+  .mbc-quote,
+  .ql-card__icon
 ) :is(i, svg) {
   width: 24px !important;
   height: 24px !important;
@@ -25124,7 +25275,8 @@ html[data-color-theme] :is(
   .mbbsx-adv__card:hover .mbbsx-adv__icon,
   .mbc-factcard:hover .mbc-factcard__icon,
   .mbc-benefit:hover .mbc-benefit__icon,
-  .mbc-daily__card:hover .mbc-daily__icon
+  .mbc-daily__card:hover .mbc-daily__icon,
+  .ql-card:hover .ql-card__icon
 ) {
   transform: scale(1.06) rotate(-3deg);
   background: color-mix(in srgb, #ff5e32 18%, #e8f7f3);

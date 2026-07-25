@@ -125,11 +125,35 @@
       }
     };
 
+    /* Space left between the top of the morphing card and the bottom of the
+       window. Tall panels (Destinations on a short laptop screen) would other-
+       wise run off the bottom of the screen with no way to reach the last rows,
+       so we clamp the card to this and let the panel scroll inside it. */
+    const MIN_PANEL_H = 220;
+    const BOTTOM_GUTTER = 16;
+    const availableHeight = () => {
+      const fRect = flyout.getBoundingClientRect();
+      // .stripe-flyout-bg sits 12px below the flyout origin.
+      const avail = window.innerHeight - (fRect.top + 12) - BOTTOM_GUTTER;
+      return Math.max(MIN_PANEL_H, avail);
+    };
+
     const positionBg = (key, animate) => {
       const section = sectionFor(key);
       if (!section || !triggerFor(key)) return;
+      // Clear any previous clamp so we measure the panel's natural height.
+      section.style.maxHeight = "";
+      section.classList.remove("is-scrollable");
       const w = section.offsetWidth;
-      const h = section.offsetHeight;
+      let h = section.offsetHeight;
+      if (isDesktop()) {
+        const avail = availableHeight();
+        if (h > avail) {
+          section.style.maxHeight = avail + "px";
+          section.classList.add("is-scrollable");
+          h = avail;
+        }
+      }
       if (key === "services") servicesBaseHeight = h;
       const center = triggerCenter(key);
       const x = clampX(center - w / 2, w);
@@ -240,6 +264,11 @@
       if (!next) return;
       const willOpen = !next.classList.contains("is-active");
       sections.forEach((s) => s.classList.remove("is-active"));
+      // Drop any desktop height clamp — the mobile drawer scrolls as one column.
+      sections.forEach((s) => {
+        s.style.maxHeight = "";
+        s.classList.remove("is-scrollable");
+      });
       triggers.forEach((t) => t.setAttribute("aria-expanded", "false"));
       if (willOpen) {
         next.classList.add("is-active");
@@ -403,6 +432,10 @@
           if (isOpen) positionBg(activeKey, false);
         } else {
           closeFlyout();
+          sections.forEach((s) => {
+            s.style.maxHeight = "";
+            s.classList.remove("is-scrollable");
+          });
         }
       },
       { passive: true }

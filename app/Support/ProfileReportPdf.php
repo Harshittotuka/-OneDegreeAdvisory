@@ -75,6 +75,11 @@ class ProfileReportPdf
             $pg = 'Page '.($pageNumber - 1).' of '.($pageCount - 1);
             $pw = $fontMetrics->getTextWidth($pg, $bold, 7.5);
             $canvas->text($w - 30 - $pw, $h - 19.5, $pg, $bold, 7.5, $white);
+
+            // Second, smaller footer line: the AI-model disclaimer, centred.
+            $disc = AiDisclaimer::TEXT;
+            $dw = $fontMetrics->getTextWidth($disc, $sans, 6);
+            $canvas->text(($w - $dw) / 2, $h - 10, $disc, $sans, 6, $soft);
         });
 
         return $dompdf->output();

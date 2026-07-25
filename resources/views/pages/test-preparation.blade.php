@@ -14,17 +14,17 @@
     ];
 
     $tests = [
-        ['title' => '(SAT) Scholastic Assessment Test', 'img' => asset('assets/test-prep/courses/SAT.webp'),
+        ['title' => '(SAT) Scholastic Assessment Test', 'img' => \App\Support\Asset::v('assets/test-prep/courses/SAT.webp'),
          'desc' => 'The SAT is one of the most important standardized tests for college admissions abroad. It measures critical reading, writing, and mathematical abilities. We help students build strong fundamentals, improve analytical thinking, and gain confidence through practice tests and expert mentoring.'],
-        ['title' => '(IELTS) International English Language Testing System', 'img' => asset('assets/test-prep/courses/IELTS.webp'),
+        ['title' => '(IELTS) International English Language Testing System', 'img' => \App\Support\Asset::v('assets/test-prep/courses/IELTS.webp'),
          'desc' => 'IELTS is an internationally accepted English proficiency test required for study, work, and migration purposes. It assesses Listening, Reading, Writing, and Speaking skills. Our IELTS coaching includes personalized speaking sessions, writing evaluations, and real exam simulations for better performance.'],
-        ['title' => '(PTE) Pearson Test of English', 'img' => asset('assets/test-prep/courses/PTE.webp'),
+        ['title' => '(PTE) Pearson Test of English', 'img' => \App\Support\Asset::v('assets/test-prep/courses/PTE.webp'),
          'desc' => 'The Pearson Test of English (PTE) is a computer-based English language exam accepted by universities and immigration authorities worldwide. Our PTE training helps students master speaking fluency, pronunciation, grammar, and AI-based test techniques for higher scores.'],
-        ['title' => '(TOEFL) Test of English as a Foreign Language', 'img' => asset('assets/test-prep/courses/TOEFL.webp'),
+        ['title' => '(TOEFL) Test of English as a Foreign Language', 'img' => \App\Support\Asset::v('assets/test-prep/courses/TOEFL.webp'),
          'desc' => 'TOEFL measures academic English proficiency for students applying to universities in English-speaking countries. We provide structured preparation covering all four modules along with practice exercises, vocabulary enhancement, and test-taking strategies.'],
-        ['title' => '(GRE) Graduate Record Examinations', 'img' => asset('assets/test-prep/courses/GRE.webp'),
+        ['title' => '(GRE) Graduate Record Examinations', 'img' => \App\Support\Asset::v('assets/test-prep/courses/GRE.webp'),
          'desc' => 'The GRE is required for admission into many graduate and postgraduate programs across the world. It evaluates verbal reasoning, quantitative reasoning, and analytical writing skills. Our GRE coaching includes advanced quantitative problem-solving, vocabulary development, and mock examinations.'],
-        ['title' => '(GMAT) Graduate Management Admission Test', 'img' => asset('assets/test-prep/courses/GMAT.webp'),
+        ['title' => '(GMAT) Graduate Management Admission Test', 'img' => \App\Support\Asset::v('assets/test-prep/courses/GMAT.webp'),
          'desc' => 'The GMAT is specifically designed for MBA and business school aspirants. It assesses analytical, quantitative, verbal, and reasoning abilities. Our preparation program helps students improve logical thinking, data interpretation, and overall business aptitude.'],
         ['title' => 'Online Tutoring', 'img' => 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80',
          'desc' => 'We offer personalized tutoring services tailored to individual learning styles and academic goals. Whether students need subject-specific support, homework assistance, or exam preparation, our experienced mentors provide one-on-one guidance for continuous improvement and success.'],
@@ -62,7 +62,9 @@
           </div>
         </div>
         <div class="inner-hero-right">
-          <img src="{{ asset('assets/test-prep/test-prep-bnr-img.webp') }}" alt="Test Preparation to Study Abroad" width="540" height="540" loading="eager" fetchpriority="high" decoding="async">
+          {{-- mtime-versioned: this file has been replaced in place before and
+               browsers/LiteSpeed kept serving the previous artwork. --}}
+          <img src="{{ \App\Support\Asset::v('assets/test-prep/test-prep-bnr-img.webp') }}" alt="Test Preparation to Study Abroad" width="540" height="540" loading="eager" fetchpriority="high" decoding="async">
         </div>
       </div>
     </div>
@@ -80,7 +82,7 @@
       <div class="benefit-content-wrap">
         <div class="benefit-img-wrap">
           <div class="benef-sticky-div">
-            <div class="benefit-img"><img src="{{ asset('assets/test-prep/benefit-img.webp') }}" alt="" width="738" height="796" loading="lazy" decoding="async"></div>
+            <div class="benefit-img"><img src="{{ \App\Support\Asset::v('assets/test-prep/benefit-img.webp') }}" alt="" width="738" height="796" loading="lazy" decoding="async"></div>
           </div>
         </div>
         <div class="benefit-content">

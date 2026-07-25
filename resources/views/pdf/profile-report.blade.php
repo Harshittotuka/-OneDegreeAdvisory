@@ -120,6 +120,7 @@
     <div class="cover-date">Date of Issue: {{ now()->format('j F Y') }}</div>
     <hr class="cover-rule">
     <div class="cover-legal">
+      {{ \App\Support\AiDisclaimer::TEXT }}
       This report is intended only for the use of the individual or entity to which it is addressed and may contain
       information that is non-public, proprietary, privileged, confidential, and exempt from disclosure under
       applicable law. It is an initial, automated summary generated from the responses shared on the One Degree

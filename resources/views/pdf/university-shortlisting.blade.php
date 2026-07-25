@@ -41,6 +41,21 @@
   .footer b { color: #fff; }
   .footer .page { float: right; color: #fff; font-weight: 700; }
 
+  /* Second footer line, drawn as its own fixed overlay rather than a child of
+     .footer — the contact line uses a float, and dompdf does not clear floats
+     reliably, which would overlap the two lines. */
+  .footer-note {
+    position: fixed;
+    left: -34px;
+    right: -34px;
+    bottom: -42px;
+    height: 30px;
+    padding: 20px 34px 0;
+    color: #d0cde8;
+    font-size: 5.5px;
+    text-align: center;
+  }
+
   h1 {
     margin: 0;
     color: #221f5b;
@@ -112,6 +127,10 @@
     <b>One Degree Advisory</b> &nbsp;|&nbsp; Contact: +91 8233365888 &nbsp;|&nbsp; counselling@onedegreeadvisory.com
     <span class="page">Page {{ $pageCount }} of {{ $pageCount }}</span>
   </div>
+
+  {{-- Matches the second footer line ProfileReportPdf draws on the pages this
+       one is appended to, so the disclaimer runs through the whole report. --}}
+  <div class="footer-note">{{ \App\Support\AiDisclaimer::TEXT }}</div>
 
   <h1>University Shortlisting{{ $shortlist['country'] !== '' ? ' - '.$shortlist['country'] : '' }}</h1>
   <div class="accent"></div>

@@ -480,12 +480,12 @@ class CareerLibraryStore
     private function defaultSettings(): array
     {
         return [
-            'hero_title_prefix' => 'Explore 3000+ New Age',
+            'hero_title_prefix' => 'Explore 2500+ New Age',
             'hero_title_highlight' => 'Career Options',
-            'hero_subtitle' => 'Explore 3000+ careers with role insights, opportunities, growth scope, and steps to become one.',
+            'hero_subtitle' => 'Explore 2500+ careers with role insights, opportunities, growth scope, and steps to become one.',
             'search_placeholder' => 'E.g., Data Scientist, Pilot, Chef...',
             'trending_heading' => 'Trending Now',
-            'explore_button' => 'Explore 3000+ Careers 🚀',
+            'explore_button' => 'Explore 2500+ Careers 🚀',
             'contact_email' => 'onedegreeadvisory@gmail.com',
             'contact_phone' => '8451825015',
             'next_steps_url' => url('/contact'),

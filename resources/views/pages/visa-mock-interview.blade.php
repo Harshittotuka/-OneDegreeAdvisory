@@ -1387,7 +1387,7 @@
 
         <div class="report-method" data-reveal>
           <i data-lucide="info"></i>
-          <span>Scores are practice indicators based on answer relevance, clarity, consistency, demonstrated knowledge, and available delivery signals. They are not a prediction or guarantee of a visa decision.</span>
+          <span>{{ \App\Support\AiDisclaimer::TEXT }} Scores are practice indicators based on answer relevance, clarity, consistency, demonstrated knowledge, and available delivery signals. They are not a prediction or guarantee of a visa decision.</span>
         </div>
 
         <div class="actions">
@@ -1492,7 +1492,9 @@
     questionAudioBase: @json(asset('assets/audio/visa-mock-interview')),
     // True when the fast cloud assessor (Groq) is configured; drives the
     // completion-time estimate shown while analysing.
-    fastAssessor: @json((bool) config('services.visa_mock_ai.groq.key'))
+    fastAssessor: @json((bool) config('services.visa_mock_ai.groq.key')),
+    // Stamped on the downloaded PDF report; the on-screen copy is in the markup.
+    aiDisclaimer: @json(\App\Support\AiDisclaimer::TEXT)
   };
 </script>
 
@@ -3027,6 +3029,10 @@ $("btn-restart").addEventListener("click", ()=>{ releaseMediaStream(); location.
 const restartFabEl = document.getElementById("vmi-restart-fab");
 if(restartFabEl) restartFabEl.addEventListener("click", ()=>{ releaseMediaStream(); location.reload(); });
 
+// This script block is @verbatim, so the text arrives via window.VMI_CONFIG.
+const AI_DISCLAIMER = (window.VMI_CONFIG && window.VMI_CONFIG.aiDisclaimer)
+  || "This report is based on an open-source AI model.";
+
 function downloadPdfReport(){
   const jsPDF = window.jspdf && window.jspdf.jsPDF;
   if(!jsPDF){ alert("PDF library failed to load — please check your internet connection and try again."); return; }
@@ -3084,6 +3090,15 @@ function downloadPdfReport(){
     const lines = doc.splitTextToSize("Overall: "+r.overall.toFixed(1)+"/10 — "+(r.feedback.improve || ""), 180);
     doc.text(lines, 18, y); y += lines.length*5 + 3;
   });
+
+  // Stamp the AI-model disclaimer at the foot of every page, matching the
+  // on-screen report and the profiler career-report PDF.
+  const pageTotal = doc.internal.getNumberOfPages();
+  for(let p = 1; p <= pageTotal; p++){
+    doc.setPage(p);
+    doc.setFont(undefined,"normal"); doc.setFontSize(8); doc.setTextColor(120,120,140);
+    doc.text(AI_DISCLAIMER, 105, 289, { align: "center" });
+  }
 
   doc.save("OneDegreeAdvisory_Visa_Interview_Report.pdf");
 }

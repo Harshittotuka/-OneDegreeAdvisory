@@ -105,10 +105,8 @@
         // LiteSpeed with long cache headers and the URLs carry no version, so an
         // old copy would otherwise stick in browsers/proxies after a deploy
         // (which is how a stale script.js can leave forms wired to nothing).
-        $assetVer = function (string $file) {
-            $path = public_path($file);
-            return is_file($path) ? asset($file).'?v='.filemtime($path) : asset($file);
-        };
+        // Shared with the views via App\Support\Asset::v().
+        $assetVer = fn (string $file) => \App\Support\Asset::v($file);
     @endphp
     <link rel="stylesheet" href="{{ $assetVer('styles.css') }}">
     <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">

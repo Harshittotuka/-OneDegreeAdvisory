@@ -552,6 +552,11 @@
     </div>
     <!-- NEXT STEP SECTION END -->
 
+    <!-- AI DISCLAIMER -->
+    <p class="mt-10 pt-6 border-t border-slate-200 max-w-3xl mx-auto text-center text-sm italic text-slate-500 leading-relaxed">
+        {{ \App\Support\AiDisclaimer::TEXT }}
+    </p>
+
 </div>
 
 @if ($live)
