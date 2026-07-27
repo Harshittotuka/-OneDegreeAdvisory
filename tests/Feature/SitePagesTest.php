@@ -225,4 +225,55 @@ class SitePagesTest extends TestCase
                 ->assertDontSee('<dt>Steps</dt>', false);
         }
     }
+
+    /**
+     * Guards a real dead band: stripe-nav.css hid the desktop links at 1080px
+     * while styles.css only revealed the hamburger at 920px, so 921-1080px had
+     * no navigation at all — the width a 1280 laptop reports at 125% zoom.
+     */
+    public function test_the_hamburger_appears_wherever_the_desktop_nav_links_are_hidden(): void
+    {
+        $css = file_get_contents(public_path('stripe-nav.css'));
+        $js = file_get_contents(public_path('stripe-nav.js'));
+
+        $mobileBlock = strpos($css, '@media (max-width: 1080px)');
+        $this->assertNotFalse($mobileBlock, 'The nav still switches to mobile at 1080px.');
+
+        // The toggle must be given a display inside that same block.
+        preg_match('/\.stripe-nav-toggle\s*\{[^}]*display:\s*grid/', $css, $m, PREG_OFFSET_CAPTURE);
+        $this->assertNotEmpty($m, 'The hamburger must be shown, not left at the inherited display:none.');
+        $this->assertGreaterThan(
+            $mobileBlock,
+            $m[0][1],
+            'The hamburger must be revealed inside the max-width:1080px block, not the desktop one.'
+        );
+
+        // ...and the script must agree on where "desktop" ends.
+        $this->assertStringContainsString('(min-width: 1081px)', $js);
+    }
+
+    public function test_the_laptop_band_gives_containers_room_without_touching_wide_screens(): void
+    {
+        $css = file_get_contents(public_path('styles.css'));
+
+        // The band is bounded at both ends on purpose: below 921px the tuned
+        // mobile ladder owns the layout, above 1440px gutters are already wide.
+        $band = strpos($css, '@media (min-width: 921px) and (max-width: 1440px)');
+        $this->assertNotFalse($band, 'The laptop band must exist.');
+
+        // Base gutters stay as they were — the band only raises the floor.
+        $this->assertStringContainsString('width: min(calc(100% - 40px), var(--container));', $css);
+        $this->assertStringContainsString('width: min(calc(100% - 64px), var(--container));', $css);
+
+        // The hero headline must step down for laptops, or its four wrapped
+        // lines push the hero CTAs below the fold on a short screen.
+        $this->assertMatchesRegularExpression(
+            '/@media \(min-width: 921px\) and \(max-width: 1180px\) \{\s*\.hero-headline \{\s*font-size: 3\.8rem/',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media \(min-width: 1181px\) and \(max-width: 1440px\) \{\s*\.hero-headline \{\s*font-size: 4\.6rem/',
+            $css
+        );
+    }
 }

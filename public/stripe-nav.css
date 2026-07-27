@@ -668,7 +668,14 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
      (but off the icon lines) feel like "clicking outside it". A firmer border,
      soft shadow and larger glyph make the whole tap target obviously the
      button. */
+  /* Reveal the hamburger at the SAME width this file hides the desktop links,
+     and the same width stripe-nav.js calls mobile (isDesktop = min-width 1081).
+     styles.css only flips `.nav-toggle` to display:grid at max-width 920px, so
+     921-1080px used to show neither the links nor the hamburger — a laptop at
+     1024 CSS px (or a 1280 one zoomed to 125%) had no navigation at all. */
   .stripe-nav-toggle {
+    display: grid;
+    place-items: center;
     width: 44px;
     height: 44px;
     border-radius: 50%;

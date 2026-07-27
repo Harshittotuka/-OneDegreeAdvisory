@@ -25747,3 +25747,58 @@ main li,
 .footer-brand p {
   text-align: justify;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LAPTOP BAND (2026-07-27)
+   ─────────────────────────────────────────────────────────────────────────────
+   The responsive ladder above tops out at 1280px, so every viewport from ~921px
+   upward received the same rules that were authored for a wide external monitor.
+   Two things that leaves wrong on an actual laptop:
+
+   1. GUTTERS COLLAPSE. The containers subtract a FIXED margin — `.container`
+      40px, `.wide-container` 28px, `.edge-container` 24px — before clamping to
+      their max-width. Above the clamp the leftover space becomes the gutter and
+      grows with the screen, but below it the gutter is stuck at that fixed
+      value: 20px / 14px / 12px per side. `--container` is 1280px and
+      `--container-edge` 1408px, so a 1280-wide laptop sat just under both and
+      got phone-tight margins on a full-size canvas. This band guarantees a
+      floor of ~32px per side instead, costing at most 24px of content width.
+
+   2. THE HERO HEADLINE NEVER STEPS DOWN. `.hero-headline` is 5.4rem from 721px
+      to infinity (the only other step is 3.1rem at ≤720px). At 1024px that
+      wrapped to four lines and pushed the hero CTAs below the fold on a short
+      laptop screen. Two intermediate steps keep it to two lines.
+
+   Deliberately bounded to 921-1440px: below 921px the tuned tablet/mobile
+   ladder takes over, and above 1440px the gutters are already generous, so the
+   wide-monitor design is left exactly as it was.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 921px) and (max-width: 1440px) {
+  .container {
+    width: min(calc(100% - 64px), var(--container));
+  }
+
+  .wide-container {
+    width: min(calc(100% - 60px), 1340px);
+  }
+
+  .edge-container {
+    width: min(calc(100% - 56px), var(--container-edge));
+  }
+}
+
+/* Headline steps. Sized so "away from the world." stays on one line, which is
+   what keeps the tracks/CTA row inside the hero's 78svh on a 768px-tall lid. */
+@media (min-width: 1181px) and (max-width: 1440px) {
+  .hero-headline {
+    font-size: 4.6rem;
+    margin: 20px 0 26px;
+  }
+}
+
+@media (min-width: 921px) and (max-width: 1180px) {
+  .hero-headline {
+    font-size: 3.8rem;
+    margin: 18px 0 24px;
+  }
+}
