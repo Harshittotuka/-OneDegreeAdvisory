@@ -73,6 +73,18 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        'crm' => [
+            'transport' => 'smtp',
+            'scheme' => env('CRM_MAIL_SCHEME', env('MAIL_SCHEME')),
+            'url' => env('CRM_MAIL_URL'),
+            'host' => env('CRM_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('CRM_MAIL_PORT', env('MAIL_PORT', 2525)),
+            'username' => env('CRM_MAIL_USERNAME'),
+            'password' => env('CRM_MAIL_PASSWORD'),
+            'timeout' => (int) env('CRM_MAIL_TIMEOUT', env('MAIL_TIMEOUT', 10)),
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

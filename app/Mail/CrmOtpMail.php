@@ -18,8 +18,11 @@ class CrmOtpMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $from = trim((string) config('crm.email.from')) ?: (string) config('site.forms.contact.from');
+        $fromName = trim((string) config('crm.email.from_name')) ?: 'One Degree CRM';
+
         return new Envelope(
-            from: new Address(config('site.forms.contact.from'), 'One Degree CRM'),
+            from: new Address($from, $fromName),
             subject: 'Your One Degree CRM login code',
         );
     }

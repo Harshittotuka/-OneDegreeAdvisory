@@ -60,6 +60,18 @@ CAREERS_MAIL_PASSWORD="PASTE_SMITA_GOOGLE_APP_PASSWORD_HERE"
 CAREERS_FORM_TO="Smita@onedegreeadvisory.com"
 CAREERS_FORM_FROM="Smita@onedegreeadvisory.com"
 CAREERS_FORM_FROM_NAME="One Degree Advisory Careers"
+
+# CRM login OTP + CRM notifications only — its own mailbox, so changing it
+# never affects the contact/careers forms. Omit the block and the CRM falls
+# back to the contact_form mailer.
+CRM_MAILER=crm
+CRM_MAIL_HOST=smtp.gmail.com
+CRM_MAIL_PORT=587
+CRM_MAIL_SCHEME=smtp
+CRM_MAIL_USERNAME="onedegreeadvisory1@gmail.com"
+CRM_MAIL_PASSWORD="PASTE_CRM_GOOGLE_APP_PASSWORD_HERE"
+CRM_MAIL_FROM="onedegreeadvisory1@gmail.com"
+CRM_MAIL_FROM_NAME="One Degree CRM"
 ```
 
 After changing mail env values:

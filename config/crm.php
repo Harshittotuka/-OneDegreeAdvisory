@@ -30,8 +30,13 @@ return [
             'otp_variable' => env('MSG91_OTP_VARIABLE', 'OTP'),
         ],
     ],
+    /* The CRM sends from its own mailbox so the public contact/careers forms
+       are untouched. If CRM_MAIL_* is not set the sender falls back to the
+       contact_form mailer and its from address. */
     'email' => [
         'enabled' => (bool) env('CRM_EMAIL_NOTIFICATIONS', true),
         'mailer' => env('CRM_MAILER', 'contact_form'),
+        'from' => env('CRM_MAIL_FROM', env('CRM_MAIL_USERNAME')),
+        'from_name' => env('CRM_MAIL_FROM_NAME', 'One Degree CRM'),
     ],
 ];
