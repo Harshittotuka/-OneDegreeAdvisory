@@ -164,6 +164,9 @@
                 <div class="page-title"><h1>{{ $currentTitle[0] }}</h1><p>{{ $isListView ? $currentTitle[1].' · '.number_format($leads->total()).' record'.($leads->total() === 1 ? '' : 's').' in this view' : $currentTitle[1] }}</p></div>
             </div>
             <div class="top-actions">
+                {{-- Soft refresh: re-fetches this view through the CRM's own swap
+                     path, so scroll, open drawer and typed filters survive. --}}
+                <button class="icon-btn icon-btn-refresh" type="button" data-crm-refresh aria-label="Refresh this view" title="Refresh"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4.2V9h-4.8"/></svg></button>
                 <button class="icon-btn" id="notificationToggle" aria-label="Follow-up notifications"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>@if($notifications->count())<span class="count-dot">{{ $notifications->count() }}</span>@endif</button>
                 <span class="top-actions-sep" aria-hidden="true"></span>
                 @if($view === 'followups')

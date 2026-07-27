@@ -604,6 +604,41 @@ class CrmTest extends TestCase
         $this->assertNotNull($lead->aptitude_tests);
     }
 
+    public function test_every_view_offers_a_soft_refresh_button_in_all_three_themes(): void
+    {
+        $admin = CrmUser::query()->create([
+            'name' => 'Refresh Admin', 'phone' => '9811111111', 'email' => 'refresh@example.com',
+            'role' => 'super_admin', 'is_active' => true,
+        ]);
+
+        // The topbar is shared chrome, so one button reaches Classic, Evergreen
+        // and Orbit; only the spin animation is theme-independent CSS.
+        foreach (['dashboard', 'leads', 'followups', 'students', 'enrollments', 'mock-invites'] as $view) {
+            $this->withSession(['crm_user_id' => $admin->id])
+                ->get(route('crm.dashboard', ['view' => $view]))
+                ->assertOk()
+                ->assertSee('data-crm-refresh', false)
+                ->assertSee('icon-btn-refresh', false)
+                ->assertSee('aria-label="Refresh this view"', false);
+        }
+    }
+
+    public function test_the_refresh_button_swaps_in_place_rather_than_reloading(): void
+    {
+        $script = file_get_contents(public_path('assets/crm/crm.js'));
+
+        // It must go through loadCrmPage (the fetch + swap path) with a replaced
+        // history entry — never location.reload(), which would flash the chrome
+        // and lose scroll, the open drawer and any typed filters.
+        $this->assertStringContainsString("target.closest('[data-crm-refresh]')", $script);
+        $this->assertStringContainsString("loadCrmPage(window.location.href, {", $script);
+        $this->assertStringContainsString("historyMode: 'replace'", $script);
+        $this->assertStringNotContainsString('location.reload', $script);
+
+        $css = file_get_contents(public_path('assets/crm/crm-dashboard.css'));
+        $this->assertStringContainsString('crmRefreshSpin', $css);
+    }
+
     private function leadFor(CrmUser $owner, string $name, string $phone): CrmLead
     {
         return CrmLead::query()->create([

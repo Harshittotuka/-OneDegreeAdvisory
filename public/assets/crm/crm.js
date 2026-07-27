@@ -624,6 +624,33 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Re-fetch the current view through the same swap path the rest of the
+        // CRM navigates with: the chrome, scroll position, open drawer and any
+        // typed filters survive, so this refreshes the data without the flash
+        // and state loss of a real page reload.
+        const refresh = target.closest('[data-crm-refresh]');
+        if (refresh) {
+            event.preventDefault();
+            if (refresh.dataset.refreshing === 'true') return;
+            refresh.dataset.refreshing = 'true';
+            refresh.classList.add('is-spinning');
+            const openTab = document.querySelector('.tab.active')?.dataset.tab || null;
+            const openModalId = document.querySelector('.overlay.open')?.id || null;
+            loadCrmPage(window.location.href, {
+                historyMode: 'replace',
+                preserveScroll: true,
+                preserveTab: openTab,
+                preserveModal: openModalId,
+            }).finally(() => {
+                // The button is inside the swapped region, so on success this
+                // element is already detached and the fresh one starts clean;
+                // clearing matters when the request failed and it is still live.
+                refresh.classList.remove('is-spinning');
+                delete refresh.dataset.refreshing;
+            });
+            return;
+        }
+
         const userMenuToggle = target.closest('[data-user-menu-toggle]');
         if (userMenuToggle) {
             event.stopPropagation();
