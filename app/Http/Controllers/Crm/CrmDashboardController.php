@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\CrmAuditLog;
 use App\Models\CrmLead;
+use App\Models\CrmMockInterviewInvite;
 use App\Models\CrmSubscriber;
 use App\Models\CrmUser;
 use App\Models\PaymentAttempt;
 use App\Support\CrmOptions;
+use App\Support\MockInterviewQuestions;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,7 +32,7 @@ class CrmDashboardController extends Controller
         if ($request->query('view') === 'audit') {
             abort_unless($user->isSuperAdmin(), 403);
         }
-        $allowedViews = ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting'];
+        $allowedViews = ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting', 'mock-invites'];
         if ($user->isSuperAdmin()) {
             $allowedViews = [...$allowedViews, 'subscriptions', 'audit'];
         }
@@ -89,6 +91,8 @@ class CrmDashboardController extends Controller
             'team_member_access_changed' => 'Team access changed',
             'crm_login' => 'CRM login',
             'crm_logout' => 'CRM logout',
+            'mock_invite_created' => 'Mock interview link issued',
+            'mock_invite_revoked' => 'Mock interview link revoked',
         ];
         $auditLogs = null;
         if ($view === 'audit') {
@@ -126,6 +130,20 @@ class CrmDashboardController extends Controller
             CrmSubscriberController::applyFilters($subscriberQuery, $request);
         } else {
             $subscriberQuery->whereRaw('1 = 0');
+        }
+
+        // Mock-interview invite links. A counsellor sees the links they issued;
+        // a super admin sees every link.
+        $mockInviteQuery = CrmMockInterviewInvite::query()->with(['creator', 'attempts'])->latest();
+        if (! $user->isSuperAdmin()) {
+            $mockInviteQuery->where('created_by', $user->id);
+        }
+        $mockInviteCount = (clone $mockInviteQuery)->count();
+        if ($inviteSearch = trim((string) $request->query('invite_search'))) {
+            $mockInviteQuery->where(fn (Builder $q) => $q
+                ->where('recipient_name', 'like', "%{$inviteSearch}%")
+                ->orWhere('recipient_email', 'like', "%{$inviteSearch}%")
+                ->orWhere('recipient_phone', 'like', "%{$inviteSearch}%"));
         }
 
         $selectedLead = null;
@@ -171,6 +189,10 @@ class CrmDashboardController extends Controller
             'subscriberSources' => $user->isSuperAdmin()
                 ? CrmSubscriber::query()->whereNotNull('source')->distinct()->orderBy('source')->pluck('source')
                 : collect(),
+            'mockInvites' => $mockInviteQuery->paginate(20, ['*'], 'invite_page')->withQueryString(),
+            'mockInviteCount' => $mockInviteCount,
+            'mockInviteCounts' => MockInterviewQuestions::INVITE_COUNTS,
+            'mockQuestionTotal' => MockInterviewQuestions::total(),
         ]);
     }
 

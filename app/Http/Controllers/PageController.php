@@ -10,6 +10,7 @@ use App\Support\AboutContent;
 use App\Support\BlogContent;
 use App\Support\HeroContent;
 use App\Support\MbbsCountryContent;
+use App\Support\MockInterviewQuestions;
 use App\Services\WebsiteLeadManager;
 use App\Support\StudyLocationContent;
 use App\Support\TestPrepCompareStore;
@@ -381,6 +382,12 @@ class PageController extends Controller
             'pageTitle'       => 'AI Visa Mock Interview — Free Practice & Feedback',
             'pageDescription' => 'Practise your student-visa interview with an AI assessor: real embassy-style questions, video or text answers, and a detailed readiness report. Free 10-question round.',
             'mainId'          => 'main',
+            // The ten recorded questions. Extended rounds are served by
+            // VisaMockInviteController::start against a counsellor's invite, so
+            // the wider bank never reaches an un-invited visitor.
+            'freeQuestions'   => MockInterviewQuestions::freePool(),
+            'invite'          => null,
+            'inviteState'     => null,
         ]);
     }
 

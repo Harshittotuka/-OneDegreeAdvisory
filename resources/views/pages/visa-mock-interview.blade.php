@@ -993,6 +993,32 @@
   #vmi-page .vmi-restart-fab.hidden{display:none;}
   @media(max-width:560px){#vmi-page .vmi-restart-fab{right:14px;padding:11px;gap:0;}#vmi-page .vmi-restart-fab > span:last-child{display:none;}}
   @media(prefers-reduced-motion:reduce){#vmi-page .vmi-restart-fab{transition:none;}#vmi-page .vmi-restart-fab:hover{transform:translateY(-50%);}#vmi-page .vmi-restart-fab__mic::before{animation:none;}}
+
+  /* ── Counsellor invite banner ─────────────────────────────────────────────
+     A flex/grid box beats the `hidden` attribute, so both of these need an
+     explicit [hidden] rule — without it the banner and the consulting CTA stay
+     on screen after the script hides them. */
+  #vmi-page .vmi-invite[hidden]{display:none;}
+  #vmi-page .vmi-unlock[hidden]{display:none;}
+  #vmi-page .vmi-invite__uses[hidden]{display:none;}
+  #vmi-page .vmi-invite{display:flex;align-items:center;gap:15px;margin:0 0 20px;padding:15px 18px;
+    border:1px solid color-mix(in srgb,var(--teal-dark,#127c71) 26%,#e6e8f2);border-radius:17px;
+    background:linear-gradient(130deg,color-mix(in srgb,var(--teal-dark,#127c71) 7%,#fff),#fff8f5);}
+  #vmi-page .vmi-invite__ic{flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+    background:color-mix(in srgb,var(--teal-dark,#127c71) 13%,#fff);color:var(--teal-dark,#127c71);}
+  #vmi-page .vmi-invite__ic i{width:20px;height:20px;}
+  #vmi-page .vmi-invite__body{flex:1 1 240px;}
+  #vmi-page .vmi-invite__body strong{display:block;font-size:13.5px;color:var(--navy-deep);}
+  #vmi-page .vmi-invite__body span{display:block;margin-top:3px;color:var(--muted);font-size:11.5px;line-height:1.5;}
+  #vmi-page .vmi-invite__uses{flex:0 0 auto;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;
+    background:color-mix(in srgb,var(--teal-dark,#127c71) 12%,#fff);color:var(--teal-dark,#127c71);}
+  #vmi-page .vmi-invite__uses.is-last{background:#fdf0e6;color:#a4571a;}
+  #vmi-page .vmi-invite.is-warning{border-color:#e9d7c4;background:linear-gradient(130deg,#fdf5ec,#fff);}
+  #vmi-page .vmi-invite.is-warning .vmi-invite__ic{background:#f7e6d4;color:#a4571a;}
+  /* The one length an invite unlocked reads as earned, not as still-locked. */
+  #vmi-page .vmi-pill.is-granted{opacity:1;border-color:var(--teal-dark,#127c71);}
+  #vmi-page .vmi-pill.is-granted small{color:var(--teal-dark,#127c71);font-weight:800;}
+  @media(max-width:560px){#vmi-page .vmi-invite{flex-wrap:wrap;}}
 </style>
 @endpush
 
@@ -1071,6 +1097,18 @@
           <span class="vmi-eyebrow"><i data-lucide="wand-sparkles"></i> Personalise your simulation</span>
           <h2>Build your practice round</h2>
           <p>Choose the depth and format. You can start with a quick warm-up or rehearse the complete interview.</p>
+        </div>
+
+        {{-- Counsellor invite banner. Always rendered, hidden until the script
+             reads VMI_CONFIG.invite (unlocked round) or .inviteError (a link
+             that is spent, revoked or expired — the free round still works). --}}
+        <div class="vmi-invite" id="vmi-invite-banner" hidden>
+          <span class="vmi-invite__ic"><i data-lucide="ticket"></i></span>
+          <div class="vmi-invite__body">
+            <strong id="vmi-invite-title"></strong>
+            <span id="vmi-invite-sub"></span>
+          </div>
+          <span class="vmi-invite__uses" id="vmi-invite-uses" hidden></span>
         </div>
 
         <div class="vmi-setup-grid">
@@ -1484,12 +1522,41 @@
 
 {{-- Dynamic values injected in a plain (Blade-compiled) script tag; the large
      functional script below is raw JS and reads window.VMI_CONFIG. --}}
+@php
+    // Built here, not inline in @json(...): Blade reads the commas of an array
+    // literal as @json's own extra arguments and silently truncates it, which
+    // compiles to a PHP parse error.
+    // Only a usable link gets a config block — a spent or revoked one sends the
+    // reason alone, so nothing about the round leaks to a dead link.
+    $inviteConfig = $invite && $inviteState === 'ok' ? [
+        'state' => $inviteState,
+        'count' => $invite->question_count,
+        'remaining' => $invite->remainingUses(),
+        'maxUses' => $invite->max_uses,
+        'name' => $invite->recipient_name,
+        'counsellor' => $invite->creator?->name,
+        'destination' => $invite->destination,
+        'startUrl' => route('visa-mock.invite.start', ['token' => $invite->token]),
+        'finishUrl' => route('visa-mock.invite.finish', ['token' => $invite->token]),
+    ] : null;
+    $inviteError = $inviteState && $inviteState !== 'ok' ? $inviteState : null;
+@endphp
 <script>
   window.VMI_CONFIG = {
     leadUrl: @json(route('visa-mock.lead')),
     assessBatchUrl: @json(route('visa-mock.assess-batch')),
     csrf: (document.querySelector('meta[name="csrf-token"]') || {}).content || @json(csrf_token()),
-    questionAudioBase: @json(asset('assets/audio/visa-mock-interview')),
+    // The free (un-invited) pool: the ten recorded questions. Each carries its
+    // own audio URL — recordings are keyed to the question, never to a position,
+    // so widening the bank can never shift a voiceover onto the wrong question.
+    freeQuestions: @json($freeQuestions ?? []),
+    // Present only when the visitor arrived on a counsellor's invite link. The
+    // extended question list is NOT here: it comes from invite.startUrl, so the
+    // granted count cannot be raised from the browser.
+    invite: @json($inviteConfig),
+    // Set when a link was recognised but cannot be used (revoked/expired/spent)
+    // or was never valid. The page still offers the normal free round.
+    inviteError: @json($inviteError),
     // True when the fast cloud assessor (Groq) is configured; drives the
     // completion-time estimate shown while analysing.
     fastAssessor: @json((bool) config('services.visa_mock_ai.groq.key')),
@@ -1506,35 +1573,22 @@
 /* ============================================================
    QUESTION BANK
    ============================================================ */
-// Curated 10-question pool, balanced across all 6 categories. A free round asks
-// 5 or 10 of these (drawn evenly by buildQueue). Extended/guided rounds are
-// handled by our team via the consulting form, not in-app.
-const QUESTION_BANK = [
-  {cat:"Personal & Academic Background", items:[
-    "Tell me about yourself.",
-    "Why did you choose this course?"
-  ]},
-  {cat:"University & Course Related", items:[
-    "Why did you choose this university?",
-    "What is the duration of your course?"
-  ]},
-  {cat:"Country Knowledge", items:[
-    "Why did you select this country for higher education?"
-  ]},
-  {cat:"Financial Questions", items:[
-    "Who is sponsoring your education?",
-    "How will you pay your tuition fees and living expenses?"
-  ]},
-  {cat:"Accommodation & Travel", items:[
-    "Where will you stay after arriving?"
-  ]},
-  {cat:"Future Plans & Intentions", items:[
-    "What will you do after completing your studies?",
-    "Will you return to your home country after your studies?"
-  ]}
-];
+// Questions come from the server now (App\Support\MockInterviewQuestions). The
+// free pool — the same curated ten, balanced across all 6 categories, each with
+// its recorded voiceover — is inlined here. An extended round (15/20/39) is
+// granted by a counsellor's invite link and its queue is fetched from
+// INVITE.startUrl when the interview starts, so the count cannot be raised from
+// the browser. Every item is {id, cat, q, audio}; `audio` is "" when no clip was
+// recorded, and aiSpeak() falls back to the browser speech engine for those.
+const FREE_QUESTIONS = (window.VMI_CONFIG.freeQuestions || []).slice();
 
-const FREE_LIMIT = 10;
+// Only an invite the server accepted unlocks anything. A revoked/expired/spent
+// link lands here as null and the page runs the ordinary free round.
+const INVITE = (window.VMI_CONFIG.invite && window.VMI_CONFIG.invite.state === "ok")
+  ? window.VMI_CONFIG.invite
+  : null;
+
+const FREE_LIMIT = FREE_QUESTIONS.length || 10;
 const PREFERS_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 /* ============================================================
@@ -1544,6 +1598,12 @@ const state = {
   mode:"video",
   destination:"",
   queue:[], qIndex:0, totalPlanned:10,
+  // The pool this round drew from — the free ten, or the wider list the invite
+  // endpoint returned. Used again by the report's practice suggestions.
+  questionPool:[],
+  // True once an invite attempt has actually been spent for this round, which
+  // is what makes it worth reporting the outcome back to the CRM.
+  inviteClaimed:false,
   unlocked:false, leadSubmitted:false, requestedLength:"",
   stream:null, streamReleased:false, audioCtx:null, analyser:null, sourceNode:null, rafId:null,
   recognition:null, recognitionReady:false, recognitionRunning:false,
@@ -1737,18 +1797,12 @@ $("in-mode").addEventListener("change", (e)=> applyModeUi(e.target.value));
 /* ============================================================
    BUILD QUESTION QUEUE
    ============================================================ */
-function buildQueue(totalWanted){
-  const all = [];
-  let questionNumber = 1;
-  QUESTION_BANK.forEach(group=>{
-    group.items.forEach(q=>{
-      const audioBase = String(window.VMI_CONFIG.questionAudioBase || "").replace(/\/$/, "");
-      const audio = audioBase ? audioBase + "/q" + questionNumber + ".mp3" : "";
-      all.push({cat:group.cat, q, questionNumber, audio});
-      questionNumber++;
-    });
-  });
-  if(totalWanted >= all.length) return all.slice();
+// Even-step walk across the pool, mirrored by MockInterviewQuestions::queue()
+// so a server-built invited queue and a client-built free queue agree.
+function buildQueue(totalWanted, pool){
+  const all = (pool && pool.length ? pool : FREE_QUESTIONS).slice();
+  if(!all.length) return [];
+  if(totalWanted >= all.length) return all;
   const step = all.length / totalWanted;
   const picked = [];
   for(let i=0;i<totalWanted;i++){
@@ -1823,8 +1877,31 @@ $("btn-start-interview").addEventListener("click", async () => {
   state.destination = ($("in-destination").value || "").trim();
   let wanted = parseInt($("in-count").value,10) || FREE_LIMIT;
   if(!state.unlocked && wanted > FREE_LIMIT) wanted = FREE_LIMIT;
+
+  // An extended round comes from the server: claiming it spends one of the
+  // invite's attempts and returns the questions it grants. A free-length round
+  // (5 or 10) never touches the invite, so a student can warm up for nothing.
+  state.inviteClaimed = false;
+  if(INVITE && wanted > FREE_LIMIT){
+    const btn = $("btn-start-interview");
+    // innerHTML, not textContent: the button holds a rendered icon that
+    // textContent would throw away for the rest of the session.
+    const previousLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = "Preparing your interview…";
+    const granted = await claimInviteQueue();
+    btn.disabled = false;
+    btn.innerHTML = previousLabel;
+    if(!granted) return;              // reason is already on the banner
+    state.questionPool = granted;
+    state.inviteClaimed = true;
+    wanted = granted.length;
+  } else {
+    state.questionPool = FREE_QUESTIONS.slice();
+  }
+
   state.totalPlanned = wanted;
-  state.queue = buildQueue(state.totalPlanned);
+  state.queue = buildQueue(state.totalPlanned, state.questionPool);
   state.qIndex = 0;
   state.results = [];
   state.analysisRunning = false;
@@ -1934,6 +2011,10 @@ function getQuestionAudio(){
 
 function stopInterviewerAudio(){
   vmiAudioRequest++;
+  // Silence both voices: the recorded clip and the speech engine that covers
+  // questions without one.
+  try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
+  if(typeof vmiStopKeepAlive === "function") vmiStopKeepAlive();
   if(!vmiQuestionAudio) return;
   try{
     vmiQuestionAudio.pause();
@@ -2118,10 +2199,16 @@ function initVoiceAgentCanvas(){
 }
 initVoiceAgentCanvas();
 
-function aiSpeak(audioUrl){
+function aiSpeak(audioUrl, text){
   stopInterviewerAudio();
-  if(state.aiVoice === false || !audioUrl){
+  if(state.aiVoice === false){
     setAvatarState("idle");
+    return;
+  }
+  // Only ten questions have a recording. Everything the extended rounds add is
+  // spoken by the browser instead, so an invited round is never silent.
+  if(!audioUrl){
+    speakWithBrowser(text);
     return;
   }
 
@@ -2136,17 +2223,129 @@ function aiSpeak(audioUrl){
     audio.onerror = ()=>{
       if(requestId !== vmiAudioRequest) return;
       console.warn("Recorded interviewer audio could not be played:", audioUrl);
-      if(!state.recognizing) setAvatarState("idle");
+      speakWithBrowser(text);
     };
     setAvatarState("speaking");
     const playPromise = audio.play();
     if(playPromise && typeof playPromise.catch === "function"){
-      playPromise.catch(()=>{ if(requestId === vmiAudioRequest && !state.recognizing) setAvatarState("idle"); });
+      playPromise.catch(()=>{ if(requestId === vmiAudioRequest) speakWithBrowser(text); });
     }
   }catch(e){
     console.warn("Recorded interviewer audio is unavailable", e);
-    if(!state.recognizing) setAvatarState("idle");
+    speakWithBrowser(text);
   }
+}
+
+/* ---- Browser speech fallback for questions with no recording -------------- */
+let vmiVoices = [];
+let vmiChosenVoice = null;
+let vmiVoiceWarmed = false;
+let vmiKeepAlive = null;
+function loadVoices(){ try{ vmiVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; }catch(e){ vmiVoices = []; } }
+if("speechSynthesis" in window){
+  loadVoices();
+  // Voices register lazily; when the OS adds a better (neural) voice, forget the
+  // earlier pick so pickVoice() can re-evaluate and upgrade to it.
+  try{ window.speechSynthesis.onvoiceschanged = function(){ loadVoices(); vmiChosenVoice = null; }; }catch(e){}
+}
+
+/* Chrome and Safari drop or robotise the very first utterance until the engine
+   has been "warmed", so a silent utterance on the first real gesture gets that
+   out of the way before the interview's first spoken question. */
+function warmUpVoice(){
+  if(vmiVoiceWarmed || !("speechSynthesis" in window)) return;
+  vmiVoiceWarmed = true;
+  try{
+    loadVoices();
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0; u.rate = 1;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+  ["pointerdown","keydown","touchstart"].forEach(function(ev){ window.removeEventListener(ev, warmUpVoice); });
+}
+["pointerdown","keydown","touchstart"].forEach(function(ev){ window.addEventListener(ev, warmUpVoice, {passive:true}); });
+
+function pickVoice(){
+  if(vmiChosenVoice) return vmiChosenVoice;
+  if(!vmiVoices.length) loadVoices();
+  const englishVoices = vmiVoices.filter(v=>/^en(?:[-_]|$)/i.test(v.lang || ""));
+  if(!englishVoices.length) return null;
+
+  // Browsers expose voices in a different order on every operating system.
+  // Score known neural/natural voices first so we do not accidentally choose
+  // an older robotic "desktop" voice simply because it appears first.
+  const preferredNames = [
+    /sonia.*(natural|online)/i, /ryan.*(natural|online)/i, /libby.*(natural|online)/i,
+    /aria.*(natural|online)/i, /jenny.*(natural|online)/i, /guy.*(natural|online)/i,
+    /ava.*(natural|online)/i, /andrew.*(natural|online)/i, /emma.*(natural|online)/i,
+    /neerja.*(natural|online)/i, /prabhat.*(natural|online)/i,
+    /google uk english female/i, /google uk english male/i,
+    /google us english/i, /samantha/i, /daniel/i, /serena/i,
+    /karen/i, /moira/i, /rishi/i
+  ];
+
+  function voiceScore(voice){
+    const name = voice.name || "";
+    const lang = (voice.lang || "").replace("_", "-").toLowerCase();
+    let score = 0;
+    preferredNames.forEach((pattern, index)=>{
+      if(pattern.test(name)) score = Math.max(score, 240 - index * 5);
+    });
+    if(/natural|neural|premium|enhanced|online/i.test(name)) score += 110;
+    else if(/google/i.test(name)) score += 60;
+    if(lang === "en-gb") score += 36;
+    else if(lang === "en-au") score += 26;
+    else if(lang === "en-us") score += 22;
+    else if(lang === "en-in") score += 18;
+    if(voice.default) score += 5;
+    if(/desktop|compact|espeak|pico|robo/i.test(name)) score -= 120;
+    return score;
+  }
+
+  const best = englishVoices.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0] || null;
+  // Lock the choice in only once a genuinely natural/neural voice is available;
+  // otherwise keep re-checking as better voices register over the first seconds.
+  if(best && /natural|neural|premium|enhanced|online|google/i.test(best.name || "")) vmiChosenVoice = best;
+  return best;
+}
+
+function vmiStopKeepAlive(){ if(vmiKeepAlive){ clearInterval(vmiKeepAlive); vmiKeepAlive = null; } }
+
+function speakWithBrowser(text){
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  // Hold the "speaking" pose for roughly the reading time so the avatar and the
+  // answer controls still behave when no voice engine is available at all.
+  const mime = ()=>{ setAvatarState("speaking"); setTimeout(()=>{ if(!state.recognizing) setAvatarState("idle"); }, Math.min(4600, 600 + clean.length*46)); };
+  if(!clean || state.aiVoice === false || !("speechSynthesis" in window)){ mime(); return; }
+
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  vmiStopKeepAlive();
+  const requestId = vmiAudioRequest;
+  try{
+    // One sentence per utterance: the engine inserts a natural breath between
+    // them, and short chunks sidestep Chrome's long-utterance cut-off.
+    const chunks = (clean.match(/[^.!?]+[.!?]*/g) || [clean]).map(s=>s.trim()).filter(Boolean);
+    if(!chunks.length){ mime(); return; }
+    const v = pickVoice();
+    setAvatarState("speaking");
+    vmiKeepAlive = setInterval(function(){
+      try{ if(window.speechSynthesis.speaking) window.speechSynthesis.resume(); }catch(e){}
+    }, 8000);
+    chunks.forEach(function(chunk, idx){
+      const u = new SpeechSynthesisUtterance(chunk);
+      if(v) u.voice = v;
+      u.lang = v && v.lang ? v.lang : "en-GB";
+      u.rate = 0.95;   // measured, natural interviewer pace
+      u.pitch = 1.0;   // true-to-voice pitch reads as more human than a lowered one
+      u.volume = 1;
+      if(idx === 0) u.onstart = ()=>{ if(requestId === vmiAudioRequest) setAvatarState("speaking"); };
+      if(idx === chunks.length - 1){
+        u.onend = ()=>{ vmiStopKeepAlive(); if(requestId === vmiAudioRequest && !state.recognizing) setAvatarState("idle"); };
+        u.onerror = ()=>{ vmiStopKeepAlive(); if(requestId === vmiAudioRequest && !state.recognizing) setAvatarState("idle"); };
+      }
+      window.speechSynthesis.speak(u);
+    });
+  }catch(e){ vmiStopKeepAlive(); mime(); }
 }
 function typeQuestion(text){
   const el = $("q-text");
@@ -2169,7 +2368,7 @@ function presentQuestion(item){
     try{ bubble.animate([{opacity:0,transform:"translateY(12px) scale(.98)"},{opacity:1,transform:"none"}],{duration:420,easing:"cubic-bezier(.2,.8,.2,1)"}); }catch(e){}
   }
   typeQuestion(item.q);
-  aiSpeak(item.audio);
+  aiSpeak(item.audio, item.q);
 }
 
 function loadQuestion(){
@@ -2851,6 +3050,10 @@ async function finishInterview(){
     ? round1(state.results.reduce((a,r)=>a+r.overall,0)/state.results.length) : 0;
   const overallScore100 = Math.round(overallAvg*10);
 
+  // Close the loop for an invited round: the counsellor's CRM row picks up how
+  // many questions were answered and the score, without having to ask.
+  reportInviteOutcome(state.results.length, overallAvg);
+
   const sorted = Object.entries(fieldAverages)
     .filter(([k])=> k!=="overall")
     .sort((a,b)=>b[1]-a[1]);
@@ -2900,13 +3103,14 @@ async function finishInterview(){
 
   const askedQs = new Set(state.results.map(r=>r.question));
   const weakCats = weakestFive.map(w=>categoryForField(w[0])).filter(Boolean);
-  const practicePool = [];
-  QUESTION_BANK.forEach(group=>{
-    if(weakCats.includes(group.cat)){
-      group.items.forEach(q=>{ if(!askedQs.has(q)) practicePool.push(q); });
-    }
-  });
-  $("report-practice").innerHTML = (practicePool.slice(0,6).length ? practicePool.slice(0,6) : QUESTION_BANK[0].items.slice(0,4))
+  // Suggest from whatever pool this round drew on, so an invited student gets
+  // practice questions from the wider bank rather than only the recorded ten.
+  const practiceSource = (state.questionPool && state.questionPool.length) ? state.questionPool : FREE_QUESTIONS;
+  const practicePool = practiceSource
+    .filter(item => weakCats.includes(item.cat) && !askedQs.has(item.q))
+    .map(item => item.q);
+  const practiceFallback = practiceSource.slice(0,4).map(item => item.q);
+  $("report-practice").innerHTML = (practicePool.slice(0,6).length ? practicePool.slice(0,6) : practiceFallback)
     .map(q=>'<li>'+escapeHtml(q)+'</li>').join("");
 
   $("report-plan").innerHTML = buildPlan(weakestFive, overallScore100);
@@ -3289,10 +3493,121 @@ document.querySelectorAll("#vmi-count-pills [data-count]").forEach(function(b){
   b.addEventListener("click", function(){
     // Locked lengths (15/20/39) are handled by our team as a consulting step —
     // clicking one records which length they wanted and opens the contact form.
+    // An invite link unlocks exactly one of them (see applyInvite).
     if(b.hasAttribute("data-locked")){ state.requestedLength = b.getAttribute("data-count"); openLead(); return; }
     setCount(b.getAttribute("data-count"));
   });
 });
+
+/* ============================================================
+   COUNSELLOR INVITE
+   ============================================================ */
+// Unlocks the one granted length, replaces the consulting CTA with the invite
+// banner, and pre-fills whatever context the counsellor recorded.
+function applyInvite(){
+  const banner = $("vmi-invite-banner");
+  const err = window.VMI_CONFIG.inviteError;
+
+  if(!INVITE){
+    if(!err || !banner) return;
+    banner.classList.add("is-warning");
+    banner.hidden = false;
+    $("vmi-invite-title").textContent = err === "exhausted"
+      ? "This interview link has been fully used"
+      : err === "revoked"
+        ? "This interview link was withdrawn"
+        : err === "expired"
+          ? "This interview link has expired"
+          : "This interview link is not valid";
+    $("vmi-invite-sub").textContent = "You can still run the free 10-question round below. For an extended interview, ask your counsellor for a new link.";
+    return;
+  }
+
+  state.unlocked = true;
+  state.questionPool = [];   // the server hands the extended list over on start
+
+  const granted = String(INVITE.count);
+  document.querySelectorAll('#vmi-count-pills [data-count="'+granted+'"]').forEach(function(pill){
+    pill.removeAttribute("data-locked");
+    pill.classList.add("is-granted");
+    const lock = pill.querySelector(".vmi-pill__lock");
+    if(lock) lock.remove();
+    const small = pill.querySelector("small");
+    if(small) small.textContent = "Unlocked";
+  });
+  const option = document.querySelector('#in-count option[value="'+granted+'"]');
+  if(option){
+    option.disabled = false;
+    option.removeAttribute("data-locked");
+  }
+  setCount(granted);
+
+  // They already have a counsellor — the lead-capture CTA is noise now.
+  const cta = $("vmi-unlock-cta");
+  if(cta) cta.hidden = true;
+
+  if(INVITE.destination && !$("in-destination").value) $("in-destination").value = INVITE.destination;
+
+  if(banner){
+    banner.hidden = false;
+    $("vmi-invite-title").textContent = (INVITE.name ? INVITE.name.split(" ")[0] + ", your " : "Your ") + INVITE.count + "-question interview is ready";
+    $("vmi-invite-sub").textContent = (INVITE.counsellor ? INVITE.counsellor + " set this up for you. " : "")
+      + "Attempts are counted only when you press Start, so take your time setting up.";
+    updateInviteUses(INVITE.remaining);
+  }
+}
+
+function updateInviteUses(remaining){
+  const el = $("vmi-invite-uses");
+  if(!el || remaining === undefined || remaining === null) return;
+  el.hidden = false;
+  el.textContent = remaining === 1 ? "1 attempt left" : remaining + " attempts left";
+  el.classList.toggle("is-last", remaining <= 1);
+}
+
+/* Spend one attempt and take the question list from the server. Returns null
+   when the link can no longer be used, with the reason already on screen. */
+async function claimInviteQueue(){
+  try{
+    const res = await fetch(INVITE.startUrl, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","X-CSRF-TOKEN":CFG.csrf,"Accept":"application/json"},
+      body:"{}"
+    });
+    const data = await res.json().catch(()=>null);
+    if(!res.ok || !data || !data.ok){
+      const banner = $("vmi-invite-banner");
+      if(banner){
+        banner.hidden = false;
+        banner.classList.add("is-warning");
+        $("vmi-invite-title").textContent = "This attempt could not be started";
+        $("vmi-invite-sub").textContent = (data && data.message) || "Please ask your counsellor for a new link. You can still run the free round.";
+        try{ banner.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
+      }
+      return null;
+    }
+    updateInviteUses(data.remaining);
+    return Array.isArray(data.questions) ? data.questions : null;
+  }catch(e){
+    console.warn("Could not start the invited interview", e);
+    return null;
+  }
+}
+
+/* Hand the outcome back so the counsellor's CRM row shows how it went. */
+function reportInviteOutcome(answered, score){
+  if(!INVITE || !state.inviteClaimed) return;
+  try{
+    fetch(INVITE.finishUrl, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","X-CSRF-TOKEN":CFG.csrf,"Accept":"application/json"},
+      body:JSON.stringify({answered:answered, score:score}),
+      keepalive:true
+    }).catch(()=>{});
+  }catch(e){}
+}
+
+applyInvite();
 
 function setMode(v){
   const sel = $("in-mode");

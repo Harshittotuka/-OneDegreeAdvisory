@@ -637,3 +637,34 @@ html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
 .table-wrap.is-scrollable{cursor:grab}
 .table-wrap.is-grabbing{cursor:grabbing;user-select:none}
 .table-wrap.is-grabbing *{cursor:grabbing!important}
+
+/* ── Mock interview invite links (view=mock-invites) ─────────────────────── */
+.crm-invite-workspace .invite-fresh{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,2fr) auto;align-items:center;gap:12px;margin:16px 20px 0;padding:14px 16px;border:1px solid color-mix(in srgb,#2bb673 34%,var(--line,#dde2e8));border-radius:13px;background:color-mix(in srgb,#2bb673 8%,var(--card,#fff))}
+.crm-invite-workspace .invite-fresh-copy strong{display:block;color:#198354;font-size:.78rem}
+.crm-invite-workspace .invite-fresh-copy span{display:block;margin-top:3px;color:var(--muted,#737b8c);font-size:.63rem;font-weight:700}
+.crm-invite-workspace .invite-fresh-url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem}
+.crm-invite-workspace .invite-create{margin:16px 20px 0;padding:18px 20px;border:1px solid var(--line,#e3e5ea);border-radius:14px;background:var(--card,#fff)}
+.crm-invite-workspace .invite-create-head h3{margin:0;font-size:.9rem;color:var(--navy,#21147f)}
+.crm-invite-workspace .invite-create-head p{margin:4px 0 14px;color:var(--muted,#737b8c);font-size:.66rem;line-height:1.5}
+.crm-invite-workspace .invite-create .form-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.crm-invite-workspace .invite-field-wide{grid-column:span 3}
+.crm-invite-workspace .invite-create-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line,#e3e5ea)}
+.crm-invite-workspace .invite-create-foot .field-help{margin-top:0;max-width:60ch}
+.field-optional{margin-left:5px;color:var(--muted,#8a91a1);font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.crm-invite-filters{grid-template-columns:minmax(250px,1fr) auto}
+.crm-invite-filters>*{display:block!important}
+.crm-invite-filters>input[type="hidden"]{display:none!important}
+.invite-status{display:inline-flex;width:max-content;max-width:100%;padding:4px 8px;border-radius:999px;font-size:.61rem;font-weight:800;line-height:1.2}
+.invite-status.is-ok{background:#e8f7ed;color:#18713b}
+.invite-status.is-exhausted{background:#fdf1e3;color:#95591b}
+.invite-status.is-expired,.invite-status.is-revoked{background:#f1f2f5;color:#6c7280}
+.invite-table tr.is-dead td:first-child strong{color:var(--muted,#737b8c)}
+.invite-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.invite-actions .btn.is-copied{border-color:#2bb673;color:#18713b}
+.invite-attempts{margin-top:5px}
+.invite-attempts summary{cursor:pointer;color:var(--muted,#737b8c);font-size:.61rem;font-weight:700}
+.invite-attempts ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+.invite-attempts li{color:var(--muted,#737b8c);font-size:.61rem;line-height:1.45}
+.nav-mock-invites{--nav-accent:#3f8fd8}
+@media(max-width:1100px){.crm-invite-workspace .invite-create .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.crm-invite-workspace .invite-field-wide{grid-column:span 2}}
+@media(max-width:820px){.crm-invite-workspace .invite-fresh{grid-template-columns:1fr}.crm-invite-workspace .invite-create .form-grid{grid-template-columns:1fr}.crm-invite-workspace .invite-field-wide{grid-column:auto}.crm-invite-workspace .invite-create-foot{flex-direction:column;align-items:stretch}.crm-invite-filters{grid-template-columns:1fr}}

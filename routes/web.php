@@ -22,6 +22,7 @@ use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SopController;
 use App\Http\Controllers\VisaMockAssessmentController;
 use App\Http\Controllers\VisaMockBatchAssessmentController;
+use App\Http\Controllers\VisaMockInviteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -119,6 +120,22 @@ Route::post('/visa-mock-interview/assess-batch', VisaMockBatchAssessmentControll
     ->middleware('throttle:10,1')
     ->name('visa-mock.assess-batch');
 
+// Counsellor-issued invite links. A CRM user generates one of these to grant a
+// student an extended (15/20/39-question) round for a fixed number of uses. The
+// landing page never spends a use — only ::start does, and it also serves the
+// question queue so the granted count cannot be raised from the browser.
+Route::get('/mock-interview/i/{token}', [VisaMockInviteController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('visa-mock.invite');
+Route::post('/mock-interview/i/{token}/start', [VisaMockInviteController::class, 'start'])
+    ->where('token', '[A-Za-z0-9]+')
+    ->middleware('throttle:20,1')
+    ->name('visa-mock.invite.start');
+Route::post('/mock-interview/i/{token}/finish', [VisaMockInviteController::class, 'finish'])
+    ->where('token', '[A-Za-z0-9]+')
+    ->middleware('throttle:20,1')
+    ->name('visa-mock.invite.finish');
+
 // Statement of Purpose — SOP / admissions-writing studio landing page (Student
 // Hub). The "book a strategy call" form POSTs to ::lead, which records a lead in
 // the CRM lead pipeline (source = sop).
@@ -184,6 +201,9 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
         // dashboard "shortlisting" view; this endpoint does the merge + download.
         Route::post('pdf-shortlisting', [\App\Http\Controllers\Crm\CrmPdfShortlistingController::class, 'generate'])
             ->middleware('throttle:10,1')->name('pdf-shortlisting.generate');
+        // Mock-interview invite links (the "Mock interviews" tab).
+        Route::post('mock-invites', [\App\Http\Controllers\Crm\CrmMockInviteController::class, 'store'])->name('mock-invites.store');
+        Route::patch('mock-invites/{invite}/revoke', [\App\Http\Controllers\Crm\CrmMockInviteController::class, 'revoke'])->name('mock-invites.revoke');
         Route::post('team', [\App\Http\Controllers\Crm\CrmUserController::class, 'store'])->name('team.store');
         Route::patch('team/{member}', [\App\Http\Controllers\Crm\CrmUserController::class, 'update'])->name('team.update');
         Route::patch('team/{member}/toggle', [\App\Http\Controllers\Crm\CrmUserController::class, 'toggle'])->name('team.toggle');
