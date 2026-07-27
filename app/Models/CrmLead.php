@@ -15,6 +15,9 @@ class CrmLead extends Model
 
     protected $fillable = [
         'lead_number', 'name', 'phone', 'email', 'city', 'course_interest', 'country_interest',
+        'tenth_score', 'tenth_passing_year', 'twelfth_score', 'twelfth_passing_year',
+        'graduation_score', 'graduation_passing_year', 'backlogs',
+        'english_tests', 'aptitude_tests',
         'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'created_by', 'follow_up_at',
         'follow_up_completed_at', 'last_contacted_at', 'tags', 'profile', 'is_student',
         'student_stage', 'student_category', 'enrollment_amount', 'enrollment_date',
@@ -27,6 +30,8 @@ class CrmLead extends Model
             'follow_up_at' => 'datetime', 'follow_up_completed_at' => 'datetime',
             'last_contacted_at' => 'datetime', 'tags' => 'array', 'profile' => 'array',
             'is_student' => 'boolean', 'enrollment_date' => 'date', 'enrollment_amount' => 'integer',
+            'english_tests' => 'array', 'aptitude_tests' => 'array', 'tenth_passing_year' => 'integer',
+            'twelfth_passing_year' => 'integer', 'graduation_passing_year' => 'integer',
         ];
     }
 

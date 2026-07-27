@@ -1,6 +1,6 @@
 @php
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
-    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Enrollments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Upcoming and overdue conversations'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist']];
+    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['In progress Enrollment', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Upcoming and overdue conversations'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist']];
     $currentTitle = $titles[$view];
     $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'shortlisting'], true);
     $filterQuery = request()->except(['page', 'lead']);
@@ -108,11 +108,11 @@
         <nav class="nav">
             <a class="nav-link nav-dashboard {{ $view === 'dashboard' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'dashboard']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'dashboard'])</span><span class="nav-text">Dashboard</span></a>
             <a class="nav-link nav-leads {{ $view === 'leads' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'leads']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'leads'])</span><span class="nav-text">Leads</span><span class="nav-badge">{{ $stats['total'] }}</span></a>
-            <a class="nav-link nav-enrollments {{ $view === 'enrollments' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'enrollments']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'enrollments'])</span><span class="nav-text">Enrollments</span><span class="nav-badge">{{ $enrollmentCount }}</span></a>
-            @if($crmUser->isSuperAdmin())<a class="nav-link nav-subscriptions {{ $view === 'subscriptions' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'subscriptions']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'subscriptions'])</span><span class="nav-text">Subscriptions</span><span class="nav-badge">{{ $subscriberCount }}</span></a>@endif
             <a class="nav-link nav-followups {{ $view === 'followups' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'followups']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'followups'])</span><span class="nav-text">Follow-ups</span>@if($stats['overdue'])<span class="nav-badge">{{ $stats['overdue'] }}</span>@endif</a>
             <a class="nav-link nav-students {{ $view === 'students' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'students']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'students'])</span><span class="nav-text">Enrolled students</span></a>
             <a class="nav-link nav-shortlisting {{ $view === 'shortlisting' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'shortlisting']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'shortlisting'])</span><span class="nav-text">PDF shortlisting</span></a>
+            <a class="nav-link nav-enrollments {{ $view === 'enrollments' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'enrollments']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'enrollments'])</span><span class="nav-text">In progress Enrollment</span><span class="nav-badge">{{ $enrollmentCount }}</span></a>
+            @if($crmUser->isSuperAdmin())<a class="nav-link nav-subscriptions {{ $view === 'subscriptions' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'subscriptions']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'subscriptions'])</span><span class="nav-text">Subscriptions</span><span class="nav-badge">{{ $subscriberCount }}</span></a>@endif
         </nav>
         <div class="sidebar-bottom">
             <div class="side-user-wrap" data-user-menu>
@@ -342,7 +342,7 @@
                 </section>
             @else
             <section class="workspace">
-                <form @class(['filters', 'lead-classification-filters' => $view === 'leads']) method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
+                <form @class(['filters', 'lead-classification-filters' => $isListView]) method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
                     <input type="hidden" name="view" value="{{ $view }}">
                     @if($view === 'followups')<input type="hidden" name="layout" value="{{ $followUpLayout }}">@endif
                     @if($view === 'followups' && $followUpLayout === 'calendar')<input type="hidden" name="month" value="{{ request('month', now()->format('Y-m')) }}">@endif
@@ -354,6 +354,7 @@
                     <select class="control" name="source"><option value="">All specific sources</option>@foreach($leadSources as $source)<option value="{{ $source }}" @selected(request('source')===$source)>{{ $source }}</option>@endforeach</select>
                     <select class="control" name="category"><option value="">All study categories</option>@foreach($categories as $key=>$label)<option value="{{ $key }}" @selected(request('category')===$key)>{{ $label }}</option>@endforeach</select>
                     @if($view === 'students')<select class="control" name="student_stage"><option value="">All journey stages</option>@foreach($studentStages as $key=>$label)<option value="{{ $key }}" @selected(request('student_stage')===$key)>{{ $label }}</option>@endforeach</select>@endif
+                    <label class="followup-date-filter"><span>Next follow-up</span><input class="control" type="date" name="follow_up_date" value="{{ request('follow_up_date') }}"></label>
                     @if($crmUser->isSuperAdmin())<select class="control" name="assigned_to"><option value="">All counsellors</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected((string)request('assigned_to')===(string)$person->id)>{{ $person->name }}</option>@endforeach</select>@else<span></span>@endif
                 </form>
 
@@ -709,6 +710,27 @@
                             <div class="field"><label>Course / field of interest</label><input name="course_interest" value="{{ $selectedLead->course_interest }}" placeholder="e.g. MS Computer Science"></div><div class="field"><label>Preferred country</label><input name="country_interest" value="{{ $selectedLead->country_interest }}" placeholder="e.g. United Kingdom"></div>
                             <div class="field"><label>Study category</label><select name="category"><option value="">Not set</option>@foreach($categories as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->category===$key)>{{ $label }}</option>@endforeach</select></div><div class="field"><label>Enquiry type</label><select name="lead_type">@foreach($leadTypes as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->lead_type===$key)>{{ $label }}</option>@endforeach</select></div>
                             <div class="field"><label>Lead origin</label><input value="{{ $leadOrigins[$selectedLead->lead_origin] ?? ucfirst($selectedLead->lead_origin) }}" disabled></div><div class="field"><label>Lead source</label><input name="source" value="{{ $selectedLead->source }}" placeholder="Website, referral, event…"></div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-card section-card">
+                        <div class="section-heading"><span class="section-icon">▤</span><div><h3>Academic background</h3><p>Filled from the website questionnaire where the student answered it — complete the rest here.</p></div></div>
+                        <div class="form-grid roomy-grid academic-grid">
+                            <div class="field"><label for="lead_tenth_score">10th %</label><input id="lead_tenth_score" name="tenth_score" value="{{ $selectedLead->tenth_score }}" placeholder="e.g. 88.4" maxlength="40"></div>
+                            <div class="field"><label for="lead_tenth_year">Passing Year</label><input id="lead_tenth_year" name="tenth_passing_year" type="number" inputmode="numeric" min="1950" max="2100" value="{{ $selectedLead->tenth_passing_year }}" placeholder="e.g. 2019"></div>
+                            <div class="field"><label for="lead_twelfth_score">12th %</label><input id="lead_twelfth_score" name="twelfth_score" value="{{ $selectedLead->twelfth_score }}" placeholder="e.g. 91" maxlength="40"></div>
+                            <div class="field"><label for="lead_twelfth_year">Passing Year</label><input id="lead_twelfth_year" name="twelfth_passing_year" type="number" inputmode="numeric" min="1950" max="2100" value="{{ $selectedLead->twelfth_passing_year }}" placeholder="e.g. 2021"></div>
+                            <div class="field academic-trio"><label for="lead_graduation_score">Graduation CGPA / %</label><input id="lead_graduation_score" name="graduation_score" value="{{ $selectedLead->graduation_score }}" placeholder="e.g. 8.2 CGPA" maxlength="40"></div>
+                            <div class="field academic-trio"><label for="lead_graduation_year">Passing Year</label><input id="lead_graduation_year" name="graduation_passing_year" type="number" inputmode="numeric" min="1950" max="2100" value="{{ $selectedLead->graduation_passing_year }}" placeholder="e.g. 2025"></div>
+                            <div class="field academic-trio"><label for="lead_backlogs">Backlogs <span class="label-note">If any</span></label><input id="lead_backlogs" name="backlogs" value="{{ $selectedLead->backlogs }}" placeholder="e.g. 0" maxlength="40"></div>
+                            @include('crm.partials.test-repeater', [
+                                'field' => 'english_tests', 'options' => $englishTests, 'rows' => $selectedLead->english_tests,
+                                'heading' => 'English Proficiency Test', 'addLabel' => 'Add English test',
+                            ])
+                            @include('crm.partials.test-repeater', [
+                                'field' => 'aptitude_tests', 'options' => $aptitudeTests, 'rows' => $selectedLead->aptitude_tests,
+                                'heading' => 'Aptitude test', 'addLabel' => 'Add aptitude test',
+                            ])
                         </div>
                     </div>
 

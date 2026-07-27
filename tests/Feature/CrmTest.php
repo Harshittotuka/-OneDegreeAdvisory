@@ -502,6 +502,108 @@ class CrmTest extends TestCase
             ->assertDontSee('Move lead to trash');
     }
 
+    public function test_leads_view_filters_by_the_next_follow_up_date(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+
+        $this->leadFor($admin, 'Morning Lead', '9876500001')->update(['follow_up_at' => now()->addDays(3)->setTime(9, 15)]);
+        $this->leadFor($admin, 'Evening Lead', '9876500002')->update(['follow_up_at' => now()->addDays(3)->setTime(18, 45)]);
+        $this->leadFor($admin, 'Other Day Lead', '9876500003')->update(['follow_up_at' => now()->addDays(4)->setTime(11, 0)]);
+        $this->leadFor($admin, 'Unscheduled Lead', '9876500004');
+
+        // Assert on the paginator rather than the HTML: the follow-up reminder
+        // popover renders upcoming leads regardless of the active filters.
+        $listed = function (array $query) use ($admin): array {
+            $response = $this->withSession(['crm_user_id' => $admin->id])
+                ->get(route('crm.dashboard', ['view' => 'leads'] + $query))->assertOk();
+
+            return $response->viewData('leads')->pluck('name')->sort()->values()->all();
+        };
+
+        // The whole chosen day matches, whatever time the follow-up was set for.
+        $this->assertSame(
+            ['Evening Lead', 'Morning Lead'],
+            $listed(['follow_up_date' => now()->addDays(3)->format('Y-m-d')]),
+        );
+        $this->assertSame(['Other Day Lead'], $listed(['follow_up_date' => now()->addDays(4)->format('Y-m-d')]));
+        $this->assertSame([], $listed(['follow_up_date' => now()->addDays(9)->format('Y-m-d')]));
+
+        // No date and an unparseable date both leave the list untouched.
+        $this->assertContains('Unscheduled Lead', $listed(['follow_up_date' => '']));
+        $this->assertContains('Unscheduled Lead', $listed(['follow_up_date' => 'not-a-date']));
+
+        $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard', ['view' => 'leads']))
+            ->assertOk()
+            ->assertSee('name="follow_up_date"', false)
+            ->assertSee('Next follow-up');
+    }
+
+    public function test_lead_details_expose_academic_background_fields_for_manual_entry(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Academic Lead', '9876500041');
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('Academic background')
+            ->assertSee('Graduation CGPA / %')
+            ->assertSee('English Proficiency Test')
+            ->assertSee('Aptitude test')
+            ->assertSee('name="tenth_passing_year"', false)
+            ->assertSee('data-test-repeater="english_tests"', false)
+            ->assertSee('data-test-repeater="aptitude_tests"', false);
+
+        $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
+            'name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium', 'status' => 'new',
+            'tenth_score' => '88.4', 'tenth_passing_year' => '2019',
+            'twelfth_score' => '91', 'twelfth_passing_year' => '2021',
+            'graduation_score' => '8.2 CGPA', 'graduation_passing_year' => '2025', 'backlogs' => '0',
+            'english_tests' => [
+                ['test' => 'ielts', 'score' => '7.5', 'date' => '2026-03-14'],
+                ['test' => 'toefl', 'score' => '105', 'date' => ''],
+                ['test' => '', 'score' => '', 'date' => ''],
+            ],
+            'aptitude_tests' => [
+                ['test' => 'gre', 'score' => '320', 'date' => ''],
+                ['test' => 'other', 'name' => 'CLAT', 'score' => '92 percentile', 'date' => ''],
+            ],
+        ])->assertSessionHasNoErrors();
+
+        $lead->refresh();
+        $this->assertSame('88.4', $lead->tenth_score);
+        $this->assertSame(2019, $lead->tenth_passing_year);
+        $this->assertSame('8.2 CGPA', $lead->graduation_score);
+        // The blank row is dropped and the rest re-indexed.
+        $this->assertSame([
+            ['test' => 'ielts', 'name' => null, 'score' => '7.5', 'date' => '2026-03-14'],
+            ['test' => 'toefl', 'name' => null, 'score' => '105', 'date' => null],
+        ], $lead->english_tests);
+        $this->assertSame([
+            ['test' => 'gre', 'name' => null, 'score' => '320', 'date' => null],
+            ['test' => 'other', 'name' => 'CLAT', 'score' => '92 percentile', 'date' => null],
+        ], $lead->aptitude_tests);
+        $this->assertDatabaseHas('crm_lead_activities', ['crm_lead_id' => $lead->id, 'type' => 'updated']);
+
+        $base = ['name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium', 'status' => 'new'];
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $base + ['aptitude_tests' => [['test' => 'not-a-test']]])
+            ->assertSessionHasErrors('aptitude_tests.0.test');
+
+        // "Other" must carry the free-text test name.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $base + ['english_tests' => [['test' => 'other', 'score' => '60']]])
+            ->assertSessionHasErrors('english_tests.0.name');
+
+        // Removing every row submits no rows at all — the hidden marker still clears the column.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $base + ['english_tests_present' => '1'])
+            ->assertSessionHasNoErrors();
+        $lead->refresh();
+        $this->assertNull($lead->english_tests);
+        $this->assertNotNull($lead->aptitude_tests);
+    }
+
     private function leadFor(CrmUser $owner, string $name, string $phone): CrmLead
     {
         return CrmLead::query()->create([

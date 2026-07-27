@@ -17,6 +17,25 @@ use Illuminate\Validation\Rule;
 
 class CrmLeadController extends Controller
 {
+    /** Human field names used by the timeline story and the audit log. */
+    private const FIELD_LABELS = [
+        'assigned_to' => 'Owner', 'follow_up_at' => 'Follow-up', 'course_interest' => 'Course',
+        'country_interest' => 'Country', 'student_stage' => 'Student stage', 'lead_type' => 'Lead type',
+        'status' => 'Status', 'priority' => 'Priority', 'category' => 'Category', 'source' => 'Source',
+        'city' => 'City', 'name' => 'Name', 'phone' => 'Phone', 'email' => 'Email',
+        'tenth_score' => '10th %', 'tenth_passing_year' => '10th passing year',
+        'twelfth_score' => '12th %', 'twelfth_passing_year' => '12th passing year',
+        'graduation_score' => 'Graduation CGPA / %', 'graduation_passing_year' => 'Graduation passing year',
+        'backlogs' => 'Backlogs', 'english_tests' => 'English proficiency tests',
+        'aptitude_tests' => 'Aptitude tests',
+    ];
+
+    /** The repeatable test groups on the academic card, and the catalog each validates against. */
+    private const TEST_GROUPS = [
+        'english_tests' => CrmOptions::ENGLISH_TESTS,
+        'aptitude_tests' => CrmOptions::APTITUDE_TESTS,
+    ];
+
     public function __construct(
         private readonly CrmAuditLogger $auditLogger,
     ) {}
@@ -105,7 +124,8 @@ class CrmLeadController extends Controller
             }
             $labels[] = match ($field) {
                 'assigned_to' => 'owner', 'follow_up_at' => 'follow-up', 'course_interest' => 'course',
-                'country_interest' => 'country', 'student_stage' => 'student stage', default => str_replace('_', ' ', $field),
+                'country_interest' => 'country', 'student_stage' => 'student stage',
+                default => mb_strtolower(self::FIELD_LABELS[$field] ?? str_replace('_', ' ', $field)),
             };
         }
         if ($labels !== []) {
@@ -309,13 +329,70 @@ class CrmLeadController extends Controller
             'assigned_to' => [$user->isSuperAdmin() ? 'nullable' : 'prohibited', Rule::exists('crm_users', 'id')->where(fn ($q) => $q->where('role', 'counsellor')->where('is_active', true))],
             'follow_up_at' => ['nullable', 'date'],
             'student_stage' => ['nullable', Rule::in(array_keys(CrmOptions::STUDENT_STAGES))],
+            'tenth_score' => ['nullable', 'string', 'max:40'],
+            'twelfth_score' => ['nullable', 'string', 'max:40'],
+            'graduation_score' => ['nullable', 'string', 'max:40'],
+            'tenth_passing_year' => ['nullable', 'integer', 'min:1950', 'max:2100'],
+            'twelfth_passing_year' => ['nullable', 'integer', 'min:1950', 'max:2100'],
+            'graduation_passing_year' => ['nullable', 'integer', 'min:1950', 'max:2100'],
+            'backlogs' => ['nullable', 'string', 'max:40'],
+            'english_tests' => ['nullable', 'array', 'max:12'],
+            'english_tests.*.test' => ['nullable', Rule::in(array_keys(CrmOptions::ENGLISH_TESTS))],
+            'aptitude_tests' => ['nullable', 'array', 'max:12'],
+            'aptitude_tests.*.test' => ['nullable', Rule::in(array_keys(CrmOptions::APTITUDE_TESTS))],
         ];
 
-        if ($errorBag !== null) {
-            return Validator::make($request->all(), $rules)->validateWithBag($errorBag);
+        $messages = [];
+        foreach (self::TEST_GROUPS as $group => $catalog) {
+            $rules[$group.'.*.name'] = ['nullable', 'required_if:'.$group.'.*.test,other', 'string', 'max:60'];
+            $rules[$group.'.*.score'] = ['nullable', 'string', 'max:40'];
+            $rules[$group.'.*.date'] = ['nullable', 'date'];
+            $messages[$group.'.*.name.required_if'] = 'Enter the name of the other test.';
         }
 
-        return $request->validate($rules);
+        $data = $errorBag !== null
+            ? Validator::make($request->all(), $rules, $messages)->validateWithBag($errorBag)
+            : $request->validate($rules, $messages);
+
+        return $this->normaliseTestRows($request, $data);
+    }
+
+    /**
+     * Tidy the test repeaters: drop rows with no test picked, re-index the array,
+     * and keep the free-text name only where "Other" was chosen.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function normaliseTestRows(Request $request, array $data): array
+    {
+        foreach (array_keys(self::TEST_GROUPS) as $group) {
+            // A repeater emptied of every row submits no rows at all, so the hidden
+            // "_present" marker is what tells us the group was on the form.
+            if (! array_key_exists($group, $data) && ! $request->boolean($group.'_present')) {
+                continue;
+            }
+
+            $rows = [];
+            foreach ((array) ($data[$group] ?? []) as $row) {
+                $test = trim((string) (is_array($row) ? ($row['test'] ?? '') : ''));
+                if ($test === '') {
+                    continue;
+                }
+                $name = trim((string) ($row['name'] ?? ''));
+                $score = trim((string) ($row['score'] ?? ''));
+                $date = trim((string) ($row['date'] ?? ''));
+                $rows[] = [
+                    'test' => $test,
+                    'name' => $test === 'other' ? ($name ?: null) : null,
+                    'score' => $score ?: null,
+                    'date' => $date ?: null,
+                ];
+            }
+            $data[$group] = $rows ?: null;
+        }
+
+        return $data;
     }
 
     private function normalisePhone(string $phone): string
@@ -364,12 +441,7 @@ class CrmLeadController extends Controller
                 : CrmUser::query()->whereKey($ids)->pluck('name', 'id')->all();
         }
 
-        $labels = [
-            'assigned_to' => 'Owner', 'follow_up_at' => 'Follow-up', 'course_interest' => 'Course',
-            'country_interest' => 'Country', 'student_stage' => 'Student stage', 'lead_type' => 'Lead type',
-            'status' => 'Status', 'priority' => 'Priority', 'category' => 'Category', 'source' => 'Source',
-            'city' => 'City', 'name' => 'Name', 'phone' => 'Phone', 'email' => 'Email',
-        ];
+        $labels = self::FIELD_LABELS;
 
         $format = function (string $field, $value) use ($userNames): string {
             if ($value === null || $value === '') {
@@ -381,6 +453,8 @@ class CrmLeadController extends Controller
                 'category' => CrmOptions::CATEGORIES[$value] ?? (string) $value,
                 'lead_type' => CrmOptions::LEAD_TYPES[$value] ?? (string) $value,
                 'student_stage' => CrmOptions::STUDENT_STAGES[$value] ?? (string) $value,
+                'english_tests' => CrmOptions::describeTests($value, CrmOptions::ENGLISH_TESTS),
+                'aptitude_tests' => CrmOptions::describeTests($value, CrmOptions::APTITUDE_TESTS),
                 'assigned_to' => $userNames[$value] ?? 'counsellor #'.$value,
                 'follow_up_at' => \Illuminate\Support\Carbon::parse($value)->format('d M Y, g:i A'),
                 'phone' => '+91 '.$value,

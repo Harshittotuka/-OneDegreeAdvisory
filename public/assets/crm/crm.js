@@ -507,8 +507,53 @@ document.addEventListener('DOMContentLoaded', () => {
         if (button) button.disabled = false;
     };
 
+    // Repeatable test rows (English proficiency / aptitude) on the academic card.
+    // Names are re-indexed after every add or remove so PHP always receives a
+    // gap-free english_tests[0..n] / aptitude_tests[0..n] array.
+    const reindexTestRows = (repeater) => {
+        const field = repeater.dataset.testRepeater;
+        repeater.querySelectorAll('[data-test-row]').forEach((row, index) => {
+            row.querySelectorAll('[name]').forEach((input) => {
+                input.name = input.name.replace(/^[^[]+\[[^\]]*\]/, `${field}[${index}]`);
+            });
+        });
+        const empty = repeater.querySelector('[data-test-empty]');
+        if (empty) empty.hidden = repeater.querySelector('[data-test-row]') !== null;
+    };
+
+    const syncTestOther = (select) => {
+        const other = select.closest('[data-test-row]')?.querySelector('[data-test-other]');
+        if (!other) return;
+        other.hidden = select.value !== 'other';
+        if (other.hidden) other.querySelector('input').value = '';
+    };
+
     document.addEventListener('click', (event) => {
         const target = event.target;
+        const addTest = target.closest('[data-test-add]');
+        if (addTest) {
+            const repeater = addTest.closest('[data-test-repeater]');
+            const template = repeater?.querySelector('[data-test-template]');
+            if (repeater && template) {
+                repeater.querySelector('[data-test-rows]').append(template.content.cloneNode(true));
+                reindexTestRows(repeater);
+                repeater.querySelector('[data-test-row]:last-of-type [data-test-select]')?.focus();
+                repeater.closest('[data-track-changes]')?.dispatchEvent(new Event('change', {bubbles: true}));
+            }
+            return;
+        }
+
+        const removeTest = target.closest('[data-test-remove]');
+        if (removeTest) {
+            const repeater = removeTest.closest('[data-test-repeater]');
+            removeTest.closest('[data-test-row]')?.remove();
+            if (repeater) {
+                reindexTestRows(repeater);
+                repeater.closest('[data-track-changes]')?.dispatchEvent(new Event('change', {bubbles: true}));
+            }
+            return;
+        }
+
         const expandDrawer = target.closest('[data-drawer-expand]');
         if (expandDrawer) {
             event.preventDefault();
@@ -685,7 +730,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const label = input.closest('.dropzone');
             if (input.files?.[0]) label?.querySelector('strong')?.replaceChildren(input.files[0].name);
         }
-        if (input.matches('[data-crm-filter-form] select')) input.form?.requestSubmit();
+        if (input.matches('[data-crm-filter-form] select, [data-crm-filter-form] input[type="date"]')) input.form?.requestSubmit();
+        if (input.matches('[data-test-select]')) syncTestOther(input);
         if (input.matches('[data-status-select]')) {
             const help = input.closest('.section-card')?.querySelector('[data-status-help]');
             if (help) help.textContent = input.selectedOptions[0]?.dataset.hint || '';

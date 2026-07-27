@@ -95,6 +95,51 @@ class CrmWebsiteLeadTest extends TestCase
         }
     }
 
+    public function test_profiler_answers_map_onto_the_lead_academic_background_without_overwriting_manual_edits(): void
+    {
+        $manager = app(\App\Services\WebsiteLeadManager::class);
+        $sections = [[
+            'eyebrow' => 'Academic background', 'title' => 'Your academic background',
+            'answers' => [
+                ['label' => 'Class 10 result (%) — actual', 'value' => ['88.4']],
+                ['label' => 'Your overall percentage in 12th Class. If pursuing then expected percentage(* Mandatory)', 'value' => ['91']],
+                ['label' => 'Year of Passing 12th class(* Mandatory)', 'value' => ['2021']],
+                ['label' => 'Your overall % or CGPA in Bachelors. If pursuing then expected % or CGPA', 'value' => ['8.2']],
+                ['label' => 'Year of Passing graduation(* Mandatory)', 'value' => ['2025']],
+                ['label' => 'No. of backlogs/repeats (if any) Please mention the exact no of repeats.(* Mandatory)', 'value' => ['2']],
+                ['label' => 'Individual score in IELTS / ToEFL / PTE Score (Listening, Reading, Writing, Speaking)', 'value' => ['IELTS', 'Overall: 7.5', 'Listening: 7']],
+                ['label' => 'GRE Score', 'value' => ['320 - 330']],
+                ['label' => 'GMAT Score', 'value' => ['700+']],
+            ],
+        ]];
+
+        $lead = $manager->capture('profiler', 'Student Profiler', 'Postgraduate', $sections, [
+            'name' => 'Aarav Sharma', 'email' => 'aarav@example.com', 'phone' => '9876500077',
+        ])->lead;
+
+        $this->assertSame('88.4', $lead->tenth_score);
+        $this->assertSame('91', $lead->twelfth_score);
+        $this->assertSame(2021, $lead->twelfth_passing_year);
+        $this->assertSame('8.2', $lead->graduation_score);
+        $this->assertSame(2025, $lead->graduation_passing_year);
+        $this->assertSame('2', $lead->backlogs);
+        $this->assertSame([['test' => 'ielts', 'name' => null, 'score' => '7.5', 'date' => null]], $lead->english_tests);
+        $this->assertSame([
+            ['test' => 'gre', 'name' => null, 'score' => '320 - 330', 'date' => null],
+            ['test' => 'gmat', 'name' => null, 'score' => '700+', 'date' => null],
+        ], $lead->aptitude_tests);
+        // Never asked on the website — left for the counsellor to fill in.
+        $this->assertNull($lead->tenth_passing_year);
+
+        $lead->update(['tenth_score' => '90 (verified marksheet)', 'tenth_passing_year' => 2019]);
+        $manager->capture('profiler', 'Student Profiler', 'Postgraduate', $sections, [
+            'name' => 'Aarav Sharma', 'email' => 'aarav@example.com', 'phone' => '9876500077',
+        ]);
+
+        $this->assertSame('90 (verified marksheet)', $lead->fresh()->tenth_score);
+        $this->assertSame(2019, $lead->fresh()->tenth_passing_year);
+    }
+
     public function test_enrollment_payment_is_classified_without_becoming_a_website_submission(): void
     {
         $attempt = PaymentAttempt::query()->create([

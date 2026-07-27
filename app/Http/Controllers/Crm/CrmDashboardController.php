@@ -156,6 +156,8 @@ class CrmDashboardController extends Controller
             'leadSources' => CrmLead::query()->visibleTo($user)->whereNotNull('source')->distinct()->orderBy('source')->pluck('source'),
             'studentStages' => CrmOptions::STUDENT_STAGES,
             'studentCategories' => CrmOptions::STUDENT_CATEGORIES,
+            'englishTests' => CrmOptions::ENGLISH_TESTS,
+            'aptitudeTests' => CrmOptions::APTITUDE_TESTS,
             'enrollments' => $enrollmentQuery->paginate(20, ['*'], 'enrollment_page')->withQueryString(),
             'enrollmentCount' => $enrollmentCount,
             'enrollmentSources' => PaymentAttempt::query()->distinct()->orderBy('page_slug')->pluck('page_slug'),
@@ -353,13 +355,21 @@ class CrmDashboardController extends Controller
 
         return response()->streamDownload(function () use ($rows): void {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created']);
+            fputcsv($out, [
+                'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created',
+                '10th %', '10th passing year', '12th %', '12th passing year', 'Graduation CGPA / %', 'Graduation passing year', 'Backlogs',
+                'English proficiency tests', 'Aptitude tests',
+            ]);
             foreach ($rows as $lead) {
                 fputcsv($out, [
                     $lead->lead_number, $lead->name, $lead->phone, $lead->email, $lead->city,
                     $lead->course_interest, $lead->country_interest, $lead->category, $lead->lead_type, $lead->lead_origin, $lead->priority,
                     $lead->source, $lead->status, $lead->assignee?->name,
                     $lead->follow_up_at?->format('Y-m-d H:i'), $lead->created_at->format('Y-m-d H:i'),
+                    $lead->tenth_score, $lead->tenth_passing_year, $lead->twelfth_score, $lead->twelfth_passing_year,
+                    $lead->graduation_score, $lead->graduation_passing_year, $lead->backlogs,
+                    CrmOptions::describeTests($lead->english_tests, CrmOptions::ENGLISH_TESTS),
+                    CrmOptions::describeTests($lead->aptitude_tests, CrmOptions::APTITUDE_TESTS),
                 ]);
             }
             fclose($out);
@@ -413,5 +423,23 @@ class CrmDashboardController extends Controller
         if ($user->isSuperAdmin() && $request->filled('assigned_to')) {
             $query->where('assigned_to', $request->integer('assigned_to'));
         }
+        $this->applyFollowUpDateFilter($query, $request);
+    }
+
+    /** Filter on the lead's "Next follow-up" date — leads scheduled on the chosen day. */
+    private function applyFollowUpDateFilter(Builder $query, Request $request): void
+    {
+        $value = trim((string) $request->query('follow_up_date'));
+        if ($value === '') {
+            return;
+        }
+
+        try {
+            $date = Carbon::createFromFormat('!Y-m-d', $value);
+        } catch (\Throwable) {
+            return;
+        }
+
+        $query->whereBetween('follow_up_at', [$date->copy()->startOfDay(), $date->copy()->endOfDay()]);
     }
 }

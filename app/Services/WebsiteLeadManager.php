@@ -7,6 +7,7 @@ use App\Models\CrmLeadActivity;
 use App\Models\CrmSubscriber;
 use App\Models\CrmWebsiteSubmission;
 use App\Models\PaymentAttempt;
+use App\Support\CrmAcademicMapper;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,10 @@ class WebsiteLeadManager
             $phone = $this->normalisePhone((string) ($meta['phone'] ?? ''));
             $lead = $forceNewLead ? null : $this->findLead($phone, $email);
 
+            // Academic answers the questionnaire already asked for; the rest of the
+            // card is left blank for the counsellor or super admin to complete.
+            $academic = CrmAcademicMapper::fromSections($sections);
+
             if (! $lead) {
                 $lead = CrmLead::query()->create([
                     'lead_number' => 'PENDING-'.Str::random(11),
@@ -50,14 +55,22 @@ class WebsiteLeadManager
                     'lead_type' => $this->leadType($source),
                     'status' => 'new',
                     'profile' => ['latest_source' => $source, 'latest_degree' => $degree],
+                    ...$academic,
                 ]);
                 $lead->update(['lead_number' => 'OD-'.str_pad((string) (10000 + $lead->id), 5, '0', STR_PAD_LEFT)]);
             } else {
+                // Never overwrite what a counsellor has already entered by hand.
+                $freshAcademic = array_filter(
+                    $academic,
+                    fn (string $field): bool => blank($lead->{$field}),
+                    ARRAY_FILTER_USE_KEY,
+                );
                 $updates = array_filter([
                     'phone' => $lead->phone ?: ($phone ?: null),
                     'email' => $lead->email ?: ($email ?: null),
                     'course_interest' => $lead->course_interest ?: $this->answer($sections, ['Course / program', 'Career', 'Service needed', 'Study level']),
                     'country_interest' => $lead->country_interest ?: $this->answer($sections, ['Country of study', 'Destination country', 'Preferred country']),
+                    ...$freshAcademic,
                 ], fn ($value) => $value !== null && $value !== '');
                 if ($source !== 'newsletter') {
                     $updates['lead_type'] = $this->leadType($source);

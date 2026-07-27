@@ -504,6 +504,33 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 .lead-classification-filters{grid-template-columns:minmax(230px,1.4fr) repeat(6,minmax(125px,.65fr))!important}
 .lead-classification-filters>*,.crm-subscriber-filters>*,.crm-enrollment-filters>*{display:block!important}
 .lead-classification-filters>input[type="hidden"],.crm-subscriber-filters>input[type="hidden"],.crm-enrollment-filters>input[type="hidden"]{display:none!important}
+/* Academic background card: pairs on a six-track grid, with the graduation row splitting into three. */
+.academic-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+.academic-grid>.field{grid-column:span 3}
+.academic-grid>.field.academic-trio{grid-column:span 2}
+.academic-grid>.field.full{grid-column:1/-1}
+@media(max-width:900px){.academic-grid>.field,.academic-grid>.field.academic-trio{grid-column:span 3}}
+/* Repeatable test rows — a student can sit several English / aptitude tests. */
+.test-repeater{align-items:stretch}
+.test-repeater-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.test-repeater-head label{margin:0}
+.test-repeater-rows{display:flex;flex-direction:column;gap:8px}
+.test-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:9px;padding:11px 12px;border:1px solid var(--line,#e3e5ea);border-radius:14px;background:var(--soft,#f7f8fa)}
+.test-row .test-row-field{flex:1 1 132px;min-width:0;gap:3px;margin-bottom:0}
+.test-row .test-row-field:first-child{flex:1.5 1 168px}
+.test-row-other[hidden]{display:none}
+.test-row-caption{color:var(--muted,#707789);font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.test-row-remove{flex:0 0 auto;width:32px;height:38px;border:1px solid var(--line,#e3e5ea);border-radius:11px;background:#fff;color:var(--muted,#707789);font-size:1.05rem;line-height:1;cursor:pointer;transition:color .16s,border-color .16s,background .16s}
+.test-row-remove:hover{border-color:#dda9a4;background:#fdf6f5;color:#b23a35}
+.test-repeater-empty{margin:0;color:var(--muted,#707789);font-size:.71rem}
+.test-repeater-add{align-self:flex-start}
+@media(max-width:640px){.test-row .test-row-field{flex:1 1 100%}.test-row-remove{width:100%}}
+/* "Next follow-up" date filter: a captioned date input sitting in one filter track. */
+.followup-date-filter{display:flex!important;flex-direction:column;gap:3px;min-width:0}
+.followup-date-filter>span{color:var(--muted,#707789);font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.followup-date-filter input[type="date"]{width:100%;min-width:0;font-size:.72rem}
+.followup-date-filter input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.55}
+.followup-date-filter input[type="date"]:hover::-webkit-calendar-picker-indicator{opacity:1}
 .subscriber-email{color:inherit;font-weight:800}.subscriber-actions,.subscriber-actions form{display:flex;align-items:center;gap:6px}
 .payment-reference,.payment-failure{display:block;margin-top:5px;font-size:.58rem;overflow-wrap:anywhere}.payment-reference{color:var(--muted,#707789)}.payment-failure{color:#b23a35;font-weight:700}
 .enrollment-table th,.enrollment-table td,.subscriber-table th,.subscriber-table td{vertical-align:middle}

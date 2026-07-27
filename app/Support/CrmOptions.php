@@ -49,4 +49,60 @@ class CrmOptions
     public const STUDENT_CATEGORIES = [
         'paid' => 'Paid student', 'non_paid' => 'Non-paid student', 'enrollment_fee_paid' => 'Enrollment fee paid',
     ];
+
+    /** English proficiency tests offered on the lead's academic background card. */
+    public const ENGLISH_TESTS = [
+        'ielts' => 'IELTS',
+        'toefl' => 'TOEFL',
+        'pte' => 'PTE Academic',
+        'duolingo' => 'Duolingo English Test',
+        'cambridge' => 'Cambridge English (C1 / C2)',
+        'other' => 'Other — enter test name',
+    ];
+
+    /** Aptitude / standardised tests offered on the lead's academic background card. */
+    public const APTITUDE_TESTS = [
+        'sat' => 'SAT',
+        'act' => 'ACT',
+        'gre' => 'GRE',
+        'gmat' => 'GMAT',
+        'lsat' => 'LSAT',
+        'mcat' => 'MCAT',
+        'ucat' => 'UCAT',
+        'nmat' => 'NMAT',
+        'other' => 'Other — enter test name',
+    ];
+
+    /**
+     * Render a lead's saved test rows as one readable line, e.g.
+     * "IELTS 7.5 (14 Mar 2026) · TOEFL 105".
+     *
+     * @param  mixed  $rows  the stored array of ['test','name','score','date']
+     * @param  array<string, string>  $catalog  ENGLISH_TESTS or APTITUDE_TESTS
+     */
+    public static function describeTests(mixed $rows, array $catalog): string
+    {
+        if (is_string($rows)) {
+            $rows = json_decode($rows, true);
+        }
+
+        return collect(is_array($rows) ? $rows : [])
+            ->map(function ($row) use ($catalog): string {
+                if (! is_array($row)) {
+                    return '';
+                }
+                $key = (string) ($row['test'] ?? '');
+                $name = trim((string) ($row['name'] ?? ''));
+                $label = $key === 'other' || $key === ''
+                    ? ($name ?: 'Test')
+                    : ($catalog[$key] ?? $key);
+                $score = trim((string) ($row['score'] ?? ''));
+                $date = trim((string) ($row['date'] ?? ''));
+                $suffix = $date === '' ? '' : ' ('.\Illuminate\Support\Carbon::parse($date)->format('d M Y').')';
+
+                return trim($label.($score === '' ? '' : ' '.$score).$suffix);
+            })
+            ->filter()
+            ->implode(' · ');
+    }
 }
