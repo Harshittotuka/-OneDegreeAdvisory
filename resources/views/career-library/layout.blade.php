@@ -20,6 +20,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Mirrors layouts/app: these pages share styles.css, so they get the same
+         content entry animation and must skip it on a view-transition
+         navigation for the same reason. Inline because pagereveal fires before
+         the incoming document's first paint. --}}
+    <script>
+      window.addEventListener("pagereveal", function (event) {
+        if (event.viewTransition) document.documentElement.classList.add("is-vt-nav");
+      });
+    </script>
     <title>@yield('title', 'Trending Career')</title>
     <meta name="description" content="@yield('meta_description', 'An intelligent career library tool that generates comprehensive career paths, work nature insights, and curated resources for any profession.')">
     <meta name="keywords" content="@yield('meta_keywords', 'career, guidance, ai, roadmap, jobs, profession, education')">

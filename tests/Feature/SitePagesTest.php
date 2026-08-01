@@ -322,6 +322,32 @@ class SitePagesTest extends TestCase
         }
     }
 
+    public function test_page_content_animates_in_on_a_fresh_load_only(): void
+    {
+        $css = file_get_contents(public_path('styles.css'));
+
+        $this->assertStringContainsString('@keyframes page-content-enter', $css);
+        // Gated twice on purpose: a view-transition navigation is already
+        // animated (running both reads as a double-take), and a CMS live editor
+        // re-renders as you type, which would replay it on every keystroke.
+        $this->assertStringContainsString(
+            'html:not(.is-vt-nav) body:not(.cms-editing) main {',
+            $css
+        );
+        $this->assertMatchesRegularExpression('/animation: page-content-enter \d+ms/', $css);
+
+        // The listener that sets the gate must be inline in the head: pagereveal
+        // fires before the incoming document paints, which a deferred script is
+        // not guaranteed to beat. Both public layouts share styles.css, so both
+        // need it or career-library pages would double-animate.
+        foreach (['/', '/global-career-library'] as $path) {
+            $html = $this->get($path)->assertOk()->getContent();
+            $head = substr($html, 0, strpos($html, '</head>') ?: strlen($html));
+            $this->assertStringContainsString('addEventListener("pagereveal"', $head, "{$path} head is missing the gate.");
+            $this->assertStringContainsString('classList.add("is-vt-nav")', $head, "{$path} never sets the gate class.");
+        }
+    }
+
     public function test_icons_are_served_from_this_origin_rather_than_a_cdn(): void
     {
         // lucide@latest on unpkg answers its redirect with max-age=60, so after a

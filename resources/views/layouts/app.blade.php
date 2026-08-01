@@ -80,6 +80,19 @@
       (function () {
         var root = document.documentElement;
         root.classList.add("js");
+
+        // The content entry animation is for a load that arrives on its own. A
+        // same-site navigation is already being animated by the cross-document
+        // view transition, so mark those and let the stylesheet skip it —
+        // otherwise the content cross-fades and then lifts again.
+        //
+        // This has to be inline in the head: pagereveal fires before the new
+        // document's first paint, which a deferred script is not guaranteed to
+        // beat. Browsers without cross-document view transitions never fire the
+        // event, so the animation simply always runs for them.
+        window.addEventListener("pagereveal", function (event) {
+          if (event.viewTransition) root.classList.add("is-vt-nav");
+        });
       })();
     </script>
     {{-- Speculation rules: the browser prefetches a page once the pointer rests

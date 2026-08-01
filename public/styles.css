@@ -25832,3 +25832,39 @@ main li,
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Content entry animation
+   ───────────────────────────────────────────────────────────────────────────
+   The page content lifts and fades in as it arrives, so a load resolves into
+   place instead of appearing all at once.
+
+   It animates <main> as a single block rather than staggering sections: the
+   pages that want a stagger already have one in .reveal (opacity + translate
+   driven by the IntersectionObserver in script.js), and running both per
+   element would compound into a slow, wobbly page.
+
+   On LCP: an opacity animation starting at 0 keeps the element out of the
+   running for Largest Contentful Paint only until the first frame lifts it
+   above zero, so the cost here is one frame — not the 420ms duration. What
+   would be expensive is holding content at opacity 0 until a deferred script
+   runs, which is what .reveal does; this deliberately does not.
+
+   Reduced motion needs no rule of its own: the global block above already
+   collapses every animation-duration to 0.001ms, which lands straight on the
+   finished state.
+   ─────────────────────────────────────────────────────────────────────────── */
+@keyframes page-content-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Fresh loads only. A same-site navigation is already animated by the
+   cross-document view transition, and playing both makes the content
+   cross-fade and then lift again — a visible double-take. html.is-vt-nav marks
+   exactly those navigations, set before first paint by the inline head script
+   in layouts/app.blade.php. CMS live editors are excluded: they re-render the
+   page as you type, and each re-render would replay the animation. */
+html:not(.is-vt-nav) body:not(.cms-editing) main {
+  animation: page-content-enter 420ms cubic-bezier(.22, .61, .36, 1) both;
+}
