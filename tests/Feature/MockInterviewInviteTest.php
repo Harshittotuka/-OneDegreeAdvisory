@@ -41,22 +41,40 @@ class MockInterviewInviteTest extends TestCase
 
     /* ---------------------------------------------------------------- bank */
 
-    public function test_the_bank_holds_all_thirty_nine_questions_with_ten_recorded(): void
+    public function test_the_bank_holds_all_thirty_nine_questions(): void
     {
         $all = MockInterviewQuestions::all();
 
         $this->assertCount(39, $all);
         $this->assertSame(39, MockInterviewQuestions::total());
+    }
 
+    public function test_recording_more_questions_never_widens_the_free_pool(): void
+    {
+        $all = MockInterviewQuestions::all();
         $recorded = array_values(array_filter($all, fn (array $q) => $q['audio'] !== ''));
-        $this->assertCount(10, $recorded, 'Exactly ten questions have a recorded clip.');
+        $free = MockInterviewQuestions::freePool();
 
-        // Recordings must line up with the free pool, since the free page plays
-        // them and nothing else.
-        $this->assertSame(
-            array_column($recorded, 'id'),
-            array_column(MockInterviewQuestions::freePool(), 'id')
-        );
+        // Most of the bank is recorded now, but the free page must keep serving
+        // the same ten it always did — `audio` and `free` are independent.
+        $this->assertGreaterThan(count($free), count($recorded));
+        $this->assertCount(10, $free, 'The free pool stays at ten however many clips exist.');
+
+        $recordedIds = array_column($recorded, 'id');
+        foreach (array_column($free, 'id') as $id) {
+            $this->assertContains($id, $recordedIds, "Free question {$id} must keep its voiceover.");
+        }
+    }
+
+    public function test_every_declared_clip_points_at_a_file_that_exists(): void
+    {
+        $declared = array_filter(MockInterviewQuestions::all(), fn (array $q) => $q['audio'] !== '');
+        $this->assertNotEmpty($declared);
+
+        foreach ($declared as $question) {
+            $path = public_path(parse_url($question['audio'], PHP_URL_PATH));
+            $this->assertFileExists($path, "{$question['id']} declares a clip that is not on disk.");
+        }
     }
 
     public function test_recorded_clips_stay_pinned_to_their_own_question(): void
@@ -64,13 +82,14 @@ class MockInterviewInviteTest extends TestCase
         $pool = MockInterviewQuestions::freePool();
 
         // The clip numbering is what silently broke when the bank was widened
-        // before: q2 belongs to "Why did you choose this course?", which sits at
-        // position 3 of the full 39.
+        // before. Clips are filed by the position their question holds in the
+        // full 39, so the free pool's own index is NOT the clip number: the
+        // second free question is q3, and the tenth is q38.
         $this->assertStringEndsWith('/q1.mp3', $pool[0]['audio']);
         $this->assertSame('Tell me about yourself.', $pool[0]['q']);
-        $this->assertStringEndsWith('/q2.mp3', $pool[1]['audio']);
+        $this->assertStringEndsWith('/q3.mp3', $pool[1]['audio']);
         $this->assertSame('Why did you choose this course?', $pool[1]['q']);
-        $this->assertStringEndsWith('/q10.mp3', $pool[9]['audio']);
+        $this->assertStringEndsWith('/q38.mp3', $pool[9]['audio']);
         $this->assertSame('Will you return to your home country after your studies?', $pool[9]['q']);
     }
 
@@ -110,6 +129,175 @@ class MockInterviewInviteTest extends TestCase
             ->assertSee('"remaining":3', false)
             ->assertSee('Rahul Student', false)
             ->assertSee('mock-interview\\/i\\/'.$invite->token.'\\/start', false);
+    }
+
+    public function test_an_invited_round_offers_the_free_warm_ups_beside_the_granted_length(): void
+    {
+        $invite = $this->invite(['question_count' => 15]);
+
+        $page = $this->get($invite->shareUrl())->assertOk();
+
+        // The free lengths stay usable as a warm-up — they cost no attempt — and
+        // the granted round sits alongside them, pre-selected.
+        $page->assertSee('id="vmi-count-pills"', false)
+            ->assertSee('data-count="5"', false)
+            ->assertSee('data-count="10"', false)
+            ->assertSee('<option value="15" selected>15 questions</option>', false)
+            ->assertSee('is-active is-granted" data-count="15"', false);
+
+        // But only the granted tier: the lengths this student was not given must
+        // not appear, as either a pill or an option.
+        $page->assertDontSee('data-count="20"', false)
+            ->assertDontSee('data-count="39"', false)
+            ->assertDontSee('With team', false);
+
+        // Nor is there anything left to sell to someone who already has a counsellor.
+        $page->assertDontSee('id="vmi-unlock-cta"', false)
+            ->assertDontSee('Talk to our team', false);
+    }
+
+    public function test_every_warm_up_pill_stays_within_the_free_limit(): void
+    {
+        // The page spends an attempt only when the chosen length exceeds
+        // FREE_LIMIT, which is the size of the free pool. So a warm-up pill
+        // offering more than that would silently start burning attempts. This
+        // pins the pills to that limit rather than to the literals 5 and 10.
+        $freeLimit = count(MockInterviewQuestions::freePool());
+        $html = $this->get($this->invite(['question_count' => 15])->shareUrl())
+            ->assertOk()
+            ->getContent();
+
+        preg_match_all('/data-count="(\d+)"/', $html, $matches);
+        $offered = array_map('intval', array_unique($matches[1]));
+        $this->assertNotEmpty($offered);
+
+        foreach ($offered as $count) {
+            if ($count === 15) {
+                continue;   // the granted round is meant to spend an attempt
+            }
+            $this->assertLessThanOrEqual(
+                $freeLimit,
+                $count,
+                "A {$count}-question pill is offered as free but exceeds the {$freeLimit}-question free pool, so choosing it would spend an attempt."
+            );
+        }
+    }
+
+    public function test_an_invited_student_granted_the_full_bank_still_sees_the_warm_ups(): void
+    {
+        $invite = $this->invite(['question_count' => 39]);
+
+        $this->get($invite->shareUrl())
+            ->assertOk()
+            ->assertSee('data-count="5"', false)
+            ->assertSee('data-count="10"', false)
+            ->assertSee('is-active is-granted" data-count="39"', false)
+            ->assertDontSee('data-count="15"', false)
+            ->assertDontSee('data-count="20"', false);
+    }
+
+    public function test_the_invited_shell_replaces_the_marketing_hero_with_a_session_pass(): void
+    {
+        $invite = $this->invite(['question_count' => 20]);
+
+        $page = $this->get($invite->shareUrl())->assertOk();
+
+        // Assert on rendered markup, not bare class names: every one of these
+        // classes also appears in the stylesheet, which both shells serve.
+        $page->assertSee('<div id="vmi-page" class="is-invited">', false)
+            ->assertSee('<dl class="vmi-pass__facts">', false)
+            ->assertSee('Rahul, your', false)
+            ->assertSee('Prepared for you by Priya Counsellor', false)
+            // A failure surface must exist, since the invited shell has no banner.
+            ->assertSee('id="vmi-session-alert"', false);
+
+        $page->assertDontSee('Walk into your visa interview', false)
+            ->assertDontSee('Start free interview', false);
+    }
+
+    public function test_the_public_page_keeps_its_marketing_shell(): void
+    {
+        $page = $this->get(route('visa-mock'))->assertOk();
+
+        $page->assertSee('Walk into your visa interview', false)
+            ->assertSee('id="vmi-count-pills"', false)
+            ->assertSee('id="vmi-unlock-cta"', false)
+            ->assertDontSee('<div id="vmi-page" class="is-invited">', false)
+            ->assertDontSee('<dl class="vmi-pass__facts">', false);
+    }
+
+    public function test_a_spent_link_keeps_the_session_shell_and_explains_itself(): void
+    {
+        $invite = $this->invite(['question_count' => 15, 'max_uses' => 3, 'uses_count' => 3]);
+        $this->assertSame('exhausted', $invite->state());
+
+        $page = $this->get($invite->shareUrl())->assertOk();
+
+        // The student came from their counsellor, so they keep the session shell
+        // and get told why it stopped working — not dumped on the sales page.
+        $page->assertSee('<div id="vmi-page" class="is-invited">', false)
+            ->assertSee('is-spent', false)
+            ->assertSee('used every round on this link', false)
+            ->assertSee('All rounds used', false)
+            ->assertSee('Message Priya Counsellor if you would like another round.', false)
+            ->assertSee('3 of 3', false);
+
+        // It must not present the granted round as startable any more. Match the
+        // rendered pill, not the bare class — the stylesheet names it too.
+        $page->assertDontSee('is-active is-granted" data-count=', false)
+            ->assertDontSee('Begin your session', false)
+            ->assertDontSee('spends one attempt', false);
+
+        // But it is not a dead end: the free rounds are still right there, and
+        // the longer tiers reappear locked so the student can ask for another.
+        $page->assertSee('data-count="5"', false)
+            ->assertSee('data-count="10"', false)
+            ->assertSee('Start free practice round', false)
+            ->assertSee('data-count="15" data-locked', false)
+            ->assertSee('data-count="20" data-locked', false)
+            ->assertSee('data-count="39" data-locked', false)
+            ->assertSee('With team', false);
+    }
+
+    public function test_an_expired_and_a_revoked_link_are_explained_the_same_way(): void
+    {
+        $expired = $this->invite(['expires_at' => now()->subDay()]);
+        $this->get($expired->shareUrl())
+            ->assertOk()
+            ->assertSee('is-spent', false)
+            ->assertSee('this link has expired.', false)
+            ->assertSee('Expired', false);
+
+        $revoked = $this->invite(['revoked_at' => now()]);
+        $this->get($revoked->shareUrl())
+            ->assertOk()
+            ->assertSee('is-spent', false)
+            ->assertSee('this link has been withdrawn.', false)
+            ->assertSee('Withdrawn', false);
+    }
+
+    public function test_a_spent_link_never_publishes_the_counsellors_contact_details(): void
+    {
+        $invite = $this->invite(['uses_count' => 3]);
+
+        // The token travels over WhatsApp; anyone holding it can load this page.
+        // The counsellor's name is context, but their email and phone are not.
+        $this->get($invite->shareUrl())
+            ->assertOk()
+            ->assertSee('Priya Counsellor', false)
+            ->assertDontSee($this->counsellor()->email, false)
+            ->assertDontSee($this->counsellor()->phone, false);
+    }
+
+    public function test_an_unknown_token_still_falls_back_to_the_public_shell(): void
+    {
+        // Nothing is known about the session, so there is nothing to describe —
+        // this one must stay on the marketing page with the banner.
+        $this->get(route('visa-mock.invite', ['token' => 'nosuchtokenatall']))
+            ->assertOk()
+            ->assertDontSee('<dl class="vmi-pass__facts">', false)
+            ->assertSee('id="vmi-invite-banner"', false)
+            ->assertSee('inviteError: "invalid"', false);
     }
 
     public function test_opening_the_link_does_not_spend_an_attempt(): void

@@ -143,39 +143,6 @@
     @endif
 </section>
 
-<script>
-    // Clipboard for the share links. Falls back to a hidden input + execCommand
-    // so it still works on http:// UAT hosts, where navigator.clipboard is absent.
-    document.querySelectorAll('[data-copy-link]').forEach(function (button) {
-        button.addEventListener('click', function () {
-            var url = button.getAttribute('data-copy-link');
-            var done = function () {
-                var previous = button.textContent;
-                button.textContent = 'Copied';
-                button.classList.add('is-copied');
-                setTimeout(function () {
-                    button.textContent = previous;
-                    button.classList.remove('is-copied');
-                }, 1800);
-            };
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(url).then(done).catch(legacyCopy);
-                return;
-            }
-            legacyCopy();
-
-            function legacyCopy() {
-                var field = document.createElement('textarea');
-                field.value = url;
-                field.setAttribute('readonly', 'readonly');
-                field.style.position = 'fixed';
-                field.style.opacity = '0';
-                document.body.appendChild(field);
-                field.select();
-                try { document.execCommand('copy'); done(); } catch (error) { window.prompt('Copy this link', url); }
-                document.body.removeChild(field);
-            }
-        });
-    });
-</script>
+{{-- Copy-link clicks are handled by the delegated [data-copy-link] listener in
+     crm.js. An inline <script> here would never run: the CRM swaps views in via
+     DOMParser, whose scripts are inert. --}}

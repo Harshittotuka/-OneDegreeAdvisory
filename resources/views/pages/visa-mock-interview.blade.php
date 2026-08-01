@@ -1019,16 +1019,256 @@
   #vmi-page .vmi-pill.is-granted{opacity:1;border-color:var(--teal-dark,#127c71);}
   #vmi-page .vmi-pill.is-granted small{color:var(--teal-dark,#127c71);font-weight:800;}
   @media(max-width:560px){#vmi-page .vmi-invite{flex-wrap:wrap;}}
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     INVITED SESSION LAYER (2026-07) — the counsellor-issued round.
+
+     Scoped entirely under #vmi-page.is-invited, which is set server-side, so
+     none of this can leak onto the public page. The public page sells; this one
+     has nothing to sell, so it trades the orange marketing palette for a deep
+     navy "appointment" surface with a single gold accent.
+     ══════════════════════════════════════════════════════════════════════════ */
+  #vmi-page.is-invited{--session-ink:#f4f1ff;--session-gold:#f3c96b;--session-deep:#0c0246;}
+
+  /* The public hero's ambient wash reads as promotional; the session opens calm. */
+  #vmi-page.is-invited .vmi-bg{opacity:.35;}
+
+  /* The pass supplies its own surface, so the hero must stop supplying one:
+     the professional layer gives .vmi-hero a 570px dark panel of its own, which
+     would otherwise frame the card in a second, larger box. */
+  #vmi-page.is-invited .vmi-hero--session{display:block;min-height:0;padding:0;margin:0 0 34px;
+    background:none;box-shadow:none;border-radius:0;overflow:visible;}
+  #vmi-page.is-invited .vmi-hero--session::before,
+  #vmi-page.is-invited .vmi-hero--session::after{content:none;}
+
+  /* ── The session pass ───────────────────────────────────────────────────
+     Two columns split by a perforation: the left reads like an invitation,
+     the right is the tear-off stub carrying this booking's specifics and the
+     one action. Splitting it this way is what stops the card reading as a
+     wide, half-empty banner. */
+  #vmi-page .vmi-pass{position:relative;overflow:hidden;border-radius:26px;
+    display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.85fr);
+    background:radial-gradient(115% 130% at 92% -15%,#2c1c96 0%,transparent 55%),linear-gradient(146deg,#160a63 0%,var(--session-deep) 60%,#08012f 100%);
+    color:var(--session-ink);box-shadow:0 34px 90px -46px rgba(12,2,70,.85);}
+  #vmi-page .vmi-pass::after{content:"";position:absolute;right:-110px;bottom:-150px;width:400px;height:400px;border-radius:50%;
+    border:1px solid rgba(243,201,107,.13);pointer-events:none;}
+  #vmi-page .vmi-pass__ribbon{position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(180deg,var(--session-gold),rgba(243,201,107,.15));}
+
+  #vmi-page .vmi-pass__main{padding:46px 44px 44px;min-width:0;}
+
+  #vmi-page .vmi-eyebrow--pass{display:inline-flex;align-items:center;gap:9px;margin-bottom:22px;
+    padding:7px 15px 7px 12px;border-radius:999px;border:1px solid rgba(243,201,107,.3);
+    background:rgba(243,201,107,.1);color:var(--session-gold);
+    font-family:var(--font-ui);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+  #vmi-page .vmi-eyebrow--pass .vmi-live-dot{background:var(--session-gold);}
+
+  #vmi-page .vmi-pass h1{margin:0 0 15px;color:#fff;font-family:var(--font-head);font-weight:600;
+    font-size:clamp(33px,3.5vw,47px);line-height:1.06;letter-spacing:-.015em;}
+  /* -webkit-text-fill-color, not just color: the professional layer sets the
+     fill on .vmi-hero h1 em, and a bare `color` loses to it. */
+  #vmi-page .vmi-pass h1 em{font-style:italic;background:none;color:var(--session-gold);-webkit-text-fill-color:var(--session-gold);}
+  #vmi-page .vmi-pass__sub{max-width:46ch;margin:0;color:rgba(244,241,255,.74);font-size:15px;line-height:1.66;}
+
+  #vmi-page .vmi-pass__marks{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:10px;}
+  #vmi-page .vmi-pass__marks li{display:flex;align-items:center;gap:10px;color:rgba(244,241,255,.8);font-size:13.5px;}
+  #vmi-page .vmi-pass__marks i{width:15px;height:15px;flex:0 0 auto;padding:3px;border-radius:50%;
+    background:rgba(243,201,107,.16);color:var(--session-gold);box-sizing:content-box;}
+
+  /* ── The stub ── */
+  #vmi-page .vmi-pass__stub{position:relative;display:flex;flex-direction:column;justify-content:center;
+    padding:40px 40px 38px;background:rgba(255,255,255,.045);}
+  /* The perforation: a dashed rule rather than a hard border, so the two halves
+     read as one ticket instead of two stacked panels. */
+  #vmi-page .vmi-pass__stub::before{content:"";position:absolute;left:0;top:30px;bottom:30px;
+    border-left:2px dashed rgba(255,255,255,.16);}
+  #vmi-page .vmi-pass__stub-label{margin-bottom:16px;color:rgba(244,241,255,.5);font-family:var(--font-ui);
+    font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;}
+
+  #vmi-page .vmi-pass__facts{margin:0 0 26px;padding:0;}
+  #vmi-page .vmi-pass__facts > div{display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+    margin:0;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+  #vmi-page .vmi-pass__facts > div:last-child{border-bottom:0;}
+  #vmi-page .vmi-pass__facts dt{margin:0;color:rgba(244,241,255,.58);font-family:var(--font-ui);
+    font-size:11.5px;font-weight:600;letter-spacing:.02em;}
+  #vmi-page .vmi-pass__facts dd{margin:0;color:#fff;font-family:var(--font-ui);font-size:17px;font-weight:700;letter-spacing:-.01em;}
+  #vmi-page .vmi-pass__facts dd.is-last{color:var(--session-gold);}
+
+  #vmi-page .vmi-pass__stub .btn-primary{width:100%;justify-content:center;
+    background:var(--session-gold);border-color:var(--session-gold);color:#241300;box-shadow:0 16px 40px -22px rgba(243,201,107,.9);}
+  #vmi-page .vmi-pass__stub .btn-primary:hover{background:#ffd985;border-color:#ffd985;color:#241300;}
+  #vmi-page .vmi-pass__note{display:flex;align-items:flex-start;gap:8px;margin-top:13px;
+    color:rgba(244,241,255,.58);font-size:12px;line-height:1.5;}
+  #vmi-page .vmi-pass__note i{width:14px;height:14px;flex:0 0 auto;margin-top:2px;color:var(--session-gold);}
+
+  /* ── Spent link: same pass, stated plainly, no false promise of a start ──
+     Gold reads as "go", so a link that cannot start drops it for a muted amber
+     and a ghost button. The card stays otherwise identical, which is the point:
+     the student recognises their session rather than landing on a stranger. */
+  #vmi-page .vmi-pass.is-spent{background:radial-gradient(115% 130% at 92% -15%,#2a2350 0%,transparent 55%),linear-gradient(146deg,#1c1740 0%,#141031 60%,#0c0920 100%);}
+  #vmi-page .vmi-pass.is-spent .vmi-pass__ribbon{background:linear-gradient(180deg,#c99a4e,rgba(201,154,78,.14));}
+  #vmi-page .vmi-pass.is-spent .vmi-eyebrow--pass{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:rgba(244,241,255,.72);}
+  #vmi-page .vmi-pass.is-spent .vmi-eyebrow--pass .vmi-live-dot{background:rgba(244,241,255,.5);animation:none;}
+  #vmi-page .vmi-pass.is-spent h1 em{color:#e8b866;-webkit-text-fill-color:#e8b866;}
+  #vmi-page .vmi-pass.is-spent .vmi-pass__marks i{background:rgba(255,255,255,.1);color:rgba(244,241,255,.75);}
+  #vmi-page .vmi-pass.is-spent .vmi-pass__note i{color:#e8b866;}
+  #vmi-page .vmi-pass__facts dd.is-spent-status{color:#e8b866;}
+
+  #vmi-page .btn-ghost-pass{width:100%;justify-content:center;border:1px solid rgba(255,255,255,.26);
+    background:rgba(255,255,255,.07);color:#fff;box-shadow:none;}
+  #vmi-page .btn-ghost-pass:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.38);color:#fff;}
+
+  /* The counsellor's round is the default and the only one costing an attempt. */
+  #vmi-page.is-invited .vmi-pill.is-granted{border-color:var(--navy);}
+  #vmi-page.is-invited .vmi-pill.is-granted small{color:var(--navy);font-weight:800;}
+  #vmi-page .vmi-pills-note{margin:11px 0 0;color:var(--muted);font-size:11.5px;line-height:1.55;}
+  /* Without the consulting CTA the options card is much shorter than the device
+     card beside it; letting it size to its content beats stretching it into a
+     tall empty box. height:auto is required — the grid pins > .card to 100%,
+     which align-self alone cannot undo. */
+  #vmi-page.is-invited .vmi-setup-grid > .vmi-options-card{align-self:start;height:auto;}
+
+  /* ── Failure surface (revoked mid-setup, last use taken by another tab) ── */
+  #vmi-page .vmi-session-alert[hidden]{display:none;}
+  #vmi-page .vmi-session-alert{display:flex;align-items:flex-start;gap:13px;margin:0 0 22px;padding:15px 18px;
+    border-radius:16px;border:1px solid #e9d7c4;background:linear-gradient(130deg,#fdf5ec,#fff);}
+  #vmi-page .vmi-session-alert__ic{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+    background:#f7e6d4;color:#a4571a;}
+  #vmi-page .vmi-session-alert__ic i{width:19px;height:19px;}
+  #vmi-page .vmi-session-alert__body strong{display:block;font-size:13.5px;color:var(--navy-deep);}
+  #vmi-page .vmi-session-alert__body span{display:block;margin-top:3px;color:var(--muted);font-size:11.5px;line-height:1.5;}
+
+  @media(max-width:1000px){
+    /* Stack, and turn the perforation horizontal so it still reads as a stub. */
+    #vmi-page .vmi-pass{grid-template-columns:minmax(0,1fr);border-radius:22px;}
+    #vmi-page .vmi-pass__main{padding:36px 28px 30px;}
+    #vmi-page .vmi-pass__stub{padding:28px;}
+    #vmi-page .vmi-pass__stub::before{left:28px;right:28px;top:0;bottom:auto;
+      border-left:0;border-top:2px dashed rgba(255,255,255,.16);}
+  }
+  @media(max-width:560px){
+    #vmi-page .vmi-pass__main{padding:28px 20px 24px;}
+    #vmi-page .vmi-pass__stub{padding:24px 20px;}
+    #vmi-page .vmi-pass__stub::before{left:20px;right:20px;}
+  }
 </style>
 @endpush
 
 @section('content')
+@php
+    // A counsellor-issued round is a different product from the public taster:
+    // the student has already been sold, already has a counsellor, and has been
+    // granted exactly one length. Everything promotional is therefore rendered
+    // out of the page rather than hidden by script, so there is no flash of the
+    // marketing hero and no free length left clickable.
+    // A link we RECOGNISE keeps the session shell even once it is dead: the
+    // student arrived from their counsellor and is owed an explanation, not the
+    // marketing page. Only an unknown token falls through to the public shell,
+    // because there is no session to describe.
+    $isLive = $invite && $inviteState === 'ok';
+    $isSession = $invite && in_array($inviteState, ['ok', 'exhausted', 'expired', 'revoked'], true);
+
+    $sessionCount = $isSession ? (int) $invite->question_count : 0;
+    $sessionFirstName = $isSession && $invite->recipient_name
+        ? explode(' ', trim($invite->recipient_name))[0]
+        : null;
+    $sessionCounsellor = $isSession ? $invite->creator?->name : null;
+    $sessionRemaining = $isSession ? $invite->remainingUses() : 0;
+    // Roughly 55s per question once the read-out and answer window are counted.
+    $sessionMinutes = $isSession ? max(5, (int) round($sessionCount * 0.9)) : 0;
+
+    // Copy for a session that can no longer be started. Deliberately never
+    // publishes the counsellor's email or phone — the token travels by
+    // WhatsApp and anyone holding it would otherwise get staff contact details.
+    $sessionAsk = $sessionCounsellor
+        ? 'Message '.$sessionCounsellor.' if you would like another round.'
+        : 'Message your counsellor if you would like another round.';
+    $sessionSpent = $isSession && ! $isLive ? match ($inviteState) {
+        'exhausted' => [
+            'status'   => 'All rounds used',
+            'headline' => 'you have used every round on this link.',
+            'sub'      => 'All '.$invite->max_uses.' attempts have been completed, so this link cannot start another interview. '.$sessionAsk,
+        ],
+        'expired' => [
+            'status'   => 'Expired',
+            'headline' => 'this link has expired.',
+            'sub'      => 'It stopped working on '.($invite->expires_at?->format('d M Y') ?? 'its expiry date').', so it cannot start another interview. '.$sessionAsk,
+        ],
+        default => [
+            'status'   => 'Withdrawn',
+            'headline' => 'this link has been withdrawn.',
+            'sub'      => 'Your counsellor turned this link off, so it cannot start an interview. '.$sessionAsk,
+        ],
+    } : null;
+@endphp
 <main id="main" class="vmi-main">
-  <div id="vmi-page">
+  <div id="vmi-page" @class(['is-invited' => $isSession])>
     <div class="vmi-bg" aria-hidden="true"></div>
     <div class="vmi-wrap">
 
       {{-- ===================== HERO ===================== --}}
+      @if($isSession)
+      {{-- Students on a counsellor's link get a session pass instead of the
+           marketing hero. A spent link keeps the same card and simply reports
+           why it can no longer start, so the page never reads as a dead end. --}}
+      <header class="vmi-hero vmi-hero--session">
+        <div @class(['vmi-pass', 'vmi-load', 'is-spent' => $sessionSpent]) style="animation-delay:.05s">
+          <span class="vmi-pass__ribbon" aria-hidden="true"></span>
+
+          <div class="vmi-pass__main">
+            <span class="vmi-eyebrow vmi-eyebrow--pass">
+              <span class="vmi-live-dot"></span>
+              {{ $sessionCounsellor ? 'Prepared for you by '.$sessionCounsellor : 'Prepared for you by One Degree Advisory' }}
+            </span>
+
+            @if($sessionSpent)
+              <h1>{{ $sessionFirstName ? $sessionFirstName.',' : 'Sorry —' }} <em>{{ $sessionSpent['headline'] }}</em></h1>
+              <p class="vmi-pass__sub">{{ $sessionSpent['sub'] }}</p>
+
+              <ul class="vmi-pass__marks">
+                <li><i data-lucide="check"></i> Your completed rounds are already with your counsellor</li>
+                <li><i data-lucide="check"></i> A free 10-question practice round is still open to you</li>
+              </ul>
+            @else
+              <h1>{{ $sessionFirstName ? $sessionFirstName.', your' : 'Your' }} interview room is <em>ready.</em></h1>
+              <p class="vmi-pass__sub">A full {{ $sessionCount }}-question sitting with the same assessor, the same scoring and the same report your counsellor sees.</p>
+
+              <ul class="vmi-pass__marks">
+                <li><i data-lucide="check"></i> Real embassy-style questioning</li>
+                <li><i data-lucide="check"></i> Scored on content and delivery</li>
+                <li><i data-lucide="check"></i> Raw video is never stored</li>
+              </ul>
+            @endif
+          </div>
+
+          {{-- The stub: everything specific to this booking, on the tear-off
+               side of the perforation. --}}
+          <div class="vmi-pass__stub">
+            <span class="vmi-pass__stub-label">{{ $sessionSpent ? 'This link' : 'Your session' }}</span>
+
+            <dl class="vmi-pass__facts">
+              <div><dt>Questions</dt><dd>{{ $sessionCount }}</dd></div>
+              @if($sessionSpent)
+                <div><dt>Rounds used</dt><dd>{{ $invite->uses_count }} of {{ $invite->max_uses }}</dd></div>
+                <div><dt>Status</dt><dd class="is-spent-status">{{ $sessionSpent['status'] }}</dd></div>
+              @else
+                <div><dt>Coverage</dt><dd>All 6 areas</dd></div>
+                <div><dt>Length</dt><dd>~{{ $sessionMinutes }} min</dd></div>
+                <div><dt>Attempts left</dt><dd id="vmi-pass-attempts">{{ $sessionRemaining }} of {{ $invite->max_uses }}</dd></div>
+              @endif
+            </dl>
+
+            @if($sessionSpent)
+              <button type="button" class="btn btn-ghost-pass btn-lg" data-scroll-setup><i data-lucide="rotate-ccw"></i> Practise for free</button>
+              <span class="vmi-pass__note"><i data-lucide="message-circle"></i> {{ $sessionAsk }}</span>
+            @else
+              <button type="button" class="btn btn-primary btn-lg" data-scroll-setup><i data-lucide="play"></i> Begin your session</button>
+              <span class="vmi-pass__note"><i data-lucide="shield-check"></i> An attempt is spent only when you press start.</span>
+            @endif
+          </div>
+        </div>
+      </header>
+      @else
       <header class="vmi-hero">
         <div class="vmi-hero__grid">
           <div class="vmi-hero__copy">
@@ -1072,6 +1312,7 @@
           </div>
         </div>
       </header>
+      @endif
 
       {{-- ===================== STEP TRACKER ===================== --}}
       <ol id="vmi-steps" class="vmi-steps" aria-label="Progress">
@@ -1094,41 +1335,84 @@
       {{-- ===================== SCREEN 1: SETUP ===================== --}}
       <div id="screen-setup">
         <div class="vmi-setup-intro" data-reveal>
-          <span class="vmi-eyebrow"><i data-lucide="wand-sparkles"></i> Personalise your simulation</span>
-          <h2>Build your practice round</h2>
-          <p>Choose the depth and format. You can start with a quick warm-up or rehearse the complete interview.</p>
+          @if($sessionSpent)
+            <span class="vmi-eyebrow"><i data-lucide="clipboard-check"></i> Still available to you</span>
+            <h2>Keep practising for free</h2>
+            <p>This link can no longer start its extended round, but the free practice interview below is open to you as often as you like.</p>
+          @elseif($isSession)
+            <span class="vmi-eyebrow"><i data-lucide="clipboard-check"></i> Before you begin</span>
+            <h2>Ready when you are</h2>
+            <p>Your round is already set. Confirm how you would like to answer, then test your camera and microphone.</p>
+          @else
+            <span class="vmi-eyebrow"><i data-lucide="wand-sparkles"></i> Personalise your simulation</span>
+            <h2>Build your practice round</h2>
+            <p>Choose the depth and format. You can start with a quick warm-up or rehearse the complete interview.</p>
+          @endif
         </div>
 
-        {{-- Counsellor invite banner. Always rendered, hidden until the script
-             reads VMI_CONFIG.invite (unlocked round) or .inviteError (a link
-             that is spent, revoked or expired — the free round still works). --}}
-        <div class="vmi-invite" id="vmi-invite-banner" hidden>
-          <span class="vmi-invite__ic"><i data-lucide="ticket"></i></span>
-          <div class="vmi-invite__body">
-            <strong id="vmi-invite-title"></strong>
-            <span id="vmi-invite-sub"></span>
+        {{-- The session shell states a dead link in the pass itself, so it needs
+             only a runtime failure surface. The public shell keeps the banner,
+             which is where an unknown token's reason is written. --}}
+        @if($isSession)
+          {{-- The invited shell's error surface. The link can still fail at the
+               moment of starting — revoked mid-setup, or a second tab taking the
+               last use — and without this that failure would be silent. --}}
+          <div class="vmi-session-alert" id="vmi-session-alert" hidden role="alert">
+            <span class="vmi-session-alert__ic"><i data-lucide="triangle-alert"></i></span>
+            <div class="vmi-session-alert__body">
+              <strong id="vmi-session-alert-title"></strong>
+              <span id="vmi-session-alert-sub"></span>
+            </div>
           </div>
-          <span class="vmi-invite__uses" id="vmi-invite-uses" hidden></span>
-        </div>
+        @else
+          <div class="vmi-invite" id="vmi-invite-banner" hidden>
+            <span class="vmi-invite__ic"><i data-lucide="ticket"></i></span>
+            <div class="vmi-invite__body">
+              <strong id="vmi-invite-title"></strong>
+              <span id="vmi-invite-sub"></span>
+            </div>
+            <span class="vmi-invite__uses" id="vmi-invite-uses" hidden></span>
+          </div>
+        @endif
 
         <div class="vmi-setup-grid">
         <div class="card vmi-options-card" data-reveal>
           <div class="card__head">
-            <span class="card__ic is-orange"><i data-lucide="settings-2"></i></span>
+            <span class="card__ic is-orange"><i data-lucide="{{ $isSession ? 'headphones' : 'settings-2' }}"></i></span>
             <div>
-              <h2>Set up your practice</h2>
-              <p>A few choices help the assessor ask the right questions and judge your answers fairly.</p>
+              @if($sessionSpent)
+                <h2>Practise again</h2>
+                <p>The 5 and 10-question rounds stay free and unlimited. The longer rounds need a fresh link from your counsellor.</p>
+              @elseif($isSession)
+                <h2>Your round</h2>
+                <p>Your counsellor's round is selected. Warm up on a shorter one first if you like — those are free and never touch an attempt.</p>
+              @else
+                <h2>Set up your practice</h2>
+                <p>A few choices help the assessor ask the right questions and judge your answers fairly.</p>
+              @endif
             </div>
           </div>
 
-          {{-- hidden real controls the JS reads; the pills below drive them --}}
+          {{-- hidden real controls the JS reads; the pills below drive them.
+               A LIVE invite adds its granted tier to the free lengths. Once the
+               link is spent it can grant nothing, so it falls back to exactly
+               the public set — free lengths plus the locked tiers, which route
+               through the lead form for another round. --}}
           <div class="sr-only" aria-hidden="true">
             <select id="in-count">
-              <option value="5">5 questions</option>
-              <option value="10" selected>10 questions</option>
-              <option value="15" disabled data-locked data-unlocked-label="15 questions (extended)">15 questions</option>
-              <option value="20" disabled data-locked data-unlocked-label="20 questions (extended)">20 questions</option>
-              <option value="39" disabled data-locked data-unlocked-label="39 questions — all categories">39 questions</option>
+              @if($isLive)
+                {{-- Free lengths cost no attempt (see FREE_LIMIT in the start
+                     handler). Only tiers the counsellor granted are added. --}}
+                <option value="5">5 questions</option>
+                <option value="10">10 questions</option>
+                <option value="{{ $sessionCount }}" selected>{{ $sessionCount }} questions</option>
+              @else
+                <option value="5">5 questions</option>
+                <option value="10" selected>10 questions</option>
+                <option value="15" disabled data-locked data-unlocked-label="15 questions (extended)">15 questions</option>
+                <option value="20" disabled data-locked data-unlocked-label="20 questions (extended)">20 questions</option>
+                <option value="39" disabled data-locked data-unlocked-label="39 questions — all categories">39 questions</option>
+              @endif
             </select>
             <select id="in-mode">
               <option value="video">Video + voice</option>
@@ -1137,13 +1421,25 @@
           </div>
 
           <span class="vmi-field-label">Number of questions</span>
-          <div class="vmi-pills" id="vmi-count-pills" role="group" aria-label="Number of questions">
-            <button type="button" class="vmi-pill" data-count="5">5<small>Free</small></button>
-            <button type="button" class="vmi-pill is-active" data-count="10">10<small>Free</small></button>
-            <button type="button" class="vmi-pill" data-count="15" data-locked><i class="vmi-pill__lock" data-lucide="lock"></i>15<small>With team</small></button>
-            <button type="button" class="vmi-pill" data-count="20" data-locked><i class="vmi-pill__lock" data-lucide="lock"></i>20<small>With team</small></button>
-            <button type="button" class="vmi-pill" data-count="39" data-locked><i class="vmi-pill__lock" data-lucide="lock"></i>39<small>With team</small></button>
-          </div>
+          @if($isLive)
+            <div class="vmi-pills" id="vmi-count-pills" role="group" aria-label="Number of questions">
+              <button type="button" class="vmi-pill" data-count="5">5<small>Free</small></button>
+              <button type="button" class="vmi-pill" data-count="10">10<small>Free</small></button>
+              <button type="button" class="vmi-pill is-active is-granted" data-count="{{ $sessionCount }}">{{ $sessionCount }}<small>Your round</small></button>
+            </div>
+            <p class="vmi-pills-note">The {{ $sessionCount }}-question round is the one {{ $sessionCounsellor ?? 'your counsellor' }} set up and the only one that uses an attempt. The shorter warm-ups are free and unlimited.</p>
+          @else
+            <div class="vmi-pills" id="vmi-count-pills" role="group" aria-label="Number of questions">
+              <button type="button" class="vmi-pill" data-count="5">5<small>Free</small></button>
+              <button type="button" class="vmi-pill is-active" data-count="10">10<small>Free</small></button>
+              <button type="button" class="vmi-pill" data-count="15" data-locked><i class="vmi-pill__lock" data-lucide="lock"></i>15<small>With team</small></button>
+              <button type="button" class="vmi-pill" data-count="20" data-locked><i class="vmi-pill__lock" data-lucide="lock"></i>20<small>With team</small></button>
+              <button type="button" class="vmi-pill" data-count="39" data-locked><i class="vmi-pill__lock" data-lucide="lock"></i>39<small>With team</small></button>
+            </div>
+            @if($sessionSpent)
+              <p class="vmi-pills-note">The longer rounds need a fresh link. {{ $sessionAsk }} You can also tap one below to ask our team directly.</p>
+            @endif
+          @endif
 
           <span class="vmi-field-label" style="margin-top:22px;">Answer mode</span>
           <div class="vmi-pills" id="vmi-mode-pills" role="group" aria-label="Answer mode">
@@ -1152,11 +1448,15 @@
           </div>
 
           <label class="vmi-field-label" for="in-destination" style="margin-top:22px;">Target country <span style="text-transform:none;font-weight:600;color:var(--muted);">(optional, improves answer accuracy)</span></label>
-          <input class="vmi-context-input" id="in-destination" type="text" maxlength="120" list="vmi-destinations" placeholder="For example: United Kingdom">
+          {{-- Pre-filled server-side for any recognised session: applyInvite()
+               only fills this for a LIVE invite, so a spent link would otherwise
+               lose the destination the counsellor recorded. --}}
+          <input class="vmi-context-input" id="in-destination" type="text" maxlength="120" list="vmi-destinations" placeholder="For example: United Kingdom"@if($isSession && $invite->destination) value="{{ $invite->destination }}"@endif>
           <datalist id="vmi-destinations">
             <option value="United Kingdom"><option value="United States"><option value="Canada"><option value="Australia"><option value="Ireland"><option value="Germany"><option value="New Zealand"><option value="France"><option value="Italy"><option value="Netherlands">
           </datalist>
 
+          @unless($isSession)
           <div class="vmi-unlock" id="vmi-unlock-cta">
             <span class="vmi-unlock__ic"><i data-lucide="headset"></i></span>
             <div class="vmi-unlock__body">
@@ -1165,6 +1465,7 @@
             </div>
             <button type="button" class="btn btn-white btn-sm" id="btn-unlock" data-lead-open>Talk to our team</button>
           </div>
+          @endunless
         </div>
 
         <div class="card" id="vmi-device-card" data-reveal>
@@ -1190,8 +1491,16 @@
         </div>
 
         <div class="actions vmi-start-row" data-reveal>
-          <button class="btn btn-primary btn-lg btn-start" id="btn-start-interview" disabled><i data-lucide="play"></i> Start mock interview</button>
-          <span style="align-self:center;color:var(--muted);font-size:13px;">Takes about 5–10 minutes · raw video is not stored</span>
+          @if($isLive)
+            <button class="btn btn-primary btn-lg btn-start" id="btn-start-interview" disabled><i data-lucide="play"></i> Begin your {{ $sessionCount }}-question interview</button>
+            <span style="align-self:center;color:var(--muted);font-size:13px;">About {{ $sessionMinutes }} minutes · this spends one attempt · raw video is not stored</span>
+          @elseif($sessionSpent)
+            <button class="btn btn-primary btn-lg btn-start" id="btn-start-interview" disabled><i data-lucide="play"></i> Start free practice round</button>
+            <span style="align-self:center;color:var(--muted);font-size:13px;">Free and unlimited · no attempt is used · raw video is not stored</span>
+          @else
+            <button class="btn btn-primary btn-lg btn-start" id="btn-start-interview" disabled><i data-lucide="play"></i> Start mock interview</button>
+            <span style="align-self:center;color:var(--muted);font-size:13px;">Takes about 5–10 minutes · raw video is not stored</span>
+          @endif
         </div>
       </div>
 
@@ -3526,40 +3835,38 @@ function applyInvite(){
   state.unlocked = true;
   state.questionPool = [];   // the server hands the extended list over on start
 
-  const granted = String(INVITE.count);
-  document.querySelectorAll('#vmi-count-pills [data-count="'+granted+'"]').forEach(function(pill){
-    pill.removeAttribute("data-locked");
-    pill.classList.add("is-granted");
-    const lock = pill.querySelector(".vmi-pill__lock");
-    if(lock) lock.remove();
-    const small = pill.querySelector("small");
-    if(small) small.textContent = "Unlocked";
-  });
-  const option = document.querySelector('#in-count option[value="'+granted+'"]');
-  if(option){
-    option.disabled = false;
-    option.removeAttribute("data-locked");
-  }
-  setCount(granted);
-
-  // They already have a counsellor — the lead-capture CTA is noise now.
-  const cta = $("vmi-unlock-cta");
-  if(cta) cta.hidden = true;
+  // The invited page is rendered for this round server-side: the count pills,
+  // the free lengths and the consulting CTA are not in the DOM at all, so there
+  // is nothing here to unlock or hide. Only the length still has to be pushed
+  // into the control the rest of the script reads.
+  setCount(String(INVITE.count));
 
   if(INVITE.destination && !$("in-destination").value) $("in-destination").value = INVITE.destination;
 
+  updateInviteUses(INVITE.remaining);
+
+  // Present only on the public shell (a spent/expired link); a live invite
+  // shows its details in the session pass instead.
   if(banner){
     banner.hidden = false;
     $("vmi-invite-title").textContent = (INVITE.name ? INVITE.name.split(" ")[0] + ", your " : "Your ") + INVITE.count + "-question interview is ready";
     $("vmi-invite-sub").textContent = (INVITE.counsellor ? INVITE.counsellor + " set this up for you. " : "")
       + "Attempts are counted only when you press Start, so take your time setting up.";
-    updateInviteUses(INVITE.remaining);
   }
 }
 
 function updateInviteUses(remaining){
+  if(remaining === undefined || remaining === null) return;
+
+  const pass = $("vmi-pass-attempts");
+  if(pass){
+    const max = INVITE && INVITE.maxUses ? INVITE.maxUses : null;
+    pass.textContent = max ? remaining + " of " + max : String(remaining);
+    pass.classList.toggle("is-last", remaining <= 1);
+  }
+
   const el = $("vmi-invite-uses");
-  if(!el || remaining === undefined || remaining === null) return;
+  if(!el) return;
   el.hidden = false;
   el.textContent = remaining === 1 ? "1 attempt left" : remaining + " attempts left";
   el.classList.toggle("is-last", remaining <= 1);
@@ -3576,22 +3883,45 @@ async function claimInviteQueue(){
     });
     const data = await res.json().catch(()=>null);
     if(!res.ok || !data || !data.ok){
-      const banner = $("vmi-invite-banner");
-      if(banner){
-        banner.hidden = false;
-        banner.classList.add("is-warning");
-        $("vmi-invite-title").textContent = "This attempt could not be started";
-        $("vmi-invite-sub").textContent = (data && data.message) || "Please ask your counsellor for a new link. You can still run the free round.";
-        try{ banner.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
-      }
+      showInviteProblem(
+        "This attempt could not be started",
+        (data && data.message) || "Please ask your counsellor for a new link."
+      );
       return null;
     }
     updateInviteUses(data.remaining);
     return Array.isArray(data.questions) ? data.questions : null;
   }catch(e){
     console.warn("Could not start the invited interview", e);
+    // Previously silent: a dropped connection left the button spinning with no
+    // explanation of why the interview never began.
+    showInviteProblem(
+      "We could not reach the interview server",
+      "Check your connection and try again. No attempt has been used."
+    );
     return null;
   }
+}
+
+/* One problem surface for both shells — the session alert on an invited page,
+   the invite banner on the public one. */
+function showInviteProblem(title, message){
+  const alertBox = $("vmi-session-alert");
+  if(alertBox){
+    alertBox.hidden = false;
+    $("vmi-session-alert-title").textContent = title;
+    $("vmi-session-alert-sub").textContent = message;
+    try{ alertBox.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
+    return;
+  }
+
+  const banner = $("vmi-invite-banner");
+  if(!banner) return;
+  banner.hidden = false;
+  banner.classList.add("is-warning");
+  $("vmi-invite-title").textContent = title;
+  $("vmi-invite-sub").textContent = message + " You can still run the free round.";
+  try{ banner.scrollIntoView({behavior:"smooth", block:"center"}); }catch(e){}
 }
 
 /* Hand the outcome back so the counsellor's CRM row shows how it went. */

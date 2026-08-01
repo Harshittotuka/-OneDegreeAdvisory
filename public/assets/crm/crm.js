@@ -528,6 +528,57 @@ document.addEventListener('DOMContentLoaded', () => {
         if (other.hidden) other.querySelector('input').value = '';
     };
 
+    /* ------------------------------------------------------------------ copy
+       Share links (mock-interview invites) are copied through the delegated
+       click handler below rather than by the view that renders them. A view
+       cannot bind this itself: swapApp() builds the next view with DOMParser,
+       whose <script> tags never execute, and replaceWith() throws away every
+       listener the previous view had. Anything bound per-view therefore works
+       on a hard reload and silently dies on the first in-CRM navigation. */
+    const flashCopied = (button) => {
+        if (button.dataset.copyBusy === '1') return;
+        button.dataset.copyBusy = '1';
+        const previous = button.textContent;
+        button.textContent = 'Copied';
+        button.classList.add('is-copied');
+        setTimeout(() => {
+            button.textContent = previous;
+            button.classList.remove('is-copied');
+            delete button.dataset.copyBusy;
+        }, 1800);
+    };
+
+    // execCommand path for http:// UAT hosts, where navigator.clipboard is absent.
+    const legacyCopy = (url) => {
+        const field = document.createElement('textarea');
+        field.value = url;
+        field.setAttribute('readonly', 'readonly');
+        field.style.position = 'fixed';
+        field.style.top = '-1000px';
+        field.style.opacity = '0';
+        document.body.append(field);
+        field.select();
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch (error) { copied = false; }
+        field.remove();
+        return copied;
+    };
+
+    const copyShareLink = async (button) => {
+        const url = button.getAttribute('data-copy-link');
+        if (!url) return;
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(url);
+                flashCopied(button);
+                return;
+            } catch (error) { /* denied or unavailable — fall through */ }
+        }
+        // execCommand reports failure by returning false, not by throwing.
+        if (legacyCopy(url)) { flashCopied(button); return; }
+        window.prompt('Copy this link', url);
+    };
+
     document.addEventListener('click', (event) => {
         const target = event.target;
         const addTest = target.closest('[data-test-add]');
@@ -672,6 +723,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const toastClose = target.closest('[data-toast-close]');
         if (toastClose) {
             dismissToast(toastClose.closest('[data-toast]'));
+            return;
+        }
+
+        const copyButton = target.closest('[data-copy-link]');
+        if (copyButton) {
+            event.preventDefault();
+            copyShareLink(copyButton);
             return;
         }
 
