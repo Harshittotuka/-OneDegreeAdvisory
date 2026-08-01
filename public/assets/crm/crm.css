@@ -236,6 +236,7 @@ tbody tr:last-child td{border-bottom:0}
 .status-new{color:#38619c;border-color:#c5d5e8;background:#f2f6fb}
 .status-interested,.status-converted{color:#1a7049;border-color:#bedbc9;background:#eff7f1}
 .status-follow_up{color:#175244;border-color:#bdd3c6;background:#eef4ee}
+.status-future_lead{color:#1f6b7a;border-color:#b9d7de;background:#eef6f8}
 .status-not_interested,.status-dropped{color:#a13c34;border-color:#e6c3bd;background:#fbf1ee}
 .status-call_back{color:#96601a;border-color:#e5d0a4;background:#faf4e4}
 .status-not_answered,.status-junk{color:#5f6a62;border-color:#d4d5c8;background:#f4f4ec}

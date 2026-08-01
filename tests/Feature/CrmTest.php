@@ -645,8 +645,8 @@ class CrmTest extends TestCase
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
 
-        // The four open statuses belong in the planner with or without a date.
-        foreach (['not_answered', 'call_back', 'follow_up', 'interested'] as $index => $status) {
+        // Every open status belongs in the planner, with or without a date.
+        foreach (['not_answered', 'call_back', 'follow_up', 'interested', 'future_lead'] as $index => $status) {
             $this->leadFor($admin, 'Open '.$status, '98765100'.$index)->update(['status' => $status]);
         }
         // A dated, still-incomplete follow-up stays in the planner whatever the status.
@@ -665,6 +665,269 @@ class CrmTest extends TestCase
         $planner->assertDontSee('Junk Lead')->assertDontSee('Done Lead');
     }
 
+    public function test_every_sidebar_badge_counts_the_view_it_opens(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        // Two open conversations, only one of them overdue — the case where the
+        // Follow-ups badge used to read 1 beside a list of 2, because it counted
+        // overdue rather than what the planner holds.
+        $this->leadFor($admin, 'Overdue One', '9876520001')
+            ->update(['status' => 'follow_up', 'follow_up_at' => now()->subDays(2)]);
+        $this->leadFor($admin, 'Upcoming One', '9876520002')
+            ->update(['status' => 'interested', 'follow_up_at' => now()->addDays(4)]);
+        $this->leadFor($admin, 'Closed One', '9876520003')->update(['status' => 'junk']);
+
+        $dashboard = $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard'))->assertOk()->getContent();
+
+        foreach (['leads' => 'nav-leads', 'followups' => 'nav-followups'] as $view => $navClass) {
+            preg_match('~'.$navClass.'\s.*?</a>~s', $dashboard, $nav);
+            $this->assertNotEmpty($nav, "The {$navClass} link was not found.");
+            preg_match('~nav-badge[^>]*>(\d+)</span>~', $nav[0], $badge);
+            $this->assertNotEmpty($badge, "The {$navClass} badge was not found.");
+
+            $page = $this->withSession(['crm_user_id' => $admin->id])
+                ->get(route('crm.dashboard', ['view' => $view]))->assertOk()->getContent();
+            $this->assertSame(
+                (int) $badge[1],
+                substr_count($page, '<tr data-crm-href'),
+                "The {$navClass} badge does not match the number of rows in the view it opens."
+            );
+        }
+
+        // Overdue keeps its own, smaller number — it is a different question, and
+        // the badge now carries the urgency as a colour instead of as the count.
+        $this->assertStringContainsString('nav-badge is-alert', $dashboard);
+        $this->assertStringContainsString('title="2 open · 1 overdue"', $dashboard);
+    }
+
+    public function test_the_follow_up_card_the_badge_and_the_planner_all_report_the_same_number(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        $n = 0;
+        foreach (\App\Support\CrmOptions::FOLLOW_UP_STATUSES as $status) {
+            $n++;
+            $this->leadFor($admin, 'Open '.$status, '987651'.str_pad((string) $n, 4, '0', STR_PAD_LEFT))
+                ->update(['status' => $status]);
+        }
+        // Parked on a status that is not "open" but with a conversation booked.
+        // The planner holds it, so every figure about the planner must count it —
+        // missing it is what made the card read 1 beside a list of 2.
+        $this->leadFor($admin, 'Booked But New', '9876519003')
+            ->update(['status' => 'new', 'follow_up_at' => now()->addDays(2)]);
+        // Neither of these belongs anywhere near the planner.
+        $this->leadFor($admin, 'Junk One', '9876519001')->update(['status' => 'junk']);
+        $this->leadFor($admin, 'Done One', '9876519002')
+            ->update(['follow_up_at' => now()->subDay(), 'follow_up_completed_at' => now()]);
+
+        $expected = count(\App\Support\CrmOptions::FOLLOW_UP_STATUSES) + 1;
+
+        $dashboard = $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard'))->assertOk();
+        $dashboard->assertSee('<strong>'.$expected.'</strong><span>In follow-up</span>', false);
+        $dashboard->assertSee('title="'.$expected.' open · 0 overdue"', false);
+
+        $planner = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'followups']))->assertOk();
+        $this->assertSame($expected, substr_count($planner->getContent(), '<tr data-crm-href'));
+        $planner->assertSee('Booked But New')->assertDontSee('Junk One')->assertDontSee('Done One');
+
+        // The grouped status filter still narrows the leads list to the open
+        // statuses; it is just no longer what the card opens.
+        $grouped = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'status' => \App\Support\CrmOptions::FOLLOW_UP_GROUP]))
+            ->assertOk();
+        $grouped->assertDontSee('Junk One')->assertDontSee('Booked But New');
+        foreach (\App\Support\CrmOptions::FOLLOW_UP_STATUSES as $status) {
+            $grouped->assertSee('Open '.$status);
+        }
+
+        // The grouped value is a filter only — it must never land on a lead.
+        $this->assertArrayNotHasKey(\App\Support\CrmOptions::FOLLOW_UP_GROUP, \App\Support\CrmOptions::STATUSES);
+    }
+
+    public function test_every_dashboard_number_lands_on_a_list_of_exactly_that_many_leads(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        $n = 0;
+        $make = function (array $attrs) use (&$n, $admin): void {
+            $n++;
+            CrmLead::query()->create([
+                'lead_number' => 'OD-'.str_pad((string) $n, 5, '0', STR_PAD_LEFT), 'name' => 'Lead '.$n,
+                'phone' => '98765'.str_pad((string) $n, 5, '0', STR_PAD_LEFT),
+                'priority' => 'medium', 'status' => 'new', 'assigned_to' => $admin->id, 'created_by' => $admin->id,
+            ])->update($attrs);
+        };
+
+        $make(['status' => 'new']);
+        $make(['status' => 'interested', 'follow_up_at' => now()->addDays(3)]);
+        $make(['status' => 'interested', 'follow_up_at' => now()->subDays(2)]);
+        $make(['status' => 'follow_up', 'follow_up_at' => now()->subDays(5)]);
+        $make(['status' => 'call_back', 'follow_up_at' => now()->subDay()]);
+        $make(['status' => 'future_lead', 'follow_up_at' => now()->addMonths(8)]);
+        $make(['status' => 'not_answered']);
+        $make(['status' => 'junk']);
+        $make(['is_student' => true, 'status' => 'converted', 'student_stage' => 'doc_pending']);
+        $make(['follow_up_at' => now()->subDays(9), 'follow_up_completed_at' => now()]);
+
+        $dashboard = $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard'))->assertOk()->getContent();
+
+        // Read each figure and its destination out of the rendered page, follow the
+        // link, and count the rows. A number that opens a differently sized list is
+        // the bug this catches: the Overdue card once said 3 and opened all 7 open
+        // conversations, because it linked at the planner with no filter at all.
+        $checked = 0;
+        // [pattern, index of the number, index of the label] — the three blocks
+        // order those two differently in the markup.
+        $patterns = [
+            'stat card' => ['~<a class="stat[^"]*" href="([^"]+)">.*?<strong>([\d,]+)</strong><span>([^<]+)</span>~s', 2, 3],
+            'metric' => ['~<a href="([^"]+)"><span>([^<]+)</span><strong>(\d+)</strong>~', 3, 2],
+            'pipeline row' => ['~<a class="pipeline-breakdown-row" href="([^"]+)">.*?</i>([^<]+)</span>.*?<b>(\d+)</b>~s', 3, 2],
+        ];
+        foreach ($patterns as $kind => [$pattern, $figureAt, $labelAt]) {
+            preg_match_all($pattern, $dashboard, $matches, PREG_SET_ORDER);
+            $this->assertNotEmpty($matches, "No {$kind} was found on the dashboard.");
+            foreach ($matches as $match) {
+                [, $href] = $match;
+                $figure = (int) str_replace(',', '', $match[$figureAt]);
+                $label = trim($match[$labelAt]);
+                $page = $this->withSession(['crm_user_id' => $admin->id])
+                    ->get(html_entity_decode($href))->assertOk()->getContent();
+                $this->assertSame(
+                    $figure,
+                    substr_count($page, '<tr data-crm-href'),
+                    "The {$kind} \"{$label}\" reads {$figure} but its link opens a different number of leads."
+                );
+                $checked++;
+            }
+        }
+        // Six cards, two linked metrics, and one row per status present.
+        $this->assertGreaterThanOrEqual(14, $checked);
+    }
+
+    public function test_the_owner_filter_reaches_unassigned_leads_and_deactivated_owners(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $active = CrmUser::query()->create(['name' => 'Active Counsellor', 'phone' => '9876543211', 'email' => 'ac@example.com', 'role' => 'counsellor', 'is_active' => true]);
+        $former = CrmUser::query()->create(['name' => 'Former Counsellor', 'phone' => '9876543212', 'email' => 'fc@example.com', 'role' => 'counsellor', 'is_active' => false]);
+
+        $this->leadFor($active, 'Owned Lead', '9876510161');
+        $legacy = $this->leadFor($former, 'Inherited Lead', '9876510162');
+        $orphan = $this->leadFor($admin, 'Nobody Owns Me', '9876510163');
+        $orphan->update(['assigned_to' => null]);
+
+        $page = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads']))->assertOk();
+
+        // A deactivated counsellor still owns leads, so the filter must reach them
+        // — their name shows in the Owner column either way.
+        // One flat list — names and counts, no grouping.
+        $page->assertDontSee('No longer taking leads')
+            ->assertDontSee('<optgroup', false)
+            ->assertSee('Former Counsellor · 1')
+            ->assertSee('Active Counsellor · 1')
+            ->assertSee('Unassigned · 1');
+
+        // Selecting each option narrows to exactly those leads.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'assigned_to' => 'unassigned']))
+            ->assertOk()->assertSee('Nobody Owns Me')->assertDontSee('Owned Lead');
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'assigned_to' => $former->id]))
+            ->assertOk()->assertSee('Inherited Lead')->assertDontSee('Owned Lead');
+
+        unset($legacy);
+    }
+
+    public function test_the_specific_source_filter_dropdown_is_gone(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $this->leadFor($admin, 'Sourced Lead', '9876510171')->update(['source' => 'Instagram']);
+
+        $html = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads']))
+            ->assertOk()
+            ->assertDontSee('All specific sources')
+            ->getContent();
+        // Only the dropdown goes. The "Lead source" text field on the lead form
+        // is a different control and stays.
+        $this->assertDoesNotMatchRegularExpression('/<select[^>]*name="source"/', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*name="source"/', $html);
+
+        // The clause behind it stays, so an explicit link or saved export URL
+        // still narrows the way it always did.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'source' => 'Instagram']))
+            ->assertOk()->assertSee('Sourced Lead');
+    }
+
+    public function test_intake_is_free_text_on_the_academic_card_and_reaches_the_export(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Intake Lead', '9876510181');
+
+        $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
+            'name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium', 'status' => 'new',
+            // Anything the counsellor types is accepted — intakes are named
+            // differently per destination, so there is no fixed list to match.
+            'intake' => "Spring '27 (rolling)",
+        ])->assertSessionHasNoErrors();
+        $this->assertSame("Spring '27 (rolling)", $lead->fresh()->intake);
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('name="intake"', false)
+            ->assertSee('list="leadIntakeOptions"', false)
+            // The datalist only suggests; it never constrains.
+            ->assertSee('<datalist id="leadIntakeOptions">', false)
+            ->assertSee('September '.now()->addYear()->year);
+
+        $csv = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.leads.export'))->streamedContent();
+        $this->assertStringContainsString('Intake', $csv);
+        $this->assertStringContainsString("Spring '27 (rolling)", $csv);
+    }
+
+    public function test_future_lead_is_a_selectable_status_that_behaves_like_the_other_open_ones(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Next Intake Lead', '9876510151');
+        $payload = ['name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium'];
+
+        $this->assertSame('Future lead', \App\Support\CrmOptions::STATUSES['future_lead']);
+        $this->assertContains('future_lead', \App\Support\CrmOptions::FOLLOW_UP_STATUSES);
+
+        // It is an open status, so it carries the same dated-follow-up rule.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['status' => 'future_lead'])
+            ->assertSessionHasErrors('follow_up_at');
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + [
+                'status' => 'future_lead', 'follow_up_at' => now()->addMonths(6)->format('Y-m-d H:i:s'),
+            ])->assertSessionHasNoErrors();
+        $this->assertSame('future_lead', $lead->fresh()->status);
+
+        // ...and it is held in the planner rather than dropping out of sight.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'followups']))
+            ->assertOk()
+            ->assertSee('Next Intake Lead')
+            ->assertSee('status-future_lead', false);
+
+        // Every theme needs the badge colour, or it renders as an unstyled pill.
+        foreach (['crm.css', 'crm-classic.css', 'crm-orbit.css'] as $theme) {
+            $this->assertStringContainsString(
+                '.status-future_lead{',
+                file_get_contents(public_path('assets/crm/'.$theme)),
+                "{$theme} is missing the Future lead badge colour."
+            );
+        }
+    }
+
     public function test_open_follow_up_statuses_are_tinted_brown_in_the_status_dropdowns(): void
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
@@ -674,8 +937,8 @@ class CrmTest extends TestCase
         $page = $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))->assertOk();
 
-        // Each of the four options carries the tint class...
-        foreach (['not_answered', 'call_back', 'follow_up', 'interested'] as $status) {
+        // Each open-status option carries the tint class...
+        foreach (['not_answered', 'call_back', 'follow_up', 'interested', 'future_lead'] as $status) {
             $page->assertSee('<option value="'.$status.'" class="is-followup-status"', false);
         }
         // ...the closed select is tinted while one of them is selected...
@@ -718,7 +981,7 @@ class CrmTest extends TestCase
             ])->assertSessionHasNoErrors();
         $this->assertSame('follow_up', $lead->fresh()->status);
 
-        // A status the counsellor already chose from the open four is left alone.
+        // A status the counsellor already chose from the open set is left alone.
         $this->withSession(['crm_user_id' => $admin->id])
             ->put(route('crm.leads.update', $lead), $payload + [
                 'status' => 'interested', 'follow_up_at' => now()->addDays(3)->format('Y-m-d H:i:s'),

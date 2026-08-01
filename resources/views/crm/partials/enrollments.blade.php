@@ -1,6 +1,6 @@
 <section class="workspace crm-source-workspace">
     <div class="workspace-head">
-        <div class="workspace-title"><h2>In progress Enrollment &amp; payments</h2><p>{{ number_format($enrollments->total()) }} payment record{{ $enrollments->total() === 1 ? '' : 's' }} in this view</p></div>
+        <div class="workspace-title"><h2>Enrollment &amp; payments</h2><p>{{ number_format($enrollments->total()) }} payment record{{ $enrollments->total() === 1 ? '' : 's' }} in this view</p></div>
         <a class="btn btn-outline" href="{{ route('crm.enrollments.export', request()->only(['search', 'payment_status', 'enrollment_source', 'enrollment_plan'])) }}" data-native-navigation>Export CSV</a>
     </div>
 

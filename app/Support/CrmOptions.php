@@ -6,7 +6,8 @@ class CrmOptions
 {
     public const STATUSES = [
         'new' => 'New lead', 'not_answered' => 'Not answered', 'call_back' => 'Call back',
-        'follow_up' => 'Follow up', 'interested' => 'Interested', 'not_interested' => 'Not interested',
+        'follow_up' => 'Follow up', 'interested' => 'Interested', 'future_lead' => 'Future lead',
+        'not_interested' => 'Not interested',
         'converted' => 'Enrolled student', 'junk' => 'Junk / invalid', 'dropped' => 'Dropped',
     ];
 
@@ -23,7 +24,14 @@ class CrmOptions
      * Follow-up planner whether or not a follow-up date has been scheduled yet.
      * These are the values tinted brown wherever the pipeline status is picked.
      */
-    public const FOLLOW_UP_STATUSES = ['not_answered', 'call_back', 'follow_up', 'interested'];
+    public const FOLLOW_UP_STATUSES = ['not_answered', 'call_back', 'follow_up', 'interested', 'future_lead'];
+
+    /**
+     * Pseudo-value for the status filter meaning "any of the above", so the
+     * dashboard's follow-up card can open a list holding exactly what it counts.
+     * Never stored on a lead — it only ever travels as ?status=.
+     */
+    public const FOLLOW_UP_GROUP = 'any_follow_up';
 
     public const CATEGORIES = [
         'undergraduate' => 'Undergraduate', 'postgraduate' => 'Postgraduate', 'mbbs' => 'MBBS',

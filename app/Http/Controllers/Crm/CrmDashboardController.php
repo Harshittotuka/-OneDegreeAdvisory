@@ -49,9 +49,15 @@ class CrmDashboardController extends Controller
             'total' => (clone $base)->count(),
             'new' => (clone $base)->where('status', 'new')->count(),
             'interested' => (clone $base)->where('status', 'interested')->count(),
-            'follow_up' => (clone $base)->where('status', 'follow_up')->count(),
             'converted' => (clone $base)->where('is_student', true)->count(),
             'overdue' => (clone $base)->whereNull('follow_up_completed_at')->where('follow_up_at', '<', $todayStart)->count(),
+            // What the Follow-up planner actually lists, and the single source for
+            // both the "In follow-up" card and the sidebar badge. They each used to
+            // count something narrower than the planner — the badge counted overdue
+            // only, the card counted open statuses and so missed a lead parked on
+            // another status with a follow-up date booked. Both read lower than the
+            // list they opened.
+            'open_conversations' => (clone $base)->openConversation()->count(),
         ];
 
         $notifications = (clone $base)
@@ -67,15 +73,8 @@ class CrmDashboardController extends Controller
 
         $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'websiteSubmissions', 'latestActivity'])->withCount('activities');
         if ($view === 'followups') {
-            // The planner holds every open conversation: any lead sitting on a
-            // follow-up status (not answered / call back / follow up / interested),
-            // plus anything with a scheduled follow-up still to be completed.
-            $leads->where(fn (Builder $open) => $open
-                ->whereIn('status', CrmOptions::FOLLOW_UP_STATUSES)
-                ->orWhere(fn (Builder $scheduled) => $scheduled
-                    ->whereNotNull('follow_up_at')->whereNull('follow_up_completed_at')))
-                ->orderByRaw('follow_up_at is null')
-                ->orderBy('follow_up_at');
+            // Dated follow-ups first, oldest first; undated open conversations last.
+            $leads->openConversation()->orderByRaw('follow_up_at is null')->orderBy('follow_up_at');
         } elseif ($view === 'students') {
             $leads->where('is_student', true)->latest('updated_at');
         } else {
@@ -180,7 +179,10 @@ class CrmDashboardController extends Controller
             'categories' => CrmOptions::CATEGORIES,
             'leadOrigins' => CrmOptions::LEAD_ORIGINS,
             'leadTypes' => CrmOptions::LEAD_TYPES,
-            'leadSources' => CrmLead::query()->visibleTo($user)->whereNotNull('source')->distinct()->orderBy('source')->pluck('source'),
+            'counsellorFilter' => $this->counsellorFilter($base, $user),
+            // Suggestions only — the field itself stays free text. Queried just for
+            // the open drawer, so the list view does not pay for it.
+            'intakeSuggestions' => $selectedLead ? $this->intakeSuggestions($user) : collect(),
             'studentStages' => CrmOptions::STUDENT_STAGES,
             'studentCategories' => CrmOptions::STUDENT_CATEGORIES,
             'englishTests' => CrmOptions::ENGLISH_TESTS,
@@ -203,6 +205,72 @@ class CrmDashboardController extends Controller
             'mockInviteCounts' => MockInterviewQuestions::INVITE_COUNTS,
             'mockQuestionTotal' => MockInterviewQuestions::total(),
         ]);
+    }
+
+    /**
+     * Options for the "owner" filter, which is a different list from the one you
+     * can ASSIGN to ($counsellors, active counsellors only).
+     *
+     * Two things the plain list got wrong: there was no way to find leads nobody
+     * owns, and deactivating a counsellor hid their still-open leads from the
+     * filter entirely — their name kept showing in the Owner column while being
+     * unselectable. Anyone actually holding a visible lead is listed, active or
+     * not, with a count so a super admin can see the spread at a glance.
+     *
+     * One flat list on purpose: grouping it read as clutter in a filter bar.
+     *
+     * @return array{unassigned: int, people: \Illuminate\Support\Collection<int, array>}
+     */
+    private function counsellorFilter(Builder $base, CrmUser $user): array
+    {
+        if (! $user->isSuperAdmin()) {
+            return ['unassigned' => 0, 'people' => collect()];
+        }
+
+        $counts = (clone $base)->selectRaw('assigned_to, COUNT(*) as total')->groupBy('assigned_to')->get();
+        $byOwner = $counts->filter(fn ($row): bool => $row->assigned_to !== null)
+            ->mapWithKeys(fn ($row): array => [(int) $row->assigned_to => (int) $row->total]);
+
+        $people = CrmUser::query()
+            ->where(fn (Builder $q) => $q
+                ->where(fn (Builder $assignable) => $assignable->where('role', 'counsellor')->where('is_active', true))
+                ->orWhereIn('id', $byOwner->keys()))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (CrmUser $person): array => [
+                'id' => $person->id,
+                'name' => $person->name,
+                'total' => $byOwner[$person->id] ?? 0,
+            ]);
+
+        return [
+            'unassigned' => (int) ($counts->firstWhere('assigned_to', null)->total ?? 0),
+            'people' => $people->values(),
+        ];
+    }
+
+    /**
+     * Common intakes to offer as datalist hints on the academic card. The field
+     * accepts anything; these just save typing for the usual terms, and any
+     * intake a counsellor has already recorded joins the list.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    private function intakeSuggestions(CrmUser $user): \Illuminate\Support\Collection
+    {
+        $year = (int) now()->year;
+        $standard = collect([$year, $year + 1, $year + 2])
+            ->crossJoin(['January', 'May', 'September'])
+            ->map(fn (array $pair): string => $pair[1].' '.$pair[0]);
+
+        return CrmLead::query()->visibleTo($user)
+            ->whereNotNull('intake')->where('intake', '!=', '')
+            ->distinct()->orderBy('intake')->pluck('intake')
+            ->merge($standard)
+            ->map(fn ($intake): string => trim((string) $intake))
+            ->filter()
+            ->unique(fn (string $intake): string => mb_strtolower($intake))
+            ->values();
     }
 
     private function followUpCalendar(Builder $base, Request $request, CrmUser $user, bool $include): ?array
@@ -388,7 +456,7 @@ class CrmDashboardController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, [
                 'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created',
-                '10th %', '10th passing year', '12th %', '12th passing year', 'Graduation CGPA / %', 'Graduation passing year', 'Backlogs',
+                '10th %', '10th passing year', '12th %', '12th passing year', 'Graduation CGPA / %', 'Graduation passing year', 'Backlogs', 'Intake',
                 'English proficiency tests', 'Aptitude tests',
             ]);
             foreach ($rows as $lead) {
@@ -398,7 +466,7 @@ class CrmDashboardController extends Controller
                     $lead->source, $lead->status, $lead->assignee?->name,
                     $lead->follow_up_at?->format('Y-m-d H:i'), $lead->created_at->format('Y-m-d H:i'),
                     $lead->tenth_score, $lead->tenth_passing_year, $lead->twelfth_score, $lead->twelfth_passing_year,
-                    $lead->graduation_score, $lead->graduation_passing_year, $lead->backlogs,
+                    $lead->graduation_score, $lead->graduation_passing_year, $lead->backlogs, $lead->intake,
                     CrmOptions::describeTests($lead->english_tests, CrmOptions::ENGLISH_TESTS),
                     CrmOptions::describeTests($lead->aptitude_tests, CrmOptions::APTITUDE_TESTS),
                 ]);
@@ -417,8 +485,11 @@ class CrmDashboardController extends Controller
                     ->orWhere('lead_number', 'like', "%{$search}%");
             });
         }
-        if (array_key_exists((string) $request->query('status'), CrmOptions::STATUSES)) {
-            $query->where('status', $request->query('status'));
+        $status = (string) $request->query('status');
+        if ($status === CrmOptions::FOLLOW_UP_GROUP) {
+            $query->whereIn('status', CrmOptions::FOLLOW_UP_STATUSES);
+        } elseif (array_key_exists($status, CrmOptions::STATUSES)) {
+            $query->where('status', $status);
         }
         if (array_key_exists((string) $request->query('priority'), CrmOptions::PRIORITIES)) {
             $query->where('priority', $request->query('priority'));
@@ -429,6 +500,9 @@ class CrmDashboardController extends Controller
         if (array_key_exists((string) $request->query('student_stage'), CrmOptions::STUDENT_STAGES)) {
             $query->where('student_stage', $request->query('student_stage'));
         }
+        // No dropdown feeds this any more — the "specific source" filter was
+        // removed from the bar. Kept so an explicit ?source= link (or a saved
+        // export URL) still narrows the way it always did.
         if ($request->filled('source')) {
             $query->where('source', $request->query('source'));
         }
@@ -452,9 +526,37 @@ class CrmDashboardController extends Controller
             });
         }
         if ($user->isSuperAdmin() && $request->filled('assigned_to')) {
-            $query->where('assigned_to', $request->integer('assigned_to'));
+            // "unassigned" is a real choice in the owner filter, not an id.
+            $request->query('assigned_to') === 'unassigned'
+                ? $query->whereNull('assigned_to')
+                : $query->where('assigned_to', $request->integer('assigned_to'));
         }
         $this->applyFollowUpDateFilter($query, $request);
+        $this->applyDueFilter($query, $request);
+    }
+
+    /**
+     * Narrow the planner to what is actually due.
+     *
+     * The Overdue card on the dashboard used to link at the planner unfiltered:
+     * it read "3" and opened a list of every open conversation, so the number
+     * and the page it led to disagreed. It now links here, and "overdue" matches
+     * the stat's own definition exactly — incomplete, and dated before today.
+     */
+    private function applyDueFilter(Builder $query, Request $request): void
+    {
+        $due = (string) $request->query('due');
+        if (! in_array($due, ['overdue', 'today', 'week'], true)) {
+            return;
+        }
+
+        $query->whereNull('follow_up_completed_at');
+
+        match ($due) {
+            'overdue' => $query->where('follow_up_at', '<', now()->startOfDay()),
+            'today' => $query->whereBetween('follow_up_at', [now()->startOfDay(), now()->endOfDay()]),
+            'week' => $query->whereBetween('follow_up_at', [now()->startOfDay(), now()->addWeek()->endOfDay()]),
+        };
     }
 
     /** Filter on the lead's "Next follow-up" date — leads scheduled on the chosen day. */

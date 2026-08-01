@@ -1,6 +1,6 @@
 @php
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
-    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['In progress Enrollment', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
+    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Enrollment & payments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
     $currentTitle = $titles[$view];
     $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'shortlisting'], true);
     $filterQuery = request()->except(['page', 'lead']);
@@ -111,11 +111,11 @@
         <nav class="nav">
             <a class="nav-link nav-dashboard {{ $view === 'dashboard' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'dashboard']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'dashboard'])</span><span class="nav-text">Dashboard</span></a>
             <a class="nav-link nav-leads {{ $view === 'leads' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'leads']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'leads'])</span><span class="nav-text">Leads</span><span class="nav-badge">{{ $stats['total'] }}</span></a>
-            <a class="nav-link nav-followups {{ $view === 'followups' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'followups']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'followups'])</span><span class="nav-text">Follow-ups</span>@if($stats['overdue'])<span class="nav-badge">{{ $stats['overdue'] }}</span>@endif</a>
+            <a class="nav-link nav-followups {{ $view === 'followups' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'followups']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'followups'])</span><span class="nav-text">Follow-ups</span>@if($stats['open_conversations'])<span @class(['nav-badge', 'is-alert' => $stats['overdue'] > 0]) title="{{ $stats['open_conversations'] }} open · {{ $stats['overdue'] }} overdue">{{ $stats['open_conversations'] }}</span>@endif</a>
             <a class="nav-link nav-students {{ $view === 'students' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'students']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'students'])</span><span class="nav-text">Enrolled students</span></a>
             <a class="nav-link nav-shortlisting {{ $view === 'shortlisting' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'shortlisting']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'shortlisting'])</span><span class="nav-text">PDF shortlisting</span></a>
             <a class="nav-link nav-mock-invites {{ $view === 'mock-invites' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'mock-invites']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'mock-invites'])</span><span class="nav-text">Mock interviews</span>@if($mockInviteCount)<span class="nav-badge">{{ $mockInviteCount }}</span>@endif</a>
-            <a class="nav-link nav-enrollments {{ $view === 'enrollments' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'enrollments']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'enrollments'])</span><span class="nav-text">In progress Enrollment</span><span class="nav-badge">{{ $enrollmentCount }}</span></a>
+            <a class="nav-link nav-enrollments {{ $view === 'enrollments' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'enrollments']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'enrollments'])</span><span class="nav-text">Enrollment &amp; payments</span><span class="nav-badge">{{ $enrollmentCount }}</span></a>
             @if($crmUser->isSuperAdmin())<a class="nav-link nav-subscriptions {{ $view === 'subscriptions' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'subscriptions']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'subscriptions'])</span><span class="nav-text">Subscriptions</span><span class="nav-badge">{{ $subscriberCount }}</span></a>@endif
         </nav>
         <div class="sidebar-bottom">
@@ -204,9 +204,13 @@
                     <a class="stat" href="{{ route('crm.dashboard', ['view' => 'leads']) }}"><span class="stat-top"><span class="stat-icon">◫</span></span><strong>{{ $stats['total'] }}</strong><span>Total leads</span></a>
                     <a class="stat" href="{{ route('crm.dashboard', ['view' => 'leads', 'status' => 'new']) }}"><span class="stat-top"><span class="stat-icon">＋</span></span><strong>{{ $stats['new'] }}</strong><span>New leads</span></a>
                     <a class="stat hot" href="{{ route('crm.dashboard', ['view' => 'leads', 'status' => 'interested']) }}"><span class="stat-top"><span class="stat-icon">↗</span></span><strong>{{ $stats['interested'] }}</strong><span>Interested</span></a>
-                    <a class="stat" href="{{ route('crm.dashboard', ['view' => 'leads', 'status' => 'follow_up']) }}"><span class="stat-top"><span class="stat-icon">◷</span></span><strong>{{ $stats['follow_up'] }}</strong><span>In follow-up</span></a>
+                    {{-- The same figure as the Follow-up planner and the sidebar badge,
+                         and it opens that planner — so the number and the list agree. --}}
+                    <a class="stat" href="{{ route('crm.dashboard', ['view' => 'followups']) }}"><span class="stat-top"><span class="stat-icon">◷</span></span><strong>{{ $stats['open_conversations'] }}</strong><span>In follow-up</span></a>
                     <a class="stat hot" href="{{ route('crm.dashboard', ['view' => 'students']) }}"><span class="stat-top"><span class="stat-icon">◇</span></span><strong>{{ $stats['converted'] }}</strong><span>Enrolled</span></a>
-                    <a class="stat danger" href="{{ route('crm.dashboard', ['view' => 'followups']) }}"><span class="stat-top"><span class="stat-icon">!</span></span><strong>{{ $stats['overdue'] }}</strong><span>Overdue</span></a>
+                    {{-- Carries due=overdue so the planner it opens holds exactly the
+                         leads this number counts, not every open conversation. --}}
+                    <a class="stat danger" href="{{ route('crm.dashboard', ['view' => 'followups', 'due' => 'overdue']) }}"><span class="stat-top"><span class="stat-icon">!</span></span><strong>{{ $stats['overdue'] }}</strong><span>Overdue</span></a>
                 </section>
 
                 <div class="dashboard-insights" data-dashboard-insights>
@@ -237,8 +241,10 @@
                         <div class="dashboard-panel-head"><div><span class="dashboard-kicker">Pipeline health</span><h2>Lead movement</h2><p>Current status mix and six-month enquiry volume.</p></div></div>
                         <div class="dashboard-metrics">
                             <div><span>Conversion</span><strong>{{ $dashboard['conversionRate'] }}%</strong><small>Lead to student</small></div>
-                            <div><span>Due today</span><strong>{{ $dashboard['dueToday'] }}</strong><small>Open follow-ups</small></div>
-                            <div><span>Unassigned</span><strong>{{ $dashboard['unassigned'] }}</strong><small>Need an owner</small></div>
+                            {{-- Both of these now have a filter that lands on exactly what they
+                                 count, so they are links rather than dead numbers. --}}
+                            <a href="{{ route('crm.dashboard', ['view' => 'followups', 'due' => 'today']) }}"><span>Due today</span><strong>{{ $dashboard['dueToday'] }}</strong><small>Open follow-ups</small></a>
+                            <a href="{{ route('crm.dashboard', ['view' => 'leads', 'assigned_to' => 'unassigned']) }}"><span>Unassigned</span><strong>{{ $dashboard['unassigned'] }}</strong><small>Need an owner</small></a>
                         </div>
                         <div class="pipeline-breakdown">
                             @forelse($dashboard['statusBreakdown']->take(6) as $status)
@@ -357,15 +363,36 @@
                     @if($view === 'followups')<input type="hidden" name="layout" value="{{ $followUpLayout }}">@endif
                     @if($view === 'followups' && $followUpLayout === 'calendar')<input type="hidden" name="month" value="{{ request('month', now()->format('Y-m')) }}">@endif
                     <div class="search-wrap"><input class="control" type="search" name="search" value="{{ request('search') }}" placeholder="Search name, phone, email or lead ID"></div>
-                    <select @class(['control', 'is-followup-status' => $isFollowUpStatus((string) request('status'))]) name="status" data-followup-tinted><option value="">All statuses</option>@foreach($statuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) @selected(request('status')===$key)>{{ $label }}</option>@endforeach</select>
+                    @php $statusValue = (string) request('status'); $followUpGroup = \App\Support\CrmOptions::FOLLOW_UP_GROUP; @endphp
+                    <select @class(['control', 'is-followup-status' => $isFollowUpStatus($statusValue) || $statusValue === $followUpGroup]) name="status" data-followup-tinted>
+                        <option value="">All statuses</option>
+                        {{-- The grouped choice the dashboard's follow-up card opens. Tinted
+                             like its members, since it selects exactly that set. --}}
+                        <option value="{{ $followUpGroup }}" class="is-followup-status" @selected($statusValue === $followUpGroup)>Any follow-up status</option>
+                        @foreach($statuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) @selected($statusValue === $key)>{{ $label }}</option>@endforeach
+                    </select>
                     <select class="control" name="priority"><option value="">All priorities</option>@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected(request('priority')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="lead_origin"><option value="">All lead origins</option>@foreach($leadOrigins as $key=>$label)<option value="{{ $key }}" @selected(request('lead_origin')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="lead_type"><option value="">All enquiry types</option>@foreach($leadTypes as $key=>$label)<option value="{{ $key }}" @selected(request('lead_type')===$key)>{{ $label }}</option>@endforeach</select>
-                    <select class="control" name="source"><option value="">All specific sources</option>@foreach($leadSources as $source)<option value="{{ $source }}" @selected(request('source')===$source)>{{ $source }}</option>@endforeach</select>
                     <select class="control" name="category"><option value="">All study categories</option>@foreach($categories as $key=>$label)<option value="{{ $key }}" @selected(request('category')===$key)>{{ $label }}</option>@endforeach</select>
+                    {{-- Arriving from the Overdue or Due-today card lands here pre-filtered;
+                         this is what makes that state visible and clearable. --}}
+                    @if($view === 'followups')<select class="control" name="due"><option value="">Due at any time</option>@foreach(['overdue' => 'Overdue', 'today' => 'Due today', 'week' => 'Due within 7 days'] as $key => $label)<option value="{{ $key }}" @selected(request('due') === $key)>{{ $label }}</option>@endforeach</select>@endif
                     @if($view === 'students')<select class="control" name="student_stage"><option value="">All journey stages</option>@foreach($studentStages as $key=>$label)<option value="{{ $key }}" @selected(request('student_stage')===$key)>{{ $label }}</option>@endforeach</select>@endif
                     <label class="followup-date-filter"><span>Next follow-up</span><input class="control" type="date" name="follow_up_date" value="{{ request('follow_up_date') }}"></label>
-                    @if($crmUser->isSuperAdmin())<select class="control" name="assigned_to"><option value="">All counsellors</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected((string)request('assigned_to')===(string)$person->id)>{{ $person->name }}</option>@endforeach</select>@else<span></span>@endif
+                    @if($crmUser->isSuperAdmin())
+                        @php $ownerValue = (string) request('assigned_to'); @endphp
+                        <select @class(['control', 'owner-filter', 'is-narrowed' => $ownerValue !== '']) name="assigned_to" aria-label="Filter by lead owner">
+                            {{-- A flat name + count list, nothing else. Counts are each owner's
+                                 workspace total rather than a count within the current view, so
+                                 they stay put as the other filters change. Anyone still holding a
+                                 lead is listed even if their account is switched off, or their
+                                 leads would show an owner the filter cannot select. --}}
+                            <option value="">Every owner</option>
+                            <option value="unassigned" @selected($ownerValue === 'unassigned')>Unassigned · {{ number_format($counsellorFilter['unassigned']) }}</option>
+                            @foreach($counsellorFilter['people'] as $person)<option value="{{ $person['id'] }}" @selected($ownerValue === (string) $person['id'])>{{ $person['name'] }} · {{ number_format($person['total']) }}</option>@endforeach
+                        </select>
+                    @endif
                 </form>
 
                 @if($view === 'followups' && $followUpLayout === 'calendar' && $followUpCalendar)
@@ -436,7 +463,8 @@
                             @foreach($leads as $lead)
                                 @php
                                     $openUrl = request()->fullUrlWithQuery(['lead' => $lead->id]);
-                                    $isContacted = $lead->last_contacted_at || in_array($lead->status, ['call_back','follow_up','interested','not_interested','converted'], true);
+                                    // Each of these statuses can only be chosen after actually speaking to the lead.
+                                    $isContacted =$lead->last_contacted_at || in_array($lead->status, ['call_back','follow_up','interested','future_lead','not_interested','converted'], true);
                                     $isCounselled = $lead->follow_up_completed_at || $lead->is_student || in_array($lead->status, ['interested','converted'], true);
                                     $isEnrolled = $lead->is_student || $lead->status === 'converted';
                                     $latestActivity = $lead->latestActivity;
@@ -608,6 +636,7 @@
         'call_back' => ['symbol' => '↗', 'copy' => 'The lead requested another conversation.', 'phase' => 2],
         'follow_up' => ['symbol' => '◷', 'copy' => 'The conversation is active and needs a scheduled next step.', 'phase' => 2],
         'interested' => ['symbol' => '◆', 'copy' => 'The lead is qualified and showing clear intent.', 'phase' => 3],
+        'future_lead' => ['symbol' => '⋯', 'copy' => 'A real opportunity, but for a later intake. Keep it warm with a dated check-in.', 'phase' => 3],
         'not_interested' => ['symbol' => '—', 'copy' => 'The lead is not interested at this time.', 'phase' => 2],
         'converted' => ['symbol' => '✓', 'copy' => 'The lead has enrolled and moved into the student journey.', 'phase' => 4],
         'junk' => ['symbol' => '×', 'copy' => 'The enquiry is invalid or not actionable.', 'phase' => 1],
@@ -737,6 +766,10 @@
                             <div class="field academic-trio"><label for="lead_graduation_score">Graduation CGPA / %</label><input id="lead_graduation_score" name="graduation_score" value="{{ $selectedLead->graduation_score }}" placeholder="e.g. 8.2 CGPA" maxlength="40"></div>
                             <div class="field academic-trio"><label for="lead_graduation_year">Passing Year</label><input id="lead_graduation_year" name="graduation_passing_year" type="number" inputmode="numeric" min="1950" max="2100" value="{{ $selectedLead->graduation_passing_year }}" placeholder="e.g. 2025"></div>
                             <div class="field academic-trio"><label for="lead_backlogs">Backlogs <span class="label-note">If any</span></label><input id="lead_backlogs" name="backlogs" value="{{ $selectedLead->backlogs }}" placeholder="e.g. 0" maxlength="40"></div>
+                            {{-- Free text, not a fixed list: intakes are named differently per
+                                 destination and institution, and a closed list would go stale
+                                 every year. The datalist only suggests the common ones. --}}
+                            <div class="field full"><label for="lead_intake">Intake <span class="label-note">The term this student is aiming for</span></label><input id="lead_intake" name="intake" value="{{ $selectedLead->intake }}" placeholder="e.g. September 2026" maxlength="60" list="leadIntakeOptions" autocomplete="off"><datalist id="leadIntakeOptions">@foreach($intakeSuggestions as $suggestion)<option value="{{ $suggestion }}"></option>@endforeach</datalist></div>
                             @include('crm.partials.test-repeater', [
                                 'field' => 'english_tests', 'options' => $englishTests, 'rows' => $selectedLead->english_tests,
                                 'heading' => 'English Proficiency Test', 'addLabel' => 'Add English test',

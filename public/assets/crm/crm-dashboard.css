@@ -165,12 +165,16 @@ html[data-crm-theme="orbit"] .dashboard-panel-head h2{font-family:var(--orbit-di
 
 /* Pipeline and trend */
 .dashboard-metrics{padding:14px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-bottom:1px solid var(--dash-line)}
-.dashboard-metrics>div{padding:10px;border:1px solid var(--dash-line);border-radius:10px;background:var(--dash-panel-soft)}
+.dashboard-metrics>div,.dashboard-metrics>a{padding:10px;border:1px solid var(--dash-line);border-radius:10px;background:var(--dash-panel-soft)}
+/* Two of the three metrics link to a filter that lands on exactly what they
+   count; the third (conversion) is a ratio with nothing to open. */
+.dashboard-metrics>a{color:inherit;text-decoration:none;transition:border-color .16s,transform .16s}
+.dashboard-metrics>a:hover{border-color:var(--dash-accent);transform:translateY(-1px)}
 .dashboard-metrics span,.dashboard-metrics strong,.dashboard-metrics small{display:block}.dashboard-metrics span{color:var(--dash-muted);font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.045em}.dashboard-metrics strong{margin-top:5px;color:var(--dash-ink);font-size:1.28rem;letter-spacing:-.04em}.dashboard-metrics small{margin-top:3px;color:var(--dash-muted);font-size:.62rem;line-height:1.35}
 .pipeline-breakdown{padding:13px 18px 9px}
 .pipeline-breakdown-row{padding:6px 0;display:grid;grid-template-columns:minmax(92px,1fr) minmax(80px,1.25fr) 27px;align-items:center;gap:8px;font-size:.72rem}
 .pipeline-breakdown-row:hover{color:var(--dash-accent)}
-.pipeline-label{min-width:0;display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.status-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#8f95a6}.status-dot-new{background:#4772d5}.status-dot-interested,.status-dot-converted{background:var(--dash-positive)}.status-dot-follow_up{background:var(--dash-accent)}.status-dot-call_back{background:#d49a2f}.status-dot-not_interested,.status-dot-dropped{background:var(--dash-danger)}
+.pipeline-label{min-width:0;display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.status-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#8f95a6}.status-dot-new{background:#4772d5}.status-dot-interested,.status-dot-converted{background:var(--dash-positive)}.status-dot-follow_up{background:var(--dash-accent)}.status-dot-call_back{background:#d49a2f}.status-dot-future_lead{background:#2c7d92}.status-dot-not_interested,.status-dot-dropped{background:var(--dash-danger)}
 .pipeline-track{height:7px;overflow:hidden;border-radius:4px;background:var(--dash-panel-soft)}.pipeline-track i{height:100%;display:block;border-radius:inherit;background:linear-gradient(90deg,var(--dash-accent),var(--dash-accent-2))}.pipeline-breakdown-row>b{text-align:right;font-size:.72rem}
 .monthly-volume{margin:4px 18px 16px;padding:10px 12px;border:1px solid var(--dash-line);border-radius:11px;background:var(--dash-panel-soft)}
 .monthly-volume-head{display:flex;justify-content:space-between;color:var(--dash-muted);font-size:.65rem}.monthly-volume-head span{font-weight:800;text-transform:uppercase;letter-spacing:.05em}.monthly-volume-head b{color:var(--dash-accent);font-weight:750}
@@ -501,7 +505,16 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 .subscriber-summary>div{padding:14px 16px;border:1px solid var(--line,#e3e5ea);border-radius:13px;background:var(--soft,#f7f8fa)}
 .subscriber-summary strong,.subscriber-summary span{display:block}.subscriber-summary strong{font-size:1.25rem;color:var(--navy,#21147f)}.subscriber-summary span{margin-top:3px;color:var(--muted,#707789);font-size:.66rem;font-weight:700}
 .crm-subscriber-filters,.crm-enrollment-filters{grid-template-columns:minmax(250px,1fr) minmax(160px,220px) minmax(170px,240px) auto}
-.lead-classification-filters{grid-template-columns:minmax(230px,1.4fr) repeat(6,minmax(125px,.65fr))!important}
+/* Even tracks, however many controls a view happens to render. The old fixed
+   "search + 6" template meant the count of filters had to match the count of
+   columns exactly: change either and one control ended up stretched or stranded
+   on its own row at a different width from the rest. auto-fit drops the tracks
+   it cannot fill and shares the row between the survivors, and anything that
+   does wrap keeps the same width as the controls above it. align-items:end
+   bottom-aligns them, so the captioned date filter lines up with the selects
+   instead of floating below them. */
+.lead-classification-filters{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;align-items:end}
+.lead-classification-filters .search-wrap{grid-column:span 2}
 .lead-classification-filters>*,.crm-subscriber-filters>*,.crm-enrollment-filters>*{display:block!important}
 .lead-classification-filters>input[type="hidden"],.crm-subscriber-filters>input[type="hidden"],.crm-enrollment-filters>input[type="hidden"]{display:none!important}
 /* Academic background card: pairs on a six-track grid, with the graduation row splitting into three. */
@@ -704,3 +717,14 @@ html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
    of a score and date. */
 .test-row-flag{flex:1 1 150px;align-self:flex-end;padding-bottom:11px;color:#8a6438;font-size:.63rem;font-weight:700}
 .test-row-flag[hidden],.test-row-result[hidden]{display:none}
+
+/* ── Owner filter ─────────────────────────────────────────────────────────── */
+/* An applied owner filter is easy to forget about when the bar wraps to two
+   rows, so the control says so while it is narrowing the list. */
+.crm-app .owner-filter.is-narrowed{border-color:var(--dash-accent,#175244);font-weight:700}
+.crm-app .owner-filter optgroup{font-weight:800;font-style:normal}
+
+/* The Follow-ups badge counts the whole planner, like every other nav badge
+   counts its own view. The urgency it used to carry by counting overdue only
+   is kept as a colour instead, so the number and the list agree. */
+.crm-app .nav-badge.is-alert{background:#c0392b;color:#fff}

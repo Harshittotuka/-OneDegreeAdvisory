@@ -16,7 +16,7 @@ class CrmLead extends Model
     protected $fillable = [
         'lead_number', 'name', 'phone', 'email', 'city', 'course_interest', 'country_interest',
         'tenth_score', 'tenth_passing_year', 'twelfth_score', 'twelfth_passing_year',
-        'graduation_score', 'graduation_passing_year', 'backlogs',
+        'graduation_score', 'graduation_passing_year', 'backlogs', 'intake',
         'english_tests', 'aptitude_tests',
         'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'created_by', 'follow_up_at',
         'follow_up_completed_at', 'last_contacted_at', 'tags', 'profile', 'is_student',
@@ -69,5 +69,21 @@ class CrmLead extends Model
     public function scopeVisibleTo(Builder $query, CrmUser $user): Builder
     {
         return $user->isSuperAdmin() ? $query : $query->where('assigned_to', $user->id);
+    }
+
+    /**
+     * Everything the Follow-up planner holds: a lead sitting on an open status,
+     * or one with a scheduled follow-up still to be completed.
+     *
+     * Defined once and shared by the planner's list and its counts. Spelling it
+     * out in both places is what let the sidebar badge drift out of step with
+     * the list it opens.
+     */
+    public function scopeOpenConversation(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $open) => $open
+            ->whereIn('status', \App\Support\CrmOptions::FOLLOW_UP_STATUSES)
+            ->orWhere(fn (Builder $scheduled) => $scheduled
+                ->whereNotNull('follow_up_at')->whereNull('follow_up_completed_at')));
     }
 }

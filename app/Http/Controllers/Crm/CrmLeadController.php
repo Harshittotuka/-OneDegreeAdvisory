@@ -26,7 +26,7 @@ class CrmLeadController extends Controller
         'tenth_score' => '10th %', 'tenth_passing_year' => '10th passing year',
         'twelfth_score' => '12th %', 'twelfth_passing_year' => '12th passing year',
         'graduation_score' => 'Graduation CGPA / %', 'graduation_passing_year' => 'Graduation passing year',
-        'backlogs' => 'Backlogs', 'english_tests' => 'English proficiency tests',
+        'backlogs' => 'Backlogs', 'intake' => 'Intake', 'english_tests' => 'English proficiency tests',
         'aptitude_tests' => 'Aptitude tests',
     ];
 
@@ -339,6 +339,8 @@ class CrmLeadController extends Controller
             'twelfth_passing_year' => ['nullable', 'integer', 'min:1950', 'max:2100'],
             'graduation_passing_year' => ['nullable', 'integer', 'min:1950', 'max:2100'],
             'backlogs' => ['nullable', 'string', 'max:40'],
+            // Free text: intakes are named differently per destination and year.
+            'intake' => ['nullable', 'string', 'max:60'],
             'english_tests' => ['nullable', 'array', 'max:12'],
             'english_tests.*.test' => ['nullable', Rule::in(array_keys(CrmOptions::ENGLISH_TESTS))],
             'aptitude_tests' => ['nullable', 'array', 'max:12'],
