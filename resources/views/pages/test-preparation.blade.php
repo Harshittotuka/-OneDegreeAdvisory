@@ -34,6 +34,10 @@
 @extends('layouts.app')
 
 @push('head')
+  {{-- This is the only public page still on unpkg (AOS), so the preconnect
+       lives here rather than in the shared layout, where it opened a
+       connection every other page had no use for. --}}
+  <link rel="preconnect" href="https://unpkg.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>

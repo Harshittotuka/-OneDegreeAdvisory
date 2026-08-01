@@ -276,4 +276,67 @@ class SitePagesTest extends TestCase
             $css
         );
     }
+
+    public function test_pages_cross_fade_into_each_other_instead_of_flashing_white(): void
+    {
+        $css = file_get_contents(public_path('styles.css'));
+
+        $this->assertStringContainsString('@view-transition { navigation: auto; }', $css);
+        // The chrome is identical on every page, so it holds still while the
+        // content between it changes. Without these names the header and footer
+        // cross-fade too, which is what made a navigation read as a full reload.
+        $this->assertStringContainsString('.stripe-site-header { view-transition-name: site-header; }', $css);
+        $this->assertStringContainsString('.site-footer { view-transition-name: site-footer; }', $css);
+        // Motion is opt-out-able; without this the transition ignores the setting.
+        $this->assertMatchesRegularExpression(
+            '/@media \(prefers-reduced-motion: reduce\) \{\s*@view-transition \{ navigation: none; \}/',
+            $css
+        );
+
+        // Both names must resolve to exactly one element per page, or the
+        // browser aborts the whole transition.
+        $html = $this->get('/')->assertOk()->getContent();
+        $this->assertSame(1, substr_count($html, 'class="stripe-site-header"'));
+        $this->assertSame(1, substr_count($html, 'class="site-footer"'));
+    }
+
+    public function test_links_are_prefetched_on_hover_but_never_the_private_areas(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        preg_match('~<script type="speculationrules">(.*?)</script>~s', $html, $match);
+        $this->assertNotEmpty($match, 'The speculation rules block must be rendered.');
+        $rules = json_decode(trim($match[1]), true);
+        $this->assertSame(JSON_ERROR_NONE, json_last_error(), 'Speculation rules must be valid JSON.');
+
+        $rule = $rules['prefetch'][0];
+        // "moderate" is hover/pointerdown only. "eager" would crawl every link
+        // on the page the moment it loads, multiplying requests to the server.
+        $this->assertSame('moderate', $rule['eagerness']);
+
+        // Prefetching an authenticated area, a one-time invite token, or the
+        // partner-proxied profiler would be wasteful at best and harmful at worst.
+        $excluded = $rule['where']['and'][1]['not']['href_matches'];
+        foreach (['/crm*', '/admin*', '/cms*', '/mock-interview/*', '/profiler*'] as $path) {
+            $this->assertContains($path, $excluded);
+        }
+    }
+
+    public function test_icons_are_served_from_this_origin_rather_than_a_cdn(): void
+    {
+        // lucide@latest on unpkg answers its redirect with max-age=60, so after a
+        // minute idle every page paid a third-party round trip before any of its
+        // ~700 icon placeholders could render.
+        $this->assertFileExists(public_path('assets/vendor/lucide.min.js'));
+
+        foreach (['/', '/about', '/global-career-library'] as $path) {
+            $html = $this->get($path)->assertOk()->getContent();
+            $this->assertStringNotContainsString('unpkg.com/lucide', $html, "{$path} still loads Lucide from a CDN.");
+            $this->assertMatchesRegularExpression(
+                '~src="[^"]*assets/vendor/lucide\.min\.js\?v=\d+"~',
+                $html,
+                "{$path} must load the self-hosted, cache-busted Lucide."
+            );
+        }
+    }
 }

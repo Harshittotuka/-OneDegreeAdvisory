@@ -72,7 +72,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com">
-    <link rel="preconnect" href="https://unpkg.com">
     @if($googleTagManagerId !== '' || $googleTagId !== '')
       <link rel="preconnect" href="https://www.googletagmanager.com">
     @endif
@@ -82,6 +81,30 @@
         var root = document.documentElement;
         root.classList.add("js");
       })();
+    </script>
+    {{-- Speculation rules: the browser prefetches a page once the pointer rests
+         on its link, so by the time the click lands the HTML is already in
+         cache and the view transition has nothing to wait for. "moderate"
+         means hover/pointerdown only — never a blanket crawl of every link.
+         Prefetch (not prerender) is deliberate: it fetches the document
+         without running its scripts, so nothing fires analytics or side
+         effects for a page the visitor never opens.
+
+         Excluded: the CRM, the admin CMS, the mock-interview invite links
+         (one-time tokens) and /profiler (a proxy to a partner's server — a
+         hover here would hit somebody else's origin). Add data-no-prefetch to
+         any individual link that should never be fetched early. --}}
+    <script type="speculationrules">
+      {
+        "prefetch": [{
+          "where": {"and": [
+            {"href_matches": "/*"},
+            {"not": {"href_matches": ["/crm*", "/admin*", "/cms*", "/mock-interview/*", "/profiler*", "/sitemap.xml", "/robots.txt"]}},
+            {"not": {"selector_matches": ["[data-no-prefetch]", "[download]", "[rel~=nofollow]"]}}
+          ]},
+          "eagerness": "moderate"
+        }]
+      }
     </script>
     @if($googleTagManagerId !== '')
       <script>
@@ -110,7 +133,13 @@
     @endphp
     <link rel="stylesheet" href="{{ $assetVer('styles.css') }}">
     <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    {{-- Lucide is self-hosted and pinned. It was loaded from unpkg as
+         `lucide@latest`, whose redirect carries max-age=60 — so after a minute
+         idle every page paid a third-party DNS + TLS + redirect round trip
+         (~240ms) before any of the ~700 <i data-lucide> placeholders on the page
+         could become icons. Same-origin and immutable, they now arrive with the
+         rest of the page instead of popping in after it. --}}
+    <script src="{{ $assetVer('assets/vendor/lucide.min.js') }}" defer></script>
     <script src="{{ $assetVer('script.js') }}" defer></script>
     <script src="{{ $assetVer('stripe-nav.js') }}" defer></script>
   </head>

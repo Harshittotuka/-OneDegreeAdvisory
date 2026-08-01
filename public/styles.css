@@ -25802,3 +25802,33 @@ main li,
     margin: 18px 0 24px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SMOOTH PAGE LOADS — cross-document view transitions
+   ═══════════════════════════════════════════════════════════════════════════
+   The browser cross-fades the outgoing page into the incoming one instead of
+   flashing white between navigations. Pure opt-in: a browser without support
+   (Firefox, today) navigates exactly as it did before, so there is nothing to
+   feature-detect and no JS involved.
+   ─────────────────────────────────────────────────────────────────────────── */
+@view-transition { navigation: auto; }
+
+/* The header and footer are the same on every page, so they are given their
+   own transition groups: they hold still while the content between them
+   changes, rather than cross-fading along with it — which is what made a
+   same-site navigation read as a full reload. Each name must be unique on a
+   page; both elements appear exactly once. Career-library pages carry the
+   header but no footer, so that group simply fades on the way in or out. */
+.stripe-site-header { view-transition-name: site-header; }
+.site-footer { view-transition-name: site-footer; }
+
+/* The 250ms default reads as sluggish for a navigation that is usually already
+   prefetched; 180ms still registers as a transition without adding delay. */
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-group(site-header),
+::view-transition-group(site-footer) { animation-duration: .18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}
