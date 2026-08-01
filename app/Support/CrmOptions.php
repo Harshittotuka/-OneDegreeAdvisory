@@ -33,6 +33,13 @@ class CrmOptions
      */
     public const FOLLOW_UP_GROUP = 'any_follow_up';
 
+    /**
+     * Counselling and shortlisting, recorded by hand on the Pipeline control card.
+     * Leaving it unset is a valid answer — "nobody has checked yet" — so the
+     * dropdown keeps a blank option and the column stays nullable.
+     */
+    public const COUNSELLING_SHORTLISTING = ['yes' => 'Yes', 'no' => 'No'];
+
     public const CATEGORIES = [
         'undergraduate' => 'Undergraduate', 'postgraduate' => 'Postgraduate', 'mbbs' => 'MBBS',
         'test_prep' => 'Test preparation', 'visa' => 'Visa', 'other' => 'Other',

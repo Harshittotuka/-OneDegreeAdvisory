@@ -1063,6 +1063,85 @@ class CrmTest extends TestCase
             ->assertSee('class="audit-serial">1</span>', false);
     }
 
+    public function test_lead_list_says_how_many_records_it_holds_and_lets_the_page_size_change(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        for ($i = 1; $i <= 30; $i++) {
+            $this->leadFor($admin, 'Paged Lead '.$i, '98765'.str_pad((string) $i, 5, '0', STR_PAD_LEFT));
+        }
+
+        // The old page size stopped at 20 with nothing on screen saying so, which
+        // read as records that had never been saved.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads']))
+            ->assertOk()
+            ->assertSee('of <strong>30</strong> records', false)
+            ->assertSee('name="per_page"', false);
+
+        // A smaller page still paginates, and the count line names the page.
+        $response = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'per_page' => 25]))
+            ->assertOk()
+            ->assertSee('page 1 of 2');
+        $this->assertSame(25, $response->viewData('leads')->count());
+
+        // Page size survives into the pagination links, or page 2 would silently
+        // fall back to the default.
+        $this->assertStringContainsString('per_page=25', $response->viewData('leads')->url(2));
+
+        // Anything not on the offered list falls back to the default rather than
+        // letting a URL ask for an unbounded page.
+        $fallback = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'per_page' => 5000]))->assertOk();
+        $this->assertSame(50, $fallback->viewData('leads')->perPage());
+    }
+
+    public function test_counselling_and_shortlisting_is_recorded_on_the_pipeline_card(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Shortlist Lead', '9876510191');
+
+        // Blank until someone records it — an untouched lead is not a "no".
+        $this->assertNull($lead->counselling_shortlisting);
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('name="counselling_shortlisting"', false)
+            ->assertSee('Counselling and Shortlisting');
+
+        $payload = ['name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium', 'status' => 'new'];
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['counselling_shortlisting' => 'yes'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('yes', $lead->fresh()->counselling_shortlisting);
+
+        // The change is told in words on the timeline, not as a raw column name.
+        $this->assertStringContainsString(
+            'Counselling and shortlisting set to “Yes”.',
+            (string) $lead->activities()->where('type', 'updated')->latest()->first()?->body,
+        );
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['counselling_shortlisting' => 'maybe'])
+            ->assertSessionHasErrors('counselling_shortlisting');
+
+        // Clearing it puts the lead back to "not recorded".
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['counselling_shortlisting' => ''])
+            ->assertSessionHasNoErrors();
+        $this->assertNull($lead->fresh()->counselling_shortlisting);
+
+        $lead->update(['counselling_shortlisting' => 'no']);
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads']))
+            ->assertOk()
+            ->assertSee('✕ No');
+
+        $csv = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.leads.export'))->streamedContent();
+        $this->assertStringContainsString('Counselling and shortlisting', $csv);
+    }
+
     private function leadFor(CrmUser $owner, string $name, string $phone): CrmLead
     {
         return CrmLead::query()->create([

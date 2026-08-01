@@ -31,7 +31,7 @@
     <meta name="robots" content="noindex,nofollow">
     <title>{{ $currentTitle[0] }} · One Degree CRM</title>
     <style>html.crm-css-pending{background:#17182a}html.crm-css-pending body{visibility:hidden!important;opacity:0!important}html.crm-css-pending:before{content:"Loading CRM…";position:fixed;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.72);font:600 13px/1.4 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}</style>
-    <style>.lead-ms{display:inline-flex;align-items:center;gap:.3em;font-weight:600;white-space:nowrap}.lead-ms-yes{color:#0f9d58}.lead-ms-no{opacity:.35}td.lead-remark{max-width:300px;white-space:normal;vertical-align:top}td.lead-remark .subtext{display:block;margin-top:2px}.lead-remark-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}</style>
+    <style>.lead-ms{display:inline-flex;align-items:center;gap:.3em;font-weight:600;white-space:nowrap}.lead-ms-yes{color:#0f9d58}.lead-ms-not{color:#c03f49}.lead-ms-no{opacity:.35}td.lead-remark{max-width:300px;white-space:normal;vertical-align:top}td.lead-remark .subtext{display:block;margin-top:2px}.lead-remark-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -393,6 +393,10 @@
                             @foreach($counsellorFilter['people'] as $person)<option value="{{ $person['id'] }}" @selected($ownerValue === (string) $person['id'])>{{ $person['name'] }} · {{ number_format($person['total']) }}</option>@endforeach
                         </select>
                     @endif
+                    {{-- How many rows a page holds. The list is paginated, and with the
+                         page size buried in the code the rows past the first page read
+                         as missing records rather than as a second page. --}}
+                    <select class="control rows-per-page" name="per_page" aria-label="Rows per page">@foreach($perPageOptions as $option)<option value="{{ $option }}" @selected($perPage === $option)>Show {{ $option }} per page</option>@endforeach</select>
                 </form>
 
                 @if($view === 'followups' && $followUpLayout === 'calendar' && $followUpCalendar)
@@ -455,10 +459,13 @@
 
                 @if($view !== 'followups' || $followUpLayout === 'table')
                 @if($leads->count())
+                    {{-- Said once, above the table: a short list that stops at the page
+                         size otherwise looks like records that never arrived. --}}
+                    <p class="list-count">Showing <strong>{{ $leads->firstItem() }}–{{ $leads->lastItem() }}</strong> of <strong>{{ number_format($leads->total()) }}</strong> {{ $leads->total() === 1 ? 'record' : 'records' }}@if($leads->hasPages()) · page {{ $leads->currentPage() }} of {{ $leads->lastPage() }}@endif</p>
                     <div class="table-wrap">
                         <table>
                         @if($view === 'leads')
-                            <thead><tr><th class="col-serial">Serial No</th><th>Lead Received</th><th>Student Name</th><th>Phone number</th><th>Contacted</th><th>Counselling Done</th><th>Shortlisting sent</th><th>Enrolled</th><th>Remarks by One Degree</th><th></th></tr></thead>
+                            <thead><tr><th class="col-serial">Serial No</th><th>Lead Received</th><th>Student Name</th><th>Phone number</th><th>Contacted</th><th>Counselling Done</th><th>Counselling &amp; Shortlisting</th><th>Enrolled</th><th>Remarks by One Degree</th><th></th></tr></thead>
                             <tbody>
                             @foreach($leads as $lead)
                                 @php
@@ -468,6 +475,8 @@
                                     $isCounselled = $lead->follow_up_completed_at || $lead->is_student || in_array($lead->status, ['interested','converted'], true);
                                     $isEnrolled = $lead->is_student || $lead->status === 'converted';
                                     $latestActivity = $lead->latestActivity;
+                                    // Recorded by hand on the lead's Pipeline control card; null until someone sets it.
+                                    $counselling = $lead->counselling_shortlisting;
                                 @endphp
                                 <tr data-crm-href="{{ $openUrl }}" tabindex="0">
                                     <td class="col-serial">{{ $leads->firstItem() + $loop->index }}</td>
@@ -476,7 +485,7 @@
                                     <td>{{ $lead->phone ? '+91 '.$lead->phone : '—' }}</td>
                                     <td>{!! $milestone((bool) $isContacted, $lead->last_contacted_at) !!}</td>
                                     <td>{!! $milestone((bool) $isCounselled, $lead->follow_up_completed_at) !!}</td>
-                                    <td><span class="lead-ms lead-ms-no" title="Tracked manually — no CRM field for this yet">—</span></td>
+                                    <td>@if($counselling)<span class="lead-ms {{ $counselling === 'yes' ? 'lead-ms-yes' : 'lead-ms-not' }}">{{ $counselling === 'yes' ? '✓ Yes' : '✕ No' }}</span>@else<span class="lead-ms lead-ms-no" title="Not recorded yet">—</span>@endif</td>
                                     <td>{!! $milestone((bool) $isEnrolled, $lead->enrollment_date) !!}</td>
                                     <td @class(['lead-remark', 'has-remark-pop' => $latestActivity])@if($latestActivity) data-remark-full="{{ $latestActivity->body }}" data-remark-time="{{ $latestActivity->created_at->format('d M Y, g:i A') }}"@endif>@if($latestActivity)<span class="lead-remark-text">{{ \Illuminate\Support\Str::limit($latestActivity->body, 90) }}</span><span class="subtext">{{ $latestActivity->created_at->diffForHumans() }}</span>@else<span class="subtext">No activity yet</span>@endif</td>
                                     <td><a class="row-open" href="{{ $openUrl }}" aria-label="Open {{ $lead->name }}">→</a></td>
@@ -738,9 +747,12 @@
                                 <div class="select-guidance"><span data-status-symbol>{{ $currentStatus['symbol'] }}</span><p data-status-help>{{ $currentStatus['copy'] }}</p></div>
                             </div>
                             <div class="field"><label>Priority</label><select name="priority">@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->priority===$key)>{{ $label }}</option>@endforeach</select></div>
+                            {{-- Recorded by hand. Blank stays blank: an untouched lead should
+                                 not read as a counsellor having answered "no". --}}
+                            <div class="field"><label>Counselling and Shortlisting <span class="label-note">Blank until recorded</span></label><select name="counselling_shortlisting"><option value="">Not recorded</option>@foreach($counsellingShortlisting as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->counselling_shortlisting===$key)>{{ $label }}</option>@endforeach</select></div>
                             @if($crmUser->isSuperAdmin())<div class="field"><label>Counsellor owner</label><select name="assigned_to"><option value="">Unassigned</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected($selectedLead->assigned_to===$person->id)>{{ $person->name }}</option>@endforeach</select></div>@endif
                             @php $followUpRequired = ! $selectedLead->is_student && $isFollowUpStatus($selectedLead->status); @endphp
-                            <div @class(['field', 'full' => $crmUser->isSuperAdmin(), 'is-followup-required' => $followUpRequired])><label>Next follow-up <span class="label-note" data-followup-note>{{ $followUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input type="datetime-local" name="follow_up_at" value="{{ $selectedLead->follow_up_at?->format('Y-m-d\TH:i') }}" @required($followUpRequired)></div>
+                            <div @class(['field', 'full' => ! $crmUser->isSuperAdmin(), 'is-followup-required' => $followUpRequired])><label>Next follow-up <span class="label-note" data-followup-note>{{ $followUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input type="datetime-local" name="follow_up_at" value="{{ $selectedLead->follow_up_at?->format('Y-m-d\TH:i') }}" @required($followUpRequired)></div>
                         </div>
                         <div class="next-action-card {{ $followUpTone }}"><span class="next-action-icon">{{ $followUpTone === 'overdue' ? '!' : ($followUpTone === 'done' ? '✓' : '◷') }}</span><div><strong>{{ $followUpTitle }}</strong><p>{{ $followUpCopy }}</p></div>@if($selectedLead->follow_up_at && !$selectedLead->follow_up_completed_at)<button class="btn btn-outline btn-compact" form="completeFollowup" type="submit">Mark completed</button>@endif</div>
                     </div>

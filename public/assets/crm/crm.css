@@ -259,9 +259,15 @@ tbody tr:last-child td{border-bottom:0}
 .pagination-wrap nav>div:first-child{display:none}
 .pagination-wrap nav>div:last-child{display:flex;align-items:center;justify-content:space-between;gap:14px}
 .pagination-wrap nav p{font-size:.72rem;color:var(--muted)}
-.pagination-wrap nav span.relative,.pagination-wrap nav a.relative{display:inline-flex;align-items:center;padding:7px 10px;border:1px solid var(--line);font-size:.7rem;background:#fffdf7}
+/* Laravel's paginator dropped the `relative` class these once keyed off, which
+   left the page buttons as bare text links that read as nothing at all. */
+.pagination-wrap nav a,.pagination-wrap nav [aria-current=page]>span,.pagination-wrap nav [aria-disabled=true]>span{display:inline-flex;align-items:center;padding:7px 11px;border:1px solid var(--line);font-size:.7rem;font-weight:600;color:var(--ink);background:#fffdf7}
+.pagination-wrap nav a:hover{background:var(--pine-soft);border-color:var(--pine);color:var(--pine)}
+.pagination-wrap nav [aria-disabled=true]>span{opacity:.45}
 .pagination-wrap svg{width:14px}
-.pagination-wrap [aria-current=page] span{background:var(--pine);color:#f2ecda;border-color:var(--pine)}
+.pagination-wrap [aria-current=page]>span{background:var(--pine);color:#f2ecda;border-color:var(--pine)}
+.list-count{margin:0;padding:12px 20px 0;font-size:.74rem;color:var(--muted)}
+.list-count strong{color:var(--ink);font-weight:700}
 
 /* ---------------- Notifications popover ---------------- */
 .popover{position:absolute;right:80px;top:66px;width:360px;max-height:440px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);z-index:50}

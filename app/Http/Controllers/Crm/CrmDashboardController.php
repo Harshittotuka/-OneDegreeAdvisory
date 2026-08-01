@@ -19,6 +19,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CrmDashboardController extends Controller
 {
+    /**
+     * Rows per page for the lead lists, offered in the filter bar.
+     *
+     * The default sits well above a typical day's intake: a workspace holding a
+     * couple of dozen leads reads as "everything is here", which is what people
+     * expect of a list this size. Larger sizes are there for bulk review.
+     */
+    public const PER_PAGE_OPTIONS = [25, 50, 100, 200];
+
+    private const DEFAULT_PER_PAGE = 50;
+
     public function index(Request $request): View
     {
         /** @var CrmUser $user */
@@ -81,6 +92,9 @@ class CrmDashboardController extends Controller
             $leads->latest('updated_at');
         }
         $this->applyFilters($leads, $request, $user);
+        $perPage = in_array((int) $request->query('per_page'), self::PER_PAGE_OPTIONS, true)
+            ? (int) $request->query('per_page')
+            : self::DEFAULT_PER_PAGE;
         $followUpCalendar = $this->followUpCalendar($base, $request, $user, $view === 'followups' && $followUpLayout === 'calendar');
 
         $auditEvents = [
@@ -163,7 +177,9 @@ class CrmDashboardController extends Controller
             'stats' => $stats,
             'dashboard' => $dashboard,
             'notifications' => $notifications,
-            'leads' => $leads->paginate(20)->withQueryString(),
+            'leads' => $leads->paginate($perPage)->withQueryString(),
+            'perPage' => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
             'followUpCalendar' => $followUpCalendar,
             'selectedLead' => $selectedLead,
             'counsellors' => CrmUser::query()->where('role', 'counsellor')->where('is_active', true)->orderBy('name')->get(),
@@ -183,6 +199,7 @@ class CrmDashboardController extends Controller
             // Suggestions only — the field itself stays free text. Queried just for
             // the open drawer, so the list view does not pay for it.
             'intakeSuggestions' => $selectedLead ? $this->intakeSuggestions($user) : collect(),
+            'counsellingShortlisting' => CrmOptions::COUNSELLING_SHORTLISTING,
             'studentStages' => CrmOptions::STUDENT_STAGES,
             'studentCategories' => CrmOptions::STUDENT_CATEGORIES,
             'englishTests' => CrmOptions::ENGLISH_TESTS,
@@ -457,7 +474,7 @@ class CrmDashboardController extends Controller
             fputcsv($out, [
                 'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created',
                 '10th %', '10th passing year', '12th %', '12th passing year', 'Graduation CGPA / %', 'Graduation passing year', 'Backlogs', 'Intake',
-                'English proficiency tests', 'Aptitude tests',
+                'Counselling and shortlisting', 'English proficiency tests', 'Aptitude tests',
             ]);
             foreach ($rows as $lead) {
                 fputcsv($out, [
@@ -467,6 +484,7 @@ class CrmDashboardController extends Controller
                     $lead->follow_up_at?->format('Y-m-d H:i'), $lead->created_at->format('Y-m-d H:i'),
                     $lead->tenth_score, $lead->tenth_passing_year, $lead->twelfth_score, $lead->twelfth_passing_year,
                     $lead->graduation_score, $lead->graduation_passing_year, $lead->backlogs, $lead->intake,
+                    CrmOptions::COUNSELLING_SHORTLISTING[$lead->counselling_shortlisting] ?? '',
                     CrmOptions::describeTests($lead->english_tests, CrmOptions::ENGLISH_TESTS),
                     CrmOptions::describeTests($lead->aptitude_tests, CrmOptions::APTITUDE_TESTS),
                 ]);
