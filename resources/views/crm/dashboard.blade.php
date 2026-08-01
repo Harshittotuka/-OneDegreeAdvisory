@@ -311,7 +311,7 @@
                         <div class="workspace-title"><h2>Audit log</h2><p>{{ number_format($auditLogs->total()) }} recorded action{{ $auditLogs->total() === 1 ? '' : 's' }}</p></div>
                         <span class="audit-private-label">Super admin only</span>
                     </div>
-                    <form class="filters audit-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
+                    <form id="crmAuditFilters" class="filters audit-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
                         <input type="hidden" name="view" value="audit">
                         <div class="search-wrap"><input class="control" type="search" name="audit_search" value="{{ request('audit_search') }}" placeholder="Search user, action or record"></div>
                         <select class="control" name="audit_event"><option value="">All actions</option>@foreach($auditEvents as $key=>$label)<option value="{{ $key }}" @selected(request('audit_event')===$key)>{{ $label }}</option>@endforeach</select>
@@ -319,6 +319,7 @@
                     </form>
 
                     @if($auditLogs->count())
+                        @include('crm.partials.list-count', ['paginator' => $auditLogs, 'filterForm' => 'crmAuditFilters', 'noun' => 'entry'])
                         <div class="audit-list">
                             @foreach($auditLogs as $log)
                                 <article class="audit-entry">
@@ -358,7 +359,7 @@
                 </section>
             @else
             <section class="workspace">
-                <form @class(['filters', 'lead-classification-filters' => $isListView]) method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
+                <form id="crmLeadFilters" @class(['filters', 'lead-classification-filters' => $isListView]) method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
                     <input type="hidden" name="view" value="{{ $view }}">
                     @if($view === 'followups')<input type="hidden" name="layout" value="{{ $followUpLayout }}">@endif
                     @if($view === 'followups' && $followUpLayout === 'calendar')<input type="hidden" name="month" value="{{ request('month', now()->format('Y-m')) }}">@endif
@@ -393,10 +394,6 @@
                             @foreach($counsellorFilter['people'] as $person)<option value="{{ $person['id'] }}" @selected($ownerValue === (string) $person['id'])>{{ $person['name'] }} · {{ number_format($person['total']) }}</option>@endforeach
                         </select>
                     @endif
-                    {{-- How many rows a page holds. The list is paginated, and with the
-                         page size buried in the code the rows past the first page read
-                         as missing records rather than as a second page. --}}
-                    <select class="control rows-per-page" name="per_page" aria-label="Rows per page">@foreach($perPageOptions as $option)<option value="{{ $option }}" @selected($perPage === $option)>Show {{ $option }} per page</option>@endforeach</select>
                 </form>
 
                 @if($view === 'followups' && $followUpLayout === 'calendar' && $followUpCalendar)
@@ -459,11 +456,7 @@
 
                 @if($view !== 'followups' || $followUpLayout === 'table')
                 @if($leads->count())
-                    {{-- Said once, above the table: a list that stops at the page size
-                         otherwise looks like records that never arrived. Only worth
-                         spelling out a range when there is a second page to reach —
-                         "1–9 of 9" is a long way of saying nine. --}}
-                    <p class="list-count">@if($leads->hasPages())Showing <strong>{{ $leads->firstItem() }}–{{ $leads->lastItem() }}</strong> of <strong>{{ number_format($leads->total()) }}</strong> records · page {{ $leads->currentPage() }} of {{ $leads->lastPage() }}@else<strong>{{ number_format($leads->total()) }}</strong> {{ $leads->total() === 1 ? 'record' : 'records' }}@endif</p>
+                    @include('crm.partials.list-count', ['paginator' => $leads, 'filterForm' => 'crmLeadFilters'])
                     <div class="table-wrap">
                         <table>
                         @if($view === 'leads')

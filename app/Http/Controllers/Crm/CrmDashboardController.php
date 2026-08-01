@@ -20,11 +20,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CrmDashboardController extends Controller
 {
     /**
-     * Rows per page for the lead lists, offered in the filter bar.
+     * Rows per page, offered above every paginated list in the workspace and
+     * shared by all of them — leads, enrollments, subscriptions, mock-interview
+     * links and the audit log — so the choice means the same thing everywhere.
      *
      * The default sits well above a typical day's intake: a workspace holding a
-     * couple of dozen leads reads as "everything is here", which is what people
-     * expect of a list this size. Larger sizes are there for bulk review.
+     * couple of dozen records reads as "everything is here", which is what
+     * people expect of a list this size. Larger sizes are there for bulk review.
      */
     public const PER_PAGE_OPTIONS = [25, 50, 100, 200];
 
@@ -53,6 +55,9 @@ class CrmDashboardController extends Controller
             default => $request->query('view'),
         };
         $view = in_array($requestedView, $allowedViews, true) ? $requestedView : 'dashboard';
+        $perPage = in_array((int) $request->query('per_page'), self::PER_PAGE_OPTIONS, true)
+            ? (int) $request->query('per_page')
+            : self::DEFAULT_PER_PAGE;
         $followUpLayout = $view === 'followups' && in_array($request->query('layout'), ['table', 'calendar'], true)
             ? $request->query('layout') : 'table';
 
@@ -92,9 +97,6 @@ class CrmDashboardController extends Controller
             $leads->latest('updated_at');
         }
         $this->applyFilters($leads, $request, $user);
-        $perPage = in_array((int) $request->query('per_page'), self::PER_PAGE_OPTIONS, true)
-            ? (int) $request->query('per_page')
-            : self::DEFAULT_PER_PAGE;
         $followUpCalendar = $this->followUpCalendar($base, $request, $user, $view === 'followups' && $followUpLayout === 'calendar');
 
         $auditEvents = [
@@ -131,7 +133,7 @@ class CrmDashboardController extends Controller
             if ($request->filled('audit_user')) {
                 $auditQuery->where('crm_user_id', $request->integer('audit_user'));
             }
-            $auditLogs = $auditQuery->paginate(30)->withQueryString();
+            $auditLogs = $auditQuery->paginate($perPage)->withQueryString();
         }
 
         $enrollmentQuery = PaymentAttempt::query()->with(['lead.assignee'])->latest();
@@ -204,20 +206,20 @@ class CrmDashboardController extends Controller
             'studentCategories' => CrmOptions::STUDENT_CATEGORIES,
             'englishTests' => CrmOptions::ENGLISH_TESTS,
             'aptitudeTests' => CrmOptions::APTITUDE_TESTS,
-            'enrollments' => $enrollmentQuery->paginate(20, ['*'], 'enrollment_page')->withQueryString(),
+            'enrollments' => $enrollmentQuery->paginate($perPage, ['*'], 'enrollment_page')->withQueryString(),
             'enrollmentCount' => $enrollmentCount,
             'enrollmentSources' => PaymentAttempt::query()->distinct()->orderBy('page_slug')->pluck('page_slug'),
             'enrollmentPlans' => collect(app(\App\Support\TestPrepCompareStore::class)->get()['programs'] ?? [])
                 ->pluck('name')->merge(PaymentAttempt::query()->whereNotNull('crm_lead_id')->pluck('item_name'))
                 ->map(fn ($name) => trim((string) $name))->filter()->unique(fn ($name) => mb_strtolower($name))->sort()->values(),
             'paymentStatuses' => \App\Http\Controllers\Crm\CrmEnrollmentController::STATUSES,
-            'subscribers' => $subscriberQuery->paginate(30, ['*'], 'subscriber_page')->withQueryString(),
+            'subscribers' => $subscriberQuery->paginate($perPage, ['*'], 'subscriber_page')->withQueryString(),
             'subscriberCount' => $user->isSuperAdmin() ? CrmSubscriber::query()->count() : 0,
             'subscriberActiveCount' => $user->isSuperAdmin() ? CrmSubscriber::query()->where('status', 'active')->count() : 0,
             'subscriberSources' => $user->isSuperAdmin()
                 ? CrmSubscriber::query()->whereNotNull('source')->distinct()->orderBy('source')->pluck('source')
                 : collect(),
-            'mockInvites' => $mockInviteQuery->paginate(20, ['*'], 'invite_page')->withQueryString(),
+            'mockInvites' => $mockInviteQuery->paginate($perPage, ['*'], 'invite_page')->withQueryString(),
             'mockInviteCount' => $mockInviteCount,
             'mockInviteCounts' => MockInterviewQuestions::INVITE_COUNTS,
             'mockQuestionTotal' => MockInterviewQuestions::total(),

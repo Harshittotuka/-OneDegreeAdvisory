@@ -1071,20 +1071,20 @@ class CrmTest extends TestCase
         }
 
         // The old page size stopped at 20 with nothing on screen saying so, which
-        // read as records that had never been saved. All 30 fit on the default
-        // page, so the line is a plain total — no range to spell out.
+        // read as records that had never been saved.
         $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'leads']))
             ->assertOk()
-            ->assertSee('<strong>30</strong> records', false)
-            ->assertDontSee('Showing')
-            ->assertSee('name="per_page"', false);
+            ->assertSee('<strong>1&ndash;30</strong> of <strong>30</strong> records', false)
+            // The size select lives outside the filter bar and is tied to it by id.
+            ->assertSee('name="per_page" form="crmLeadFilters"', false)
+            ->assertSee('<form id="crmLeadFilters"', false);
 
-        // A smaller page does paginate, and there the range and page are worth saying.
+        // A smaller page paginates, and the line names the page as well.
         $response = $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'leads', 'per_page' => 25]))
             ->assertOk()
-            ->assertSee('<strong>1–25</strong> of <strong>30</strong> records', false)
+            ->assertSee('<strong>1&ndash;25</strong> of <strong>30</strong> records', false)
             ->assertSee('page 1 of 2');
         $this->assertSame(25, $response->viewData('leads')->count());
 
@@ -1097,6 +1097,43 @@ class CrmTest extends TestCase
         $fallback = $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'leads', 'per_page' => 5000]))->assertOk();
         $this->assertSame(50, $fallback->viewData('leads')->perPage());
+    }
+
+    public function test_every_paginated_workspace_list_carries_the_same_count_line_and_page_size(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        \App\Models\CrmAuditLog::query()->create([
+            'crm_user_id' => $admin->id, 'event' => 'crm_login', 'description' => 'Signed in.',
+        ]);
+        \App\Models\CrmSubscriber::query()->create(['email' => 'reader@example.com', 'status' => 'active', 'subscribed_at' => now()]);
+        \App\Models\PaymentAttempt::query()->create([
+            'request_token' => str_repeat('e', 64), 'session_hash' => str_repeat('f', 64),
+            'page_slug' => 'test-preparation', 'block_id' => 'compare', 'option_index' => 0,
+            'item_name' => 'IELTS intensive', 'amount' => 500000, 'currency' => 'INR', 'status' => 'paid',
+            'customer_name' => 'Paid Student', 'customer_email' => 'paid@example.com', 'customer_phone' => '9876500011',
+        ]);
+        \App\Models\CrmMockInterviewInvite::query()->create([
+            'token' => str()->random(32), 'recipient_name' => 'Invited Student', 'recipient_email' => 'invited@example.com',
+            'question_count' => 20, 'max_attempts' => 3, 'created_by' => $admin->id,
+        ]);
+
+        // Each list used to hardcode its own page size (20 or 30) with no way to
+        // change it and nothing saying how much was on screen.
+        $lists = [
+            'audit' => ['crmAuditFilters', 'entry', 'entries'],
+            'subscriptions' => ['crmSubscriberFilters', 'subscription', 'subscriptions'],
+            'enrollments' => ['crmEnrollmentFilters', 'payment', 'payments'],
+            'mock-invites' => ['crmInviteFilters', 'link', 'links'],
+        ];
+        foreach ($lists as $view => [$formId, $one, $noun]) {
+            $this->withSession(['crm_user_id' => $admin->id])
+                ->get(route('crm.dashboard', ['view' => $view, 'per_page' => 100]))
+                ->assertOk()
+                ->assertSee('<strong>1&ndash;1</strong> of <strong>1</strong> '.$one, false)
+                ->assertSee('name="per_page" form="'.$formId.'"', false)
+                ->assertSee('<option value="100" selected>100 '.$noun.'</option>', false)
+                ->assertSee('<form id="'.$formId.'"', false);
+        }
     }
 
     public function test_counselling_and_shortlisting_is_recorded_on_the_pipeline_card(): void

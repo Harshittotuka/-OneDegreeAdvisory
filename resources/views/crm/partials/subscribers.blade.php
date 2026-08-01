@@ -13,7 +13,7 @@
         <div><strong>{{ number_format($subscriberSources->count()) }}</strong><span>Signup sources</span></div>
     </div>
 
-    <form class="filters crm-subscriber-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
+    <form id="crmSubscriberFilters" class="filters crm-subscriber-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
         <input type="hidden" name="view" value="subscriptions">
         <div class="search-wrap"><input class="control" type="search" name="subscriber_search" value="{{ request('subscriber_search') }}" placeholder="Search email address"></div>
         <select class="control" name="subscriber_status"><option value="">All statuses</option><option value="active" @selected(request('subscriber_status')==='active')>Active</option><option value="unsubscribed" @selected(request('subscriber_status')==='unsubscribed')>Unsubscribed</option></select>
@@ -22,6 +22,7 @@
     </form>
 
     @if($subscribers->count())
+        @include('crm.partials.list-count', ['paginator' => $subscribers, 'filterForm' => 'crmSubscriberFilters', 'noun' => 'subscription'])
         <div class="table-wrap"><table class="subscriber-table">
             <thead><tr><th class="col-serial">Serial No</th><th>Email</th><th>Signup source</th><th>Status</th><th>Subscribed</th>@if($crmUser->isSuperAdmin())<th>Manage</th>@endif</tr></thead>
             <tbody>@foreach($subscribers as $subscriber)<tr>

@@ -850,7 +850,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const label = input.closest('.dropzone');
             if (input.files?.[0]) label?.querySelector('strong')?.replaceChildren(input.files[0].name);
         }
-        if (input.matches('[data-crm-filter-form] select, [data-crm-filter-form] input[type="date"]')) input.form?.requestSubmit();
+        // [data-crm-filter-control] covers controls that sit outside their filter
+        // bar and are tied to it with form="…" — the rows-per-page select above
+        // each list. They are not descendants, so the two selectors above miss them.
+        if (input.matches('[data-crm-filter-form] select, [data-crm-filter-form] input[type="date"], [data-crm-filter-control]')) input.form?.requestSubmit();
         if (input.matches('[data-test-select]')) syncTestRow(input);
         // Statuses that keep a lead in the Follow-up planner carry a brown tint.
         if (input.matches('[data-followup-tinted]')) {

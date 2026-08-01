@@ -80,13 +80,14 @@
         </div>
     </form>
 
-    <form class="filters crm-invite-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
+    <form id="crmInviteFilters" class="filters crm-invite-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
         <input type="hidden" name="view" value="mock-invites">
         <div class="search-wrap"><input class="control" type="search" name="invite_search" value="{{ request('invite_search') }}" placeholder="Search student name, email or mobile"></div>
         <button class="btn btn-outline" type="submit">Filter</button>
     </form>
 
     @if($mockInvites->count())
+        @include('crm.partials.list-count', ['paginator' => $mockInvites, 'filterForm' => 'crmInviteFilters', 'noun' => 'link'])
         <div class="table-wrap"><table class="invite-table">
             <thead><tr><th class="col-serial">Serial No</th><th>Student</th><th>Round</th><th>Attempts</th><th>Status</th><th>Issued</th><th>Share</th></tr></thead>
             <tbody>@foreach($mockInvites as $invite)

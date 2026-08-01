@@ -4,7 +4,7 @@
         <a class="btn btn-outline" href="{{ route('crm.enrollments.export', request()->only(['search', 'payment_status', 'enrollment_source', 'enrollment_plan'])) }}" data-native-navigation>Export CSV</a>
     </div>
 
-    <form class="filters crm-enrollment-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
+    <form id="crmEnrollmentFilters" class="filters crm-enrollment-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
         <input type="hidden" name="view" value="enrollments">
         <div class="search-wrap"><input class="control" type="search" name="search" value="{{ request('search') }}" placeholder="Search student, program, payment or order ID"></div>
         <select class="control" name="payment_status"><option value="">All payment statuses</option>@foreach($paymentStatuses as $key=>$label)<option value="{{ $key }}" @selected(request('payment_status')===$key)>{{ $label }}</option>@endforeach</select>
@@ -14,6 +14,7 @@
     </form>
 
     @if($enrollments->count())
+        @include('crm.partials.list-count', ['paginator' => $enrollments, 'filterForm' => 'crmEnrollmentFilters', 'noun' => 'payment'])
         <div class="table-wrap"><table class="enrollment-table">
             <thead><tr><th class="col-serial">Serial No</th><th>Student</th><th>Program</th><th>Source</th><th>Amount</th><th>Payment details</th><th>Created</th>@if($crmUser->isSuperAdmin())<th>Manage</th>@endif</tr></thead>
             <tbody>@foreach($enrollments as $attempt)<tr>
