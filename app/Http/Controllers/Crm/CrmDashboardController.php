@@ -67,7 +67,15 @@ class CrmDashboardController extends Controller
 
         $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'websiteSubmissions', 'latestActivity'])->withCount('activities');
         if ($view === 'followups') {
-            $leads->whereNotNull('follow_up_at')->whereNull('follow_up_completed_at')->orderBy('follow_up_at');
+            // The planner holds every open conversation: any lead sitting on a
+            // follow-up status (not answered / call back / follow up / interested),
+            // plus anything with a scheduled follow-up still to be completed.
+            $leads->where(fn (Builder $open) => $open
+                ->whereIn('status', CrmOptions::FOLLOW_UP_STATUSES)
+                ->orWhere(fn (Builder $scheduled) => $scheduled
+                    ->whereNotNull('follow_up_at')->whereNull('follow_up_completed_at')))
+                ->orderByRaw('follow_up_at is null')
+                ->orderBy('follow_up_at');
         } elseif ($view === 'students') {
             $leads->where('is_student', true)->latest('updated_at');
         } else {
@@ -167,6 +175,7 @@ class CrmDashboardController extends Controller
             'followUpLayout' => $followUpLayout,
             'statuses' => CrmOptions::STATUSES,
             'pipelineStatuses' => CrmOptions::pipelineStatuses(),
+            'followUpStatuses' => CrmOptions::FOLLOW_UP_STATUSES,
             'priorities' => CrmOptions::PRIORITIES,
             'categories' => CrmOptions::CATEGORIES,
             'leadOrigins' => CrmOptions::LEAD_ORIGINS,

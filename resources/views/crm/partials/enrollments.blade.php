@@ -15,8 +15,9 @@
 
     @if($enrollments->count())
         <div class="table-wrap"><table class="enrollment-table">
-            <thead><tr><th>Student</th><th>Program</th><th>Source</th><th>Amount</th><th>Payment details</th><th>Created</th>@if($crmUser->isSuperAdmin())<th>Manage</th>@endif</tr></thead>
+            <thead><tr><th class="col-serial">Serial No</th><th>Student</th><th>Program</th><th>Source</th><th>Amount</th><th>Payment details</th><th>Created</th>@if($crmUser->isSuperAdmin())<th>Manage</th>@endif</tr></thead>
             <tbody>@foreach($enrollments as $attempt)<tr>
+                <td class="col-serial">{{ $enrollments->firstItem() + $loop->index }}</td>
                 <td><div class="lead-primary"><span class="lead-avatar">{{ $initials($attempt->customer_name) }}</span><span class="lead-name">@if($attempt->crm_lead_id)<a href="{{ route('crm.dashboard',['view'=>'enrollments','lead'=>$attempt->crm_lead_id]) }}"><strong>{{ $attempt->customer_name }}</strong></a>@else<strong>{{ $attempt->customer_name }}</strong>@endif<span>{{ $attempt->customer_email }}@if($attempt->customer_phone) · {{ $attempt->customer_phone }}@endif</span></span></div></td>
                 <td><strong>{{ $attempt->item_name }}</strong><span class="subtext">Option {{ $attempt->option_index + 1 }}</span></td>
                 <td><span class="source-page-pill">{{ str($attempt->page_slug)->replace('-',' ')->title() }}</span><span class="subtext">{{ $attempt->block_id }}</span></td>

@@ -88,13 +88,14 @@
 
     @if($mockInvites->count())
         <div class="table-wrap"><table class="invite-table">
-            <thead><tr><th>Student</th><th>Round</th><th>Attempts</th><th>Status</th><th>Issued</th><th>Share</th></tr></thead>
+            <thead><tr><th class="col-serial">Serial No</th><th>Student</th><th>Round</th><th>Attempts</th><th>Status</th><th>Issued</th><th>Share</th></tr></thead>
             <tbody>@foreach($mockInvites as $invite)
                 @php
                     $completed = $invite->attempts->whereNotNull('completed_at');
                     $contact = collect([$invite->recipient_email, $invite->recipient_phone])->filter()->implode(' · ');
                 @endphp
                 <tr @class(['is-dead' => ! $invite->isUsable()])>
+                    <td class="col-serial">{{ $mockInvites->firstItem() + $loop->index }}</td>
                     <td>
                         <strong>{{ $invite->recipient_name }}</strong>
                         <span class="subtext">{{ $contact !== '' ? $contact : 'No contact recorded' }}</span>

@@ -18,6 +18,13 @@ class CrmOptions
         return array_filter(self::STATUSES, fn (string $key): bool => $key !== 'converted', ARRAY_FILTER_USE_KEY);
     }
 
+    /**
+     * Statuses that mean the conversation is still open, so the lead belongs in the
+     * Follow-up planner whether or not a follow-up date has been scheduled yet.
+     * These are the values tinted brown wherever the pipeline status is picked.
+     */
+    public const FOLLOW_UP_STATUSES = ['not_answered', 'call_back', 'follow_up', 'interested'];
+
     public const CATEGORIES = [
         'undergraduate' => 'Undergraduate', 'postgraduate' => 'Postgraduate', 'mbbs' => 'MBBS',
         'test_prep' => 'Test preparation', 'visa' => 'Visa', 'other' => 'Other',
@@ -52,6 +59,7 @@ class CrmOptions
 
     /** English proficiency tests offered on the lead's academic background card. */
     public const ENGLISH_TESTS = [
+        'not_taken' => 'Not taken',
         'ielts' => 'IELTS',
         'toefl' => 'TOEFL',
         'pte' => 'PTE Academic',
@@ -62,6 +70,7 @@ class CrmOptions
 
     /** Aptitude / standardised tests offered on the lead's academic background card. */
     public const APTITUDE_TESTS = [
+        'not_taken' => 'Not taken',
         'sat' => 'SAT',
         'act' => 'ACT',
         'gre' => 'GRE',

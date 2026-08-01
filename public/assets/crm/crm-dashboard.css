@@ -403,7 +403,7 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 .audit-list{display:grid}
 .audit-entry{border-bottom:1px solid var(--audit-line);background:var(--audit-surface)}
 .audit-entry:last-child{border-bottom:0}
-.audit-entry-main{display:grid;grid-template-columns:40px minmax(130px,.65fr) minmax(280px,2fr) minmax(120px,.55fr);align-items:center;gap:13px;padding:15px 20px}
+.audit-entry-main{display:grid;grid-template-columns:26px 40px minmax(130px,.65fr) minmax(280px,2fr) minmax(120px,.55fr);align-items:center;gap:13px;padding:15px 20px}
 .audit-avatar{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--audit-soft);color:var(--audit-accent);font-size:.68rem;font-weight:850}
 .audit-actor,.audit-action,.audit-meta{min-width:0}
 .audit-actor strong,.audit-actor small,.audit-action strong,.audit-action small,.audit-meta strong,.audit-meta small{display:block}
@@ -414,7 +414,7 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
 .audit-event{display:inline-flex;padding:3px 7px;border-radius:999px;background:var(--audit-soft);color:var(--audit-accent);font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.035em}
 .audit-meta{text-align:right}
 .audit-meta strong{font-size:.7rem}
-.audit-details{padding:0 20px 13px 73px}
+.audit-details{padding:0 20px 13px 112px}
 .audit-details summary{width:max-content;cursor:pointer;color:var(--audit-accent);font-size:.63rem;font-weight:800}
 .audit-change-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px;margin-top:10px}
 .audit-change-group{min-width:0;padding:10px 12px;border:1px solid var(--audit-line);border-radius:10px;background:var(--audit-soft)}
@@ -451,12 +451,12 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
     .team-role-guide{grid-template-columns:1fr}
     .audit-filters{grid-template-columns:1fr!important}
     .audit-filters>.search-wrap,.audit-filters>.control{display:block!important;grid-column:auto!important}
-    .audit-entry-main{grid-template-columns:36px minmax(0,1fr);gap:9px;padding:13px 14px}
+    .audit-entry-main{grid-template-columns:22px 36px minmax(0,1fr);gap:9px;padding:13px 14px}
     .audit-avatar{width:36px;height:36px}
-    .audit-action,.audit-meta{grid-column:2}
+    .audit-action,.audit-meta{grid-column:3}
     .audit-meta{text-align:left;display:flex;gap:8px;flex-wrap:wrap}
     .audit-meta small{margin-top:0}
-    .audit-details{padding:0 14px 13px 59px}
+    .audit-details{padding:0 14px 13px 81px}
     .audit-change-groups{grid-template-columns:1fr}
 }
 
@@ -681,3 +681,26 @@ html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
     .crm-app .icon-btn-refresh svg,.crm-app .icon-btn-refresh:hover svg{transition:none;transform:none}
     .crm-app .icon-btn-refresh.is-spinning svg{animation:none;opacity:.55}
 }
+
+/* ── Serial numbers: every CRM list is numbered from the paginator ─────────── */
+.crm-app th.col-serial,.crm-app td.col-serial{width:1%;white-space:nowrap;text-align:center}
+.crm-app td.col-serial{color:var(--muted,#707789);font-weight:800;font-variant-numeric:tabular-nums}
+.audit-serial{align-self:center;color:var(--audit-muted);font-size:.68rem;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ── Follow-up pipeline statuses ──────────────────────────────────────────── */
+/* Not answered / Call back / Follow up / Interested keep a lead in the Follow-up
+   planner, so they are tinted brown wherever the pipeline status is chosen —
+   both the option itself and the closed select once one is picked. */
+.crm-app option.is-followup-status{background:#f3e7d8;color:#6b4321}
+.crm-app select.is-followup-status{border-color:#cfa876;background:#faf3e9;color:#6b4321;font-weight:750}
+.crm-app select.is-followup-status:focus{border-color:#b17d3c;box-shadow:0 0 0 3px rgba(154,108,45,.14)}
+.followup-status-note{display:block;margin-top:7px;color:#8a6438;font-size:.62rem;font-weight:700;line-height:1.4}
+.followup-status-note::before{content:"";display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:3px;background:#cfa876;vertical-align:-1px}
+/* Those statuses promise another conversation, so the date stops being optional. */
+.field.is-followup-required>label .label-note{color:#8a6438;font-weight:800}
+.field.is-followup-required input[type="datetime-local"]{border-color:#cfa876;background:#fdf8f2}
+
+/* "Not taken" rows record the absence of a result, so they carry a note instead
+   of a score and date. */
+.test-row-flag{flex:1 1 150px;align-self:flex-end;padding-bottom:11px;color:#8a6438;font-size:.63rem;font-weight:700}
+.test-row-flag[hidden],.test-row-result[hidden]{display:none}

@@ -23,8 +23,9 @@
 
     @if($subscribers->count())
         <div class="table-wrap"><table class="subscriber-table">
-            <thead><tr><th>Email</th><th>Signup source</th><th>Status</th><th>Subscribed</th>@if($crmUser->isSuperAdmin())<th>Manage</th>@endif</tr></thead>
+            <thead><tr><th class="col-serial">Serial No</th><th>Email</th><th>Signup source</th><th>Status</th><th>Subscribed</th>@if($crmUser->isSuperAdmin())<th>Manage</th>@endif</tr></thead>
             <tbody>@foreach($subscribers as $subscriber)<tr>
+                <td class="col-serial">{{ $subscribers->firstItem() + $loop->index }}</td>
                 <td><a class="subscriber-email" href="mailto:{{ $subscriber->email }}">{{ $subscriber->email }}</a></td>
                 <td>{{ $subscriber->source ?: 'Website newsletter' }}</td>
                 <td><span class="subscriber-status is-{{ $subscriber->status }}">{{ $subscriber->status === 'active' ? 'Active' : 'Unsubscribed' }}</span></td>

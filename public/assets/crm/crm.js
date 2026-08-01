@@ -521,11 +521,46 @@ document.addEventListener('DOMContentLoaded', () => {
         if (empty) empty.hidden = repeater.querySelector('[data-test-row]') !== null;
     };
 
-    const syncTestOther = (select) => {
-        const other = select.closest('[data-test-row]')?.querySelector('[data-test-other]');
-        if (!other) return;
-        other.hidden = select.value !== 'other';
-        if (other.hidden) other.querySelector('input').value = '';
+    // "Other" reveals a free-text test name; "Not taken" is the absence of a
+    // result, so it drops the score and date boxes instead.
+    const syncTestRow = (select) => {
+        const row = select.closest('[data-test-row]');
+        if (!row) return;
+        const notTaken = select.value === 'not_taken';
+        const other = row.querySelector('[data-test-other]');
+        if (other) {
+            other.hidden = select.value !== 'other';
+            if (other.hidden) other.querySelector('input').value = '';
+        }
+        row.querySelectorAll('[data-test-result]').forEach((result) => {
+            result.hidden = notTaken;
+            if (notTaken) result.querySelector('input').value = '';
+        });
+        const flag = row.querySelector('[data-test-flag]');
+        if (flag) flag.hidden = !notTaken;
+    };
+
+    // An open follow-up status and the follow-up date are two halves of the same
+    // promise: picking a date defaults the status to "Follow up", and any of the
+    // open statuses makes the date mandatory. Membership is read off the option's
+    // brown-tint class, so the status list stays defined in PHP only.
+    const syncFollowUpPairing = (form, statusLed) => {
+        const status = form?.querySelector('select[data-followup-tinted]');
+        const date = form?.querySelector('input[name="follow_up_at"]');
+        if (!status || !date) return;
+        const isOpenStatus = status.selectedOptions[0]?.classList.contains('is-followup-status') === true;
+        const canDefault = [...status.options].some((option) => option.value === 'follow_up');
+        if (!statusLed && date.value && !isOpenStatus && canDefault) {
+            status.value = 'follow_up';
+            // Re-enters this function through the delegated change handler, which
+            // also refreshes the tint, the guidance copy and the required state.
+            status.dispatchEvent(new Event('change', {bubbles: true}));
+            return;
+        }
+        date.required = isOpenStatus;
+        date.closest('.field')?.classList.toggle('is-followup-required', isOpenStatus);
+        const note = date.closest('.field')?.querySelector('[data-followup-note]');
+        if (note) note.textContent = isOpenStatus ? 'Required for this status' : 'Optional';
     };
 
     /* ------------------------------------------------------------------ copy
@@ -816,7 +851,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (input.files?.[0]) label?.querySelector('strong')?.replaceChildren(input.files[0].name);
         }
         if (input.matches('[data-crm-filter-form] select, [data-crm-filter-form] input[type="date"]')) input.form?.requestSubmit();
-        if (input.matches('[data-test-select]')) syncTestOther(input);
+        if (input.matches('[data-test-select]')) syncTestRow(input);
+        // Statuses that keep a lead in the Follow-up planner carry a brown tint.
+        if (input.matches('[data-followup-tinted]')) {
+            input.classList.toggle('is-followup-status', input.selectedOptions[0]?.classList.contains('is-followup-status') === true);
+            syncFollowUpPairing(input.form, true);
+        }
+        if (input.matches('input[name="follow_up_at"]')) syncFollowUpPairing(input.form, false);
         if (input.matches('[data-status-select]')) {
             const help = input.closest('.section-card')?.querySelector('[data-status-help]');
             if (help) help.textContent = input.selectedOptions[0]?.dataset.hint || '';

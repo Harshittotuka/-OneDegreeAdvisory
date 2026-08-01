@@ -1,6 +1,6 @@
 @php
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
-    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['In progress Enrollment', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Upcoming and overdue conversations'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
+    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['In progress Enrollment', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
     $currentTitle = $titles[$view];
     $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'shortlisting'], true);
     $filterQuery = request()->except(['page', 'lead']);
@@ -13,6 +13,9 @@
         if (is_array($value)) return (string) json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         return (string) $value;
     };
+    // Pipeline statuses that keep a lead in the Follow-up planner. They are tinted
+    // brown in every status dropdown so the planner's contents are predictable.
+    $isFollowUpStatus = static fn (string $key): bool => in_array($key, $followUpStatuses, true);
     // Leads-table milestone cell (derived from status). Content is trusted markup, render with {!! !!}.
     $milestone = static function (bool $done, ?\Carbon\Carbon $date = null): string {
         if (! $done) return '<span class="lead-ms lead-ms-no">—</span>';
@@ -314,6 +317,7 @@
                             @foreach($auditLogs as $log)
                                 <article class="audit-entry">
                                     <div class="audit-entry-main">
+                                        <span class="audit-serial">{{ $auditLogs->firstItem() + $loop->index }}</span>
                                         <span class="audit-avatar">{{ $initials($log->actor?->name) }}</span>
                                         <span class="audit-actor"><strong>{{ $log->actor?->name ?? 'Deleted user' }}</strong><small>{{ $log->actor?->isSuperAdmin() ? 'Super admin' : ($log->actor ? 'Counsellor' : 'Account removed') }}</small></span>
                                         <span class="audit-action"><span class="audit-event">{{ $auditEvents[$log->event] ?? str($log->event)->replace('_', ' ')->title() }}</span><strong>{{ $log->description }}</strong>@if($log->subject_label)<small>@if($log->lead)<a href="{{ route('crm.dashboard', ['view' => 'leads', 'lead' => $log->lead->id]) }}">{{ $log->subject_label }}</a>@else{{ $log->subject_label }}@endif</small>@endif</span>
@@ -353,7 +357,7 @@
                     @if($view === 'followups')<input type="hidden" name="layout" value="{{ $followUpLayout }}">@endif
                     @if($view === 'followups' && $followUpLayout === 'calendar')<input type="hidden" name="month" value="{{ request('month', now()->format('Y-m')) }}">@endif
                     <div class="search-wrap"><input class="control" type="search" name="search" value="{{ request('search') }}" placeholder="Search name, phone, email or lead ID"></div>
-                    <select class="control" name="status"><option value="">All statuses</option>@foreach($statuses as $key=>$label)<option value="{{ $key }}" @selected(request('status')===$key)>{{ $label }}</option>@endforeach</select>
+                    <select @class(['control', 'is-followup-status' => $isFollowUpStatus((string) request('status'))]) name="status" data-followup-tinted><option value="">All statuses</option>@foreach($statuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) @selected(request('status')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="priority"><option value="">All priorities</option>@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected(request('priority')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="lead_origin"><option value="">All lead origins</option>@foreach($leadOrigins as $key=>$label)<option value="{{ $key }}" @selected(request('lead_origin')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="lead_type"><option value="">All enquiry types</option>@foreach($leadTypes as $key=>$label)<option value="{{ $key }}" @selected(request('lead_type')===$key)>{{ $label }}</option>@endforeach</select>
@@ -427,7 +431,7 @@
                     <div class="table-wrap">
                         <table>
                         @if($view === 'leads')
-                            <thead><tr><th>Serial No</th><th>Lead Received</th><th>Student Name</th><th>Phone number</th><th>Contacted</th><th>Counselling Done</th><th>Shortlisting sent</th><th>Enrolled</th><th>Remarks by One Degree</th><th></th></tr></thead>
+                            <thead><tr><th class="col-serial">Serial No</th><th>Lead Received</th><th>Student Name</th><th>Phone number</th><th>Contacted</th><th>Counselling Done</th><th>Shortlisting sent</th><th>Enrolled</th><th>Remarks by One Degree</th><th></th></tr></thead>
                             <tbody>
                             @foreach($leads as $lead)
                                 @php
@@ -438,7 +442,7 @@
                                     $latestActivity = $lead->latestActivity;
                                 @endphp
                                 <tr data-crm-href="{{ $openUrl }}" tabindex="0">
-                                    <td>{{ $leads->firstItem() + $loop->index }}</td>
+                                    <td class="col-serial">{{ $leads->firstItem() + $loop->index }}</td>
                                     <td>{{ $lead->created_at->format('d M Y') }}<span class="subtext">{{ $lead->created_at->format('g:i A') }}</span></td>
                                     <td><div class="lead-primary"><span class="lead-avatar">{{ $initials($lead->name) }}</span><span class="lead-name"><strong>{{ $lead->name }}</strong><span>{{ $lead->lead_number }}</span></span></div></td>
                                     <td>{{ $lead->phone ? '+91 '.$lead->phone : '—' }}</td>
@@ -452,7 +456,7 @@
                             @endforeach
                             </tbody>
                         @else
-                            <thead><tr><th>Lead</th><th>Type &amp; source</th><th>{{ $view === 'students' ? 'Journey stage' : 'Status' }}</th><th>Category</th>@if($crmUser->isSuperAdmin())<th>Owner</th>@endif<th>Follow-up</th><th>Updated</th><th></th></tr></thead>
+                            <thead><tr><th class="col-serial">Serial No</th><th>Lead</th><th>Type &amp; source</th><th>{{ $view === 'students' ? 'Journey stage' : 'Status' }}</th><th>Category</th>@if($crmUser->isSuperAdmin())<th>Owner</th>@endif<th>Follow-up</th><th>Updated</th><th></th></tr></thead>
                             <tbody>
                             @foreach($leads as $lead)
                                 @php
@@ -460,6 +464,7 @@
                                     $followClass = $lead->follow_up_at && !$lead->follow_up_completed_at ? ($lead->follow_up_at->isPast() ? 'due' : ($lead->follow_up_at->isTomorrow() ? 'soon' : '')) : '';
                                 @endphp
                                 <tr data-crm-href="{{ $openUrl }}" tabindex="0">
+                                    <td class="col-serial">{{ $leads->firstItem() + $loop->index }}</td>
                                     <td><div class="lead-primary"><span class="lead-avatar">{{ $initials($lead->name) }}</span><span class="lead-name"><strong>{{ $lead->name }}</strong><span>{{ $lead->lead_number }}@if($lead->phone) · +91 {{ $lead->phone }}@elseif($lead->email) · {{ $lead->email }}@endif</span></span></div></td>
                                     <td><span class="lead-type-pill">{{ $leadTypes[$lead->lead_type] ?? 'General enquiry' }}</span><span class="subtext">{{ $leadOrigins[$lead->lead_origin] ?? ucfirst($lead->lead_origin) }} · {{ $lead->source ?: 'Source not set' }}</span></td>
                                     @if($view === 'students')
@@ -505,9 +510,10 @@
                 <div @class(['field', 'has-error' => $leadErrors->has('lead_type')])><label for="lead_type">Enquiry type</label><select id="lead_type" name="lead_type">@foreach($leadTypes as $key=>$label)<option value="{{ $key }}" @selected(old('lead_type','general')===$key)>{{ $label }}</option>@endforeach</select>@error('lead_type','leadCreate')<span class="field-error">{{ $message }}</span>@enderror</div>
                 <div @class(['field', 'has-error' => $leadErrors->has('priority')])><label for="lead_priority">Priority</label><select id="lead_priority" name="priority" @if($leadErrors->has('priority')) aria-invalid="true" aria-describedby="lead_priority_error" @endif>@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected(old('priority','medium')===$key)>{{ $label }}</option>@endforeach</select>@error('priority','leadCreate')<span class="field-error" id="lead_priority_error">{{ $message }}</span>@enderror</div>
                 <div @class(['field', 'has-error' => $leadErrors->has('source')])><label for="lead_source">Lead source</label><input id="lead_source" name="source" value="{{ old('source') }}" placeholder="Website, Instagram, referral…" @if($leadErrors->has('source')) aria-invalid="true" aria-describedby="lead_source_error" @endif>@error('source','leadCreate')<span class="field-error" id="lead_source_error">{{ $message }}</span>@enderror</div>
-                <div @class(['field', 'has-error' => $leadErrors->has('status')])><label for="lead_status">Pipeline status</label><select id="lead_status" name="status" @if($leadErrors->has('status')) aria-invalid="true" aria-describedby="lead_status_error" @endif>@foreach($pipelineStatuses as $key=>$label)<option value="{{ $key }}" @selected(old('status','new')===$key)>{{ $label }}</option>@endforeach</select><span class="field-help">Enrollment is completed later from the Student tab.</span>@error('status','leadCreate')<span class="field-error" id="lead_status_error">{{ $message }}</span>@enderror</div>
+                <div @class(['field', 'has-error' => $leadErrors->has('status')])><label for="lead_status">Pipeline status</label><select id="lead_status" name="status" data-followup-tinted @class(['is-followup-status' => $isFollowUpStatus((string) old('status', 'new'))]) @if($leadErrors->has('status')) aria-invalid="true" aria-describedby="lead_status_error" @endif>@foreach($pipelineStatuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) @selected(old('status','new')===$key)>{{ $label }}</option>@endforeach</select><span class="field-help">Enrollment is completed later from the Student tab.</span>@error('status','leadCreate')<span class="field-error" id="lead_status_error">{{ $message }}</span>@enderror</div>
                 @if($crmUser->isSuperAdmin())<div @class(['field', 'has-error' => $leadErrors->has('assigned_to')])><label for="lead_assigned">Assign to counsellor</label><select id="lead_assigned" name="assigned_to" @if($leadErrors->has('assigned_to')) aria-invalid="true" aria-describedby="lead_assigned_error" @endif><option value="">Unassigned</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected((string)old('assigned_to') === (string)$person->id)>{{ $person->name }}</option>@endforeach</select>@error('assigned_to','leadCreate')<span class="field-error" id="lead_assigned_error">{{ $message }}</span>@enderror</div>@endif
-                <div @class(['field', 'has-error' => $leadErrors->has('follow_up_at')])><label for="lead_followup">First follow-up</label><input id="lead_followup" type="datetime-local" name="follow_up_at" value="{{ old('follow_up_at') }}" @if($leadErrors->has('follow_up_at')) aria-invalid="true" aria-describedby="lead_followup_error" @endif>@error('follow_up_at','leadCreate')<span class="field-error" id="lead_followup_error">{{ $message }}</span>@enderror</div>
+                @php $newLeadFollowUpRequired = $isFollowUpStatus((string) old('status', 'new')); @endphp
+                <div @class(['field', 'is-followup-required' => $newLeadFollowUpRequired, 'has-error' => $leadErrors->has('follow_up_at')])><label for="lead_followup">First follow-up <span class="label-note" data-followup-note>{{ $newLeadFollowUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input id="lead_followup" type="datetime-local" name="follow_up_at" value="{{ old('follow_up_at') }}" @required($newLeadFollowUpRequired) @if($leadErrors->has('follow_up_at')) aria-invalid="true" aria-describedby="lead_followup_error" @endif>@error('follow_up_at','leadCreate')<span class="field-error" id="lead_followup_error">{{ $message }}</span>@enderror</div>
             </div></div>
             <div class="modal-foot"><button class="btn btn-outline" type="button" data-modal-close>Cancel</button><button class="btn btn-primary" type="submit">Create lead</button></div>
         </form>
@@ -694,16 +700,18 @@
                                     <input type="hidden" name="status" value="converted">
                                     <div class="locked-conversion-status"><strong>Enrolled student</strong><span>Status is managed through the student journey below.</span></div>
                                 @else
-                                    <select name="status" data-status-select>
+                                    <select name="status" data-status-select data-followup-tinted @class(['is-followup-status' => ! $conversionIncomplete && $isFollowUpStatus($selectedLead->status)])>
                                         @if($conversionIncomplete)<option value="converted" data-symbol="!" data-hint="{{ $currentStatus['copy'] }}" selected>Conversion incomplete — finish in Student tab</option>@endif
-                                        @foreach($pipelineStatuses as $key=>$label)<option value="{{ $key }}" data-symbol="{{ $statusDetails[$key]['symbol'] ?? '•' }}" data-hint="{{ $statusDetails[$key]['copy'] ?? '' }}" @selected(!$conversionIncomplete && $selectedLead->status===$key)>{{ $label }}</option>@endforeach
+                                        @foreach($pipelineStatuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) data-symbol="{{ $statusDetails[$key]['symbol'] ?? '•' }}" data-hint="{{ $statusDetails[$key]['copy'] ?? '' }}" @selected(!$conversionIncomplete && $selectedLead->status===$key)>{{ $label }}</option>@endforeach
                                     </select>
+                                    <span class="followup-status-note">Brown-tinted statuses keep this lead in the Follow-up planner.</span>
                                 @endif
                                 <div class="select-guidance"><span data-status-symbol>{{ $currentStatus['symbol'] }}</span><p data-status-help>{{ $currentStatus['copy'] }}</p></div>
                             </div>
                             <div class="field"><label>Priority</label><select name="priority">@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->priority===$key)>{{ $label }}</option>@endforeach</select></div>
                             @if($crmUser->isSuperAdmin())<div class="field"><label>Counsellor owner</label><select name="assigned_to"><option value="">Unassigned</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected($selectedLead->assigned_to===$person->id)>{{ $person->name }}</option>@endforeach</select></div>@endif
-                            <div class="field {{ $crmUser->isSuperAdmin() ? 'full' : '' }}"><label>Next follow-up <span class="label-note">Optional</span></label><input type="datetime-local" name="follow_up_at" value="{{ $selectedLead->follow_up_at?->format('Y-m-d\TH:i') }}"></div>
+                            @php $followUpRequired = ! $selectedLead->is_student && $isFollowUpStatus($selectedLead->status); @endphp
+                            <div @class(['field', 'full' => $crmUser->isSuperAdmin(), 'is-followup-required' => $followUpRequired])><label>Next follow-up <span class="label-note" data-followup-note>{{ $followUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input type="datetime-local" name="follow_up_at" value="{{ $selectedLead->follow_up_at?->format('Y-m-d\TH:i') }}" @required($followUpRequired)></div>
                         </div>
                         <div class="next-action-card {{ $followUpTone }}"><span class="next-action-icon">{{ $followUpTone === 'overdue' ? '!' : ($followUpTone === 'done' ? '✓' : '◷') }}</span><div><strong>{{ $followUpTitle }}</strong><p>{{ $followUpCopy }}</p></div>@if($selectedLead->follow_up_at && !$selectedLead->follow_up_completed_at)<button class="btn btn-outline btn-compact" form="completeFollowup" type="submit">Mark completed</button>@endif</div>
                     </div>

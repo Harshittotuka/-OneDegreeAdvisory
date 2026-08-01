@@ -327,7 +327,10 @@ class CrmLeadController extends Controller
             'priority' => ['required', Rule::in(array_keys(CrmOptions::PRIORITIES))],
             'source' => ['nullable', 'string', 'max:100'], 'status' => ['required', Rule::in($allowedStatuses)],
             'assigned_to' => [$user->isSuperAdmin() ? 'nullable' : 'prohibited', Rule::exists('crm_users', 'id')->where(fn ($q) => $q->where('role', 'counsellor')->where('is_active', true))],
-            'follow_up_at' => ['nullable', 'date'],
+            // An open follow-up status is a promise to talk again, so it has to carry a date.
+            'follow_up_at' => ['nullable', Rule::requiredIf(
+                fn (): bool => in_array((string) $request->input('status'), CrmOptions::FOLLOW_UP_STATUSES, true)
+            ), 'date'],
             'student_stage' => ['nullable', Rule::in(array_keys(CrmOptions::STUDENT_STAGES))],
             'tenth_score' => ['nullable', 'string', 'max:40'],
             'twelfth_score' => ['nullable', 'string', 'max:40'],
@@ -342,7 +345,7 @@ class CrmLeadController extends Controller
             'aptitude_tests.*.test' => ['nullable', Rule::in(array_keys(CrmOptions::APTITUDE_TESTS))],
         ];
 
-        $messages = [];
+        $messages = ['follow_up_at.required' => 'Set the next follow-up date and time for this pipeline status.'];
         foreach (self::TEST_GROUPS as $group => $catalog) {
             $rules[$group.'.*.name'] = ['nullable', 'required_if:'.$group.'.*.test,other', 'string', 'max:60'];
             $rules[$group.'.*.score'] = ['nullable', 'string', 'max:40'];
@@ -354,7 +357,34 @@ class CrmLeadController extends Controller
             ? Validator::make($request->all(), $rules, $messages)->validateWithBag($errorBag)
             : $request->validate($rules, $messages);
 
-        return $this->normaliseTestRows($request, $data);
+        return $this->normaliseTestRows($request, $this->defaultFollowUpStatus($data, $lead));
+    }
+
+    /**
+     * Scheduling a conversation puts the lead back in the planner: a new or changed
+     * follow-up date defaults the status to "Follow up", unless the counsellor
+     * already picked one of the open follow-up statuses.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function defaultFollowUpStatus(array $data, ?CrmLead $lead): array
+    {
+        $followUp = $data['follow_up_at'] ?? null;
+        $status = (string) ($data['status'] ?? '');
+        if (blank($followUp) || $status === 'converted' || $lead?->is_student) {
+            return $data;
+        }
+        if (in_array($status, CrmOptions::FOLLOW_UP_STATUSES, true)) {
+            return $data;
+        }
+        // Leave an untouched date alone — only a freshly picked one moves the status.
+        if ($lead?->follow_up_at?->equalTo(\Illuminate\Support\Carbon::parse($followUp))) {
+            return $data;
+        }
+        $data['status'] = 'follow_up';
+
+        return $data;
     }
 
     /**
@@ -380,8 +410,9 @@ class CrmLeadController extends Controller
                     continue;
                 }
                 $name = trim((string) ($row['name'] ?? ''));
-                $score = trim((string) ($row['score'] ?? ''));
-                $date = trim((string) ($row['date'] ?? ''));
+                // "Not taken" is the absence of a result, so it never carries a score or date.
+                $score = $test === 'not_taken' ? '' : trim((string) ($row['score'] ?? ''));
+                $date = $test === 'not_taken' ? '' : trim((string) ($row['date'] ?? ''));
                 $rows[] = [
                     'test' => $test,
                     'name' => $test === 'other' ? ($name ?: null) : null,

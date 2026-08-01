@@ -161,6 +161,8 @@ class CrmTest extends TestCase
         $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
             'name' => 'Legacy One Updated', 'phone' => $lead->phone, 'email' => 'legacy@example.com',
             'priority' => 'high', 'status' => 'interested',
+            // An open follow-up status has to carry a date; see the follow-up pairing test.
+            'follow_up_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
         ])->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('crm_leads', ['id' => $lead->id, 'name' => 'Legacy One Updated', 'priority' => 'high']);
@@ -637,6 +639,165 @@ class CrmTest extends TestCase
 
         $css = file_get_contents(public_path('assets/crm/crm-dashboard.css'));
         $this->assertStringContainsString('crmRefreshSpin', $css);
+    }
+
+    public function test_the_follow_up_planner_holds_every_open_conversation(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+
+        // The four open statuses belong in the planner with or without a date.
+        foreach (['not_answered', 'call_back', 'follow_up', 'interested'] as $index => $status) {
+            $this->leadFor($admin, 'Open '.$status, '98765100'.$index)->update(['status' => $status]);
+        }
+        // A dated, still-incomplete follow-up stays in the planner whatever the status.
+        $this->leadFor($admin, 'Dated New Lead', '9876510090')->update(['follow_up_at' => now()->addDay()]);
+        // Closed and completed leads stay out.
+        $this->leadFor($admin, 'Junk Lead', '9876510091')->update(['status' => 'junk']);
+        $this->leadFor($admin, 'Done Lead', '9876510092')
+            ->update(['follow_up_at' => now()->addDay(), 'follow_up_completed_at' => now()]);
+
+        $planner = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'followups']))->assertOk();
+
+        foreach (['Open not_answered', 'Open call_back', 'Open follow_up', 'Open interested', 'Dated New Lead'] as $name) {
+            $planner->assertSee($name);
+        }
+        $planner->assertDontSee('Junk Lead')->assertDontSee('Done Lead');
+    }
+
+    public function test_open_follow_up_statuses_are_tinted_brown_in_the_status_dropdowns(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Tinted Lead', '9876510141');
+        $lead->update(['status' => 'call_back', 'follow_up_at' => now()->addDay()]);
+
+        $page = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))->assertOk();
+
+        // Each of the four options carries the tint class...
+        foreach (['not_answered', 'call_back', 'follow_up', 'interested'] as $status) {
+            $page->assertSee('<option value="'.$status.'" class="is-followup-status"', false);
+        }
+        // ...the closed select is tinted while one of them is selected...
+        $page->assertSee('data-followup-tinted class="is-followup-status"', false);
+        // ...and closed statuses stay untinted.
+        $page->assertSee('<option value="junk" class=""', false);
+        $page->assertSee('Brown-tinted statuses keep this lead in the Follow-up planner.');
+        // The date is mandatory while the lead sits on one of those statuses.
+        $page->assertSee('is-followup-required', false)->assertSee('Required for this status');
+    }
+
+    public function test_an_open_follow_up_status_requires_a_follow_up_date(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Needs A Date', '9876510101');
+        $payload = ['name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium'];
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['status' => 'call_back'])
+            ->assertSessionHasErrors('follow_up_at');
+        $this->assertSame('new', $lead->fresh()->status);
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + [
+                'status' => 'call_back', 'follow_up_at' => now()->addDay()->format('Y-m-d H:i:s'),
+            ])->assertSessionHasNoErrors();
+        $this->assertSame('call_back', $lead->fresh()->status);
+    }
+
+    public function test_scheduling_a_follow_up_defaults_the_status_to_follow_up(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'Fresh Enquiry', '9876510111');
+        $payload = ['name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium'];
+
+        // Picking a date on a "New lead" moves it into the planner.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + [
+                'status' => 'new', 'follow_up_at' => now()->addDay()->format('Y-m-d H:i:s'),
+            ])->assertSessionHasNoErrors();
+        $this->assertSame('follow_up', $lead->fresh()->status);
+
+        // A status the counsellor already chose from the open four is left alone.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + [
+                'status' => 'interested', 'follow_up_at' => now()->addDays(3)->format('Y-m-d H:i:s'),
+            ])->assertSessionHasNoErrors();
+        $this->assertSame('interested', $lead->fresh()->status);
+
+        // Re-saving without touching the date keeps the counsellor's own status.
+        $unchanged = $lead->fresh()->follow_up_at->format('Y-m-d H:i:s');
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['status' => 'not_interested', 'follow_up_at' => $unchanged])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('not_interested', $lead->fresh()->status);
+    }
+
+    public function test_a_test_row_can_record_that_the_student_never_sat_the_test(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $lead = $this->leadFor($admin, 'No Tests Yet', '9876510121');
+
+        $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
+            'name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium', 'status' => 'new',
+            // A stray score submitted alongside "Not taken" is dropped, not stored.
+            'english_tests' => [['test' => 'not_taken', 'score' => '7.5', 'date' => '2026-03-14']],
+            'aptitude_tests' => [['test' => 'not_taken']],
+        ])->assertSessionHasNoErrors();
+
+        $lead->refresh();
+        $this->assertSame([['test' => 'not_taken', 'name' => null, 'score' => null, 'date' => null]], $lead->english_tests);
+        $this->assertSame([['test' => 'not_taken', 'name' => null, 'score' => null, 'date' => null]], $lead->aptitude_tests);
+
+        // Both catalogs offer the option on the academic card.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('value="not_taken"', false)
+            ->assertSee('>Not taken</option>', false);
+    }
+
+    public function test_every_crm_list_numbers_its_rows(): void
+    {
+        $admin = CrmUser::query()->create([
+            'name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com',
+            'role' => 'super_admin', 'is_active' => true,
+        ]);
+        $this->leadFor($admin, 'Numbered Lead', '9876510131')
+            ->update(['status' => 'interested', 'follow_up_at' => now()->addDay()]);
+        $this->leadFor($admin, 'Numbered Student', '9876510132')
+            ->update(['is_student' => true, 'status' => 'converted', 'student_stage' => 'doc_pending']);
+        \App\Models\PaymentAttempt::query()->create([
+            'request_token' => str_repeat('c', 64), 'session_hash' => str_repeat('d', 64),
+            'page_slug' => 'test-preparation', 'block_id' => 'compare-plans', 'option_index' => 0,
+            'item_name' => 'IELTS Coaching', 'amount' => 1800000, 'currency' => 'INR',
+            'customer_name' => 'Rhea Kapoor', 'customer_email' => 'rhea@example.com',
+            'customer_phone' => '9876543219', 'status' => 'order_created',
+        ]);
+        \App\Models\CrmSubscriber::query()->create([
+            'email' => 'reader@example.com', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now(),
+        ]);
+        \App\Models\CrmMockInterviewInvite::query()->create([
+            'token' => \App\Models\CrmMockInterviewInvite::freshToken(), 'recipient_name' => 'Rahul Student',
+            'question_count' => 15, 'max_uses' => 3, 'created_by' => $admin->id, 'expires_at' => now()->addDays(30),
+        ]);
+
+        foreach (['leads', 'followups', 'students', 'enrollments', 'subscriptions', 'mock-invites'] as $view) {
+            $this->withSession(['crm_user_id' => $admin->id])
+                ->get(route('crm.dashboard', ['view' => $view]))
+                ->assertOk()
+                ->assertSee('class="col-serial">Serial No', false)
+                ->assertSee('class="col-serial">1</td>', false);
+        }
+
+        // The audit log is a card list rather than a table, so it numbers entries too.
+        \App\Models\CrmAuditLog::query()->create([
+            'crm_user_id' => $admin->id, 'event' => 'crm_login', 'description' => 'Signed in.',
+        ]);
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'audit']))
+            ->assertOk()
+            ->assertSee('class="audit-serial">1</span>', false);
     }
 
     private function leadFor(CrmUser $owner, string $name, string $phone): CrmLead
