@@ -459,9 +459,11 @@
 
                 @if($view !== 'followups' || $followUpLayout === 'table')
                 @if($leads->count())
-                    {{-- Said once, above the table: a short list that stops at the page
-                         size otherwise looks like records that never arrived. --}}
-                    <p class="list-count">Showing <strong>{{ $leads->firstItem() }}–{{ $leads->lastItem() }}</strong> of <strong>{{ number_format($leads->total()) }}</strong> {{ $leads->total() === 1 ? 'record' : 'records' }}@if($leads->hasPages()) · page {{ $leads->currentPage() }} of {{ $leads->lastPage() }}@endif</p>
+                    {{-- Said once, above the table: a list that stops at the page size
+                         otherwise looks like records that never arrived. Only worth
+                         spelling out a range when there is a second page to reach —
+                         "1–9 of 9" is a long way of saying nine. --}}
+                    <p class="list-count">@if($leads->hasPages())Showing <strong>{{ $leads->firstItem() }}–{{ $leads->lastItem() }}</strong> of <strong>{{ number_format($leads->total()) }}</strong> records · page {{ $leads->currentPage() }} of {{ $leads->lastPage() }}@else<strong>{{ number_format($leads->total()) }}</strong> {{ $leads->total() === 1 ? 'record' : 'records' }}@endif</p>
                     <div class="table-wrap">
                         <table>
                         @if($view === 'leads')

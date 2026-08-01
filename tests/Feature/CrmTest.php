@@ -1071,17 +1071,20 @@ class CrmTest extends TestCase
         }
 
         // The old page size stopped at 20 with nothing on screen saying so, which
-        // read as records that had never been saved.
+        // read as records that had never been saved. All 30 fit on the default
+        // page, so the line is a plain total — no range to spell out.
         $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'leads']))
             ->assertOk()
-            ->assertSee('of <strong>30</strong> records', false)
+            ->assertSee('<strong>30</strong> records', false)
+            ->assertDontSee('Showing')
             ->assertSee('name="per_page"', false);
 
-        // A smaller page still paginates, and the count line names the page.
+        // A smaller page does paginate, and there the range and page are worth saying.
         $response = $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'leads', 'per_page' => 25]))
             ->assertOk()
+            ->assertSee('<strong>1–25</strong> of <strong>30</strong> records', false)
             ->assertSee('page 1 of 2');
         $this->assertSame(25, $response->viewData('leads')->count());
 
