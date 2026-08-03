@@ -22,15 +22,14 @@ namespace App\Support;
  *     question and the convention breaks for everything after it, while these
  *     explicit keys keep pointing at the right audio.
  *  2. `free` marks the ten questions the public page samples, and is independent
- *     of `audio`. Most of the bank is now recorded, but the free pool stays at
+ *     of `audio`. The whole bank is recorded now, but the free pool stays at
  *     those same ten so an anonymous visitor gets the identical round they got
  *     before the bank was widened — recording a clip must never widen it.
  *
  * Questions without a recording are spoken by the browser's speech engine.
  * To promote one, record the clip and add its `audio` key — nothing else changes.
- *
- * Seven questions are still unrecorded, and their numbers are the gaps in the
- * folder: q2, q4, q5, q6, q7, q9 and q10.
+ * That fallback is still live for a question added later; as of the q2/q4-q7/q9/q10
+ * clips landing, every one of the 39 has its own voiceover and none of them use it.
  */
 class MockInterviewQuestions
 {
@@ -48,17 +47,17 @@ class MockInterviewQuestions
     private const BANK = [
         ['cat' => 'Personal & Academic Background', 'items' => [
             ['id' => 'about-yourself', 'q' => 'Tell me about yourself.', 'audio' => 'q1', 'free' => true],
-            ['id' => 'previous-education', 'q' => 'What did you study in your previous education?'],
+            ['id' => 'previous-education', 'q' => 'What did you study in your previous education?', 'audio' => 'q2'],
             ['id' => 'why-course', 'q' => 'Why did you choose this course?', 'audio' => 'q3', 'free' => true],
-            ['id' => 'academic-background', 'q' => 'Explain your academic background.'],
-            ['id' => 'field-change', 'q' => 'Why are you changing your field (if applicable)?'],
-            ['id' => 'career-goals', 'q' => 'What are your future career goals?'],
+            ['id' => 'academic-background', 'q' => 'Explain your academic background.', 'audio' => 'q4'],
+            ['id' => 'field-change', 'q' => 'Why are you changing your field (if applicable)?', 'audio' => 'q5'],
+            ['id' => 'career-goals', 'q' => 'What are your future career goals?', 'audio' => 'q6'],
         ]],
         ['cat' => 'University & Course Related', 'items' => [
-            ['id' => 'which-university', 'q' => 'Which university are you going to?'],
+            ['id' => 'which-university', 'q' => 'Which university are you going to?', 'audio' => 'q7'],
             ['id' => 'why-university', 'q' => 'Why did you choose this university?', 'audio' => 'q8', 'free' => true],
-            ['id' => 'why-here-not-elsewhere', 'q' => 'Why this country and not another country?'],
-            ['id' => 'university-knowledge', 'q' => 'What do you know about your university?'],
+            ['id' => 'why-here-not-elsewhere', 'q' => 'Why this country and not another country?', 'audio' => 'q9'],
+            ['id' => 'university-knowledge', 'q' => 'What do you know about your university?', 'audio' => 'q10'],
             ['id' => 'course-duration', 'q' => 'What is the duration of your course?', 'audio' => 'q11', 'free' => true],
             ['id' => 'course-start', 'q' => 'When does your course start?', 'audio' => 'q12'],
             ['id' => 'course-subjects', 'q' => 'What subjects will you study?', 'audio' => 'q13'],
