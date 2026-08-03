@@ -47,6 +47,14 @@ class SitePagesTest extends TestCase
         }
     }
 
+    public function test_evaluate_your_personality_opens_decode_in_the_same_tab(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<a class="course-menu-card" href="https://decode.onedegreeadvisory.com/">', false)
+            ->assertDontSee('data-feature="personality-assessment"', false);
+    }
+
     public function test_legacy_pages_redirect_to_canonical_urls(): void
     {
         foreach ([

@@ -14,6 +14,11 @@ return [
        would otherwise consider itself canonical. Override via CANONICAL_HOST. */
     'canonical_host' => env('CANONICAL_HOST', 'onedegreeadvisory.com'),
 
+    /* Decode — the personality assessment app on its own subdomain. The navbar's
+       "Evaluate your personality" card opens it in the same tab. Override via
+       DECODE_URL if it ever moves. */
+    'decode_url' => env('DECODE_URL', 'https://decode.onedegreeadvisory.com/'),
+
     /* Password for the /admin blog CMS. Override via CMS_PASSWORD in .env. */
     'cms_password' => env('CMS_PASSWORD', 'onedegree'),
 

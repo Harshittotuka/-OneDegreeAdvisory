@@ -219,11 +219,11 @@
                       <span class="course-menu-copy"><strong>Evaluate your profile</strong><small>Map academics, scores &amp; goals</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
-                    <button class="course-menu-card" type="button" data-students-hub-trigger data-feature="personality-assessment">
+                    <a class="course-menu-card" href="{{ config('site.decode_url') }}">
                       <span class="course-icon course-icon--pg" aria-hidden="true"><i data-lucide="brain"></i></span>
                       <span class="course-menu-copy"><strong>Evaluate your personality</strong><small>Discover your strengths &amp; work style</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
