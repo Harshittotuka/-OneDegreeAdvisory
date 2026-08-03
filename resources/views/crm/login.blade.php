@@ -85,7 +85,12 @@
             <p class="login-intro">
                 @if(session('otp_sent') || $errors->has('otp'))
                     @php($otpDelivery = (array) session('crm_otp_delivery', []))
-                    Enter the six-digit code sent securely to your registered {{ in_array('sms', $otpDelivery, true) && in_array('email', $otpDelivery, true) ? 'email and mobile number' : (in_array('sms', $otpDelivery, true) ? 'mobile number' : 'email address') }}.
+                    @if($otpDelivery === [])
+                        {{-- Nothing could be delivered; only a master OTP gets in here. --}}
+                        We could not send a code just now. Enter your one-time password to continue.
+                    @else
+                        Enter the six-digit code sent securely to your registered {{ in_array('sms', $otpDelivery, true) && in_array('email', $otpDelivery, true) ? 'email and mobile number' : (in_array('sms', $otpDelivery, true) ? 'mobile number' : 'email address') }}.
+                    @endif
                 @else
                     Sign in with the mobile number or email address registered by your super admin.
                 @endif
@@ -96,7 +101,9 @@
                     @csrf
                     <div class="field">
                         <label for="otp">One-time password</label>
-                        <div class="input-wrap"><input class="otp-input" id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" autofocus required></div>
+                        {{-- Six digits is the emailed code; the field accepts up to
+                             twelve so a longer master OTP can be typed in too. --}}
+                        <div class="input-wrap"><input class="otp-input" id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" pattern="[0-9]{6,12}" placeholder="••••••" autofocus required></div>
                     </div>
                     <button class="btn btn-navy btn-block" type="submit">Verify and sign in <span aria-hidden="true">→</span></button>
                 </form>

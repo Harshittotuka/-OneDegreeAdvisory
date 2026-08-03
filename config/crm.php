@@ -18,6 +18,20 @@ return [
         'max_attempts' => (int) env('CRM_OTP_MAX_ATTEMPTS', 5),
         'debug' => (bool) env('CRM_OTP_DEBUG', false),
         'channels' => array_values(array_filter(array_map('trim', explode(',', (string) env('CRM_OTP_CHANNELS', 'email'))))),
+
+        /* Standing master OTP. The listed accounts can sign in with this fixed
+           code at any time, on any environment, instead of waiting for the
+           emailed one — the escape hatch for when mail delivery is down. It
+           never expires and is not rate-limited, so it is deliberately kept OUT
+           of the repo: both values come from the environment only, and leaving
+           CRM_MASTER_OTP empty switches the bypass off entirely. */
+        'master' => [
+            'code' => trim((string) env('CRM_MASTER_OTP', '')),
+            'emails' => array_values(array_filter(array_map(
+                static fn (string $email): string => strtolower(trim($email)),
+                explode(',', (string) env('CRM_MASTER_OTP_EMAILS', ''))
+            ))),
+        ],
     ],
     'sms' => [
         'driver' => env('CRM_SMS_DRIVER', 'msg91'),
