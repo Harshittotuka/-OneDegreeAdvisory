@@ -17,7 +17,7 @@ class CrmLead extends Model
         'lead_number', 'name', 'phone', 'email', 'city', 'course_interest', 'country_interest',
         'tenth_score', 'tenth_passing_year', 'twelfth_score', 'twelfth_passing_year',
         'graduation_score', 'graduation_passing_year', 'backlogs', 'intake',
-        'counselling_shortlisting', 'english_tests', 'aptitude_tests',
+        'counselling', 'shortlisting', 'english_tests', 'aptitude_tests',
         'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'created_by', 'follow_up_at',
         'follow_up_completed_at', 'last_contacted_at', 'tags', 'profile', 'is_student',
         'student_stage', 'student_category', 'enrollment_amount', 'enrollment_date',

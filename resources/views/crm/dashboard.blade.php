@@ -22,6 +22,14 @@
         $sub = $date ? '<span class="subtext">'.e($date->format('d M Y')).'</span>' : '';
         return '<span class="lead-ms lead-ms-yes">✓ Yes</span>'.$sub;
     };
+    // Leads-table cell for a hand-recorded answer (counselling, shortlisting).
+    // Unlike a milestone, blank is its own state and must not read as "no".
+    $recorded = static function (?string $value): string {
+        if ($value === null || $value === '') return '<span class="lead-ms lead-ms-no" title="Not recorded yet">—</span>';
+        return $value === 'yes'
+            ? '<span class="lead-ms lead-ms-yes">✓ Yes</span>'
+            : '<span class="lead-ms lead-ms-not">✕ No</span>';
+    };
 @endphp
 <!doctype html>
 <html lang="en" class="crm-css-pending">
@@ -376,6 +384,17 @@
                     <select class="control" name="lead_origin"><option value="">All lead origins</option>@foreach($leadOrigins as $key=>$label)<option value="{{ $key }}" @selected(request('lead_origin')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="lead_type"><option value="">All enquiry types</option>@foreach($leadTypes as $key=>$label)<option value="{{ $key }}" @selected(request('lead_type')===$key)>{{ $label }}</option>@endforeach</select>
                     <select class="control" name="category"><option value="">All study categories</option>@foreach($categories as $key=>$label)<option value="{{ $key }}" @selected(request('category')===$key)>{{ $label }}</option>@endforeach</select>
+                    {{-- One filter per hand-recorded column on the leads table. "Not
+                         recorded" is a choice of its own: it is what most leads are,
+                         and the list worth pulling up before a review call. --}}
+                    @foreach($doneFields as $field => $fieldLabel)
+                        @php $doneValue = (string) request($field); @endphp
+                        <select class="control" name="{{ $field }}" aria-label="Filter by {{ strtolower($fieldLabel) }}">
+                            <option value="">All {{ strtolower($fieldLabel) }}</option>
+                            @foreach($doneStates as $key=>$label)<option value="{{ $key }}" @selected($doneValue === $key)>{{ $fieldLabel }}: {{ $label }}</option>@endforeach
+                            <option value="{{ $notRecorded }}" @selected($doneValue === $notRecorded)>{{ $fieldLabel }}: not recorded</option>
+                        </select>
+                    @endforeach
                     {{-- Arriving from the Overdue or Due-today card lands here pre-filtered;
                          this is what makes that state visible and clearable. --}}
                     @if($view === 'followups')<select class="control" name="due"><option value="">Due at any time</option>@foreach(['overdue' => 'Overdue', 'today' => 'Due today', 'week' => 'Due within 7 days'] as $key => $label)<option value="{{ $key }}" @selected(request('due') === $key)>{{ $label }}</option>@endforeach</select>@endif
@@ -460,18 +479,15 @@
                     <div class="table-wrap">
                         <table>
                         @if($view === 'leads')
-                            <thead><tr><th class="col-serial">Serial No</th><th>Lead Received</th><th>Student Name</th><th>Phone number</th><th>Contacted</th><th>Counselling Done</th><th>Counselling &amp; Shortlisting</th><th>Enrolled</th><th>Remarks by One Degree</th><th></th></tr></thead>
+                            <thead><tr><th class="col-serial">Serial No</th><th>Lead Received</th><th>Student Name</th><th>Phone number</th><th>Contacted</th><th>Counselling</th><th>Shortlisting</th><th>Enrolled</th><th>Remarks by One Degree</th><th></th></tr></thead>
                             <tbody>
                             @foreach($leads as $lead)
                                 @php
                                     $openUrl = request()->fullUrlWithQuery(['lead' => $lead->id]);
                                     // Each of these statuses can only be chosen after actually speaking to the lead.
                                     $isContacted =$lead->last_contacted_at || in_array($lead->status, ['call_back','follow_up','interested','future_lead','not_interested','converted'], true);
-                                    $isCounselled = $lead->follow_up_completed_at || $lead->is_student || in_array($lead->status, ['interested','converted'], true);
                                     $isEnrolled = $lead->is_student || $lead->status === 'converted';
                                     $latestActivity = $lead->latestActivity;
-                                    // Recorded by hand on the lead's Pipeline control card; null until someone sets it.
-                                    $counselling = $lead->counselling_shortlisting;
                                 @endphp
                                 <tr data-crm-href="{{ $openUrl }}" tabindex="0">
                                     <td class="col-serial">{{ $leads->firstItem() + $loop->index }}</td>
@@ -479,8 +495,9 @@
                                     <td><div class="lead-primary"><span class="lead-avatar">{{ $initials($lead->name) }}</span><span class="lead-name"><strong>{{ $lead->name }}</strong><span>{{ $lead->lead_number }}</span></span></div></td>
                                     <td>{{ $lead->phone ? '+91 '.$lead->phone : '—' }}</td>
                                     <td>{!! $milestone((bool) $isContacted, $lead->last_contacted_at) !!}</td>
-                                    <td>{!! $milestone((bool) $isCounselled, $lead->follow_up_completed_at) !!}</td>
-                                    <td>@if($counselling)<span class="lead-ms {{ $counselling === 'yes' ? 'lead-ms-yes' : 'lead-ms-not' }}">{{ $counselling === 'yes' ? '✓ Yes' : '✕ No' }}</span>@else<span class="lead-ms lead-ms-no" title="Not recorded yet">—</span>@endif</td>
+                                    {{-- Both recorded by hand on the lead's Pipeline control card; blank until someone sets them. --}}
+                                    <td>{!! $recorded($lead->counselling) !!}</td>
+                                    <td>{!! $recorded($lead->shortlisting) !!}</td>
                                     <td>{!! $milestone((bool) $isEnrolled, $lead->enrollment_date) !!}</td>
                                     <td @class(['lead-remark', 'has-remark-pop' => $latestActivity])@if($latestActivity) data-remark-full="{{ $latestActivity->body }}" data-remark-time="{{ $latestActivity->created_at->format('d M Y, g:i A') }}"@endif>@if($latestActivity)<span class="lead-remark-text">{{ \Illuminate\Support\Str::limit($latestActivity->body, 90) }}</span><span class="subtext">{{ $latestActivity->created_at->diffForHumans() }}</span>@else<span class="subtext">No activity yet</span>@endif</td>
                                     <td><a class="row-open" href="{{ $openUrl }}" aria-label="Open {{ $lead->name }}">→</a></td>
@@ -742,9 +759,13 @@
                                 <div class="select-guidance"><span data-status-symbol>{{ $currentStatus['symbol'] }}</span><p data-status-help>{{ $currentStatus['copy'] }}</p></div>
                             </div>
                             <div class="field"><label>Priority</label><select name="priority">@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->priority===$key)>{{ $label }}</option>@endforeach</select></div>
-                            {{-- Recorded by hand. Blank stays blank: an untouched lead should
-                                 not read as a counsellor having answered "no". --}}
-                            <div class="field"><label>Counselling and Shortlisting <span class="label-note">Blank until recorded</span></label><select name="counselling_shortlisting"><option value="">Not recorded</option>@foreach($counsellingShortlisting as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->counselling_shortlisting===$key)>{{ $label }}</option>@endforeach</select></div>
+                            {{-- Recorded by hand, and separately: a lead is often counselled
+                                 long before a shortlist exists. Blank stays blank — an
+                                 untouched lead should not read as a counsellor having
+                                 answered "no". --}}
+                            @foreach($doneFields as $field => $fieldLabel)
+                                <div class="field"><label>{{ $fieldLabel }} <span class="label-note">Blank until recorded</span></label><select name="{{ $field }}"><option value="">Not recorded</option>@foreach($doneStates as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->{$field}===$key)>{{ $label }}</option>@endforeach</select></div>
+                            @endforeach
                             @if($crmUser->isSuperAdmin())<div class="field"><label>Counsellor owner</label><select name="assigned_to"><option value="">Unassigned</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected($selectedLead->assigned_to===$person->id)>{{ $person->name }}</option>@endforeach</select></div>@endif
                             @php $followUpRequired = ! $selectedLead->is_student && $isFollowUpStatus($selectedLead->status); @endphp
                             <div @class(['field', 'full' => ! $crmUser->isSuperAdmin(), 'is-followup-required' => $followUpRequired])><label>Next follow-up <span class="label-note" data-followup-note>{{ $followUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input type="datetime-local" name="follow_up_at" value="{{ $selectedLead->follow_up_at?->format('Y-m-d\TH:i') }}" @required($followUpRequired)></div>

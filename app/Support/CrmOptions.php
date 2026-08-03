@@ -34,11 +34,23 @@ class CrmOptions
     public const FOLLOW_UP_GROUP = 'any_follow_up';
 
     /**
-     * Counselling and shortlisting, recorded by hand on the Pipeline control card.
-     * Leaving it unset is a valid answer — "nobody has checked yet" — so the
-     * dropdown keeps a blank option and the column stays nullable.
+     * Counselling and shortlisting are recorded by hand on the Pipeline control
+     * card — separately, because a lead is often counselled long before a
+     * shortlist exists — and share this answer set. Leaving either unset is a
+     * valid answer — "nobody has checked yet" — so the dropdowns keep a blank
+     * option and both columns stay nullable.
      */
-    public const COUNSELLING_SHORTLISTING = ['yes' => 'Yes', 'no' => 'No'];
+    public const DONE_STATES = ['yes' => 'Yes', 'no' => 'No'];
+
+    /** The two lead columns DONE_STATES answers, in the order they are shown. */
+    public const DONE_FIELDS = ['counselling' => 'Counselling', 'shortlisting' => 'Shortlisting'];
+
+    /**
+     * Pseudo-value for the counselling / shortlisting filters meaning "nobody has
+     * recorded this yet". Never stored on a lead — it only ever travels as a
+     * query string, where it selects the rows holding null.
+     */
+    public const NOT_RECORDED = 'not_recorded';
 
     public const CATEGORIES = [
         'undergraduate' => 'Undergraduate', 'postgraduate' => 'Postgraduate', 'mbbs' => 'MBBS',

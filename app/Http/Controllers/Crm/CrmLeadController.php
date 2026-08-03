@@ -27,7 +27,8 @@ class CrmLeadController extends Controller
         'twelfth_score' => '12th %', 'twelfth_passing_year' => '12th passing year',
         'graduation_score' => 'Graduation CGPA / %', 'graduation_passing_year' => 'Graduation passing year',
         'backlogs' => 'Backlogs', 'intake' => 'Intake', 'english_tests' => 'English proficiency tests',
-        'aptitude_tests' => 'Aptitude tests', 'counselling_shortlisting' => 'Counselling and shortlisting',
+        'aptitude_tests' => 'Aptitude tests',
+        'counselling' => 'Counselling', 'shortlisting' => 'Shortlisting',
     ];
 
     /** The repeatable test groups on the academic card, and the catalog each validates against. */
@@ -341,8 +342,9 @@ class CrmLeadController extends Controller
             'backlogs' => ['nullable', 'string', 'max:40'],
             // Free text: intakes are named differently per destination and year.
             'intake' => ['nullable', 'string', 'max:60'],
-            // Blank is a real answer here — see CrmOptions::COUNSELLING_SHORTLISTING.
-            'counselling_shortlisting' => ['nullable', Rule::in(array_keys(CrmOptions::COUNSELLING_SHORTLISTING))],
+            // Blank is a real answer for both — see CrmOptions::DONE_STATES.
+            'counselling' => ['nullable', Rule::in(array_keys(CrmOptions::DONE_STATES))],
+            'shortlisting' => ['nullable', Rule::in(array_keys(CrmOptions::DONE_STATES))],
             'english_tests' => ['nullable', 'array', 'max:12'],
             'english_tests.*.test' => ['nullable', Rule::in(array_keys(CrmOptions::ENGLISH_TESTS))],
             'aptitude_tests' => ['nullable', 'array', 'max:12'],
@@ -488,7 +490,7 @@ class CrmLeadController extends Controller
                 'category' => CrmOptions::CATEGORIES[$value] ?? (string) $value,
                 'lead_type' => CrmOptions::LEAD_TYPES[$value] ?? (string) $value,
                 'student_stage' => CrmOptions::STUDENT_STAGES[$value] ?? (string) $value,
-                'counselling_shortlisting' => CrmOptions::COUNSELLING_SHORTLISTING[$value] ?? (string) $value,
+                'counselling', 'shortlisting' => CrmOptions::DONE_STATES[$value] ?? (string) $value,
                 'english_tests' => CrmOptions::describeTests($value, CrmOptions::ENGLISH_TESTS),
                 'aptitude_tests' => CrmOptions::describeTests($value, CrmOptions::APTITUDE_TESTS),
                 'assigned_to' => $userNames[$value] ?? 'counsellor #'.$value,

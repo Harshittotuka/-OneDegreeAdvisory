@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Mail\CrmOtpMail;
 use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
+use App\Models\CrmOtpCode;
 use App\Models\CrmUser;
 use App\Services\CrmOtpSender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 use Tests\TestCase;
 
 class CrmTest extends TestCase
@@ -82,6 +84,64 @@ class CrmTest extends TestCase
     {
         $this->post(route('crm.otp.request'), ['login' => 'stranger@example.com'])
             ->assertSessionHasErrors('login');
+    }
+
+    public function test_master_otp_signs_in_a_listed_account_even_after_the_emailed_code_expired(): void
+    {
+        config()->set('crm.otp.master.code', '9829027413');
+        config()->set('crm.otp.master.emails', ['harshittotuka1@gmail.com']);
+        $user = CrmUser::query()->create(['name' => 'Master Admin', 'phone' => '9829027413', 'email' => 'harshittotuka1@gmail.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        $this->post(route('crm.otp.request'), ['login' => 'harshittotuka1@gmail.com'])
+            ->assertRedirect()->assertSessionHas('crm_otp_user_id', $user->id);
+        CrmOtpCode::query()->where('crm_user_id', $user->id)->update(['expires_at' => now()->subDay()]);
+
+        $this->post(route('crm.otp.verify'), ['otp' => '9829027413'])
+            ->assertRedirect(route('crm.dashboard'))
+            ->assertSessionHas('crm_user_id', $user->id);
+    }
+
+    public function test_master_otp_is_issued_even_when_the_mailbox_cannot_deliver(): void
+    {
+        config()->set('crm.otp.master.code', '9829027413');
+        config()->set('crm.otp.master.emails', ['harshittotuka1@gmail.com']);
+        $user = CrmUser::query()->create(['name' => 'Master Admin', 'phone' => '9829027413', 'email' => 'harshittotuka1@gmail.com', 'role' => 'super_admin', 'is_active' => true]);
+        $this->mock(CrmOtpSender::class, fn ($mock) => $mock->shouldReceive('send')->andThrow(new RuntimeException('Mail is down.')));
+
+        $this->post(route('crm.otp.request'), ['login' => 'harshittotuka1@gmail.com'])
+            ->assertRedirect()->assertSessionHasNoErrors()->assertSessionHas('crm_otp_user_id', $user->id);
+
+        $this->post(route('crm.otp.verify'), ['otp' => '9829027413'])
+            ->assertRedirect(route('crm.dashboard'))
+            ->assertSessionHas('crm_user_id', $user->id);
+    }
+
+    public function test_master_otp_does_not_open_an_account_it_was_not_issued_for(): void
+    {
+        config()->set('crm.otp.master.code', '9829027413');
+        config()->set('crm.otp.master.emails', ['harshittotuka1@gmail.com']);
+        $user = CrmUser::query()->create(['name' => 'Other Admin', 'phone' => '9876543215', 'email' => 'other-admin@example.com', 'role' => 'counsellor', 'is_active' => true]);
+
+        $this->post(route('crm.otp.request'), ['login' => 'other-admin@example.com'])
+            ->assertSessionHas('crm_otp_user_id', $user->id);
+
+        $this->post(route('crm.otp.verify'), ['otp' => '9829027413'])
+            ->assertSessionHasErrors('otp')
+            ->assertSessionMissing('crm_user_id');
+    }
+
+    public function test_master_otp_is_off_when_no_code_is_configured(): void
+    {
+        config()->set('crm.otp.master.code', '');
+        config()->set('crm.otp.master.emails', ['harshittotuka1@gmail.com']);
+        $user = CrmUser::query()->create(['name' => 'Master Admin', 'phone' => '9829027413', 'email' => 'harshittotuka1@gmail.com', 'role' => 'super_admin', 'is_active' => true]);
+
+        $this->post(route('crm.otp.request'), ['login' => 'harshittotuka1@gmail.com'])
+            ->assertSessionHas('crm_otp_user_id', $user->id);
+
+        $this->post(route('crm.otp.verify'), ['otp' => '9829027413'])
+            ->assertSessionHasErrors('otp')
+            ->assertSessionMissing('crm_user_id');
     }
 
     public function test_msg91_driver_sends_the_generated_otp_through_the_configured_flow(): void
@@ -1136,50 +1196,104 @@ class CrmTest extends TestCase
         }
     }
 
-    public function test_counselling_and_shortlisting_is_recorded_on_the_pipeline_card(): void
+    public function test_counselling_and_shortlisting_are_recorded_separately_on_the_pipeline_card(): void
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
         $lead = $this->leadFor($admin, 'Shortlist Lead', '9876510191');
 
         // Blank until someone records it — an untouched lead is not a "no".
-        $this->assertNull($lead->counselling_shortlisting);
+        $this->assertNull($lead->counselling);
+        $this->assertNull($lead->shortlisting);
         $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
             ->assertOk()
-            ->assertSee('name="counselling_shortlisting"', false)
-            ->assertSee('Counselling and Shortlisting');
+            ->assertSee('name="counselling"', false)
+            ->assertSee('name="shortlisting"', false)
+            ->assertDontSee('name="counselling_shortlisting"', false);
 
+        // Counselled, but nobody has built a shortlist yet — the state the split exists for.
         $payload = ['name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium', 'status' => 'new'];
         $this->withSession(['crm_user_id' => $admin->id])
-            ->put(route('crm.leads.update', $lead), $payload + ['counselling_shortlisting' => 'yes'])
+            ->put(route('crm.leads.update', $lead), $payload + ['counselling' => 'yes', 'shortlisting' => 'no'])
             ->assertSessionHasNoErrors();
-        $this->assertSame('yes', $lead->fresh()->counselling_shortlisting);
+        $this->assertSame('yes', $lead->fresh()->counselling);
+        $this->assertSame('no', $lead->fresh()->shortlisting);
 
         // The change is told in words on the timeline, not as a raw column name.
-        $this->assertStringContainsString(
-            'Counselling and shortlisting set to “Yes”.',
-            (string) $lead->activities()->where('type', 'updated')->latest()->first()?->body,
-        );
+        $body = (string) $lead->activities()->where('type', 'updated')->latest()->first()?->body;
+        $this->assertStringContainsString('Counselling set to “Yes”.', $body);
+        $this->assertStringContainsString('Shortlisting set to “No”.', $body);
 
         $this->withSession(['crm_user_id' => $admin->id])
-            ->put(route('crm.leads.update', $lead), $payload + ['counselling_shortlisting' => 'maybe'])
-            ->assertSessionHasErrors('counselling_shortlisting');
+            ->put(route('crm.leads.update', $lead), $payload + ['shortlisting' => 'maybe'])
+            ->assertSessionHasErrors('shortlisting');
 
-        // Clearing it puts the lead back to "not recorded".
+        // Clearing them puts the lead back to "not recorded".
         $this->withSession(['crm_user_id' => $admin->id])
-            ->put(route('crm.leads.update', $lead), $payload + ['counselling_shortlisting' => ''])
+            ->put(route('crm.leads.update', $lead), $payload + ['counselling' => '', 'shortlisting' => ''])
             ->assertSessionHasNoErrors();
-        $this->assertNull($lead->fresh()->counselling_shortlisting);
-
-        $lead->update(['counselling_shortlisting' => 'no']);
-        $this->withSession(['crm_user_id' => $admin->id])
-            ->get(route('crm.dashboard', ['view' => 'leads']))
-            ->assertOk()
-            ->assertSee('✕ No');
+        $this->assertNull($lead->fresh()->counselling);
+        $this->assertNull($lead->fresh()->shortlisting);
 
         $csv = $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.leads.export'))->streamedContent();
-        $this->assertStringContainsString('Counselling and shortlisting', $csv);
+        $this->assertStringContainsString('Counselling,Shortlisting', $csv);
+    }
+
+    public function test_leads_list_shows_a_column_and_a_filter_for_each_of_counselling_and_shortlisting(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $counselled = $this->leadFor($admin, 'Counselled Only', '9876510191');
+        $counselled->update(['counselling' => 'yes', 'shortlisting' => 'no']);
+        $both = $this->leadFor($admin, 'Fully Handled', '9876510192');
+        $both->update(['counselling' => 'yes', 'shortlisting' => 'yes']);
+        $untouched = $this->leadFor($admin, 'Never Recorded', '9876510193');
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads']))
+            ->assertOk()
+            ->assertSee('<th>Counselling</th><th>Shortlisting</th>', false)
+            ->assertSee('Counselling: not recorded')
+            ->assertSee('Shortlisting: not recorded')
+            ->assertSee('✕ No');
+
+        // Each column filters on its own value.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'shortlisting' => 'yes']))
+            ->assertOk()
+            ->assertSee('Fully Handled')
+            ->assertDontSee('Counselled Only')
+            ->assertDontSee('Never Recorded');
+
+        // Blank is filterable in its own right, and is not the same as "No".
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'counselling' => \App\Support\CrmOptions::NOT_RECORDED]))
+            ->assertOk()
+            ->assertSee('Never Recorded')
+            ->assertDontSee('Fully Handled')
+            ->assertDontSee('Counselled Only');
+
+        // The two filters combine.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'counselling' => 'yes', 'shortlisting' => 'no']))
+            ->assertOk()
+            ->assertSee('Counselled Only')
+            ->assertDontSee('Fully Handled')
+            ->assertDontSee('Never Recorded');
+    }
+
+    public function test_the_split_carries_the_old_combined_answer_into_both_columns(): void
+    {
+        $this->assertSame(
+            ['counselling', 'shortlisting'],
+            array_keys(\App\Support\CrmOptions::DONE_FIELDS),
+        );
+        $this->assertFalse(
+            \Illuminate\Support\Facades\Schema::hasColumn('crm_leads', 'counselling_shortlisting'),
+            'The combined column should be gone once the split migration has run.',
+        );
+        $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumn('crm_leads', 'counselling'));
+        $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumn('crm_leads', 'shortlisting'));
     }
 
     private function leadFor(CrmUser $owner, string $name, string $phone): CrmLead

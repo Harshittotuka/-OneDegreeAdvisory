@@ -201,7 +201,9 @@ class CrmDashboardController extends Controller
             // Suggestions only — the field itself stays free text. Queried just for
             // the open drawer, so the list view does not pay for it.
             'intakeSuggestions' => $selectedLead ? $this->intakeSuggestions($user) : collect(),
-            'counsellingShortlisting' => CrmOptions::COUNSELLING_SHORTLISTING,
+            'doneStates' => CrmOptions::DONE_STATES,
+            'doneFields' => CrmOptions::DONE_FIELDS,
+            'notRecorded' => CrmOptions::NOT_RECORDED,
             'studentStages' => CrmOptions::STUDENT_STAGES,
             'studentCategories' => CrmOptions::STUDENT_CATEGORIES,
             'englishTests' => CrmOptions::ENGLISH_TESTS,
@@ -476,7 +478,7 @@ class CrmDashboardController extends Controller
             fputcsv($out, [
                 'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created',
                 '10th %', '10th passing year', '12th %', '12th passing year', 'Graduation CGPA / %', 'Graduation passing year', 'Backlogs', 'Intake',
-                'Counselling and shortlisting', 'English proficiency tests', 'Aptitude tests',
+                'Counselling', 'Shortlisting', 'English proficiency tests', 'Aptitude tests',
             ]);
             foreach ($rows as $lead) {
                 fputcsv($out, [
@@ -486,7 +488,8 @@ class CrmDashboardController extends Controller
                     $lead->follow_up_at?->format('Y-m-d H:i'), $lead->created_at->format('Y-m-d H:i'),
                     $lead->tenth_score, $lead->tenth_passing_year, $lead->twelfth_score, $lead->twelfth_passing_year,
                     $lead->graduation_score, $lead->graduation_passing_year, $lead->backlogs, $lead->intake,
-                    CrmOptions::COUNSELLING_SHORTLISTING[$lead->counselling_shortlisting] ?? '',
+                    CrmOptions::DONE_STATES[$lead->counselling] ?? '',
+                    CrmOptions::DONE_STATES[$lead->shortlisting] ?? '',
                     CrmOptions::describeTests($lead->english_tests, CrmOptions::ENGLISH_TESTS),
                     CrmOptions::describeTests($lead->aptitude_tests, CrmOptions::APTITUDE_TESTS),
                 ]);
@@ -544,6 +547,17 @@ class CrmDashboardController extends Controller
                     $typeQuery->orWhereHas('websiteSubmissions', fn (Builder $submission) => $submission->where('source', $submissionSource));
                 }
             });
+        }
+        // Counselling and shortlisting each filter to Yes, No, or the blank that
+        // means nobody has recorded it — the state most leads are in, and the one
+        // worth listing on its own.
+        foreach (array_keys(CrmOptions::DONE_FIELDS) as $field) {
+            $value = (string) $request->query($field);
+            if ($value === CrmOptions::NOT_RECORDED) {
+                $query->whereNull($field);
+            } elseif (array_key_exists($value, CrmOptions::DONE_STATES)) {
+                $query->where($field, $value);
+            }
         }
         if ($user->isSuperAdmin() && $request->filled('assigned_to')) {
             // "unassigned" is a real choice in the owner filter, not an id.
