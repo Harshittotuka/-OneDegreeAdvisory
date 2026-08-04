@@ -614,6 +614,40 @@ ready(() => {
     }
   }
 
+  // Home hero · Student Hub drawer ("Important Links"). The tab on the hero's
+  // right edge slides the panel in and out; the slide itself is CSS (a single
+  // transform on .hero-hub), so this only owns the open/closed state. The tab
+  // travels with the panel, so the same button closes it again.
+  const heroHub = document.querySelector("[data-hero-hub]");
+  if (heroHub) {
+    const hubToggle = heroHub.querySelector("[data-hero-hub-toggle]");
+    const setHubOpen = (open) => {
+      heroHub.classList.toggle("is-open", open);
+      if (hubToggle) hubToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+
+    if (hubToggle) {
+      hubToggle.addEventListener("click", () => {
+        setHubOpen(!heroHub.classList.contains("is-open"));
+      });
+    }
+
+    // An open drawer covers part of the hero copy, so a click anywhere else and
+    // Escape both dismiss it — the usual way out of an overlay.
+    document.addEventListener("click", (event) => {
+      if (!heroHub.classList.contains("is-open")) return;
+      if (heroHub.contains(event.target)) return;
+      setHubOpen(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (!heroHub.classList.contains("is-open")) return;
+      setHubOpen(false);
+      if (hubToggle) hubToggle.focus();
+    });
+  }
+
   // Phone-only collapsible contact card: tap the blue strip to slide the
   // contact details over the form; the close button tucks it away again. The
   // collapsed/overlay styling is gated to ≤720px in CSS, so on desktop this

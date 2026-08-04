@@ -165,4 +165,6 @@
       </div>
     </div>
   </div>
+
+  @include('partials.home.hero-hub')
 </section>

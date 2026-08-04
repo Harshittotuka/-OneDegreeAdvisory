@@ -47,8 +47,8 @@
         </div>
       </section>
 
-      @include('partials.home.quick-links')
-
+      {{-- The Student Hub "Important Links" band used to sit here; it is now the
+           slide-out drawer on the right of the hero (partials/home/hero-hub). --}}
       @include('partials.home.method-compass')
 
       <section class="audience-section" aria-labelledby="audience-title">
