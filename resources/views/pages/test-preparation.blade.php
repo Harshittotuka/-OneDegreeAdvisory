@@ -38,7 +38,8 @@
        lives here rather than in the shared layout, where it opened a
        connection every other page had no use for. --}}
   <link rel="preconnect" href="https://unpkg.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  {{-- No Poppins <link> any more: this page uses the site type stack, already
+       loaded by the shared layout. --}}
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
   <script>

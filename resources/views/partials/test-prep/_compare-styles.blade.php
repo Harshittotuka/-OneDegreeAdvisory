@@ -10,8 +10,15 @@
   --tpc-accent:#ff5a2e;
   /* Slightly darker shade of the accent for hovers, derived at runtime is
      not possible in CSS, so we lean on the navy for depth instead. */
+  /* Site type stack — same as home / About and the rest of this page, which
+     use exactly two faces. --tpc-font-mono is a chip/label role (never code),
+     so it maps to the body face: home and About render every label in Manrope.
+     Kept as its own variable so the role stays nameable. */
+  --tpc-font-head:"Cormorant Garamond",Georgia,serif;
+  --tpc-font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --tpc-font-mono:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   position:relative; padding:78px 0; background:var(--tpc-lav);
-  font-family:'Poppins','Inter',system-ui,sans-serif; color:var(--tpc-ink);
+  font-family:var(--tpc-font-body); color:var(--tpc-ink);
   -webkit-font-smoothing:antialiased;
 }
 .tpc *{box-sizing:border-box;}
@@ -24,7 +31,7 @@
   text-transform:uppercase; margin-bottom:16px;}
 .tpc-eyebrow--dark{background:rgba(255,255,255,.12); color:#FFB27A;}
 .tpc-dot{width:6px; height:6px; border-radius:50%; background:var(--tpc-accent); display:inline-block;}
-.tpc-title{font-size:clamp(26px,3.2vw,38px); font-weight:700; line-height:1.15; margin:0; color:var(--tpc-navy-deep);
+.tpc-title{font-family:var(--tpc-font-head); font-size:clamp(26px,3.2vw,38px); font-weight:700; line-height:1.15; margin:0; color:var(--tpc-navy-deep);
   letter-spacing:-.01em;}
 .tpc-sub{margin:12px 0 0; font-size:15.5px; line-height:1.6; color:var(--tpc-muted);}
 .tpc-empty{text-align:center; color:var(--tpc-muted); padding:40px 0;}
@@ -32,7 +39,7 @@
 /* ── Price / duration toggle ── */
 .tpc-controls{display:flex; justify-content:center; gap:10px; margin:0 auto 34px;}
 .tpc-chip{background:#fff; border:1.5px solid var(--tpc-line); border-radius:10px; padding:9px 16px;
-  font:600 13px/'1' 'Poppins',sans-serif; color:var(--tpc-navy-deep); cursor:pointer; transition:all .18s ease;}
+  font:600 13px/1 var(--tpc-font-body); color:var(--tpc-navy-deep); cursor:pointer; transition:all .18s ease;}
 .tpc-chip:hover{border-color:var(--tpc-accent);}
 .tpc-chip.is-active{border-color:var(--tpc-accent); color:#E8461C; background:#FFEEE7;}
 
@@ -76,8 +83,8 @@
 .tpc-card-badge{position:absolute; top:14px; right:14px; font-size:10px; font-weight:800; letter-spacing:.04em;
   text-transform:uppercase; color:#fff; background:var(--tpc-accent); padding:4px 9px; border-radius:999px;}
 .tpc-card-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
-.tpc-card-name{font-family:'Poppins'; font-weight:700; font-size:17px; color:var(--tpc-navy-deep);}
-.tpc-card-price{font-family:'Poppins'; font-size:25px; font-weight:700; color:#E8461C; line-height:1.1; margin-bottom:14px;}
+.tpc-card-name{font-family:var(--tpc-font-head); font-weight:700; font-size:17px; color:var(--tpc-navy-deep);}
+.tpc-card-price{font-family:var(--tpc-font-head); font-size:25px; font-weight:700; color:#E8461C; line-height:1.1; margin-bottom:14px;}
 .tpc-card-price span{display:block; font-size:11.5px; color:var(--tpc-muted); font-weight:500; margin-top:2px;}
 .tpc-card-price .tpc-card-onreq{font-size:17px; color:var(--tpc-navy); display:inline;}
 .tpc-card-meta{display:flex; flex-direction:column; gap:7px; margin-bottom:16px;}
@@ -85,7 +92,7 @@
 .tpc-card-meta i{width:15px; height:15px; stroke-width:1.8;}
 .tpc-card-btn{margin-top:auto; display:flex; align-items:center; justify-content:center; gap:7px;
   background:var(--tpc-navy-deep); color:#fff; border:none; border-radius:11px; padding:12px;
-  font:700 13px 'Poppins',sans-serif; cursor:pointer; transition:background .2s ease;}
+  font:700 13px var(--tpc-font-body); cursor:pointer; transition:background .2s ease;}
 .tpc-card-btn:hover{background:var(--tpc-accent);}
 .tpc-card-btn i{width:15px; height:15px;}
 
@@ -102,7 +109,7 @@
 .tpc-td-name{font-weight:700; color:var(--tpc-navy-deep);}
 .tpc-td-price{font-variant-numeric:tabular-nums; font-weight:700; color:#E8461C;}
 .tpc-table-btn{background:var(--tpc-navy-deep); color:#fff; border:none; border-radius:8px; padding:8px 14px;
-  font:700 12px 'Poppins',sans-serif; cursor:pointer; transition:background .2s ease;}
+  font:700 12px var(--tpc-font-body); cursor:pointer; transition:background .2s ease;}
 .tpc-table-btn:hover{background:var(--tpc-accent);}
 
 /* ═══════════ VARIANT 4 · TIER LIST ═══════════
@@ -115,14 +122,14 @@
   transition:transform .2s ease, box-shadow .2s ease;}
 .tpc-tier:hover{transform:translateY(-3px); box-shadow:0 20px 40px -22px rgba(18,8,46,.4);}
 .tpc-tier-lead{display:flex; flex-direction:column; gap:4px; min-width:0;}
-.tpc-tier-name{font-family:'Poppins'; font-weight:700; font-size:19px; color:var(--tpc-navy-deep);}
+.tpc-tier-name{font-family:var(--tpc-font-head); font-weight:700; font-size:19px; color:var(--tpc-navy-deep);}
 .tpc-tier-meta{display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--tpc-muted);}
 .tpc-tier-meta i{width:15px; height:15px; stroke-width:1.8;}
-.tpc-tier-price{font-family:'Poppins'; font-weight:700; font-size:26px; color:#E8461C; font-variant-numeric:tabular-nums;
+.tpc-tier-price{font-family:var(--tpc-font-head); font-weight:700; font-size:26px; color:#E8461C; font-variant-numeric:tabular-nums;
   line-height:1; white-space:nowrap;}
 .tpc-tier-btn{display:inline-flex; align-items:center; justify-content:center; gap:7px;
   background:var(--tpc-navy-deep); color:#fff; border:none; border-radius:10px; padding:12px 22px;
-  font:700 13.5px 'Poppins',sans-serif; cursor:pointer; transition:background .2s ease; white-space:nowrap;}
+  font:700 13.5px var(--tpc-font-body); cursor:pointer; transition:background .2s ease; white-space:nowrap;}
 .tpc-tier-btn:hover{background:var(--tpc-accent);}
 .tpc-tier-btn i{width:15px; height:15px;}
 
@@ -136,10 +143,10 @@
 .tpc-pay-copy{background:var(--tpc-navy-deep); color:#fff; padding:40px 38px; position:relative; overflow:hidden;}
 .tpc-pay-copy::after{content:''; position:absolute; right:-70px; bottom:-70px; width:240px; height:240px;
   border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--tpc-accent) 40%, transparent), transparent 65%);}
-.tpc-pay-title{font-family:'Poppins'; color:#fff; font-size:24px; font-weight:700; margin:0 0 12px; position:relative; z-index:1;}
+.tpc-pay-title{font-family:var(--tpc-font-head); color:#fff; font-size:24px; font-weight:700; margin:0 0 12px; position:relative; z-index:1;}
 .tpc-pay-desc{color:#C9C4E8; font-size:14px; line-height:1.6; margin:0 0 24px; position:relative; z-index:1;}
 .tpc-exam-strip{display:flex; flex-wrap:wrap; gap:9px; margin:0 0 24px; position:relative; z-index:1;}
-.tpc-exam-chip{font-family:'IBM Plex Mono','SFMono-Regular',monospace; font-size:12px; font-weight:700; line-height:1;
+.tpc-exam-chip{font-family:var(--tpc-font-mono); font-size:12px; font-weight:700; line-height:1;
   padding:8px 13px; border-radius:999px; border:1px solid rgba(255,255,255,.16);
   background:rgba(255,255,255,.08); color:#EDEBFA; cursor:pointer;
   transition:transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease;}
@@ -163,9 +170,9 @@
 .tpc-ticket-top::before, .tpc-ticket-top::after{content:''; position:absolute; bottom:-8px; width:16px; height:16px;
   border-radius:50%; background:var(--tpc-navy-deep);}
 .tpc-ticket-top::before{left:-8px;} .tpc-ticket-top::after{right:-8px;}
-.tpc-ticket-route{display:flex; align-items:flex-start; justify-content:space-between; position:relative; font-family:'Poppins';}
+.tpc-ticket-route{display:flex; align-items:flex-start; justify-content:space-between; position:relative; font-family:var(--tpc-font-head);}
 .tpc-ticket-goal{text-align:right;}
-.tpc-ticket-city{font-family:'Poppins'; font-weight:700; font-size:20px; color:var(--tpc-navy-deep); line-height:1;}
+.tpc-ticket-city{font-family:var(--tpc-font-head); font-weight:700; font-size:20px; color:var(--tpc-navy-deep); line-height:1;}
 .tpc-ticket-route small{display:block; font-size:9.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
   color:var(--tpc-muted); margin-top:5px;}
 /* Dashed flight path with the plane flying HOME to GOAL along it. */
@@ -181,7 +188,7 @@
 .tpc-ticket-body{padding:16px 20px 18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 18px;}
 .tpc-ticket-field small{display:block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
   color:var(--tpc-muted); margin-bottom:4px;}
-.tpc-ticket-field span{font-family:'IBM Plex Mono','SFMono-Regular',monospace; font-weight:500; font-size:13.5px;
+.tpc-ticket-field span{font-family:var(--tpc-font-mono); font-weight:500; font-size:13.5px;
   color:var(--tpc-navy-deep); word-break:break-word;}
 .tpc-ticket-ok{color:#1F9D55 !important;}
 .tpc-ticket-barcode{height:30px; margin:0 20px 20px; border-radius:4px; opacity:.85;
@@ -199,7 +206,7 @@
    icon-font dependency, so it's always centred on the right edge. */
 .tpc-select{width:100%; appearance:none; -webkit-appearance:none; -moz-appearance:none;
   border:1.5px solid var(--tpc-line); border-radius:11px; padding:13px 42px 13px 14px;
-  font:600 14px 'Poppins',sans-serif; color:var(--tpc-ink); background-color:var(--tpc-lav);
+  font:600 14px var(--tpc-font-body); color:var(--tpc-ink); background-color:var(--tpc-lav);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23635D86' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:right 14px center; background-size:16px;
   cursor:pointer; transition:border-color .15s, background-color .15s;}
@@ -211,7 +218,7 @@
   padding:16px 18px; border-radius:12px; background:linear-gradient(120deg, #FFF4EE, #FFEAF0);
   border:1px solid #FFD9C4;}
 .tpc-pay-amount-label{font-size:12.5px; font-weight:600; color:var(--tpc-muted); text-transform:uppercase; letter-spacing:.04em;}
-.tpc-pay-amount-value{font-family:'Poppins'; font-size:28px; font-weight:700; color:#E8461C; font-variant-numeric:tabular-nums;
+.tpc-pay-amount-value{font-family:var(--tpc-font-head); font-size:28px; font-weight:700; color:#E8461C; font-variant-numeric:tabular-nums;
   transition:transform .25s ease;}
 .tpc-pay-amount-value.tpc-bump{transform:scale(1.12);}
 
@@ -220,12 +227,12 @@
 .tpc-pay-fields label span{display:block; font-size:11.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
   color:var(--tpc-muted); margin-bottom:6px;}
 .tpc-pay-fields input{width:100%; border:1.5px solid var(--tpc-line); border-radius:10px; padding:11px 13px;
-  font:500 14px 'Poppins',sans-serif; color:var(--tpc-ink); background:var(--tpc-lav); transition:border-color .15s;}
+  font:500 14px var(--tpc-font-body); color:var(--tpc-ink); background:var(--tpc-lav); transition:border-color .15s;}
 .tpc-pay-fields input:focus{outline:none; border-color:var(--tpc-accent); background:#fff;}
 
 .tpc-pay-btn{width:100%; display:flex; align-items:center; justify-content:center; gap:9px;
   background:var(--tpc-accent); color:#fff; border:none; border-radius:999px; padding:15px;
-  font:700 15px 'Poppins',sans-serif; cursor:pointer; text-decoration:none;
+  font:700 15px var(--tpc-font-body); cursor:pointer; text-decoration:none;
   box-shadow:0 16px 30px -14px color-mix(in srgb, var(--tpc-accent) 70%, transparent); transition:transform .15s ease, background .2s ease;}
 .tpc-pay-btn:hover{transform:translateY(-2px);}
 .tpc-pay-btn:disabled{opacity:.6; cursor:default; transform:none;}
@@ -250,18 +257,18 @@
 .tpc-exam-modal.is-open .tpc-exam-modal__card{transform:none;}
 .tpc-exam-modal__close{position:absolute; top:17px; right:17px; width:33px; height:33px; border-radius:50%;
   border:1.5px solid var(--tpc-line); background:var(--tpc-lav); color:var(--tpc-muted);
-  font:700 15px 'Poppins',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font:700 15px var(--tpc-font-body); cursor:pointer; display:flex; align-items:center; justify-content:center;
   transition:background .15s, color .15s, border-color .15s;}
 .tpc-exam-modal__close:hover{background:var(--tpc-accent); color:#fff; border-color:var(--tpc-accent);}
-.tpc-exam-modal__eyebrow{font-family:'IBM Plex Mono','SFMono-Regular',monospace; font-size:11.5px; font-weight:700;
+.tpc-exam-modal__eyebrow{font-family:var(--tpc-font-mono); font-size:11.5px; font-weight:700;
   letter-spacing:.1em; text-transform:uppercase; color:var(--tpc-accent); display:block; margin-bottom:7px;}
-.tpc-exam-modal__card h3{font-family:'Poppins'; font-size:22px; line-height:1.25; margin:0 38px 4px 0; color:var(--tpc-navy-deep);}
+.tpc-exam-modal__card h3{font-family:var(--tpc-font-head); font-size:22px; line-height:1.25; margin:0 38px 4px 0; color:var(--tpc-navy-deep);}
 .tpc-exam-modal__tagline{color:var(--tpc-muted); font-size:13.8px; line-height:1.55; margin:0 0 20px;}
 .tpc-exam-modal__grid{display:grid; grid-template-columns:1fr 1fr; gap:13px; margin-bottom:20px;}
 .tpc-exam-fact{background:var(--tpc-lav); border:1px solid var(--tpc-line); border-radius:12px; padding:13px 15px;}
 .tpc-exam-fact small{display:block; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--tpc-muted);
   font-weight:700; margin-bottom:4px;}
-.tpc-exam-fact span{font-family:'Poppins'; font-weight:700; color:var(--tpc-navy-deep); font-size:14.5px; line-height:1.3;}
+.tpc-exam-fact span{font-family:var(--tpc-font-head); font-weight:700; color:var(--tpc-navy-deep); font-size:14.5px; line-height:1.3;}
 .tpc-exam-modal__section{margin-bottom:17px;}
 .tpc-exam-modal__section h4{font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--tpc-navy);
   margin:0 0 7px;}
@@ -272,7 +279,7 @@
 .tpc-exam-modal__source{font-size:11px; color:var(--tpc-muted); border-top:1px solid var(--tpc-line);
   padding-top:13px; margin:5px 0 0;}
 .tpc-exam-modal__cta{margin-top:17px; display:inline-flex; align-items:center; gap:8px; background:var(--tpc-accent);
-  color:#fff; padding:12px 21px; border-radius:999px; font:700 13px 'Poppins',sans-serif; border:none; cursor:pointer;}
+  color:#fff; padding:12px 21px; border-radius:999px; font:700 13px var(--tpc-font-body); border:none; cursor:pointer;}
 .tpc-exam-modal__cta:hover{filter:brightness(.96);}
 html.tpc-exam-open{overflow:hidden;}
 
@@ -286,11 +293,11 @@ html.tpc-exam-open{overflow:hidden;}
 .tpc-result.is-open .tpc-result__card{transform:none;}
 .tpc-result__badge{width:64px; height:64px; margin:0 auto 18px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   background:#EAFAF0; color:#1f9d57;}
-.tpc-result__card h3{font-family:'Poppins'; font-size:21px; margin:0 0 8px; color:var(--tpc-navy-deep);}
+.tpc-result__card h3{font-family:var(--tpc-font-head); font-size:21px; margin:0 0 8px; color:var(--tpc-navy-deep);}
 .tpc-result__msg{color:var(--tpc-muted); font-size:14px; line-height:1.55; margin:0 0 6px;}
 .tpc-result__id{font-size:12px; color:var(--tpc-muted); font-variant-numeric:tabular-nums; margin:0 0 20px;}
 .tpc-result__done{background:var(--tpc-navy-deep); color:#fff; border:none; border-radius:999px; padding:12px 30px;
-  font:700 14px 'Poppins',sans-serif; cursor:pointer;}
+  font:700 14px var(--tpc-font-body); cursor:pointer;}
 .tpc-result__done:hover{background:var(--tpc-accent);}
 
 /* ── Responsive ── */

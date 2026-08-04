@@ -1,9 +1,11 @@
 {{-- Statement of Purpose — SOP / admissions-writing studio landing page under
      the Student Hub. This is the design of the standalone sop.html the client
-     shared, kept verbatim (Special Elite / Space Grotesk / Caveat, indigo /
-     brass palette + two interactive games + a GSAP handwriting animation), but
-     rendered on the shared site layout so the navbar + footer match the rest of
-     the site. The whole page is scoped under #sop-page so its generic class
+     shared, kept verbatim (indigo / brass palette + two interactive games + a
+     GSAP handwriting animation), but rendered on the shared site layout so the
+     navbar + footer match the rest of the site. The type is the one exception to
+     "verbatim": the original's Special Elite / Space Grotesk / Inter / IBM Plex
+     Mono / Caveat were swapped for the site stack (Cormorant Garamond / Manrope
+     / Jost) so Student Hub reads as the same site as home and About. The whole page is scoped under #sop-page so its generic class
      names (.hero, .btn, .wrap, section{}, .service-card, table …) never collide
      with the global styles.css / stripe-nav.css that style the shared chrome.
 
@@ -23,7 +25,8 @@
 @endphp
 
 @push('head')
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Spectral:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+{{-- No font <link> here: the page now uses the site stack, already loaded by the
+     shared layout. --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
   /* Neutralise the site's body gradient (fades dark toward the footer) so the
@@ -53,10 +56,14 @@
     --crimson:#FF5E32;
     --crimson-light:#FF8760;
     --shadow: 0 20px 60px -20px rgba(26,0,136,0.4);
-    --serif: 'Space Grotesk', 'Spectral', serif;
-    --type: 'Special Elite', 'IBM Plex Mono', monospace;
-    --sans: 'Inter', sans-serif;
-    --mono: 'IBM Plex Mono', monospace;
+    /* Site type stack — same as home / About, which use exactly two faces.
+       --type was the display "typewriter" face and --mono a label/eyebrow role
+       (never code), so all four roles collapse onto those two rather than
+       pulling in a third and fourth family. */
+    --serif: "Cormorant Garamond", Georgia, serif;
+    --type: "Cormorant Garamond", Georgia, serif;
+    --sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
     color:var(--ink);
     font-family:var(--sans);
     line-height:1.6;
@@ -86,7 +93,9 @@
     width:26px;height:1px;background:var(--crimson);
     display:inline-block;
   }
-  #sop-page h1, #sop-page h2, #sop-page h3, #sop-page h4{font-family:var(--serif);font-weight:600;line-height:1.1;color:var(--ink);}
+  {{-- 700, the weight every display heading on the site uses (Cormorant Garamond
+       ships only 600 and 700). --}}
+  #sop-page h1, #sop-page h2, #sop-page h3, #sop-page h4{font-family:var(--serif);font-weight:700;line-height:1.1;color:var(--ink);}
   #sop-page .btn{
     display:inline-flex;align-items:center;gap:10px;
     font-family:var(--sans);font-weight:600;font-size:14.5px;
@@ -122,7 +131,12 @@
     line-height:1.28;
     opacity:0;
     animation:sopRiseIn .9s cubic-bezier(.2,.8,.2,1) forwards .3s;
-    min-height:4.6em;
+    /* Reserve for the JS typing effect, so the paragraph below does not jump as
+       characters appear. 4.6em was sized for the old typewriter face; on the
+       serif this phrase measures 2 lines (2.56em) at every width from 390px to
+       1440px, and the extra 2 lines of reserve read as a hole under the
+       headline. Re-measure this if the phrase changes. */
+    min-height:2.6em;
   }
   #sop-page .hero h1 .cursor{display:inline-block;width:0.5ch;background:var(--crimson);animation:sopBlink 0.9s steps(1) infinite;margin-left:1px;}
   #sop-page .hero h1 .accent{color:var(--crimson);}
@@ -251,7 +265,9 @@
   #sop-page .hw-desc-cell{position:relative;min-height:26px;display:flex;align-items:flex-start;gap:10px;}
   #sop-page .hw-text-wrap{position:relative;flex:1;min-height:26px;}
   #sop-page .hw-cursive-text{
-    font-family:'Caveat', cursive;
+    /* Was Caveat cursive; on the site stack this reveal reads as the serif
+       display face instead of handwriting. */
+    font-family:var(--serif);
     font-size:21px;
     font-weight:600;
     color:var(--ink-soft);
@@ -630,7 +646,7 @@
   /* Typewriter Sprint game */
   #sop-page .sprint-target{
     background:var(--parchment);border:1px solid rgba(26,0,136,0.12);border-radius:2px;
-    padding:30px 28px;font-family:var(--type);font-size:18px;line-height:2;letter-spacing:0.02em;
+    padding:30px 28px;font-family:var(--sans);font-size:18px;line-height:2;letter-spacing:0.02em;
     min-height:110px;
   }
   #sop-page .sprint-target span{transition:color .1s ease;}
@@ -640,7 +656,7 @@
   #sop-page .sprint-target .pending{color:var(--ink-soft);opacity:.55;}
   #sop-page .sprint-input{
     margin-top:22px;width:100%;background:var(--paper);border:1px solid rgba(26,0,136,0.25);
-    padding:14px 16px;font-family:var(--type);font-size:15px;color:var(--ink);outline:none;border-radius:2px;
+    padding:14px 16px;font-family:var(--sans);font-size:15px;color:var(--ink);outline:none;border-radius:2px;
   }
   #sop-page .sprint-input:focus{border-color:var(--brass);}
   #sop-page .sprint-stats{display:flex;gap:26px;margin-top:20px;font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}

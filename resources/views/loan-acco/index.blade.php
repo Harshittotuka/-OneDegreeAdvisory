@@ -15,7 +15,8 @@
 @endphp
 
 @push('head')
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+{{-- No font <link> here: the page now uses the site stack, already loaded by the
+     shared layout. --}}
 <style>
   /* Neutralise the site's body gradient (fades to dark for the footer) so this
      paper-white page has no dark band above the footer. */
@@ -38,21 +39,31 @@
     --line:#DEDFF5;
     --radius:18px;
 
-    font-family:'Inter',sans-serif;
+    /* Site type stack — same as home / About, which use exactly two faces.
+       --font-mono is a label/eyebrow role (never code), so it maps to the body
+       face: home and About render every eyebrow in Manrope, not a third family.
+       Kept as its own variable so the role stays nameable. */
+    --font-head:"Cormorant Garamond",Georgia,serif;
+    --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-mono:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+
+    font-family:var(--font-body);
     color:var(--ink);
     background:var(--paper);
     line-height:1.55;
     -webkit-font-smoothing:antialiased;
   }
   #la-page *{box-sizing:border-box;}
-  #la-page h1,#la-page h2,#la-page h3{font-family:'Sora',sans-serif; font-weight:600; letter-spacing:-0.02em; line-height:1.1; max-width:none;}
+  {{-- letter-spacing stays at normal: the -0.02em tracking was tuned for Sora,
+       and a high-contrast serif does not want negative tracking. --}}
+  #la-page h1,#la-page h2,#la-page h3{font-family:var(--font-head); font-weight:700; line-height:1.1; max-width:none;}
   #la-page h1{color:var(--navy);}
   #la-page a{color:inherit; text-decoration:none;}
   #la-page img{display:block; max-width:100%;}
   #la-page p{margin:0;}
   #la-page .wrap{max-width:1160px; margin:0 auto; padding:0 28px;}
   #la-page .eyebrow{
-    font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500;
+    font-family:var(--font-mono); font-size:14px; font-weight:500;
     letter-spacing:0.14em; text-transform:uppercase; color:var(--orange);
     display:flex; align-items:center; gap:8px; margin-bottom:14px;
   }
@@ -82,7 +93,7 @@
   #la-page .hero-ctas{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:52px;}
   #la-page .btn{
     display:inline-flex; align-items:center; gap:8px; padding:14px 26px; border-radius:100px;
-    font-weight:600; font-size:15px; cursor:pointer; border:none; font-family:'Inter',sans-serif;
+    font-weight:600; font-size:15px; cursor:pointer; border:none; font-family:var(--font-body);
     transition:transform 0.15s ease, box-shadow 0.15s ease;
   }
   #la-page .btn:hover{transform:translateY(-2px);}
@@ -94,7 +105,7 @@
 
   #la-page .hero-stats{display:flex; gap:44px; flex-wrap:wrap;}
   #la-page .hero-stats div{border-left:2px solid var(--line); padding-left:14px;}
-  #la-page .hero-stats .num{font-family:'Sora',sans-serif; font-size:26px; font-weight:700; color:var(--navy);}
+  #la-page .hero-stats .num{font-family:var(--font-head); font-size:26px; font-weight:700; color:var(--navy);}
   #la-page .hero-stats .lbl{font-size:12.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
 
   /* ---------- SERVICE CARDS ---------- */
@@ -134,12 +145,12 @@
   #la-page .type-grid{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:60px;}
   #la-page .type-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:30px;}
   #la-page .type-card .tag{
-    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.08em;
+    display:inline-block; font-family:var(--font-mono); font-size:11.5px; letter-spacing:0.08em;
     text-transform:uppercase; padding:5px 12px; border-radius:100px; margin-bottom:18px;
   }
   #la-page .type-card.collateral .tag{background:var(--navy-soft); color:var(--navy);}
   #la-page .type-card.noncollateral .tag{background:var(--orange-soft); color:var(--orange);}
-  #la-page .type-card h4{font-family:'Sora',sans-serif; font-size:21px; margin-bottom:16px; color:var(--navy);}
+  #la-page .type-card h4{font-family:var(--font-head); font-size:21px; margin-bottom:16px; color:var(--navy);}
   #la-page .type-card ul{list-style:none; margin:0; padding:0;}
   #la-page .type-card li{font-size:14.5px; color:var(--ink); padding:8px 0; border-top:1px solid var(--line); display:flex; gap:10px; align-items:flex-start;}
   #la-page .type-card li:first-of-type{border-top:none;}
@@ -157,7 +168,7 @@
   #la-page .field.full{grid-column:1/-1;}
   #la-page label{font-size:12.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--navy);}
   #la-page input, #la-page select{
-    font-family:'Inter',sans-serif; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line);
+    font-family:var(--font-body); padding:13px 14px; border-radius:10px; border:1.5px solid var(--line);
     font-size:14.5px; color:var(--ink); background:#FBFAFF; transition:border-color 0.15s ease; width:100%;
   }
   #la-page input:focus, #la-page select:focus{outline:none; border-color:var(--orange); background:#fff;}
@@ -174,7 +185,7 @@
 
   /* ---------- FAQ ---------- */
   #la-page details{border:1px solid var(--line); border-radius:14px; padding:18px 22px;}
-  #la-page details summary{cursor:pointer; font-weight:600; color:var(--navy); font-family:'Sora',sans-serif;}
+  #la-page details summary{cursor:pointer; font-weight:600; color:var(--navy); font-family:var(--font-head);}
   #la-page details p{margin-top:10px; color:var(--muted); font-size:14.5px;}
 
   /* ---------- CONNECT ---------- */
@@ -184,7 +195,7 @@
   #la-page .connect-item:hover{border-color:var(--orange); transform:translateX(3px);}
   #la-page .connect-item .ci-icon{width:44px; height:44px; border-radius:12px; background:var(--navy-soft); color:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   #la-page .connect-item .ci-icon svg{width:20px; height:20px;}
-  #la-page .connect-item .ci-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:3px;}
+  #la-page .connect-item .ci-label{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:3px;}
   #la-page .connect-item .ci-value{font-size:15px; font-weight:600; color:var(--ink);}
   #la-page .connect-map{border-radius:18px; overflow:hidden; border:1px solid var(--line); min-height:320px; height:100%;}
   #la-page .connect-map iframe{width:100%; height:100%; min-height:320px; border:0; display:block;}

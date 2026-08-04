@@ -47,7 +47,9 @@
     --radius-sm:13px;
     --font-head:"Cormorant Garamond",Georgia,serif;
     --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
-    --font-ui:"Jost","Manrope",system-ui,sans-serif;
+    /* Label/eyebrow role. Was Jost; home and About render every eyebrow and
+       micro-label in Manrope, so this page uses the same two faces they do. */
+    --font-ui:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
     --shadow-card:0 22px 60px -38px rgba(16,2,88,.55);
     --shadow-pop:0 30px 70px -30px rgba(16,2,88,.6);
 
@@ -563,7 +565,10 @@
     --line-soft:#eef0f6;
     --radius:24px;
     --radius-sm:14px;
-    --font-head:"Manrope","Jost",system-ui,sans-serif;
+    /* --font-head deliberately NOT overridden here any more: this layer used to
+       flip the display face to Manrope, which made the page the odd one out in
+       the Student Hub. It inherits the base layer's Cormorant Garamond, i.e. the
+       same display face as home / About. */
     --shadow-card:0 18px 50px -34px rgba(18,22,61,.3);
     --shadow-pop:0 28px 70px -36px rgba(18,22,61,.4);
   }
@@ -589,7 +594,9 @@
   #vmi-page .vmi-hero__copy{position:relative;z-index:2;}
   #vmi-page .vmi-hero .vmi-eyebrow{margin-bottom:22px;padding:8px 13px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:rgba(255,255,255,.055);color:rgba(255,255,255,.78);font-size:10px;letter-spacing:.14em;backdrop-filter:blur(12px);}
   #vmi-page .vmi-live-dot{width:7px;height:7px;border-radius:50%;background:#57ffac;animation:vmiDotPulse 2s ease-in-out infinite;}
-  #vmi-page .vmi-hero h1{max-width:670px;font-family:var(--font-head);font-size:clamp(48px,5vw,72px);font-weight:800;line-height:1.01;letter-spacing:-.055em;margin-bottom:22px;}
+  {{-- weight 700 / no negative tracking: the 800 + -.055em were tuned for
+       Manrope, and the serif display face wants neither. --}}
+  #vmi-page .vmi-hero h1{max-width:670px;font-family:var(--font-head);font-size:clamp(48px,5vw,72px);font-weight:700;line-height:1.02;letter-spacing:-.01em;margin-bottom:22px;}
   #vmi-page .vmi-hero h1 em{font-style:normal;color:transparent;background:linear-gradient(100deg,#ffb194,#ff6534 80%);background-clip:text;-webkit-background-clip:text;}
   #vmi-page .vmi-hero p.pagesub{max-width:620px;color:rgba(239,241,255,.7);font-size:16px;line-height:1.8;}
   #vmi-page .vmi-hero__cta{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:30px;}
@@ -617,7 +624,7 @@
   #vmi-page .vmi-officer__core{width:74px;height:74px;border-radius:24px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#686bff,#3336c6);box-shadow:0 18px 42px -14px rgba(82,85,240,.9),inset 0 1px rgba(255,255,255,.3);transform:rotate(8deg);}
   #vmi-page .vmi-officer__core i{width:30px;height:30px;transform:rotate(-8deg);}
   #vmi-page .vmi-console__label{font-size:9px;letter-spacing:.16em;font-weight:800;color:#9da0ff;margin-bottom:8px;}
-  #vmi-page .vmi-console__body p{max-width:330px;color:#fff;font-family:var(--font-head);font-size:19px;font-weight:750;line-height:1.4;letter-spacing:-.025em;}
+  #vmi-page .vmi-console__body p{max-width:330px;color:#fff;font-family:var(--font-head);font-size:19px;font-weight:700;line-height:1.4;letter-spacing:0;}
   #vmi-page .vmi-console__wave{height:27px;display:flex;align-items:center;gap:4px;margin-top:auto;}
   #vmi-page .vmi-console__wave i{width:3px;height:100%;border-radius:99px;background:linear-gradient(#8d8fff,#ff7c55);transform-origin:center;animation:vmiWaveModern 1s ease-in-out infinite;}
   #vmi-page .vmi-console__wave i:nth-child(2),#vmi-page .vmi-console__wave i:nth-child(8){animation-delay:.12s}#vmi-page .vmi-console__wave i:nth-child(3),#vmi-page .vmi-console__wave i:nth-child(7){animation-delay:.24s}#vmi-page .vmi-console__wave i:nth-child(4),#vmi-page .vmi-console__wave i:nth-child(6){animation-delay:.36s}#vmi-page .vmi-console__wave i:nth-child(5){animation-delay:.48s}
@@ -647,7 +654,7 @@
 
   #vmi-page .vmi-setup-intro{max-width:720px;margin:0 auto 30px;text-align:center;}
   #vmi-page .vmi-setup-intro .vmi-eyebrow{margin-bottom:10px;color:var(--navy);}
-  #vmi-page .vmi-setup-intro h2{font-family:var(--font-head);font-size:clamp(31px,4vw,46px);line-height:1.12;letter-spacing:-.045em;color:var(--navy-deep);}
+  #vmi-page .vmi-setup-intro h2{font-family:var(--font-head);font-size:clamp(31px,4vw,46px);line-height:1.12;letter-spacing:-.01em;color:var(--navy-deep);}
   #vmi-page .vmi-setup-intro p{max-width:600px;margin:10px auto 0;color:var(--muted);font-size:14px;}
   #vmi-page .vmi-setup-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;align-items:stretch;transition:grid-template-columns .58s cubic-bezier(.22,1,.36,1),gap .48s cubic-bezier(.22,1,.36,1);}
   #vmi-page .vmi-setup-grid>.card{height:100%;min-width:0;margin:0;}
@@ -660,7 +667,7 @@
   #vmi-page .card:hover{box-shadow:0 24px 64px -40px rgba(20,24,64,.42);transform:translateY(-2px);}
   #vmi-page .card__ic{width:42px;height:42px;border-radius:13px;background:var(--navy-deep);box-shadow:none;}
   #vmi-page .card__ic.is-orange{background:#fff0eb;color:var(--orange);box-shadow:none;}
-  #vmi-page .card h2{font-family:var(--font-head);font-size:23px;font-weight:800;letter-spacing:-.035em;color:var(--navy-deep);}
+  #vmi-page .card h2{font-family:var(--font-head);font-size:23px;font-weight:700;letter-spacing:0;color:var(--navy-deep);}
   #vmi-page .vmi-field-label{font-size:10px;letter-spacing:.1em;margin-bottom:9px;color:#545b72;}
   #vmi-page .vmi-pills{gap:8px;}
   #vmi-page .vmi-pill{min-width:74px;min-height:61px;padding:10px 14px;border:1px solid #e0e3ed;border-radius:14px;background:#f8f9fc;font-size:16px;}
@@ -720,7 +727,7 @@
   #vmi-page .vmi-ai__status{display:inline-flex;align-items:center;justify-content:center;min-height:0;margin:0 auto 12px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.07);color:#f7dc84;font-size:9px;letter-spacing:.1em;}
   #vmi-page .vmi-ai .cat-badge{padding:7px 11px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.065);font-size:9px;}
   #vmi-page .vmi-ai__bubble{border-radius:18px;padding:20px 24px;margin-top:12px;background:rgba(255,255,255,.065);backdrop-filter:blur(18px);}
-  #vmi-page .vmi-ai__bubble .qtext{font-family:var(--font-head);font-size:25px;letter-spacing:-.035em;}
+  #vmi-page .vmi-ai__bubble .qtext{font-family:var(--font-head);font-size:25px;letter-spacing:0;}
   #vmi-page .vmi-ai__hint{margin-top:12px;}
   #vmi-page .vmi-answer .qbox{border:1px solid rgba(255,255,255,.7);border-radius:25px;background:rgba(255,255,255,.95);box-shadow:0 35px 80px -36px rgba(0,0,0,.7);backdrop-filter:blur(22px);}
   #vmi-page .mode-toggle{background:#eff1f7;border-radius:13px;padding:4px;}
@@ -745,7 +752,7 @@
 
   #vmi-page #screen-report{max-width:1080px;margin:0 auto;}
   #vmi-page .report-head{text-align:center;margin:18px auto 28px;}
-  #vmi-page .report-head h1{font-family:var(--font-head);font-size:clamp(38px,5vw,56px);font-weight:800;letter-spacing:-.05em;color:var(--navy-deep);}
+  #vmi-page .report-head h1{font-family:var(--font-head);font-size:clamp(38px,5vw,56px);font-weight:700;letter-spacing:-.01em;color:var(--navy-deep);}
   #vmi-page #screen-report>.card,#vmi-page #screen-report .two-col>.card{margin-bottom:16px;}
   #vmi-page #screen-report .card h3{font-size:11px;letter-spacing:.11em;color:#565d74;}
   #vmi-page .score-chip{border-color:#e4e7ef;border-radius:14px;background:#f7f8fc;}
@@ -1063,7 +1070,7 @@
     font-family:var(--font-ui);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
   #vmi-page .vmi-eyebrow--pass .vmi-live-dot{background:var(--session-gold);}
 
-  #vmi-page .vmi-pass h1{margin:0 0 15px;color:#fff;font-family:var(--font-head);font-weight:600;
+  #vmi-page .vmi-pass h1{margin:0 0 15px;color:#fff;font-family:var(--font-head);font-weight:700;
     font-size:clamp(33px,3.5vw,47px);line-height:1.06;letter-spacing:-.015em;}
   /* -webkit-text-fill-color, not just color: the professional layer sets the
      fill on .vmi-hero h1 em, and a bare `color` loses to it. */

@@ -1,8 +1,10 @@
 {{-- Visa — Student Hub landing page with a free visa-eligibility pre-check.
      This is the design of the standalone visa.html the client shared, kept
-     verbatim (Fraunces / Work Sans / Space Mono, navy / red-orange / gold), but
-     rendered on the shared site layout so the navbar + footer match the rest of
-     the site. The whole page is scoped under #visa-page so its generic class
+     verbatim (navy / red-orange / gold), but rendered on the shared site layout
+     so the navbar + footer match the rest of the site. The type is the one
+     exception to "verbatim": the original's Fraunces / Work Sans / Space Mono
+     were swapped for the site stack (Cormorant Garamond / Manrope / Jost) so
+     Student Hub reads as the same site as home and About. The whole page is scoped under #visa-page so its generic class
      names (.hero, .btn, .wrap, section{}, .service-card …) never collide with the
      global styles.css / stripe-nav.css that style the shared chrome.
 
@@ -21,7 +23,8 @@
 @endphp
 
 @push('head')
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+{{-- No font <link> here: the page now uses the site stack, already loaded by the
+     shared layout. --}}
 <style>
   /* Neutralise the site's body gradient (fades dark toward the footer) so the
      page's paper colour runs uninterrupted down to the shared footer. */
@@ -49,9 +52,13 @@
     --warning-bg:#FBF0DC;
     --danger:#B23A2F;
     --danger-bg:#FBEAE7;
-    --font-head:'Fraunces',serif;
-    --font-body:'Work Sans',sans-serif;
-    --font-mono:'Space Mono',monospace;
+    /* Site type stack — same as home / About, which use exactly two faces.
+       --font-mono is a label/eyebrow role (never code), so it maps to the body
+       face: home and About render every eyebrow in Manrope, not a third family.
+       Kept as its own variable so the role stays nameable. */
+    --font-head:"Cormorant Garamond",Georgia,serif;
+    --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-mono:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
     --grad-hero:radial-gradient(1100px 520px at 85% -10%,rgba(255,106,57,.14),transparent 60%),radial-gradient(800px 460px at -5% 10%,rgba(27,21,82,.10),transparent 55%);
     --grad-navy:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
     --grad-brand:linear-gradient(135deg,var(--red) 0%,var(--gold) 100%);

@@ -21577,26 +21577,33 @@ body.tp-body {
   background: #fff;
 }
 
-/* Use the source site's font (Poppins) throughout this page, overriding
-   the global Cormorant/Manrope. NOTE: do not set overflow on .tp-edwise —
-   it breaks the sticky benefit image. */
+/* Type on this page is the site stack (Manrope body / Cormorant Garamond
+   display), same as home and About — the source site's Poppins is gone, so this
+   page no longer reads as a different site inside the Student Hub.
+   NOTE: do not set overflow on .tp-edwise — it breaks the sticky benefit
+   image.
+   Bare `span` / `strong` are deliberately NOT listed below: the headings here
+   wrap their emphasis in them (.hero-title-txt strong, .sec-title
+   span.highlighter), so pinning those to the body face would leave half of
+   every headline in the wrong font. They inherit from their parent instead. */
 .tp-edwise,
+.tp-edwise p,
+.tp-edwise a,
+.tp-edwise .button {
+  font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
 .tp-edwise h1,
 .tp-edwise h2,
 .tp-edwise h3,
 .tp-edwise h4,
 .tp-edwise h5,
 .tp-edwise h6,
-.tp-edwise p,
-.tp-edwise a,
-.tp-edwise span,
-.tp-edwise strong,
 .tp-edwise .sec-title,
 .tp-edwise .hero-title-txt,
 .tp-edwise .benef-title,
-.tp-edwise .prep-cors-title,
-.tp-edwise .button {
-  font-family: "Poppins", sans-serif;
+.tp-edwise .prep-cors-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
 }
 
 .tp-edwise .container {
@@ -21670,8 +21677,8 @@ body.tp-body {
 
 .tp-edwise .sec-title {
   font-size: 42px;
-  font-weight: 400;
-  line-height: 1.25;
+  font-weight: 600;
+  line-height: 1.15;
   text-transform: capitalize;
   color: var(--tp-secndry);
   /* Cancel the global `h1 { max-width: 760px }`, which left-pins the
@@ -21686,8 +21693,8 @@ body.tp-body {
 /* Hero */
 .tp-edwise .hero-title-txt {
   font-size: 52px;
-  font-weight: 400;
-  line-height: 1.4;
+  font-weight: 600;
+  line-height: 1.18;
   color: var(--tp-secndry);
   position: relative;
 }
@@ -21709,7 +21716,7 @@ body.tp-body {
 }
 
 .tp-edwise .highlighter {
-  font-weight: 600;
+  font-weight: 700;
   position: relative;
 }
 
@@ -21856,7 +21863,7 @@ body.tp-body {
 
 .tp-edwise .benef-title {
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--tp-secndry);
   margin: 8px 0 16px;
   text-transform: capitalize;
@@ -21927,7 +21934,7 @@ body.tp-body {
 
 .tp-edwise .prep-cors-title {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 12px;
   color: var(--tp-secndry);
 }
