@@ -728,3 +728,15 @@ html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
    counts its own view. The urgency it used to carry by counting overdue only
    is kept as a colour instead, so the number and the list agree. */
 .crm-app .nav-badge.is-alert{background:#c0392b;color:#fff}
+
+/* ─────────────────── Confirm-before-committing dialog ───────────────────
+   Built by crm.js (see openConfirm) and shared by every theme, so it leans
+   only on the modal chrome all three define and keeps its own neutral,
+   light surface for the read-back rows. */
+.crm-confirm .modal-body{padding-top:8px}
+.crm-confirm-summary{list-style:none;margin:0;padding:0;background:#fbfbfd;border:1px solid #e4e7ee;border-radius:14px;overflow:hidden}
+.crm-confirm-summary[hidden]{display:none}
+.crm-confirm-summary li{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:10px 13px;font-size:.74rem}
+.crm-confirm-summary li+li{border-top:1px solid #eceef4}
+.crm-confirm-summary li span{color:#5f687c}
+.crm-confirm-summary li strong{color:#172033;font-weight:650;text-align:right}

@@ -416,6 +416,7 @@ class CrmTest extends TestCase
 
         $this->withSession(['crm_user_id' => $user->id])->post(route('crm.leads.convert', $lead), [
             'student_category' => 'paid', 'student_stage' => 'doc_pending', 'enrollment_amount' => 25000,
+            'enrollment_date' => now()->toDateString(), 'payment_reference' => 'OD-PAY-1000',
         ])->assertSessionHasNoErrors();
 
         $this->withSession(['crm_user_id' => $user->id])->patch(route('crm.leads.student-journey.update', $lead), [
@@ -549,6 +550,137 @@ class CrmTest extends TestCase
             ->assertOk()
             ->assertSee('Visa Granted Student')
             ->assertDontSee('Doc Pending Student');
+    }
+
+    public function test_alumni_is_a_journey_stage_of_its_own_that_can_be_filtered(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $alumnus = $this->leadFor($admin, 'Placed Alumnus', '9876500061');
+        $alumnus->update(['is_student' => true, 'status' => 'converted', 'student_stage' => 'alumni']);
+        $inProcess = $this->leadFor($admin, 'Visa Filed Student', '9876500062');
+        $inProcess->update(['is_student' => true, 'status' => 'converted', 'student_stage' => 'visa_filed']);
+
+        // Alumni is offered by the journey-stage filter alongside every other stage.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'students']))
+            ->assertOk()
+            ->assertSee('<option value="alumni" >Alumni</option>', false);
+
+        // And it lists only the students whose whole process is complete.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'students', 'student_stage' => 'alumni']))
+            ->assertOk()
+            ->assertSee('Placed Alumnus')
+            ->assertDontSee('Visa Filed Student');
+    }
+
+    public function test_conversion_requires_the_enrollment_figures_before_it_will_enrol(): void
+    {
+        $user = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'role' => 'counsellor', 'is_active' => true]);
+        $lead = $this->leadFor($user, 'Mandatory Fields Lead', '9876500071');
+
+        // Amount and date are not optional any more, and a paid student needs the
+        // receipt the money came from.
+        $this->withSession(['crm_user_id' => $user->id])->post(route('crm.leads.convert', $lead), [
+            'student_category' => 'paid', 'student_stage' => 'doc_pending',
+        ])->assertSessionHasErrors(['enrollment_amount', 'enrollment_date', 'payment_reference']);
+        $this->assertFalse($lead->fresh()->is_student);
+
+        // A "paid" student recorded at ₹0 is a data error, not an enrollment.
+        $this->withSession(['crm_user_id' => $user->id])->post(route('crm.leads.convert', $lead), [
+            'student_category' => 'paid', 'student_stage' => 'doc_pending', 'enrollment_amount' => 0,
+            'enrollment_date' => now()->toDateString(), 'payment_reference' => 'OD-PAY-2001',
+        ])->assertSessionHasErrors(['enrollment_amount']);
+        $this->assertFalse($lead->fresh()->is_student);
+
+        // A non-paid student may be ₹0 with no reference — but the 0 has to be typed.
+        $this->withSession(['crm_user_id' => $user->id])->post(route('crm.leads.convert', $lead), [
+            'student_category' => 'non_paid', 'student_stage' => 'doc_pending', 'enrollment_amount' => 0,
+            'enrollment_date' => now()->toDateString(),
+        ])->assertSessionHasNoErrors();
+        $this->assertTrue($lead->fresh()->is_student);
+
+        // Converting an already-enrolled student would overwrite the record it
+        // already holds, so the route refuses it.
+        $this->withSession(['crm_user_id' => $user->id])->post(route('crm.leads.convert', $lead), [
+            'student_category' => 'paid', 'student_stage' => 'visa_filed', 'enrollment_amount' => 90000,
+            'enrollment_date' => now()->toDateString(), 'payment_reference' => 'OD-PAY-2002',
+        ])->assertSessionHasErrors(['student_stage']);
+        $this->assertSame(0, $lead->fresh()->enrollment_amount);
+        $this->assertSame('doc_pending', $lead->fresh()->student_stage);
+
+        // The same mandatory set guards a later journey update.
+        $this->withSession(['crm_user_id' => $user->id])->patch(route('crm.leads.student-journey.update', $lead), [
+            'student_category' => 'paid', 'student_stage' => 'doc_complete', 'enrollment_amount' => '',
+            'enrollment_date' => '',
+        ])->assertSessionHasErrors(['enrollment_amount', 'enrollment_date', 'payment_reference']);
+        $this->assertSame('doc_pending', $lead->fresh()->student_stage);
+    }
+
+    public function test_the_conversion_form_asks_for_confirmation_before_it_enrols(): void
+    {
+        $user = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'role' => 'counsellor', 'is_active' => true]);
+        $lead = $this->leadFor($user, 'Reconfirm Lead', '9876500072');
+
+        $this->withSession(['crm_user_id' => $user->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('data-confirm-submit', false)
+            ->assertSee('data-confirm-title="Enrol Reconfirm Lead as a student?"', false)
+            ->assertSee('data-confirm-accept="Yes, enrol this student"', false)
+            // The mandatory figures are marked as such on the form itself.
+            ->assertSee('name="enrollment_amount" placeholder="0" required', false)
+            ->assertSee('value="'.now()->format('Y-m-d').'" required', false);
+    }
+
+    public function test_only_a_super_admin_can_move_an_enrolled_student_back_into_the_pipeline(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'role' => 'counsellor', 'is_active' => true]);
+        $lead = $this->leadFor($counsellor, 'Wrongly Enrolled', '9876500073');
+        $lead->update([
+            'is_student' => true, 'status' => 'converted', 'student_stage' => 'doc_pending',
+            'student_category' => 'paid', 'enrollment_amount' => 45000, 'enrollment_date' => now()->toDateString(),
+            'payment_reference' => 'OD-PAY-3001',
+        ]);
+        $payload = ['name' => $lead->name, 'phone' => $lead->phone, 'priority' => 'medium', 'lead_type' => 'general'];
+
+        // The counsellor who owns the lead cannot: the status stays where it is.
+        $this->withSession(['crm_user_id' => $counsellor->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['status' => 'interested', 'follow_up_at' => now()->addDay()->format('Y-m-d\TH:i')])
+            ->assertSessionHasErrors(['status']);
+        $this->assertTrue($lead->fresh()->is_student);
+
+        // Their drawer says so, and offers no status dropdown to try it with.
+        $this->withSession(['crm_user_id' => $counsellor->id])
+            ->get(route('crm.dashboard', ['view' => 'students', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('Status is managed through the student journey below.')
+            ->assertSee('A super admin can move it back into the pipeline.');
+
+        // A super admin can, and the enrollment details survive the trip back.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->put(route('crm.leads.update', $lead), $payload + ['status' => 'interested', 'follow_up_at' => now()->addDay()->format('Y-m-d\TH:i')])
+            ->assertSessionHasNoErrors();
+        $lead->refresh();
+        $this->assertFalse($lead->is_student);
+        $this->assertSame('interested', $lead->status);
+        $this->assertSame(45000, $lead->enrollment_amount);
+        $this->assertSame('doc_pending', $lead->student_stage);
+
+        // The revert is on the timeline and in the audit log, named as itself.
+        $this->assertDatabaseHas('crm_lead_activities', ['crm_lead_id' => $lead->id, 'type' => 'enrollment_reverted']);
+        $this->assertDatabaseHas('crm_audit_logs', ['crm_lead_id' => $lead->id, 'event' => 'lead_enrollment_reverted']);
+
+        // The lead is convertible again, and the super admin's drawer explains the
+        // consequence before they pick a status.
+        $lead->update(['is_student' => true, 'status' => 'converted']);
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'students', 'lead' => $lead->id]))
+            ->assertOk()
+            ->assertSee('Moving this student to a pipeline status reverts the enrollment.')
+            ->assertSee('data-confirm-if="status!=converted"', false)
+            ->assertSee('data-confirm-accept="Yes, revert the enrollment"', false);
     }
 
     public function test_lead_workspace_no_longer_offers_a_delete_option(): void

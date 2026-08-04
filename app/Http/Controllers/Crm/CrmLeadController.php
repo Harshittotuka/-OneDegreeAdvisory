@@ -112,14 +112,34 @@ class CrmLeadController extends Controller
 
         $before = $lead->getAttributes();
         $lead->fill($data);
+        // Only a super admin gets this far with a non-converted status on a
+        // student (validatedLead limits the list); moving the status out of
+        // "Enrolled student" is what takes the lead back out of the journey.
+        $reverting = (bool) $before['is_student'] && ($data['status'] ?? null) !== 'converted';
+        if ($reverting) {
+            $lead->is_student = false;
+        }
         if ($lead->isDirty('follow_up_at')) {
             $lead->follow_up_completed_at = null;
         }
         $changes = $lead->getDirty();
         $lead->save();
 
+        if ($reverting) {
+            $body = 'Enrollment reverted by a super admin — the record is back in the pipeline as “'
+                .(CrmOptions::STATUSES[$lead->status] ?? $lead->status).'”. The enrollment details are kept and reappear if it is converted again.';
+            $this->activity($lead, $user, 'enrollment_reverted', $body, ['before' => $before, 'changes' => $changes]);
+            $this->auditLead($request, $user, $lead, 'lead_enrollment_reverted', 'Reverted the enrollment for '.$lead->name.'.', [
+                'before' => array_intersect_key($before, $changes),
+                'after' => $changes,
+            ]);
+        }
+
+        // A revert has already said its own piece above, status and all, so the
+        // generic story covers only whatever else was edited in the same save.
+        $storyChanges = array_diff_key($changes, array_flip($reverting ? ['is_student', 'status'] : []));
         $labels = [];
-        foreach (array_keys($changes) as $field) {
+        foreach (array_keys($storyChanges) as $field) {
             if (in_array($field, ['updated_at', 'follow_up_completed_at'], true)) {
                 continue;
             }
@@ -130,12 +150,12 @@ class CrmLeadController extends Controller
             };
         }
         if ($labels !== []) {
-            $story = $this->describeChanges($before, $changes);
-            $this->activity($lead, $user, 'updated', $story ?: 'Updated '.implode(', ', $labels).'.', ['before' => $before, 'changes' => $changes]);
+            $story = $this->describeChanges($before, $storyChanges);
+            $this->activity($lead, $user, 'updated', $story ?: 'Updated '.implode(', ', $labels).'.', ['before' => $before, 'changes' => $storyChanges]);
             $lead->unsetRelation('assignee')->load('assignee');
             $this->auditLead($request, $user, $lead, 'lead_updated', 'Updated '.implode(', ', $labels).' for '.$lead->name.'.', [
-                'before' => array_intersect_key($before, $changes),
-                'after' => $changes,
+                'before' => array_intersect_key($before, $storyChanges),
+                'after' => $storyChanges,
             ]);
         }
 
@@ -194,14 +214,13 @@ class CrmLeadController extends Controller
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
         $this->guardLead($lead, $user);
-        $data = $request->validate([
-            'student_category' => ['required', Rule::in(array_keys(CrmOptions::STUDENT_CATEGORIES))],
-            'student_stage' => ['required', Rule::in(array_keys(CrmOptions::STUDENT_STAGES))],
-            'enrollment_amount' => ['nullable', 'integer', 'min:0'],
-            'enrollment_date' => ['nullable', 'date'],
-            'payment_reference' => ['nullable', 'string', 'max:150'],
-            'conversion_remarks' => ['nullable', 'string', 'max:3000'],
-        ]);
+        // Enrolling twice would overwrite the recorded enrollment with a blank
+        // form's worth of data; the button is gone once it is done, but the route
+        // is not, and a resubmitted POST would land right here.
+        if ($lead->is_student) {
+            return back()->withErrors(['student_stage' => 'This lead is already an enrolled student. Update the journey instead.'])->withInput();
+        }
+        $data = $request->validate($this->enrollmentRules($request), $this->enrollmentMessages());
         $before = $lead->only(['is_student', 'status', 'student_category', 'student_stage', 'enrollment_amount', 'enrollment_date', 'payment_reference', 'conversion_remarks']);
         $lead->update($data + ['is_student' => true, 'status' => 'converted']);
         $this->activity($lead, $user, 'converted', 'Converted to an enrolled student at stage “'.CrmOptions::STUDENT_STAGES[$data['student_stage']].'”.');
@@ -221,14 +240,9 @@ class CrmLeadController extends Controller
         $this->guardLead($lead, $user);
         abort_unless($lead->is_student, 422);
 
-        $data = $request->validate([
-            'student_category' => ['required', Rule::in(array_keys(CrmOptions::STUDENT_CATEGORIES))],
-            'student_stage' => ['required', Rule::in(array_keys(CrmOptions::STUDENT_STAGES))],
-            'enrollment_amount' => ['nullable', 'integer', 'min:0'],
-            'enrollment_date' => ['nullable', 'date'],
-            'payment_reference' => ['nullable', 'string', 'max:150'],
-            'conversion_remarks' => ['nullable', 'string', 'max:3000'],
-        ]);
+        // The same mandatory set the conversion asked for: what a conversion has
+        // to record, an update must not be able to empty back out.
+        $data = $request->validate($this->enrollmentRules($request), $this->enrollmentMessages());
 
         $before = collect(array_keys($data))->mapWithKeys(fn (string $field): array => [$field => $lead->getRawOriginal($field)])->all();
         $lead->fill($data);
@@ -310,11 +324,51 @@ class CrmLeadController extends Controller
         return back()->with('status', "Imported {$created} lead(s); skipped {$skipped} invalid or duplicate row(s).");
     }
 
+    /**
+     * What an enrollment has to carry, shared by the conversion and by every
+     * later journey update so the two can never disagree.
+     *
+     * Enrollment amount and date are mandatory: a conversion is a financial
+     * record, and one made by mistake used to be indistinguishable from a real
+     * one with nothing filled in. Zero is still a valid amount — that is what a
+     * non-paid student is — but it has to be typed, not left blank. A paid
+     * student instead needs a real figure and the receipt it came from.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function enrollmentRules(Request $request): array
+    {
+        $paid = in_array((string) $request->input('student_category'), CrmOptions::PAID_STUDENT_CATEGORIES, true);
+
+        return [
+            'student_category' => ['required', Rule::in(array_keys(CrmOptions::STUDENT_CATEGORIES))],
+            'student_stage' => ['required', Rule::in(array_keys(CrmOptions::STUDENT_STAGES))],
+            'enrollment_amount' => ['required', 'integer', $paid ? 'min:1' : 'min:0'],
+            'enrollment_date' => ['required', 'date'],
+            'payment_reference' => [Rule::requiredIf($paid), 'nullable', 'string', 'max:150'],
+            'conversion_remarks' => ['nullable', 'string', 'max:3000'],
+        ];
+    }
+
+    /** @return array<string, string> */
+    private function enrollmentMessages(): array
+    {
+        return [
+            'enrollment_amount.required' => 'Enter the enrollment amount before enrolling this student — use 0 for a non-paid student.',
+            'enrollment_amount.min' => 'A paid student needs an enrollment amount above ₹0.',
+            'enrollment_date.required' => 'Pick the enrollment date before enrolling this student.',
+            'payment_reference.required' => 'Add the receipt or transaction ID for a paid enrollment.',
+        ];
+    }
+
     private function validatedLead(Request $request, CrmUser $user, ?string $errorBag = null, ?CrmLead $lead = null): array
     {
         $allowedStatuses = array_keys(CrmOptions::pipelineStatuses());
         if ($lead?->is_student) {
-            $allowedStatuses = ['converted'];
+            // A counsellor can only leave an enrolled student where it is. A super
+            // admin can move it back into the pipeline, which is how a conversion
+            // made by mistake gets undone.
+            $allowedStatuses = $user->isSuperAdmin() ? [...$allowedStatuses, 'converted'] : ['converted'];
         } elseif ($lead?->status === 'converted') {
             $allowedStatuses[] = 'converted';
         }
@@ -378,7 +432,10 @@ class CrmLeadController extends Controller
     {
         $followUp = $data['follow_up_at'] ?? null;
         $status = (string) ($data['status'] ?? '');
-        if (blank($followUp) || $status === 'converted' || $lead?->is_student) {
+        // An enrolled student stays enrolled — unless this save is the super-admin
+        // revert, which puts the record back in the pipeline and so back under the
+        // planner's rules.
+        if (blank($followUp) || $status === 'converted') {
             return $data;
         }
         if (in_array($status, CrmOptions::FOLLOW_UP_STATUSES, true)) {
@@ -464,7 +521,7 @@ class CrmLeadController extends Controller
      */
     private function describeChanges(array $before, array $changes): string
     {
-        $fields = array_diff(array_keys($changes), ['updated_at', 'follow_up_completed_at']);
+        $fields = array_diff(array_keys($changes), ['updated_at', 'follow_up_completed_at', 'is_student']);
         if ($fields === []) {
             return '';
         }

@@ -696,9 +696,10 @@
         'imported' => ['symbol' => '⇧', 'group' => 'system', 'label' => 'Lead imported'],
         'follow_up_done' => ['symbol' => '✓', 'group' => 'milestones', 'label' => 'Follow-up completed'],
         'converted' => ['symbol' => '◇', 'group' => 'milestones', 'label' => 'Student enrolled'],
+        'enrollment_reverted' => ['symbol' => '↩', 'group' => 'milestones', 'label' => 'Enrollment reverted'],
         'student_stage' => ['symbol' => '→', 'group' => 'milestones', 'label' => 'Journey advanced'],
     ];
-    $journeyKeys = ['doc_pending', 'doc_complete', 'app_submitted', 'offer_received', 'deposit_paid', 'visa_in_process', 'visa_filed', 'visa_granted'];
+    $journeyKeys = ['doc_pending', 'doc_complete', 'app_submitted', 'offer_received', 'deposit_paid', 'visa_in_process', 'visa_filed', 'visa_granted', 'alumni'];
     $stageGuidance = [
         'doc_pending' => 'Collect identity, academic and financial documents from the student.',
         'doc_complete' => 'Review the final shortlist and prepare institution applications.',
@@ -708,6 +709,7 @@
         'visa_in_process' => 'Complete financial evidence, medicals and application documents.',
         'visa_filed' => 'Track the decision and keep the student ready for further requests.',
         'visa_granted' => 'Complete pre-departure guidance and final travel preparation.',
+        'alumni' => 'The process is complete and the student is placed. Keep them on the alumni list for referrals and testimonials.',
         'visa_rejected' => 'Review the refusal reason and decide whether to refile or close the journey.',
         'dropped' => 'Record the reason and close any outstanding tasks for the student.',
     ];
@@ -741,20 +743,36 @@
                     @foreach($pipelineSteps as $phase=>$phaseLabel)<div class="pipeline-step {{ $phase < $currentStatus['phase'] ? 'complete' : ($phase === $currentStatus['phase'] ? 'current' : '') }}"><span>{{ $phase < $currentStatus['phase'] ? '✓' : $phase }}</span><small>{{ $phaseLabel }}</small></div>@endforeach
                 </div>
 
-                <form method="post" action="{{ route('crm.leads.update',$selectedLead) }}" data-lead-details-form data-track-changes>@csrf @method('PUT')
+                <form method="post" action="{{ route('crm.leads.update',$selectedLead) }}" data-lead-details-form data-track-changes
+                    @if($selectedLead->is_student && $crmUser->isSuperAdmin())
+                        data-confirm-submit data-confirm-if="status!=converted"
+                        data-confirm-title="Revert this enrollment?"
+                        data-confirm-body="{{ $selectedLead->name }} stops being an enrolled student and goes back into the pipeline. The recorded enrollment details are kept, and the whole timeline stays."
+                        data-confirm-accept="Yes, revert the enrollment"
+                        data-confirm-fields="status:Moving to"
+                    @endif
+                    >@csrf @method('PUT')
                     <div class="drawer-card section-card">
                         <div class="section-heading"><span class="section-icon">↗</span><div><h3>Pipeline control</h3><p>Keep ownership, intent and the next conversation clear.</p></div></div>
                         <div class="form-grid roomy-grid">
                             <div class="field full"><label>Pipeline status <span class="label-note">Where is this lead now?</span></label>
-                                @if($selectedLead->is_student)
+                                @if($selectedLead->is_student && ! $crmUser->isSuperAdmin())
                                     <input type="hidden" name="status" value="converted">
-                                    <div class="locked-conversion-status"><strong>Enrolled student</strong><span>Status is managed through the student journey below.</span></div>
+                                    <div class="locked-conversion-status"><strong>Enrolled student</strong><span>Status is managed through the student journey below. A super admin can move it back into the pipeline.</span></div>
                                 @else
                                     <select name="status" data-status-select data-followup-tinted @class(['is-followup-status' => ! $conversionIncomplete && $isFollowUpStatus($selectedLead->status)])>
+                                        {{-- Only a super admin sees this list on an enrolled student, and
+                                             picking anything but "Enrolled student" reverts the enrollment —
+                                             the way a conversion made by mistake is undone. --}}
+                                        @if($selectedLead->is_student)<option value="converted" data-symbol="{{ $statusDetails['converted']['symbol'] }}" data-hint="{{ $statusDetails['converted']['copy'] }}" selected>{{ $statuses['converted'] }}</option>@endif
                                         @if($conversionIncomplete)<option value="converted" data-symbol="!" data-hint="{{ $currentStatus['copy'] }}" selected>Conversion incomplete — finish in Student tab</option>@endif
-                                        @foreach($pipelineStatuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) data-symbol="{{ $statusDetails[$key]['symbol'] ?? '•' }}" data-hint="{{ $statusDetails[$key]['copy'] ?? '' }}" @selected(!$conversionIncomplete && $selectedLead->status===$key)>{{ $label }}</option>@endforeach
+                                        @foreach($pipelineStatuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) data-symbol="{{ $statusDetails[$key]['symbol'] ?? '•' }}" data-hint="{{ $statusDetails[$key]['copy'] ?? '' }}" @selected(!$conversionIncomplete && !$selectedLead->is_student && $selectedLead->status===$key)>{{ $label }}</option>@endforeach
                                     </select>
-                                    <span class="followup-status-note">Brown-tinted statuses keep this lead in the Follow-up planner.</span>
+                                    @if($selectedLead->is_student)
+                                        <span class="followup-status-note">Moving this student to a pipeline status reverts the enrollment. The enrollment details are kept.</span>
+                                    @else
+                                        <span class="followup-status-note">Brown-tinted statuses keep this lead in the Follow-up planner.</span>
+                                    @endif
                                 @endif
                                 <div class="select-guidance"><span data-status-symbol>{{ $currentStatus['symbol'] }}</span><p data-status-help>{{ $currentStatus['copy'] }}</p></div>
                             </div>
@@ -858,7 +876,7 @@
                     <section class="journey-hero crm-stage-summary {{ $journeyIsAlert ? 'journey-alert' : '' }} {{ $journeyIsComplete ? 'journey-complete' : '' }}">
                         <div class="journey-stage-mark" aria-hidden="true"><span>{{ $journeyIsAlert ? '!' : ($journeyIsComplete ? '✓' : ($journeyPosition >= 0 ? $journeyPosition + 1 : '•')) }}</span></div>
                         <div class="journey-stage-copy"><span class="section-kicker">Current student stage</span><h3>{{ $studentStages[$selectedLead->student_stage] ?? 'Journey not started' }}</h3><p>{{ $stageGuidance[$selectedLead->student_stage] ?? 'Select the current stage and keep the student record up to date.' }}</p></div>
-                        <div class="journey-stage-status"><strong>{{ $journeyIsAlert ? 'Needs attention' : ($journeyIsComplete ? 'Journey complete' : ($journeyPosition >= 0 ? 'Step '.($journeyPosition + 1).' of '.count($journeyKeys) : 'Stage pending')) }}</strong><small>{{ $nextJourneyKey ? 'Next: '.$studentStages[$nextJourneyKey] : ($journeyIsComplete ? 'Pre-departure ready' : 'Review and update') }}</small></div>
+                        <div class="journey-stage-status"><strong>{{ $journeyIsAlert ? 'Needs attention' : ($journeyIsComplete ? 'Journey complete' : ($journeyPosition >= 0 ? 'Step '.($journeyPosition + 1).' of '.count($journeyKeys) : 'Stage pending')) }}</strong><small>{{ $nextJourneyKey ? 'Next: '.$studentStages[$nextJourneyKey] : ($journeyIsComplete ? 'Placed — on the alumni list' : 'Review and update') }}</small></div>
                     </section>
 
                     <div class="journey-track" aria-label="Student journey progress">
@@ -874,10 +892,11 @@
                             <div class="section-heading"><span class="section-icon">◇</span><div><h3>Update student journey</h3><p>Advance the stage and maintain enrollment information.</p></div></div>
                             <div class="form-grid roomy-grid">
                                 <div class="field full"><label>Current journey stage</label><select name="student_stage" data-stage-select required>@foreach($studentStages as $key=>$label)<option value="{{ $key }}" data-hint="{{ $stageGuidance[$key] ?? '' }}" @selected($selectedLead->student_stage===$key)>{{ $label }}</option>@endforeach</select><div class="select-guidance stage-guidance"><span>→</span><p data-stage-help>{{ $stageGuidance[$selectedLead->student_stage] ?? 'Keep the student journey current.' }}</p></div></div>
-                                <div class="field"><label>Student type</label><select name="student_category" required>@foreach($studentCategories as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->student_category===$key)>{{ $label }}</option>@endforeach</select></div>
-                                <div class="field"><label>Enrollment date</label><input type="date" name="enrollment_date" value="{{ $selectedLead->enrollment_date?->format('Y-m-d') }}"></div>
-                                <div class="field"><label>Enrollment amount</label><div class="money-input"><span>₹</span><input type="number" min="0" name="enrollment_amount" value="{{ $selectedLead->enrollment_amount }}" placeholder="0"></div></div>
-                                <div class="field"><label>Payment reference</label><input name="payment_reference" value="{{ $selectedLead->payment_reference }}" placeholder="Receipt or transaction ID"></div>
+                                @php $studentIsPaid = in_array($selectedLead->student_category, \App\Support\CrmOptions::PAID_STUDENT_CATEGORIES, true); @endphp
+                                <div class="field"><label>Student type <span class="required">*</span></label><select name="student_category" data-paid-values="{{ implode(',', \App\Support\CrmOptions::PAID_STUDENT_CATEGORIES) }}" required>@foreach($studentCategories as $key=>$label)<option value="{{ $key }}" @selected($selectedLead->student_category===$key)>{{ $label }}</option>@endforeach</select></div>
+                                <div class="field"><label>Enrollment date <span class="required">*</span></label><input type="date" name="enrollment_date" value="{{ $selectedLead->enrollment_date?->format('Y-m-d') }}" required></div>
+                                <div class="field"><label>Enrollment amount <span class="required">*</span> <span class="label-note" data-amount-note>{{ $studentIsPaid ? 'Above ₹0 for a paid student' : 'Enter 0 for a non-paid student' }}</span></label><div class="money-input"><span>₹</span><input type="number" min="{{ $studentIsPaid ? 1 : 0 }}" step="1" name="enrollment_amount" value="{{ $selectedLead->enrollment_amount }}" placeholder="0" required></div></div>
+                                <div class="field"><label>Payment reference <span class="required" data-reference-star @unless($studentIsPaid) hidden @endunless>*</span> <span class="label-note" data-reference-note>{{ $studentIsPaid ? 'Required for a paid enrollment' : 'Optional' }}</span></label><input name="payment_reference" value="{{ $selectedLead->payment_reference }}" placeholder="Receipt or transaction ID" @required($studentIsPaid)></div>
                                 <div class="field full"><label>Counsellor remarks <span class="label-note">Optional</span></label><textarea name="conversion_remarks" rows="3" placeholder="Important enrollment, application or visa notes…">{{ $selectedLead->conversion_remarks }}</textarea></div>
                             </div>
                         </div>
@@ -886,19 +905,27 @@
                 @else
                     <section class="conversion-hero"><div class="conversion-graphic" aria-hidden="true"><span class="student-card-graphic"><i>{{ $initials($selectedLead->name) }}</i><b>{{ $selectedLead->name }}</b><small>Future student</small></span><span class="conversion-arrow">→</span><span class="journey-passport">◇<i>One Degree</i></span></div><span class="section-kicker">Ready for the next chapter?</span><h3>Convert this lead into a student journey</h3><p>Enrollment keeps the complete lead history and unlocks structured document, application, offer and visa tracking.</p><div class="conversion-benefits"><span><i>1</i>Keep the full timeline</span><span><i>2</i>Track every admission stage</span><span><i>3</i>Manage payment information</span></div></section>
 
-                    <form method="post" action="{{ route('crm.leads.convert',$selectedLead) }}" data-track-changes>@csrf
+                    {{-- Enrolling is a financial record, so the money fields are mandatory
+                         and the button asks again before it commits: a conversion made by
+                         mistake used to look exactly like a real one with nothing filled in. --}}
+                    <form method="post" action="{{ route('crm.leads.convert',$selectedLead) }}" data-track-changes
+                        data-confirm-submit
+                        data-confirm-title="Enrol {{ $selectedLead->name }} as a student?"
+                        data-confirm-body="This starts the student journey and records the enrollment below. Only a super admin can move the record back into the pipeline afterwards."
+                        data-confirm-accept="Yes, enrol this student"
+                        data-confirm-fields="student_category:Student type,student_stage:Starting stage,enrollment_amount:Enrollment amount,enrollment_date:Enrollment date,payment_reference:Payment reference">@csrf
                         <div class="drawer-card section-card conversion-form-card">
-                            <div class="section-heading"><span class="section-icon">✦</span><div><h3>Enrollment information</h3><p>Start with the details available today. They can be updated later.</p></div></div>
+                            <div class="section-heading"><span class="section-icon">✦</span><div><h3>Enrollment information</h3><p>The enrollment figures are recorded now — the journey details can be updated later.</p></div></div>
                             <div class="form-grid roomy-grid">
-                                <div class="field"><label>Student type</label><select name="student_category" required>@foreach($studentCategories as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
-                                <div class="field"><label>Starting stage</label><select name="student_stage" required>@foreach($studentStages as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
-                                <div class="field"><label>Enrollment amount <span class="label-note">Optional</span></label><div class="money-input"><span>₹</span><input type="number" min="0" name="enrollment_amount" placeholder="0"></div></div>
-                                <div class="field"><label>Enrollment date <span class="label-note">Optional</span></label><input type="date" name="enrollment_date" value="{{ now()->format('Y-m-d') }}"></div>
-                                <div class="field full"><label>Payment reference <span class="label-note">Optional</span></label><input name="payment_reference" placeholder="Receipt or transaction ID"></div>
+                                <div class="field"><label>Student type <span class="required">*</span></label><select name="student_category" data-paid-values="{{ implode(',', \App\Support\CrmOptions::PAID_STUDENT_CATEGORIES) }}" required>@foreach($studentCategories as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
+                                <div class="field"><label>Starting stage <span class="required">*</span></label><select name="student_stage" required>@foreach($studentStages as $key=>$label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
+                                <div class="field"><label>Enrollment amount <span class="required">*</span> <span class="label-note" data-amount-note>Enter 0 for a non-paid student</span></label><div class="money-input"><span>₹</span><input type="number" min="1" step="1" name="enrollment_amount" placeholder="0" required></div></div>
+                                <div class="field"><label>Enrollment date <span class="required">*</span></label><input type="date" name="enrollment_date" value="{{ now()->format('Y-m-d') }}" required></div>
+                                <div class="field full"><label>Payment reference <span class="required" data-reference-star>*</span> <span class="label-note" data-reference-note>Required for a paid enrollment</span></label><input name="payment_reference" placeholder="Receipt or transaction ID" required></div>
                                 <div class="field full"><label>Enrollment remarks <span class="label-note">Optional</span></label><textarea name="conversion_remarks" rows="3" placeholder="Scholarship, payment plan, intake or special notes…"></textarea></div>
                             </div>
                         </div>
-                        <div class="lead-save-bar conversion-save-bar"><span class="save-state"><i></i><span>This action starts the student journey</span></span><button class="btn btn-primary" type="submit"><span>Convert to student</span><b aria-hidden="true">→</b></button></div>
+                        <div class="lead-save-bar conversion-save-bar"><span class="save-state"><i></i><span>You will be asked to confirm before this is recorded</span></span><button class="btn btn-primary" type="submit"><span>Convert to student</span><b aria-hidden="true">→</b></button></div>
                     </form>
                 @endif
             </div>

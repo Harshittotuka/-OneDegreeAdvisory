@@ -105,6 +105,7 @@ class CrmDashboardController extends Controller
             'timeline_comment_added' => 'Timeline comment added',
             'follow_up_completed' => 'Follow-up completed',
             'lead_converted' => 'Lead converted',
+            'lead_enrollment_reverted' => 'Enrollment reverted',
             'student_journey_updated' => 'Student journey updated',
             'lead_deleted' => 'Lead moved to trash',
             'leads_imported' => 'Leads imported',

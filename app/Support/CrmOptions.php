@@ -72,17 +72,30 @@ class CrmOptions
         'enrollment' => 'Enrollment',
     ];
 
+    /**
+     * The student journey, in order. "Alumni" is the one stage that sits after
+     * the process rather than inside it: it is set only once everything is done
+     * and the student is placed, which is what makes it worth filtering on.
+     */
     public const STUDENT_STAGES = [
         'doc_pending' => 'Documentation pending', 'doc_complete' => 'Documents complete',
         'app_submitted' => 'Application submitted', 'offer_received' => 'Offer letter received',
         'deposit_paid' => 'Deposit / tuition paid', 'visa_in_process' => 'Visa in process',
         'visa_filed' => 'Visa filed', 'visa_granted' => 'Visa granted',
-        'visa_rejected' => 'Visa rejected', 'dropped' => 'Student dropped',
+        'alumni' => 'Alumni', 'visa_rejected' => 'Visa rejected', 'dropped' => 'Student dropped',
     ];
 
     public const STUDENT_CATEGORIES = [
         'paid' => 'Paid student', 'non_paid' => 'Non-paid student', 'enrollment_fee_paid' => 'Enrollment fee paid',
     ];
+
+    /**
+     * Student types that mean money has changed hands. Converting into one of
+     * these has to carry a real amount and the receipt it came from — a "paid
+     * student" recorded at ₹0 with no reference is the data gap that made a
+     * mistaken conversion impossible to tell from a real one.
+     */
+    public const PAID_STUDENT_CATEGORIES = ['paid', 'enrollment_fee_paid'];
 
     /** English proficiency tests offered on the lead's academic background card. */
     public const ENGLISH_TESTS = [

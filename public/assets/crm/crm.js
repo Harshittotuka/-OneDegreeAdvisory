@@ -60,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModal = (overlay) => {
         overlay?.classList.remove('open');
         overlay?.setAttribute('aria-hidden', 'true');
+        // Dismissing the confirmation — by button, backdrop or Escape — drops the
+        // submit it was holding, so nothing is committed later by surprise.
+        if (overlay?.id === 'crmConfirmModal') pendingConfirm = null;
         if (!document.querySelector('.overlay.open')) document.body.style.overflow = '';
     };
 
@@ -204,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (windowScroll !== null) window.scrollTo({top: windowScroll, behavior: 'auto'});
         if (!document.querySelector('.overlay.open')) document.body.style.overflow = '';
         setDrawerExpanded(drawerExpanded ?? sessionStorage.getItem('crmDrawerExpanded') === '1', false);
+        document.querySelectorAll('[data-paid-values]').forEach(syncEnrollmentRequirements);
         initialiseDrawerChrome();
         initialiseDashboardMap();
         initialiseToasts();
@@ -507,6 +511,120 @@ document.addEventListener('DOMContentLoaded', () => {
         if (button) button.disabled = false;
     };
 
+    /* ------------------------------------------------ confirm before committing
+       A few submits are worth asking about twice: enrolling a lead (a financial
+       record, and awkward to undo) and a super admin reverting that enrollment.
+       A form opts in with data-confirm-submit, optionally narrowed by
+       data-confirm-if="field!=value", and names the fields to read back with
+       data-confirm-fields="name:Label,…".
+
+       Built here rather than in the view for the same reason as the copy buttons
+       below: swapApp() rebuilds the view with DOMParser, whose <script> tags
+       never run, so anything bound per-view dies on the first navigation. */
+    let pendingConfirm = null;
+
+    const confirmRequired = (form) => {
+        if (!form.matches('[data-confirm-submit]')) return false;
+        const rule = form.dataset.confirmIf;
+        if (!rule) return true;
+        const negated = rule.includes('!=');
+        const [name, expected] = rule.split(negated ? '!=' : '=');
+        const current = String(form.elements[name.trim()]?.value ?? '');
+        return negated ? current !== expected.trim() : current === expected.trim();
+    };
+
+    // What the field says, the way the drawer shows it: the chosen option's own
+    // words, money with its ₹ and thousands separators, dates as "04 Aug 2026".
+    const readableFieldValue = (form, name) => {
+        const field = form.elements[name];
+        if (!field || field.disabled) return '';
+        if (field.tagName === 'SELECT') return (field.selectedOptions[0]?.textContent || '').trim();
+        const raw = (field.value || '').trim();
+        if (!raw) return '';
+        const currency = field.closest('.money-input')?.querySelector('span')?.textContent.trim();
+        if (currency) {
+            const amount = Number(raw);
+            return `${currency}${Number.isFinite(amount) ? amount.toLocaleString('en-IN') : raw}`;
+        }
+        if (field.type === 'date') {
+            const parsed = new Date(`${raw}T00:00`);
+            return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+        }
+        return raw;
+    };
+
+    const confirmOverlay = () => {
+        const existing = document.getElementById('crmConfirmModal');
+        if (existing) return existing;
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        overlay.id = 'crmConfirmModal';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.innerHTML = '<div class="modal sm crm-confirm" role="dialog" aria-modal="true" aria-labelledby="crmConfirmTitle">'
+            + '<div class="modal-head"><div><h2 id="crmConfirmTitle"></h2><p data-confirm-copy></p></div>'
+            + '<button class="close-btn" type="button" data-modal-close aria-label="Cancel">×</button></div>'
+            + '<div class="modal-body"><ul class="crm-confirm-summary" data-confirm-summary></ul></div>'
+            + '<div class="modal-foot"><button class="btn btn-outline" type="button" data-modal-close>Go back</button>'
+            + '<button class="btn btn-primary" type="button" data-crm-confirm-accept></button></div></div>';
+        // Body, not the swapped app region, so an in-flight dialog outlives a swap.
+        document.body.append(overlay);
+        return overlay;
+    };
+
+    const openConfirm = (form, submitter) => {
+        const overlay = confirmOverlay();
+        overlay.querySelector('#crmConfirmTitle').textContent = form.dataset.confirmTitle || 'Are you sure?';
+        overlay.querySelector('[data-confirm-copy]').textContent = form.dataset.confirmBody || '';
+        const accept = overlay.querySelector('[data-crm-confirm-accept]');
+        accept.textContent = form.dataset.confirmAccept || 'Yes, continue';
+
+        const summary = overlay.querySelector('[data-confirm-summary]');
+        summary.replaceChildren();
+        (form.dataset.confirmFields || '').split(',').forEach((pair) => {
+            const [name, label] = pair.split(':');
+            if (!name) return;
+            const value = readableFieldValue(form, name.trim());
+            if (!value) return;
+            const row = document.createElement('li');
+            const term = document.createElement('span');
+            const detail = document.createElement('strong');
+            term.textContent = (label || name).trim();
+            detail.textContent = value;
+            row.append(term, detail);
+            summary.append(row);
+        });
+        summary.hidden = !summary.children.length;
+
+        pendingConfirm = {form, submitter};
+        openModal(overlay.id, false);
+        setTimeout(() => accept.focus(), 70);
+    };
+
+    // Student type drives two rules the server also enforces: a paid student needs
+    // an amount above ₹0 and the receipt it came from, while a non-paid one may
+    // legitimately be ₹0 with no reference. Kept in step so the form asks for
+    // exactly what will be accepted.
+    const syncEnrollmentRequirements = (select) => {
+        const form = select.form;
+        if (!form) return;
+        const paid = (select.dataset.paidValues || '').split(',').filter(Boolean).includes(select.value);
+        const amount = form.elements.enrollment_amount;
+        if (amount) {
+            amount.min = paid ? '1' : '0';
+            const note = amount.closest('.field')?.querySelector('[data-amount-note]');
+            if (note) note.textContent = paid ? 'Above ₹0 for a paid student' : 'Enter 0 for a non-paid student';
+        }
+        const reference = form.elements.payment_reference;
+        if (reference) {
+            reference.required = paid;
+            const field = reference.closest('.field');
+            const note = field?.querySelector('[data-reference-note]');
+            if (note) note.textContent = paid ? 'Required for a paid enrollment' : 'Optional';
+            const star = field?.querySelector('[data-reference-star]');
+            if (star) star.hidden = !paid;
+        }
+    };
+
     // Repeatable test rows (English proficiency / aptitude) on the academic card.
     // Names are re-indexed after every add or remove so PHP always receives a
     // gap-free english_tests[0..n] / aptitude_tests[0..n] array.
@@ -691,6 +809,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const confirmAccept = target.closest('[data-crm-confirm-accept]');
+        if (confirmAccept) {
+            event.preventDefault();
+            const held = pendingConfirm;
+            closeModal(confirmAccept.closest('.overlay'));
+            if (held?.form?.isConnected) submitCrmForm(held.form, held.submitter);
+            return;
+        }
+
         const modalClose = target.closest('[data-modal-close]');
         if (modalClose) {
             event.preventDefault();
@@ -839,7 +966,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!form.closest('[data-crm-app]')) return;
         event.preventDefault();
+        // Native validation has already passed by the time a submit event fires,
+        // so the confirmation only ever appears over a complete form.
         if (form.matches('[data-timeline-form]')) submitTimeline(form);
+        else if (confirmRequired(form)) openConfirm(form, event.submitter);
         else submitCrmForm(form, event.submitter);
     });
 
@@ -855,6 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // each list. They are not descendants, so the two selectors above miss them.
         if (input.matches('[data-crm-filter-form] select, [data-crm-filter-form] input[type="date"], [data-crm-filter-control]')) input.form?.requestSubmit();
         if (input.matches('[data-test-select]')) syncTestRow(input);
+        if (input.matches('[data-paid-values]')) syncEnrollmentRequirements(input);
         // Statuses that keep a lead in the Follow-up planner carry a brown tint.
         if (input.matches('[data-followup-tinted]')) {
             input.classList.toggle('is-followup-status', input.selectedOptions[0]?.classList.contains('is-followup-status') === true);
