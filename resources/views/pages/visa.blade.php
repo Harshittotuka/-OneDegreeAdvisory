@@ -160,7 +160,7 @@
   #visa-page .sc-icon svg{width:24px;height:24px;stroke-width:2;}
   #visa-page .service-card:hover .sc-icon{transform:scale(1.06) rotate(-3deg);background:color-mix(in srgb,#ff5e32 18%,#e8f7f3);}
   #visa-page .service-card .num{font-family:var(--font-mono);color:var(--red);font-size:11.5px;font-weight:700;letter-spacing:.08em;}
-  #visa-page .service-card h4{font-size:15px;margin:0 0 6px;color:var(--navy);}
+  #visa-page .service-card h4{font-family:var(--font-body);font-weight:700;font-size:15px;margin:0 0 6px;color:var(--navy);}
   #visa-page .service-card p{font-size:13px;color:var(--muted);}
 
   /* ===== EXPLAINER (edu) CARDS ===== */
@@ -170,7 +170,7 @@
   #visa-page .edu-icon{flex-shrink:0;width:52px;height:52px;border-radius:16px;background:var(--aqua);color:var(--teal-dark);display:inline-flex;align-items:center;justify-content:center;transition:transform .28s ease,background .28s ease;}
   #visa-page .edu-icon svg{width:24px;height:24px;stroke-width:2;}
   #visa-page .edu-card:hover .edu-icon{transform:scale(1.06) rotate(-3deg);background:color-mix(in srgb,#ff5e32 18%,#e8f7f3);}
-  #visa-page .edu-card h4{font-size:15px;color:var(--navy);margin-bottom:7px;}
+  #visa-page .edu-card h4{font-family:var(--font-body);font-weight:700;font-size:15px;color:var(--navy);margin-bottom:7px;}
   #visa-page .edu-card p{font-size:14px;color:var(--muted);}
 
   /* ===== STAT CARDS (hover polish) ===== */
@@ -286,7 +286,7 @@
   #visa-page .vc-opt--mail:hover{border-color:var(--red);background:#FFF4EF;}
   #visa-page .vc-opt--mail .vc-opt-icon{background:var(--grad-brand);}
   #visa-page .vc-opt-text{flex:1;min-width:0;}
-  #visa-page .vc-opt-text strong{display:block;font-family:var(--font-head);font-size:16px;color:var(--navy);}
+  #visa-page .vc-opt-text strong{display:block;font-family:var(--font-body);font-size:16px;color:var(--navy);}
   #visa-page .vc-opt-text small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   #visa-page .vc-opt-arrow{color:var(--muted);flex-shrink:0;transition:transform .18s ease,color .18s ease;}
   #visa-page .vc-opt-arrow svg{width:18px;height:18px;}

@@ -150,7 +150,7 @@
   }
   #la-page .type-card.collateral .tag{background:var(--navy-soft); color:var(--navy);}
   #la-page .type-card.noncollateral .tag{background:var(--orange-soft); color:var(--orange);}
-  #la-page .type-card h4{font-family:var(--font-head); font-size:21px; margin-bottom:16px; color:var(--navy);}
+  #la-page .type-card h4{font-family:var(--font-body); font-weight:700; font-size:21px; margin-bottom:16px; color:var(--navy);}
   #la-page .type-card ul{list-style:none; margin:0; padding:0;}
   #la-page .type-card li{font-size:14.5px; color:var(--ink); padding:8px 0; border-top:1px solid var(--line); display:flex; gap:10px; align-items:flex-start;}
   #la-page .type-card li:first-of-type{border-top:none;}
@@ -185,7 +185,7 @@
 
   /* ---------- FAQ ---------- */
   #la-page details{border:1px solid var(--line); border-radius:14px; padding:18px 22px;}
-  #la-page details summary{cursor:pointer; font-weight:600; color:var(--navy); font-family:var(--font-head);}
+  #la-page details summary{cursor:pointer; font-weight:700; color:var(--navy); font-family:var(--font-body);}
   #la-page details p{margin-top:10px; color:var(--muted); font-size:14.5px;}
 
   /* ---------- CONNECT ---------- */

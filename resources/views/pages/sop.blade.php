@@ -198,7 +198,7 @@
   #sop-page .service-card .icon{width:30px;height:30px;color:var(--crimson);margin-bottom:14px;transition:transform .4s cubic-bezier(.2,.8,.2,1);}
   #sop-page .service-card:hover .icon{transform:translateY(-4px) rotate(-4deg);}
   #sop-page .service-card .idx{font-family:var(--mono);font-size:10px;color:var(--crimson);letter-spacing:.1em;margin-bottom:6px;display:block;}
-  #sop-page .service-card h3{color:var(--ink);font-size:16px;margin-bottom:8px;line-height:1.25;}
+  #sop-page .service-card h3{font-family:var(--sans);font-weight:700;color:var(--ink);font-size:16px;margin-bottom:8px;line-height:1.25;}
   #sop-page .service-card p{color:var(--ink-soft);font-size:13px;line-height:1.5;}
   #sop-page .service-card-image{padding:0;min-height:160px;}
   #sop-page .service-card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.2,.8,.2,1);}
@@ -265,9 +265,11 @@
   #sop-page .hw-desc-cell{position:relative;min-height:26px;display:flex;align-items:flex-start;gap:10px;}
   #sop-page .hw-text-wrap{position:relative;flex:1;min-height:26px;}
   #sop-page .hw-cursive-text{
-    /* Was Caveat cursive; on the site stack this reveal reads as the serif
-       display face instead of handwriting. */
-    font-family:var(--serif);
+    /* Was Caveat cursive. Annotation copy, not a heading — it sits below the
+       22px floor where home/About stop using the display serif, and it swaps to
+       .hw-crisp-text (also --sans) as the reveal finishes, so the two halves of
+       the animation have to share one face. */
+    font-family:var(--sans);
     font-size:21px;
     font-weight:600;
     color:var(--ink-soft);
@@ -481,7 +483,7 @@
     background:linear-gradient(180deg,#FFFFFF,var(--parchment));
     border:1px solid rgba(26,0,136,0.12);
     padding:40px 36px;border-radius:6px;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
-    font-family:var(--serif);font-size:21px;line-height:1.45;color:var(--ink);
+    font-family:var(--sans);font-size:21px;line-height:1.45;color:var(--ink);
     min-height:150px;box-shadow:0 18px 44px -26px rgba(26,0,136,0.42);
   }
   #sop-page #game-card::before{
@@ -660,7 +662,7 @@
   }
   #sop-page .sprint-input:focus{border-color:var(--brass);}
   #sop-page .sprint-stats{display:flex;gap:26px;margin-top:20px;font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}
-  #sop-page .sprint-stats b{color:var(--ink);font-family:var(--serif);font-size:18px;display:block;}
+  #sop-page .sprint-stats b{color:var(--ink);font-family:var(--sans);font-size:18px;display:block;}
 
   /* TESTIMONIALS */
   #sop-page .testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;}
@@ -686,7 +688,7 @@
   }
   #sop-page .faq-q{
     display:flex;justify-content:space-between;align-items:center;
-    padding:14px 4px;cursor:pointer;font-family:var(--serif);font-size:15.5px;font-weight:600;
+    padding:14px 4px;cursor:pointer;font-family:var(--sans);font-size:15.5px;font-weight:600;
     gap:12px;
   }
   #sop-page .faq-q .plus{font-family:var(--mono);font-size:18px;transition:transform .3s ease;color:var(--crimson);flex-shrink:0;}
@@ -1048,7 +1050,7 @@
               <div><b id="sprint-time">0.0s</b>Elapsed</div>
             </div>
             <div id="sprint-result" class="hidden" style="margin-top:20px;padding-top:20px;border-top:1px dashed rgba(26,0,136,0.2);">
-              <p style="font-family:var(--serif);font-size:18px;margin-bottom:14px;" id="sprint-verdict">Nice typing.</p>
+              <p style="font-family:var(--sans);font-size:18px;margin-bottom:14px;" id="sprint-verdict">Nice typing.</p>
               <a href="#contact" class="btn btn-primary">Get Every Line This Clean →</a>
             </div>
           </div>

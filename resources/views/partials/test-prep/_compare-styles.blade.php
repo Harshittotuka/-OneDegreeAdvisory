@@ -170,9 +170,9 @@
 .tpc-ticket-top::before, .tpc-ticket-top::after{content:''; position:absolute; bottom:-8px; width:16px; height:16px;
   border-radius:50%; background:var(--tpc-navy-deep);}
 .tpc-ticket-top::before{left:-8px;} .tpc-ticket-top::after{right:-8px;}
-.tpc-ticket-route{display:flex; align-items:flex-start; justify-content:space-between; position:relative; font-family:var(--tpc-font-head);}
+.tpc-ticket-route{display:flex; align-items:flex-start; justify-content:space-between; position:relative; font-family:var(--tpc-font-body);}
 .tpc-ticket-goal{text-align:right;}
-.tpc-ticket-city{font-family:var(--tpc-font-head); font-weight:700; font-size:20px; color:var(--tpc-navy-deep); line-height:1;}
+.tpc-ticket-city{font-family:var(--tpc-font-body); font-weight:700; font-size:20px; color:var(--tpc-navy-deep); line-height:1;}
 .tpc-ticket-route small{display:block; font-size:9.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
   color:var(--tpc-muted); margin-top:5px;}
 /* Dashed flight path with the plane flying HOME to GOAL along it. */
@@ -270,7 +270,7 @@
   font-weight:700; margin-bottom:4px;}
 .tpc-exam-fact span{font-family:var(--tpc-font-head); font-weight:700; color:var(--tpc-navy-deep); font-size:14.5px; line-height:1.3;}
 .tpc-exam-modal__section{margin-bottom:17px;}
-.tpc-exam-modal__section h4{font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--tpc-navy);
+.tpc-exam-modal__section h4{font-family:var(--tpc-font-body); font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--tpc-navy);
   margin:0 0 7px;}
 .tpc-exam-modal__section p{color:var(--tpc-ink); font-size:13.6px; line-height:1.6; margin:0;}
 .tpc-exam-modal__section ul{list-style:none; display:flex; flex-direction:column; gap:6px; margin:0; padding:0;}

@@ -624,7 +624,7 @@
   #vmi-page .vmi-officer__core{width:74px;height:74px;border-radius:24px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#686bff,#3336c6);box-shadow:0 18px 42px -14px rgba(82,85,240,.9),inset 0 1px rgba(255,255,255,.3);transform:rotate(8deg);}
   #vmi-page .vmi-officer__core i{width:30px;height:30px;transform:rotate(-8deg);}
   #vmi-page .vmi-console__label{font-size:9px;letter-spacing:.16em;font-weight:800;color:#9da0ff;margin-bottom:8px;}
-  #vmi-page .vmi-console__body p{max-width:330px;color:#fff;font-family:var(--font-head);font-size:19px;font-weight:700;line-height:1.4;letter-spacing:0;}
+  #vmi-page .vmi-console__body p{max-width:330px;color:#fff;font-family:var(--font-body);font-size:19px;font-weight:700;line-height:1.4;letter-spacing:0;}
   #vmi-page .vmi-console__wave{height:27px;display:flex;align-items:center;gap:4px;margin-top:auto;}
   #vmi-page .vmi-console__wave i{width:3px;height:100%;border-radius:99px;background:linear-gradient(#8d8fff,#ff7c55);transform-origin:center;animation:vmiWaveModern 1s ease-in-out infinite;}
   #vmi-page .vmi-console__wave i:nth-child(2),#vmi-page .vmi-console__wave i:nth-child(8){animation-delay:.12s}#vmi-page .vmi-console__wave i:nth-child(3),#vmi-page .vmi-console__wave i:nth-child(7){animation-delay:.24s}#vmi-page .vmi-console__wave i:nth-child(4),#vmi-page .vmi-console__wave i:nth-child(6){animation-delay:.36s}#vmi-page .vmi-console__wave i:nth-child(5){animation-delay:.48s}
