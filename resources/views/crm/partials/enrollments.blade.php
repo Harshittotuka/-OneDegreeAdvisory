@@ -28,7 +28,7 @@
                 @if($crmUser->isSuperAdmin())<td><div class="crm-payment-actions"><form method="post" action="{{ route('crm.enrollments.update',$attempt) }}">@csrf @method('PATCH')<select name="status" class="control">@foreach($paymentStatuses as $key=>$label)<option value="{{ $key }}" @selected($attempt->status===$key)>{{ $label }}</option>@endforeach</select><button class="btn btn-outline btn-compact" type="submit">Save</button></form><form method="post" action="{{ route('crm.enrollments.destroy',$attempt) }}" onsubmit="return confirm('Delete this transaction? The linked student record will remain.')">@csrf @method('DELETE')<button class="btn btn-danger btn-compact" type="submit">Delete</button></form></div></td>@endif
             </tr>@endforeach</tbody>
         </table></div>
-        @if($enrollments->hasPages())<div class="pagination-wrap">{{ $enrollments->onEachSide(1)->links() }}</div>@endif
+        @if($enrollments->hasPages())<div class="pagination-wrap">{{ $enrollments->onEachSide(1)->links('pagination::crm') }}</div>@endif
     @else
         <div class="empty"><h3>No enrollment payments found</h3><p>Try changing the filters. New website checkout records will appear here automatically.</p></div>
     @endif

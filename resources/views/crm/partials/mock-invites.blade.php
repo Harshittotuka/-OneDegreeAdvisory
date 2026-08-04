@@ -135,7 +135,7 @@
                 </tr>
             @endforeach</tbody>
         </table></div>
-        @if($mockInvites->hasPages())<div class="pagination-wrap">{{ $mockInvites->onEachSide(1)->links() }}</div>@endif
+        @if($mockInvites->hasPages())<div class="pagination-wrap">{{ $mockInvites->onEachSide(1)->links('pagination::crm') }}</div>@endif
     @else
         <div class="empty">
             <span class="empty-icon">◎</span>

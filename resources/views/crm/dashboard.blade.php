@@ -360,7 +360,7 @@
                                 </article>
                             @endforeach
                         </div>
-                        @if($auditLogs->hasPages())<div class="pagination-wrap">{{ $auditLogs->onEachSide(1)->links() }}</div>@endif
+                        @if($auditLogs->hasPages())<div class="pagination-wrap">{{ $auditLogs->onEachSide(1)->links('pagination::crm') }}</div>@endif
                     @else
                         <div class="empty"><span class="empty-icon">≣</span><h3>No audit entries found</h3><p>Try changing the filters. New CRM actions will be recorded here.</p></div>
                     @endif
@@ -533,7 +533,7 @@
                         @endif
                         </table>
                     </div>
-                    @if($leads->hasPages())<div class="pagination-wrap">{{ $leads->onEachSide(1)->links() }}</div>@endif
+                    @if($leads->hasPages())<div class="pagination-wrap">{{ $leads->onEachSide(1)->links('pagination::crm') }}</div>@endif
                 @else
                     <div class="empty"><span class="empty-icon">⌕</span><h3>No leads found</h3><p>Adjust the filters or add your first lead to this view.</p></div>
                 @endif

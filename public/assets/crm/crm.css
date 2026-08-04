@@ -256,16 +256,16 @@ tbody tr:last-child td{border-bottom:0}
 .empty h3{font-family:var(--font-display);font-weight:600;font-size:1.02rem;margin:0 0 6px}
 .empty p{color:var(--muted);font-size:.78rem;margin:0}
 .pagination-wrap{padding:14px 20px;border-top:1px solid var(--line-soft);background:#faf8ef}
-.pagination-wrap nav>div:first-child{display:none}
-.pagination-wrap nav>div:last-child{display:flex;align-items:center;justify-content:space-between;gap:14px}
-.pagination-wrap nav p{font-size:.72rem;color:var(--muted)}
-/* Laravel's paginator dropped the `relative` class these once keyed off, which
-   left the page buttons as bare text links that read as nothing at all. */
+/* Markup comes from resources/views/vendor/pagination/crm.blade.php — page
+   links only, right-aligned, since the count line above the list already says
+   which rows are showing. */
+.pagination-wrap nav{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.pagination-wrap nav a,.pagination-wrap nav [aria-current=page]>span,.pagination-wrap nav [aria-disabled=true]>span{border-radius:8px}
 .pagination-wrap nav a,.pagination-wrap nav [aria-current=page]>span,.pagination-wrap nav [aria-disabled=true]>span{display:inline-flex;align-items:center;padding:7px 11px;border:1px solid var(--line);font-size:.7rem;font-weight:600;color:var(--ink);background:#fffdf7}
 .pagination-wrap nav a:hover{background:var(--pine-soft);border-color:var(--pine);color:var(--pine)}
 .pagination-wrap nav [aria-disabled=true]>span{opacity:.45}
 .pagination-wrap svg{width:14px}
-.pagination-wrap [aria-current=page]>span{background:var(--pine);color:#f2ecda;border-color:var(--pine)}
+.pagination-wrap nav [aria-current=page]>span{background:var(--pine);color:#f2ecda;border-color:var(--pine)}
 .list-count{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 20px 0;font-size:.74rem;color:var(--muted)}
 .list-count p{margin:0}
 .list-count strong{color:var(--ink);font-weight:700}

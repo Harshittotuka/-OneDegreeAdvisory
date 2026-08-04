@@ -1196,6 +1196,40 @@ class CrmTest extends TestCase
         }
     }
 
+    public function test_a_multi_page_list_offers_a_way_off_the_first_page(): void
+    {
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
+        for ($i = 1; $i <= 26; $i++) {
+            $this->leadFor($admin, 'Lead '.$i, '98765'.str_pad((string) $i, 5, '0', STR_PAD_LEFT));
+        }
+
+        $response = $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'per_page' => 25]))
+            ->assertOk()
+            ->assertSee('page 1 of 2')
+            ->assertSee('per_page=25&amp;page=2', false);
+
+        // Laravel's Tailwind paginator renders its page links twice — and hangs a
+        // bare `hidden` class on the wide-screen copy. The CRM's own
+        // `.hidden{display:none!important}` then killed it, while the CRM
+        // stylesheet hid the narrow copy, so the strip rendered empty and the
+        // second page was unreachable. The CRM owns this markup now.
+        $html = $response->getContent();
+        $start = strpos($html, 'pagination-wrap');
+        $this->assertNotFalse($start, 'The leads list should render a paginator.');
+        $paginator = substr($html, $start, strpos($html, '</nav>', $start) - $start);
+        $this->assertStringNotContainsString('class="hidden', $paginator);
+        $this->assertStringNotContainsString('sm:hidden', $paginator);
+        $this->assertStringContainsString('aria-current="page"', $paginator);
+
+        // And the page it points at holds the one leftover record.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->get(route('crm.dashboard', ['view' => 'leads', 'per_page' => 25, 'page' => 2]))
+            ->assertOk()
+            ->assertSee('page 2 of 2')
+            ->assertSee('<strong>26&ndash;26</strong> of <strong>26</strong> records', false);
+    }
+
     public function test_counselling_and_shortlisting_are_recorded_separately_on_the_pipeline_card(): void
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);

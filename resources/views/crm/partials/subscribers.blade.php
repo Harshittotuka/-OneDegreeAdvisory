@@ -37,7 +37,7 @@
                 </div></td>@endif
             </tr>@endforeach</tbody>
         </table></div>
-        @if($subscribers->hasPages())<div class="pagination-wrap">{{ $subscribers->onEachSide(1)->links() }}</div>@endif
+        @if($subscribers->hasPages())<div class="pagination-wrap">{{ $subscribers->onEachSide(1)->links('pagination::crm') }}</div>@endif
     @else
         <div class="empty"><span class="empty-icon">@</span><h3>No subscriptions found</h3><p>Newsletter signups will appear here automatically.</p></div>
     @endif
