@@ -25,7 +25,7 @@
   <button class="hero-hub-handle" type="button" data-hero-hub-toggle
           aria-expanded="false" aria-controls="hero-hub-panel">
     <span class="hero-hub-handle-icon" aria-hidden="true"><i data-lucide="layout-grid"></i></span>
-    <span class="hero-hub-handle-label">Student Hub</span>
+    <span class="hero-hub-handle-label">Quick Links</span>
     <span class="hero-hub-handle-caret" aria-hidden="true"><i data-lucide="chevron-left"></i></span>
   </button>
 
