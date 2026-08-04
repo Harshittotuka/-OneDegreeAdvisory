@@ -207,6 +207,26 @@ class SitePagesTest extends TestCase
         }
     }
 
+    public function test_country_pages_never_serve_the_scraped_partner_brand_as_our_copy(): void
+    {
+        /* The scraped sheets carry the source site's own brand in seo_description
+           ("Study in Ireland with Leverage Edu.") and page_title ("… | Leverage
+           Edu"), which used to be served verbatim as our meta description, og /
+           twitter descriptions and title fallback. StudyLocationContent rewrites
+           it on read, so a fresh country sync can't leak it back in. Asset URLs
+           on that domain are addresses, not copy, and stay as they are. */
+        foreach (app(StudyLocationContent::class)->destinations() as $destination) {
+            $html = $this->get("/countries/{$destination['slug']}")->assertOk()->getContent();
+            $prose = preg_replace('#https?://[^\s"\']+#', '', (string) $html);
+
+            $this->assertDoesNotMatchRegularExpression(
+                '/leverage\s*edu/i',
+                (string) $prose,
+                "Partner brand leaked into copy on {$destination['slug']}"
+            );
+        }
+    }
+
     public function test_unknown_country_returns_not_found(): void
     {
         $this->get('/countries/study-in-nowhere')->assertNotFound();

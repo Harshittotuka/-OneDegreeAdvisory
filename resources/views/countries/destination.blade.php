@@ -57,6 +57,32 @@
 
     $cardBody = fn (array $card, int $limit = 190): string => \Illuminate\Support\Str::limit((string) ($card['card_body_clean'] ?? $card['card_body'] ?? ''), $limit);
     $tableRows = fn (int $index): \Illuminate\Support\Collection => collect($costTables[$index]['rows'] ?? []);
+    // The scraped "Top Courses" section body has no intro sentence — it is the
+    // heading fragments followed by the course rows themselves — so $plainBody()
+    // picked whichever fragment ran past 38 characters and printed a stray course
+    // or university name (or the heading again) under the heading, on all 19
+    // country pages. Only keep the line when it is prose that isn't already on
+    // screen; no invented fallback, matching the rest of this page.
+    $coursesHeading = (string) ($sectionCopy['courses']['section_heading'] ?? '');
+    $coursesIntro = $plainBody($sectionCopy['courses']['section_body'] ?? '', 190);
+    $coursesEcho = collect($studyContent['topCourses'] ?? [])
+        ->flatMap(fn (array $course) => [
+            $course['course_name'] ?? '',
+            $course['university_name'] ?? '',
+            $course['duration'] ?? '',
+            $course['credential'] ?? '',
+        ])
+        ->map(fn ($value) => strtolower(trim((string) $value)))
+        ->filter()
+        ->all();
+
+    if ($coursesIntro !== '' && (
+        in_array(strtolower($coursesIntro), $coursesEcho, true)
+        || str_contains(strtolower($coursesHeading), strtolower($coursesIntro))
+    )) {
+        $coursesIntro = '';
+    }
+
     $tuitionSnapshotKeywords = array_filter(array_map('trim', explode('|', $text('tuition_snapshot_keywords'))));
     // Render each "/"-separated figure as a non-breaking unit on its own line,
     // with the slash kept on the line above — e.g. "CAD 18,000 - 38,000 /\nCAD
@@ -241,8 +267,10 @@
     <div class="dynamic-courses-bleed">
       <div class="section-head dynamic-courses-head">
         <span class="eyebrow">{{ $text('courses_eyebrow') }}</span>
-        <h2>{{ $sectionCopy['courses']['section_heading'] ?? '' }}</h2>
-        <p>{{ $plainBody($sectionCopy['courses']['section_body'] ?? '', 190) }}</p>
+        <h2>{{ $coursesHeading }}</h2>
+        @if($coursesIntro !== '')
+          <p>{{ $coursesIntro }}</p>
+        @endif
         <span class="dynamic-course-count">{{ str_pad((string) $courseCount, 2, '0', STR_PAD_LEFT) }} {{ $text('courses_eyebrow') }}</span>
       </div>
 

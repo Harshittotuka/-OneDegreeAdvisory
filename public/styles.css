@@ -25735,9 +25735,9 @@ html[data-color-theme] .whyus-card:hover .whyus-icon {
    Justified body copy (client request — justified alignment across the site).
    Applies to long-form paragraph text inside page content plus the footer
    blurb. Headings, eyebrows, nav, buttons and stat figures are not <p> here so
-   they're untouched, and any component that sets its own text-align (centred
-   section intros, etc.) keeps it because that selector is more specific.
-   Single-line paragraphs are visually unaffected — only wrapped lines justify.
+   they're untouched. A component that sets text-align on the paragraph ITSELF
+   keeps it (more specific), but one that centres its whole block does NOT — see
+   the restore rule below, which every centred prose block needs.
    `main li` extends the same treatment to prose list items (e.g. the careers
    "why join" points); single-line bullets stay visually unchanged. Numeric /
    tabular values live in <dd> and are deliberately left out so figures keep
@@ -25746,6 +25746,51 @@ main p,
 main li,
 .footer-brand p {
   text-align: justify;
+}
+
+/* …except inside a block that deliberately centres its copy. The comment above
+   assumed those keep their alignment "because that selector is more specific",
+   which is wrong: centred blocks set `text-align: center` on the PARENT, and a
+   declaration matching the <p> itself always beats an inherited value no matter
+   how specific the ancestor selector is. Justified text also aligns its LAST
+   line to the start, so a one-line centred intro rendered flush-LEFT inside a
+   centred box — visibly off-centre under its own centred heading (every country
+   page's "Top Courses" intro, the home/about/services section intros, …).
+
+   `inherit` hands the paragraph back whatever its wrapper asked for. The list is
+   explicit on purpose: pattern-matching class names (`[class*="head"]`,
+   `[class*="card"]`) also catches left-aligned heads and card bodies, and there
+   it would silently drop the justification the client asked for. When you add a
+   centred block that holds prose, add it here too.
+
+   `:is()` and not `:where()`: `:where()` contributes ZERO specificity, which
+   would leave this rule at (0,0,1) — weaker than the `main p` above it (0,0,2) —
+   so it would never apply. `:is()` counts its heaviest argument, giving (0,1,2). */
+main :is(
+  .section-head,
+  .section-lead.centered,
+  .va-impact-head,
+  .adm-head,
+  .adm-cta__inner,
+  .tpc-head,
+  .mbbs-v2-services-head,
+  .whyus-card,
+  .sserv-card,
+  .mbbs-v2-service-card,
+  .vc-card,
+  .odp-cta-band,
+  .odp-cc,
+  .report-head,
+  .vmi-console__body,
+  .vmi-setup-intro,
+  .vmi-prepare__inner,
+  .vmi-ai__bubble,
+  .vmi-analyze__inner,
+  .vmi-lead-success,
+  .game-start-content,
+  .game-end-content
+) > :is(p, li) {
+  text-align: inherit;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════

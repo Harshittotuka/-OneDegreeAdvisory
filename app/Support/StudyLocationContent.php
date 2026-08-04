@@ -165,8 +165,50 @@ class StudyLocationContent
         }
 
         $payload = json_decode((string) file_get_contents($path), true);
+        $sheets = is_array($payload['sheets'] ?? null) ? $payload['sheets'] : [];
 
-        return is_array($payload['sheets'] ?? null) ? $payload['sheets'] : [];
+        return $this->withOurBrand($sheets);
+    }
+
+    /**
+     * The country sheets are scraped from a partner site whose own brand name is
+     * baked into the copy — "Study in Ireland with Leverage Edu." in seo_description,
+     * "… | Leverage Edu" in page_title — so it was being served as our
+     * <meta name="description">, og/twitter descriptions and title fallback.
+     * Rewrite it to our name on read rather than in the stored file, so a fresh
+     * country sync can never leak it back. Values that are addresses rather than
+     * copy (the partner's asset/CTA URLs) are left alone: rewriting those would
+     * break the images they point at.
+     */
+    private function withOurBrand(array $sheets): array
+    {
+        $ourName = (string) config('site.name');
+
+        foreach ($sheets as $sheet => $rows) {
+            foreach ($rows as $index => $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+
+                foreach ($row as $key => $value) {
+                    if (! is_string($value) || stripos($value, 'leverage') === false) {
+                        continue;
+                    }
+
+                    if (preg_match('#(?:https?:)?//#', $value)) {
+                        continue; // a URL, not prose
+                    }
+
+                    $sheets[$sheet][$index][$key] = (string) preg_replace_callback(
+                        '/\bleverage\s*edu\b/i',
+                        fn (): string => $ourName,
+                        $value
+                    );
+                }
+            }
+        }
+
+        return $sheets;
     }
 
     private function loadGeneratedAt(): string
