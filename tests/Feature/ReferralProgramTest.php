@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\ReferralController;
+use App\Mail\ReferralReferrerMail;
+use App\Mail\ReferralStudentMail;
+use App\Mail\ReferralTeamMail;
 use App\Models\CrmLead;
 use App\Models\CrmWebsiteSubmission;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -160,6 +164,77 @@ class ReferralProgramTest extends TestCase
         $this->assertContains('Meera Iyer', $referrer);
         $this->assertContains('meera@example.test', $referrer);
         $this->assertContains('+91 90000 11111', $referrer);
+    }
+
+    /* ─────────────────────── Emails ─────────────────────── */
+
+    public function test_one_referral_sends_three_emails(): void
+    {
+        $this->migrate();
+        Mail::fake();
+
+        $this->postJson(route('referral.submit'), $this->payload())->assertOk();
+
+        // 1. The admissions team, with the referrer on Reply-To so a thank-you
+        //    goes to the person waiting on one.
+        Mail::assertSent(ReferralTeamMail::class, function (ReferralTeamMail $mail) {
+            return $mail->hasTo(config('site.forms.referral.to'))
+                && $mail->hasReplyTo('meera@example.test')
+                && $mail->data['student_name'] === 'Rohan Gupta';
+        });
+
+        // 2. The person who filled the form in.
+        Mail::assertSent(ReferralReferrerMail::class, fn (ReferralReferrerMail $mail) => $mail->hasTo('meera@example.test'));
+
+        // 3. The referred student.
+        Mail::assertSent(ReferralStudentMail::class, function (ReferralStudentMail $mail) {
+            return $mail->hasTo('rohan@example.test')
+                // Named in the subject so the introduction never reads as spam.
+                && str_contains($mail->envelope()->subject, 'Meera Iyer');
+        });
+
+        Mail::assertSentCount(3);
+    }
+
+    public function test_the_student_introduction_can_be_switched_off_per_environment(): void
+    {
+        $this->migrate();
+        Mail::fake();
+        config()->set('site.forms.referral.notify_student', false);
+
+        $this->postJson(route('referral.submit'), $this->payload())->assertOk();
+
+        // The team and the referrer still hear about it; the student does not.
+        Mail::assertSent(ReferralTeamMail::class);
+        Mail::assertSent(ReferralReferrerMail::class);
+        Mail::assertNotSent(ReferralStudentMail::class);
+    }
+
+    public function test_a_mail_failure_never_fails_the_submission(): void
+    {
+        $this->migrate();
+
+        // A mailer that always throws — the referral is already in the CRM by the
+        // time mail is attempted, so the visitor must still see success.
+        Mail::shouldReceive('mailer')->andThrow(new \RuntimeException('SMTP down'));
+
+        $this->postJson(route('referral.submit'), $this->payload())
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertDatabaseHas('crm_leads', ['email' => 'rohan@example.test']);
+    }
+
+    public function test_a_rejected_referral_sends_nothing(): void
+    {
+        $this->migrate();
+        Mail::fake();
+
+        // Self-referral.
+        $this->postJson(route('referral.submit'), $this->payload(['student_email' => 'meera@example.test']))
+            ->assertStatus(422);
+
+        Mail::assertNothingSent();
     }
 
     public function test_a_second_referral_of_the_same_student_attaches_to_the_existing_lead(): void

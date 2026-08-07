@@ -136,7 +136,10 @@ return [
          - careers: application form on the Careers page
          - profiler: Student Profiler (/profiler) — on submit a team
            notification and an applicant thank-you (each carrying the generated
-           profile report) are sent from this mailbox. */
+           profile report) are sent from this mailbox.
+         - referral: Referral Program (/referral-program) — one submission sends
+           THREE emails from this mailbox: the team notification, a confirmation
+           to the referrer, and an introduction to the referred student. */
     'forms' => [
         'contact' => [
             'mailer'    => env('CONTACT_FORM_MAILER'),
@@ -155,6 +158,16 @@ return [
             'to'        => env('PROFILER_FORM_TO', 'Admissions@onedegreeadvisory.com'),
             'from'      => env('PROFILER_FORM_FROM', 'Admissions@onedegreeadvisory.com'),
             'from_name' => env('PROFILER_FORM_FROM_NAME', 'One Degree Advisory'),
+        ],
+        'referral' => [
+            'mailer'    => env('REFERRAL_FORM_MAILER', env('CONTACT_FORM_MAILER')),
+            'to'        => env('REFERRAL_FORM_TO', 'Admissions@onedegreeadvisory.com'),
+            'from'      => env('REFERRAL_FORM_FROM', 'Admissions@onedegreeadvisory.com'),
+            'from_name' => env('REFERRAL_FORM_FROM_NAME', 'One Degree Advisory'),
+            /* Set REFERRAL_NOTIFY_STUDENT=false to stop the introduction email to
+               the referred student (the referrer still gets their confirmation and
+               the team still gets notified). */
+            'notify_student' => filter_var(env('REFERRAL_NOTIFY_STUDENT', true), FILTER_VALIDATE_BOOLEAN),
         ],
     ],
 

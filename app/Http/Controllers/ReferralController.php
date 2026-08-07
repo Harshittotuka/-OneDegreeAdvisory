@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ReferralReferrerMail;
+use App\Mail\ReferralStudentMail;
+use App\Mail\ReferralTeamMail;
 use App\Services\WebsiteLeadManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Referral Program — /referral-program (Student Hub).
@@ -127,12 +132,64 @@ class ReferralController extends Controller
             ['name' => $studentName, 'email' => $studentEmail, 'phone' => $studentPhone],
         );
 
+        $this->sendReferralEmails([
+            'referrer_name' => $referrerName,
+            'referrer_email' => $referrerEmail,
+            'referrer_phone' => $referrerPhone,
+            'student_name' => $studentName,
+            'student_email' => $studentEmail,
+            'student_phone' => $studentPhone,
+            'level' => $validated['level'],
+            'country' => $validated['country'],
+            'notes' => $notes,
+        ]);
+
         return response()->json([
             'ok' => true,
             'title' => 'Referral received',
             'message' => 'Thank you, '.Str::limit($referrerName, 40, '').'. We have logged your referral and a counsellor will reach out to '
                 .Str::limit($studentName, 40, '').' shortly. You will hear from us as their application progresses.',
         ]);
+    }
+
+    /**
+     * One referral, three emails: the admissions team, the referrer, and the
+     * referred student.
+     *
+     * Each is sent independently and best-effort. The referral is already saved
+     * to the CRM by the time we get here, so a mail failure must never surface as
+     * a failed submission — and one recipient bouncing (a typo'd student address
+     * is the likely case) must not stop the other two going out.
+     *
+     * @param array<string,string> $data
+     */
+    private function sendReferralEmails(array $data): void
+    {
+        $mailer = config('site.forms.referral.mailer') ?: config('mail.default');
+        $team = config('site.forms.referral.to');
+
+        $deliveries = [
+            ['to' => $team, 'mail' => new ReferralTeamMail($data), 'label' => 'team'],
+            ['to' => $data['referrer_email'], 'mail' => new ReferralReferrerMail($data), 'label' => 'referrer'],
+        ];
+
+        // The student did not fill the form in themselves, so this one is
+        // switchable per environment (REFERRAL_NOTIFY_STUDENT).
+        if (config('site.forms.referral.notify_student')) {
+            $deliveries[] = ['to' => $data['student_email'], 'mail' => new ReferralStudentMail($data), 'label' => 'student'];
+        }
+
+        foreach ($deliveries as $delivery) {
+            if (trim((string) $delivery['to']) === '') {
+                continue;
+            }
+
+            try {
+                Mail::mailer($mailer)->to($delivery['to'])->send($delivery['mail']);
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
     }
 
     /** Loose equality for contact details — case, spacing and punctuation aside. */
