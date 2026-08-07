@@ -54,7 +54,8 @@ class CrmOptions
 
     public const CATEGORIES = [
         'undergraduate' => 'Undergraduate', 'postgraduate' => 'Postgraduate', 'mbbs' => 'MBBS',
-        'test_prep' => 'Test preparation', 'visa' => 'Visa', 'other' => 'Other',
+        'test_prep' => 'Test preparation', 'career_counselling' => 'Career counselling',
+        'visa' => 'Visa', 'other' => 'Other',
     ];
 
     public const LEAD_ORIGINS = [
@@ -69,6 +70,8 @@ class CrmOptions
         'statement_of_purpose' => 'Statement of purpose',
         'visa_mock_interview' => 'Visa mock interview',
         'career_library' => 'Career library',
+        'career_counselling' => 'Career counselling',
+        'referral' => 'Referral program',
         'enrollment' => 'Enrollment',
     ];
 

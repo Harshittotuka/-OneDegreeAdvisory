@@ -25422,7 +25422,8 @@ html[data-color-theme] :is(
   .mbc-factcard__icon,
   .mbc-benefit__icon,
   .mbc-daily__icon,
-  .mbc-quote
+  .mbc-quote,
+  .cc-block__icon
 ) {
   width: 52px;
   height: 52px;
@@ -25452,7 +25453,8 @@ html[data-color-theme] :is(
   .mbc-factcard__icon,
   .mbc-benefit__icon,
   .mbc-daily__icon,
-  .mbc-quote
+  .mbc-quote,
+  .cc-block__icon
 ) :is(i, svg) {
   width: 24px !important;
   height: 24px !important;
@@ -25472,7 +25474,8 @@ html[data-color-theme] :is(
   .sserv-intro__badge-icon,
   .va-impact-icon,
   .insight-card-more-icon,
-  .study-abroad-page .pf-step-ico
+  .study-abroad-page .pf-step-ico,
+  .rf-who-icon
 ) {
   border-radius: 14px;
   background: var(--aqua);
@@ -25490,7 +25493,8 @@ html[data-color-theme] :is(
   .sserv-intro__badge-icon,
   .va-impact-icon,
   .insight-card-more-icon,
-  .study-abroad-page .pf-step-ico
+  .study-abroad-page .pf-step-ico,
+  .rf-who-icon
 ) :is(i, svg) {
   width: 22px !important;
   height: 22px !important;
@@ -25514,7 +25518,9 @@ html[data-color-theme] :is(
   .mbbsx-adv__card:hover .mbbsx-adv__icon,
   .mbc-factcard:hover .mbc-factcard__icon,
   .mbc-benefit:hover .mbc-benefit__icon,
-  .mbc-daily__card:hover .mbc-daily__icon
+  .mbc-daily__card:hover .mbc-daily__icon,
+  .cc-block:hover .cc-block__icon,
+  .rf-who-card:hover .rf-who-icon
 ) {
   transform: scale(1.06) rotate(-3deg);
   background: color-mix(in srgb, #ff5e32 18%, #e8f7f3);
@@ -26008,7 +26014,13 @@ main :is(
   .vmi-analyze__inner,
   .vmi-lead-success,
   .game-start-content,
-  .game-end-content
+  .game-end-content,
+  .cc-head,
+  .cc-done,
+  .rf-head,
+  .rf-stat,
+  .rf-step,
+  .rf-game
 ) > :is(p, li) {
   text-align: inherit;
 }

@@ -1055,6 +1055,13 @@ ready(() => {
   // Statement of Purpose "book a strategy call" form (/statement-of-purpose) —
   // same AJAX flow + popup; each lead is stored server-side (source = sop).
   document.querySelectorAll("[data-sop-form]").forEach(wireFormSubmit);
+  // Career Counselling consultation request (/career-counselling) — same AJAX
+  // flow + popup; the lead is stored server-side (source = career-counselling).
+  document.querySelectorAll("[data-career-counselling-form]").forEach(wireFormSubmit);
+  // Referral Program submission (/referral-program) — same AJAX flow + popup;
+  // the referred STUDENT is stored as the lead (source = referral) with the
+  // referrer recorded alongside them.
+  document.querySelectorAll("[data-referral-form]").forEach(wireFormSubmit);
 
   // ── Resume drag-and-drop uploader (careers form) ──
   // The native file input is hidden; the styled zone opens it on click and

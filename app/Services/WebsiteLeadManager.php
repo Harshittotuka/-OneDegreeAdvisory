@@ -142,7 +142,11 @@ class WebsiteLeadManager
                     'phone' => $phone ?: null,
                     'email' => $email ?: null,
                     'course_interest' => $attempt->item_name,
-                    'category' => $attempt->page_slug === 'test-preparation' ? 'test_prep' : 'other',
+                    'category' => match ($attempt->page_slug) {
+                        'test-preparation', 'test-prep-compare' => 'test_prep',
+                        'career-counselling' => 'career_counselling',
+                        default => 'other',
+                    },
                     'priority' => 'medium',
                     'source' => str($attempt->page_slug)->replace('-', ' ')->title().' checkout',
                     'lead_origin' => 'enrollment',
@@ -279,6 +283,7 @@ class WebsiteLeadManager
         return match ($source) {
             'visa-mock' => 'visa',
             'test-prep-enrollment' => 'test_prep',
+            'career-counselling' => 'career_counselling',
             'profiler' => 'other',
             default => 'other',
         };
@@ -292,6 +297,8 @@ class WebsiteLeadManager
             'sop' => 'statement_of_purpose',
             'visa-mock' => 'visa_mock_interview',
             'career-library' => 'career_library',
+            'career-counselling' => 'career_counselling',
+            'referral' => 'referral',
             default => 'general',
         };
     }

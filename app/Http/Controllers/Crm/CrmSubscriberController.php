@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\CrmSubscriber;
 use App\Models\CrmUser;
+use App\Support\CrmFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -54,11 +55,11 @@ class CrmSubscriberController extends Controller
         if ($search = trim((string) $request->query('subscriber_search'))) {
             $query->where('email', 'like', "%{$search}%");
         }
-        if (in_array($request->query('subscriber_status'), ['active', 'unsubscribed'], true)) {
-            $query->where('status', $request->query('subscriber_status'));
+        if ($statuses = CrmFilter::values($request, 'subscriber_status', ['active', 'unsubscribed'])) {
+            $query->whereIn('status', $statuses);
         }
-        if ($request->filled('subscriber_source')) {
-            $query->where('source', $request->query('subscriber_source'));
+        if ($sources = CrmFilter::raw($request, 'subscriber_source')) {
+            $query->whereIn('source', $sources);
         }
     }
 

@@ -9,6 +9,7 @@ use App\Models\CrmMockInterviewInvite;
 use App\Models\CrmSubscriber;
 use App\Models\CrmUser;
 use App\Models\PaymentAttempt;
+use App\Support\CrmFilter;
 use App\Support\CrmOptions;
 use App\Support\MockInterviewQuestions;
 use Carbon\Carbon;
@@ -128,11 +129,11 @@ class CrmDashboardController extends Controller
                         ->orWhereHas('actor', fn (Builder $actor) => $actor->where('name', 'like', "%{$search}%"));
                 });
             }
-            if (array_key_exists((string) $request->query('audit_event'), $auditEvents)) {
-                $auditQuery->where('event', $request->query('audit_event'));
+            if ($events = CrmFilter::values($request, 'audit_event', $auditEvents)) {
+                $auditQuery->whereIn('event', $events);
             }
-            if ($request->filled('audit_user')) {
-                $auditQuery->where('crm_user_id', $request->integer('audit_user'));
+            if ($actors = CrmFilter::ids($request, 'audit_user')) {
+                $auditQuery->whereIn('crm_user_id', $actors);
             }
             $auditLogs = $auditQuery->paginate($perPage)->withQueryString();
         }
@@ -142,9 +143,9 @@ class CrmDashboardController extends Controller
             $enrollmentQuery->whereHas('lead', fn (Builder $lead) => $lead->visibleTo($user));
         }
         $enrollmentCount = (clone $enrollmentQuery)->count();
-        if ($request->filled('payment_status')) $enrollmentQuery->where('status', $request->query('payment_status'));
-        if ($request->filled('enrollment_source')) $enrollmentQuery->where('page_slug', $request->query('enrollment_source'));
-        if ($request->filled('enrollment_plan')) $enrollmentQuery->where('item_name', $request->query('enrollment_plan'));
+        if ($statusFilter = CrmFilter::values($request, 'payment_status', CrmEnrollmentController::STATUSES)) $enrollmentQuery->whereIn('status', $statusFilter);
+        if ($pageFilter = CrmFilter::raw($request, 'enrollment_source')) $enrollmentQuery->whereIn('page_slug', $pageFilter);
+        if ($planFilter = CrmFilter::raw($request, 'enrollment_plan')) $enrollmentQuery->whereIn('item_name', $planFilter);
         if ($enrollmentSearch = trim((string) $request->query('search'))) {
             $enrollmentQuery->where(fn (Builder $q) => $q->where('customer_name', 'like', "%{$enrollmentSearch}%")->orWhere('customer_email', 'like', "%{$enrollmentSearch}%")->orWhere('customer_phone', 'like', "%{$enrollmentSearch}%")->orWhere('item_name', 'like', "%{$enrollmentSearch}%")->orWhere('razorpay_payment_id', 'like', "%{$enrollmentSearch}%"));
         }
@@ -509,62 +510,98 @@ class CrmDashboardController extends Controller
                     ->orWhere('lead_number', 'like', "%{$search}%");
             });
         }
-        $status = (string) $request->query('status');
-        if ($status === CrmOptions::FOLLOW_UP_GROUP) {
-            $query->whereIn('status', CrmOptions::FOLLOW_UP_STATUSES);
-        } elseif (array_key_exists($status, CrmOptions::STATUSES)) {
-            $query->where('status', $status);
+        // Every dropdown below takes more than one value; two statuses ticked
+        // means "either", not "both", so each is a whereIn over what was chosen.
+        $statuses = CrmFilter::values($request, 'status', array_merge(
+            [CrmOptions::FOLLOW_UP_GROUP => 'Any follow-up status'],
+            CrmOptions::STATUSES,
+        ));
+        if ($statuses !== []) {
+            // "Any follow-up status" is a set, not a status. Ticking it next to
+            // named statuses widens the list to the union of the two.
+            $query->whereIn('status', in_array(CrmOptions::FOLLOW_UP_GROUP, $statuses, true)
+                ? array_values(array_unique(array_merge(
+                    array_diff($statuses, [CrmOptions::FOLLOW_UP_GROUP]),
+                    CrmOptions::FOLLOW_UP_STATUSES,
+                )))
+                : $statuses);
         }
-        if (array_key_exists((string) $request->query('priority'), CrmOptions::PRIORITIES)) {
-            $query->where('priority', $request->query('priority'));
+        if ($priorities = CrmFilter::values($request, 'priority', CrmOptions::PRIORITIES)) {
+            $query->whereIn('priority', $priorities);
         }
-        if (array_key_exists((string) $request->query('category'), CrmOptions::CATEGORIES)) {
-            $query->where('category', $request->query('category'));
+        if ($categories = CrmFilter::values($request, 'category', CrmOptions::CATEGORIES)) {
+            $query->whereIn('category', $categories);
         }
-        if (array_key_exists((string) $request->query('student_stage'), CrmOptions::STUDENT_STAGES)) {
-            $query->where('student_stage', $request->query('student_stage'));
+        if ($stages = CrmFilter::values($request, 'student_stage', CrmOptions::STUDENT_STAGES)) {
+            $query->whereIn('student_stage', $stages);
         }
         // No dropdown feeds this any more — the "specific source" filter was
         // removed from the bar. Kept so an explicit ?source= link (or a saved
         // export URL) still narrows the way it always did.
-        if ($request->filled('source')) {
-            $query->where('source', $request->query('source'));
+        if ($sources = CrmFilter::raw($request, 'source')) {
+            $query->whereIn('source', $sources);
         }
-        if (array_key_exists((string) $request->query('lead_origin'), CrmOptions::LEAD_ORIGINS)) {
-            $query->where('lead_origin', $request->query('lead_origin'));
+        if ($origins = CrmFilter::values($request, 'lead_origin', CrmOptions::LEAD_ORIGINS)) {
+            $query->whereIn('lead_origin', $origins);
         }
-        if (array_key_exists((string) $request->query('lead_type'), CrmOptions::LEAD_TYPES)) {
-            $leadType = (string) $request->query('lead_type');
-            $submissionSource = [
+        if ($leadTypes = CrmFilter::values($request, 'lead_type', CrmOptions::LEAD_TYPES)) {
+            // Some enquiry types also exist as a website submission source, and a
+            // lead counts as that type either way. With several ticked this stays
+            // one OR group so it cannot swallow the filters applied around it.
+            $submissionSources = array_values(array_filter(array_map(static fn (string $type): ?string => [
                 'student_profiler' => 'profiler',
                 'loan_accommodation' => 'loan-acco',
                 'statement_of_purpose' => 'sop',
                 'visa_mock_interview' => 'visa-mock',
                 'career_library' => 'career-library',
-            ][$leadType] ?? null;
-            $query->where(function (Builder $typeQuery) use ($leadType, $submissionSource): void {
-                $typeQuery->where('lead_type', $leadType);
-                if ($submissionSource !== null) {
-                    $typeQuery->orWhereHas('websiteSubmissions', fn (Builder $submission) => $submission->where('source', $submissionSource));
+                'career_counselling' => 'career-counselling',
+                'referral' => 'referral',
+            ][$type] ?? null, $leadTypes)));
+            $query->where(function (Builder $typeQuery) use ($leadTypes, $submissionSources): void {
+                $typeQuery->whereIn('lead_type', $leadTypes);
+                if ($submissionSources !== []) {
+                    $typeQuery->orWhereHas('websiteSubmissions', fn (Builder $submission) => $submission->whereIn('source', $submissionSources));
                 }
             });
         }
         // Counselling and shortlisting each filter to Yes, No, or the blank that
         // means nobody has recorded it — the state most leads are in, and the one
-        // worth listing on its own.
+        // worth listing on its own. "Not recorded" is a null check rather than a
+        // value, so a mixed selection becomes one OR group.
         foreach (array_keys(CrmOptions::DONE_FIELDS) as $field) {
-            $value = (string) $request->query($field);
-            if ($value === CrmOptions::NOT_RECORDED) {
-                $query->whereNull($field);
-            } elseif (array_key_exists($value, CrmOptions::DONE_STATES)) {
-                $query->where($field, $value);
+            $selected = CrmFilter::values($request, $field, array_merge(
+                CrmOptions::DONE_STATES,
+                [CrmOptions::NOT_RECORDED => 'Not recorded'],
+            ));
+            if ($selected === []) {
+                continue;
             }
+            $wantsBlank = in_array(CrmOptions::NOT_RECORDED, $selected, true);
+            $recorded = array_values(array_diff($selected, [CrmOptions::NOT_RECORDED]));
+            $query->where(function (Builder $doneQuery) use ($field, $recorded, $wantsBlank): void {
+                if ($recorded !== []) {
+                    $doneQuery->whereIn($field, $recorded);
+                }
+                if ($wantsBlank) {
+                    $recorded === [] ? $doneQuery->whereNull($field) : $doneQuery->orWhereNull($field);
+                }
+            });
         }
-        if ($user->isSuperAdmin() && $request->filled('assigned_to')) {
-            // "unassigned" is a real choice in the owner filter, not an id.
-            $request->query('assigned_to') === 'unassigned'
-                ? $query->whereNull('assigned_to')
-                : $query->where('assigned_to', $request->integer('assigned_to'));
+        if ($user->isSuperAdmin()) {
+            // "unassigned" is a real choice in the owner filter, not an id, and it
+            // can be ticked alongside named owners.
+            $wantsUnassigned = in_array('unassigned', CrmFilter::raw($request, 'assigned_to'), true);
+            $ownerIds = CrmFilter::ids($request, 'assigned_to');
+            if ($ownerIds !== [] || $wantsUnassigned) {
+                $query->where(function (Builder $ownerQuery) use ($ownerIds, $wantsUnassigned): void {
+                    if ($ownerIds !== []) {
+                        $ownerQuery->whereIn('assigned_to', $ownerIds);
+                    }
+                    if ($wantsUnassigned) {
+                        $ownerIds === [] ? $ownerQuery->whereNull('assigned_to') : $ownerQuery->orWhereNull('assigned_to');
+                    }
+                });
+            }
         }
         $this->applyFollowUpDateFilter($query, $request);
         $this->applyDueFilter($query, $request);

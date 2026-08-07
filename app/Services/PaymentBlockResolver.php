@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\BriefPageStore;
+use App\Support\CareerCounsellingStore;
 use App\Support\TestPrepCompareStore;
 
 class PaymentBlockResolver
@@ -10,6 +11,7 @@ class PaymentBlockResolver
     public function __construct(
         private BriefPageStore $pages,
         private TestPrepCompareStore $compare,
+        private CareerCounsellingStore $counselling,
     ) {}
 
     public function resolve(string $pageSlug, string $blockId, int $optionIndex): ?array
@@ -19,6 +21,11 @@ class PaymentBlockResolver
         // server-side (never trusted from the client) exactly as below.
         if ($pageSlug === TestPrepCompareStore::PAGE_SLUG) {
             return $this->resolveCompare($blockId, $optionIndex);
+        }
+
+        // Same arrangement for the Career Counselling "Plans & Pricing" cards.
+        if ($pageSlug === CareerCounsellingStore::PAGE_SLUG) {
+            return $this->resolveCounselling($blockId, $optionIndex);
         }
 
         $page = $this->pages->find($pageSlug);
@@ -95,6 +102,43 @@ class PaymentBlockResolver
             'option' => $program,
             'option_index' => $optionIndex,
             'item_name' => $itemName,
+            'description' => mb_substr(trim((string) ($config['payment']['title'] ?? '')), 0, 500),
+            'amount' => $amount,
+            'currency' => 'INR',
+            'theme_color' => self::safeColour((string) ($config['payment']['accent'] ?? ''), '#F05A28'),
+        ];
+    }
+
+    /**
+     * Resolve a Career Counselling plan purchase: the option index is a position
+     * in the flattened list of payable (plan, session-tier) pairs, and the price
+     * is read from the counselling store (whole rupees → paise). Tiers priced at
+     * 0 never enter that list, so an "on request" plan simply has no index.
+     */
+    private function resolveCounselling(string $blockId, int $optionIndex): ?array
+    {
+        if (! hash_equals(CareerCounsellingStore::BLOCK_ID, $blockId)) {
+            return null;
+        }
+
+        $option = $this->counselling->payableOptionAt($optionIndex);
+        if ($option === null) {
+            return null;
+        }
+
+        $config = $this->counselling->get();
+        $amount = self::rupeesToPaise((string) $option['price']);
+        if ($amount === null) {
+            return null;
+        }
+
+        return [
+            'page' => ['slug' => CareerCounsellingStore::PAGE_SLUG],
+            'block' => ['id' => $blockId],
+            'data' => $config['payment'] ?? [],
+            'option' => $option,
+            'option_index' => $optionIndex,
+            'item_name' => CareerCounsellingStore::optionLabel($option),
             'description' => mb_substr(trim((string) ($config['payment']['title'] ?? '')), 0, 500),
             'amount' => $amount,
             'currency' => 'INR',

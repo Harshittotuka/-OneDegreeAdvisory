@@ -16,6 +16,7 @@
         ['label' => 'Visa',                 'icon' => 'stamp',           'url' => route('visa'),               'note' => 'Eligibility & expert guidance'],
         ['label' => 'Visa Mock Interview',  'icon' => 'video',           'url' => route('visa-mock'),          'note' => 'AI practice with feedback'],
         ['label' => 'Statement of Purpose', 'icon' => 'feather',         'url' => route('sop.index'),          'note' => 'SOPs, LORs, resumes & essays'],
+        ['label' => 'Referral Program',     'icon' => 'gift',            'url' => route('referral'),           'note' => 'Refer a student, earn rewards'],
     ];
 @endphp
 

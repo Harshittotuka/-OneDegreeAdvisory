@@ -1,6 +1,6 @@
 @php
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
-    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Enrollment & payments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
+    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Website payments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
     $currentTitle = $titles[$view];
     $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'shortlisting'], true);
     $filterQuery = request()->except(['page', 'lead']);
@@ -123,7 +123,7 @@
             <a class="nav-link nav-students {{ $view === 'students' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'students']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'students'])</span><span class="nav-text">Enrolled students</span></a>
             <a class="nav-link nav-shortlisting {{ $view === 'shortlisting' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'shortlisting']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'shortlisting'])</span><span class="nav-text">PDF shortlisting</span></a>
             <a class="nav-link nav-mock-invites {{ $view === 'mock-invites' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'mock-invites']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'mock-invites'])</span><span class="nav-text">Mock interviews</span>@if($mockInviteCount)<span class="nav-badge">{{ $mockInviteCount }}</span>@endif</a>
-            <a class="nav-link nav-enrollments {{ $view === 'enrollments' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'enrollments']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'enrollments'])</span><span class="nav-text">Enrollment &amp; payments</span><span class="nav-badge">{{ $enrollmentCount }}</span></a>
+            <a class="nav-link nav-enrollments {{ $view === 'enrollments' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'enrollments']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'enrollments'])</span><span class="nav-text">Website payments</span><span class="nav-badge">{{ $enrollmentCount }}</span></a>
             @if($crmUser->isSuperAdmin())<a class="nav-link nav-subscriptions {{ $view === 'subscriptions' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'subscriptions']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'subscriptions'])</span><span class="nav-text">Subscriptions</span><span class="nav-badge">{{ $subscriberCount }}</span></a>@endif
         </nav>
         <div class="sidebar-bottom">
@@ -372,18 +372,38 @@
                     @if($view === 'followups')<input type="hidden" name="layout" value="{{ $followUpLayout }}">@endif
                     @if($view === 'followups' && $followUpLayout === 'calendar')<input type="hidden" name="month" value="{{ request('month', now()->format('Y-m')) }}">@endif
                     <div class="search-wrap"><input class="control" type="search" name="search" value="{{ request('search') }}" placeholder="Search name, phone, email or lead ID"></div>
-                    @php $statusValue = (string) request('status'); $followUpGroup = \App\Support\CrmOptions::FOLLOW_UP_GROUP; @endphp
-                    <select @class(['control', 'is-followup-status' => $isFollowUpStatus($statusValue) || $statusValue === $followUpGroup]) name="status" data-followup-tinted>
-                        <option value="">All statuses</option>
-                        {{-- The grouped choice the dashboard's follow-up card opens. Tinted
-                             like its members, since it selects exactly that set. --}}
-                        <option value="{{ $followUpGroup }}" class="is-followup-status" @selected($statusValue === $followUpGroup)>Any follow-up status</option>
-                        @foreach($statuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) @selected($statusValue === $key)>{{ $label }}</option>@endforeach
-                    </select>
-                    <select class="control" name="priority"><option value="">All priorities</option>@foreach($priorities as $key=>$label)<option value="{{ $key }}" @selected(request('priority')===$key)>{{ $label }}</option>@endforeach</select>
-                    <select class="control" name="lead_origin"><option value="">All lead origins</option>@foreach($leadOrigins as $key=>$label)<option value="{{ $key }}" @selected(request('lead_origin')===$key)>{{ $label }}</option>@endforeach</select>
-                    <select class="control" name="lead_type"><option value="">All enquiry types</option>@foreach($leadTypes as $key=>$label)<option value="{{ $key }}" @selected(request('lead_type')===$key)>{{ $label }}</option>@endforeach</select>
-                    <select class="control" name="category"><option value="">All study categories</option>@foreach($categories as $key=>$label)<option value="{{ $key }}" @selected(request('category')===$key)>{{ $label }}</option>@endforeach</select>
+                    @php
+                        $followUpGroup = \App\Support\CrmOptions::FOLLOW_UP_GROUP;
+                        $selectedStatuses = \App\Support\CrmFilter::raw(request(), 'status');
+                        // "Any follow-up status" and its members share a tint, since
+                        // that choice selects exactly that set.
+                        $statusOptions = [$followUpGroup => 'Any follow-up status'] + $statuses;
+                        $statusClasses = collect($statusOptions)
+                            ->mapWithKeys(fn ($label, $key) => [$key => ($key === $followUpGroup || $isFollowUpStatus($key)) ? 'is-followup-status' : ''])
+                            ->all();
+                    @endphp
+                    @include('crm.partials.multi-filter', [
+                        'name' => 'status', 'options' => $statusOptions, 'selected' => $selectedStatuses,
+                        'placeholder' => 'All statuses', 'label' => 'Filter by status', 'noun' => 'statuses',
+                        'optionClass' => $statusClasses,
+                        'triggerClass' => collect($selectedStatuses)->contains(fn ($v) => $v === $followUpGroup || $isFollowUpStatus($v)) ? 'is-followup-status' : '',
+                    ])
+                    @include('crm.partials.multi-filter', [
+                        'name' => 'priority', 'options' => $priorities, 'selected' => \App\Support\CrmFilter::raw(request(), 'priority'),
+                        'placeholder' => 'All priorities', 'label' => 'Filter by priority', 'noun' => 'priorities',
+                    ])
+                    @include('crm.partials.multi-filter', [
+                        'name' => 'lead_origin', 'options' => $leadOrigins, 'selected' => \App\Support\CrmFilter::raw(request(), 'lead_origin'),
+                        'placeholder' => 'All lead origins', 'label' => 'Filter by lead origin', 'noun' => 'origins',
+                    ])
+                    @include('crm.partials.multi-filter', [
+                        'name' => 'lead_type', 'options' => $leadTypes, 'selected' => \App\Support\CrmFilter::raw(request(), 'lead_type'),
+                        'placeholder' => 'All enquiry types', 'label' => 'Filter by enquiry type', 'noun' => 'types',
+                    ])
+                    @include('crm.partials.multi-filter', [
+                        'name' => 'category', 'options' => $categories, 'selected' => \App\Support\CrmFilter::raw(request(), 'category'),
+                        'placeholder' => 'All study categories', 'label' => 'Filter by study category', 'noun' => 'categories',
+                    ])
                     {{-- One filter per hand-recorded column on the leads table. "Not
                          recorded" is a choice of its own: it is what most leads are,
                          and the list worth pulling up before a review call. --}}

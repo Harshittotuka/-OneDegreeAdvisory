@@ -84,7 +84,47 @@ class HeroContent
             $merged['slides'] = $merged['background'] !== '' ? [$merged['background']] : [];
         }
 
+        $merged['actions'] = $this->linkShippedActions($merged['actions'] ?? []);
+
         return $merged;
+    }
+
+    /**
+     * Buttons that shipped as "coming soon" placeholders and now have a real page
+     * behind them, keyed by the label they shipped with.
+     *
+     * The stored JSON is the authority for the hero, and it is deliberately kept
+     * out of git (restored from a server backup on deploy) — so a button that
+     * went live in code would otherwise stay dead everywhere the file already
+     * exists. Back-filling on read fixes that once. It only applies to the
+     * untouched placeholder state (style "disabled" AND no href), so as soon as
+     * an admin saves the hero the stored value wins for good.
+     */
+    private function linkShippedActions(mixed $actions): array
+    {
+        if (! is_array($actions)) {
+            return [];
+        }
+
+        $links = ['career mentoring' => '/career-counselling'];
+
+        foreach ($actions as $i => $action) {
+            if (! is_array($action)) {
+                continue;
+            }
+
+            $href = $links[strtolower(trim((string) ($action['label'] ?? '')))] ?? null;
+            if ($href === null
+                || ($action['style'] ?? '') !== 'disabled'
+                || trim((string) ($action['href'] ?? '')) !== '') {
+                continue;
+            }
+
+            $actions[$i]['href'] = $href;
+            $actions[$i]['style'] = 'ghost';
+        }
+
+        return $actions;
     }
 
     /** What the public page renders. (Kept separate so preview logic can swap it.) */
@@ -235,7 +275,7 @@ class HeroContent
             'colors' => ['eyebrow' => '', 'heading' => '', 'highlight' => ''],
             'styles' => self::TEXT_STYLE_DEFAULTS,
             'actions' => [
-                ['label' => 'Career Mentoring', 'icon' => 'compass', 'href' => '', 'style' => 'disabled', 'row' => 0],
+                ['label' => 'Career Mentoring', 'icon' => 'compass', 'href' => '/career-counselling', 'style' => 'ghost', 'row' => 0],
                 ['label' => 'Student Development Programme', 'icon' => 'graduation-cap', 'href' => '', 'style' => 'disabled', 'row' => 0],
                 ['label' => 'Study Abroad', 'icon' => 'globe', 'href' => '/study-abroad', 'style' => 'orange', 'row' => 0],
             ],

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AboutCmsController;
 use App\Http\Controllers\Admin\BlogCmsController;
+use App\Http\Controllers\Admin\CareerCounsellingCmsController;
 use App\Http\Controllers\Admin\CountryVisibilityController;
 use App\Http\Controllers\Admin\CountryDataSyncController;
 use App\Http\Controllers\Admin\DestinationsLayoutController;
@@ -14,10 +15,12 @@ use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\Admin\CareerLibraryCmsController;
 use App\Http\Controllers\BriefPageController;
+use App\Http\Controllers\CareerCounsellingController;
 use App\Http\Controllers\CareerLibraryController;
 use App\Http\Controllers\LoanAccoController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SopController;
 use App\Http\Controllers\VisaMockAssessmentController;
@@ -71,6 +74,25 @@ Route::get('/services/admissions-counselling', [PageController::class, 'admissio
 Route::get('/services/student-services', [PageController::class, 'studentServices'])->name('services.student-services');
 
 Route::get('/study-abroad', [PageController::class, 'studyAbroad'])->name('study-abroad');
+
+// Referral Program — Student Hub page where anyone can refer a prospective
+// student and earn a reward once that student enrols. The form records the
+// STUDENT as a CRM lead (source = referral) with the referrer attached as their
+// own section, so the team knows who to credit.
+Route::get('/referral-program', [ReferralController::class, 'index'])->name('referral');
+Route::post('/referral-program', [ReferralController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->name('referral.submit');
+
+// Career Counselling — counselling / assessment / guidance landing page, linked
+// from the home hero's "Career Mentoring" button. Plans and prices are
+// CMS-managed in storage/app/career-counselling.json; a plan card checks out
+// through the shared /payments flow (priced server-side by PaymentBlockResolver)
+// and the consultation form records a CRM lead (source = career-counselling).
+Route::get('/career-counselling', [CareerCounsellingController::class, 'index'])->name('career-counselling');
+Route::post('/career-counselling/lead', [CareerCounsellingController::class, 'lead'])
+    ->middleware('throttle:15,1')
+    ->name('career-counselling.lead');
 
 // Global Career Library — a self-contained careers explorer, CMS-managed data
 // in storage/app/career-library.json. Detail URLs are shaped:
@@ -285,6 +307,10 @@ Route::prefix('admin')->group(function () {
         /* ── Test-Prep "Compare & enrol" section (programs list, prices, durations, style) ── */
         Route::get('test-prep-compare', [TestPrepCompareCmsController::class, 'edit'])->name('admin.test-prep-compare.index');
         Route::post('test-prep-compare', [TestPrepCompareCmsController::class, 'update'])->name('admin.test-prep-compare.update');
+
+        /* ── Career Counselling "Plans & Pricing" (stages, plan cards, prices) ── */
+        Route::get('career-counselling', [CareerCounsellingCmsController::class, 'edit'])->name('admin.career-counselling.index');
+        Route::post('career-counselling', [CareerCounsellingCmsController::class, 'update'])->name('admin.career-counselling.update');
 
         /* ── Global Career Library (landing settings + per-career LIVE editor) ── */
         Route::get('career-library', [CareerLibraryCmsController::class, 'index'])->name('admin.career-library.index');
