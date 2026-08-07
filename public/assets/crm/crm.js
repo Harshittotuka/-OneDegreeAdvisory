@@ -768,6 +768,13 @@ document.addEventListener('DOMContentLoaded', () => {
         mfilter.querySelector('[data-mfilter-toggle]')?.setAttribute('aria-expanded', 'false');
         const menu = mfilter.querySelector('[data-mfilter-menu]');
         if (menu) menu.hidden = true;
+        // Closing beats a reopen that is already queued. A tick fires a request
+        // and asks the render that follows to put this panel back; if the user
+        // shuts it, or leaves the view, before that lands, honour that instead of
+        // popping it open again a moment later.
+        if (pendingMultiFilter && pendingMultiFilter === mfilter.querySelector('[data-mfilter-option]')?.name) {
+            pendingMultiFilter = null;
+        }
     };
 
     const closeMultiFilters = (except = null) => {
