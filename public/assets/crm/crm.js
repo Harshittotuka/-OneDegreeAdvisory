@@ -295,6 +295,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ? { name: activeEl.name, value: activeEl.value, start: activeEl.selectionStart, end: activeEl.selectionEnd }
             : null;
 
+        // Whichever filter panel is open right now, so it is still open after the
+        // rebuild. Read from the live DOM rather than from whatever triggered the
+        // request: by the time a response lands the user may have moved on to a
+        // different filter, and that is the one to keep — or closed it, in which
+        // case nothing reopens.
+        const openFilterName = currentApp.querySelector('[data-mfilter][data-open] [data-mfilter-option]')?.name || null;
+
         const previousUrl = new URL(window.location.href);
         const nextUrl = new URL(finalUrl, window.location.href);
         const sameLead = previousUrl.searchParams.get('lead') && previousUrl.searchParams.get('lead') === nextUrl.searchParams.get('lead');
@@ -313,11 +320,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (options.historyMode === 'push') history.pushState({}, '', nextUrl.href);
             if (options.historyMode === 'replace') history.replaceState({}, '', nextUrl.href);
             initialiseApp(state);
-            // Put back the filter panel the user was working in. Consumed here so
-            // an unrelated navigation cannot reopen it later.
-            if (pendingMultiFilter) {
-                const reopen = nextApp.querySelector(`[data-mfilter-option][name="${CSS.escape(pendingMultiFilter)}"]`);
-                pendingMultiFilter = null;
+            // Put back the filter panel the user was working in.
+            if (openFilterName) {
+                const reopen = nextApp.querySelector(`[data-mfilter-option][name="${CSS.escape(openFilterName)}"]`);
                 if (reopen) openMultiFilter(reopen.closest('[data-mfilter]'));
             }
             if (activeFilter) {
@@ -739,9 +744,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.prompt('Copy this link', url);
     };
 
-    /* Which filter panel was open when the current request went out, so the
-       render that replaces the page can reopen it. Consumed once. */
-    let pendingMultiFilter = null;
+    /* Ticking boxes is a burst, not one decision per box, so the reload waits
+       for the user to stop rather than firing per tick. Same delay as the filter
+       search field, for the same reason. */
+    let multiFilterTimer = null;
 
     /* ── Multi-select filters ───────────────────────────────────────────────
        Each filter is a button plus a panel of real checkboxes named "field[]",
@@ -768,13 +774,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mfilter.querySelector('[data-mfilter-toggle]')?.setAttribute('aria-expanded', 'false');
         const menu = mfilter.querySelector('[data-mfilter-menu]');
         if (menu) menu.hidden = true;
-        // Closing beats a reopen that is already queued. A tick fires a request
-        // and asks the render that follows to put this panel back; if the user
-        // shuts it, or leaves the view, before that lands, honour that instead of
-        // popping it open again a moment later.
-        if (pendingMultiFilter && pendingMultiFilter === mfilter.querySelector('[data-mfilter-option]')?.name) {
-            pendingMultiFilter = null;
-        }
     };
 
     const closeMultiFilters = (except = null) => {
@@ -822,14 +821,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    /* Reload the list for what is ticked now.
+
+       Debounced, because picking three values is one intention: firing a request
+       per tick meant the page rebuilt underneath a panel the user was still
+       working in, and any click landing in that window was thrown away by the
+       swap. Waiting for the burst to finish means one reload for the whole
+       selection. 'replace' history matches the search field — stepping back
+       through every tick is not what the back button is for. */
     const submitMultiFilter = (mfilter) => {
-        const box = mfilter?.querySelector('[data-mfilter-option]');
-        if (!box?.form) return;
-        // The submit swaps the whole app out, which would drop the open panel
-        // mid-selection. Name it so the next render can put it back, the same
-        // way the filter search box keeps its focus.
-        pendingMultiFilter = box.name;
-        box.form.requestSubmit();
+        const form = mfilter?.querySelector('[data-mfilter-option]')?.form;
+        if (!form) return;
+        clearTimeout(multiFilterTimer);
+        multiFilterTimer = setTimeout(() => {
+            const destination = new URL(form.action, window.location.href);
+            destination.search = new URLSearchParams(new FormData(form)).toString();
+            loadCrmPage(destination.href, { historyMode: 'replace', preserveScroll: true });
+        }, 350);
     };
 
     document.addEventListener('click', (event) => {
