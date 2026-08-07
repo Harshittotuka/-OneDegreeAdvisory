@@ -7,9 +7,22 @@
     <form id="crmEnrollmentFilters" class="filters crm-enrollment-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
         <input type="hidden" name="view" value="enrollments">
         <div class="search-wrap"><input class="control" type="search" name="search" value="{{ request('search') }}" placeholder="Search student, program, payment or order ID"></div>
-        <select class="control" name="payment_status"><option value="">All payment statuses</option>@foreach($paymentStatuses as $key=>$label)<option value="{{ $key }}" @selected(request('payment_status')===$key)>{{ $label }}</option>@endforeach</select>
-        <select class="control" name="enrollment_source"><option value="">All source pages</option>@foreach($enrollmentSources as $source)<option value="{{ $source }}" @selected(request('enrollment_source')===$source)>{{ str($source)->replace('-',' ')->title() }}</option>@endforeach</select>
-        <select class="control" name="enrollment_plan"><option value="">All programs</option>@foreach($enrollmentPlans as $plan)<option value="{{ $plan }}" @selected(request('enrollment_plan')===$plan)>{{ $plan }}</option>@endforeach</select>
+        @include('crm.partials.multi-filter', [
+            'name' => 'payment_status', 'options' => $paymentStatuses, 'selected' => \App\Support\CrmFilter::raw(request(), 'payment_status'),
+            'placeholder' => 'All payment statuses', 'label' => 'Filter by payment status', 'noun' => 'statuses',
+        ])
+        @include('crm.partials.multi-filter', [
+            'name' => 'enrollment_source',
+            'options' => collect($enrollmentSources)->mapWithKeys(fn ($source) => [$source => (string) str($source)->replace('-', ' ')->title()])->all(),
+            'selected' => \App\Support\CrmFilter::raw(request(), 'enrollment_source'),
+            'placeholder' => 'All source pages', 'label' => 'Filter by source page', 'noun' => 'pages',
+        ])
+        @include('crm.partials.multi-filter', [
+            'name' => 'enrollment_plan',
+            'options' => collect($enrollmentPlans)->mapWithKeys(fn ($plan) => [$plan => $plan])->all(),
+            'selected' => \App\Support\CrmFilter::raw(request(), 'enrollment_plan'),
+            'placeholder' => 'All programs', 'label' => 'Filter by program', 'noun' => 'programs',
+        ])
         <button class="btn btn-outline" type="submit">Filter</button>
     </form>
 

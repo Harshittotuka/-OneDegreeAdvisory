@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CrmUser;
 use App\Models\PaymentAttempt;
 use App\Services\WebsiteLeadManager;
+use App\Support\CrmFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -43,9 +44,11 @@ class CrmEnrollmentController extends Controller
         if (! $user->isSuperAdmin()) {
             $query->whereHas('lead', fn ($lead) => $lead->visibleTo($user));
         }
-        if ($request->filled('payment_status')) $query->where('status', $request->query('payment_status'));
-        if ($request->filled('enrollment_source')) $query->where('page_slug', $request->query('enrollment_source'));
-        if ($request->filled('enrollment_plan')) $query->where('item_name', $request->query('enrollment_plan'));
+        // Same multi-value filters as the list this exports, so the CSV is the
+        // rows the user is looking at rather than a differently-filtered set.
+        if ($statuses = CrmFilter::values($request, 'payment_status', self::STATUSES)) $query->whereIn('status', $statuses);
+        if ($pages = CrmFilter::raw($request, 'enrollment_source')) $query->whereIn('page_slug', $pages);
+        if ($plans = CrmFilter::raw($request, 'enrollment_plan')) $query->whereIn('item_name', $plans);
         if ($search = trim((string) $request->query('search'))) {
             $query->where(fn ($q) => $q->where('customer_name', 'like', "%{$search}%")->orWhere('customer_email', 'like', "%{$search}%")->orWhere('customer_phone', 'like', "%{$search}%")->orWhere('item_name', 'like', "%{$search}%")->orWhere('razorpay_payment_id', 'like', "%{$search}%")->orWhere('razorpay_order_id', 'like', "%{$search}%"));
         }

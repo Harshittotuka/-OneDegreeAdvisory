@@ -313,6 +313,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (options.historyMode === 'push') history.pushState({}, '', nextUrl.href);
             if (options.historyMode === 'replace') history.replaceState({}, '', nextUrl.href);
             initialiseApp(state);
+            // Put back the filter panel the user was working in. Consumed here so
+            // an unrelated navigation cannot reopen it later.
+            if (pendingMultiFilter) {
+                const reopen = nextApp.querySelector(`[data-mfilter-option][name="${CSS.escape(pendingMultiFilter)}"]`);
+                pendingMultiFilter = null;
+                if (reopen) openMultiFilter(reopen.closest('[data-mfilter]'));
+            }
             if (activeFilter) {
                 const field = nextApp.querySelector(`input[type="search"][name="${CSS.escape(activeFilter.name)}"]`);
                 if (field) {
@@ -732,8 +739,121 @@ document.addEventListener('DOMContentLoaded', () => {
         window.prompt('Copy this link', url);
     };
 
+    /* Which filter panel was open when the current request went out, so the
+       render that replaces the page can reopen it. Consumed once. */
+    let pendingMultiFilter = null;
+
+    /* ── Multi-select filters ───────────────────────────────────────────────
+       Each filter is a button plus a panel of real checkboxes named "field[]",
+       so submitting is the browser's job and the server reads a plain array.
+       These helpers only handle opening, the trigger's own label, and keeping
+       the panel open across the app swap that a filter change triggers. */
+
+    const openMultiFilter = (mfilter) => {
+        const menu = mfilter?.querySelector('[data-mfilter-menu]');
+        if (!menu) return;
+        mfilter.setAttribute('data-open', '');
+        mfilter.querySelector('[data-mfilter-toggle]')?.setAttribute('aria-expanded', 'true');
+        menu.hidden = false;
+        // Filters at the end of the bar would open past the right edge, so they
+        // open inwards instead. Measured after unhiding, with any previous
+        // decision cleared, or it would compound.
+        mfilter.removeAttribute('data-align');
+        if (menu.getBoundingClientRect().right > window.innerWidth - 12) mfilter.setAttribute('data-align', 'end');
+    };
+
+    const closeMultiFilter = (mfilter) => {
+        if (!mfilter) return;
+        mfilter.removeAttribute('data-open');
+        mfilter.querySelector('[data-mfilter-toggle]')?.setAttribute('aria-expanded', 'false');
+        const menu = mfilter.querySelector('[data-mfilter-menu]');
+        if (menu) menu.hidden = true;
+    };
+
+    const closeMultiFilters = (except = null) => {
+        document.querySelectorAll('[data-mfilter][data-open]').forEach((mfilter) => {
+            if (mfilter !== except) closeMultiFilter(mfilter);
+        });
+    };
+
+    /* The trigger tells the truth immediately, without waiting for the response
+       the change also kicks off. */
+    const syncMultiFilter = (mfilter) => {
+        if (!mfilter) return;
+        const chosen = [...mfilter.querySelectorAll('[data-mfilter-option]')].filter((box) => box.checked);
+        const text = mfilter.querySelector('[data-mfilter-text]');
+        const noun = text?.dataset.noun || 'selected';
+        if (text) {
+            const only = chosen[0]?.closest('.mfilter-opt')?.querySelector('.mfilter-opt-text')?.textContent.trim();
+            text.textContent = chosen.length === 0
+                ? (text.dataset.placeholder || 'All')
+                : (chosen.length === 1 ? (only || `1 ${noun}`) : `${chosen.length} ${noun}`);
+        }
+        let badge = mfilter.querySelector('[data-mfilter-badge]');
+        if (chosen.length) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'mfilter-count';
+                badge.setAttribute('data-mfilter-badge', '');
+                text?.after(badge);
+            }
+            badge.textContent = String(chosen.length);
+        } else {
+            badge?.remove();
+        }
+        mfilter.classList.toggle('is-active', chosen.length > 0);
+        const summary = mfilter.querySelector('[data-mfilter-summary]');
+        if (summary) summary.textContent = chosen.length ? `${chosen.length} ${noun}` : 'None selected';
+        const clear = mfilter.querySelector('[data-mfilter-clear]');
+        if (clear) clear.disabled = chosen.length === 0;
+        const trigger = mfilter.querySelector('[data-mfilter-toggle]');
+        if (trigger) {
+            const labels = chosen.map((box) => box.closest('.mfilter-opt')?.querySelector('.mfilter-opt-text')?.textContent.trim()).filter(Boolean);
+            chosen.length > 1
+                ? trigger.setAttribute('title', `${trigger.getAttribute('aria-label') || 'Filter'}: ${labels.join(', ')}`)
+                : trigger.removeAttribute('title');
+        }
+    };
+
+    const submitMultiFilter = (mfilter) => {
+        const box = mfilter?.querySelector('[data-mfilter-option]');
+        if (!box?.form) return;
+        // The submit swaps the whole app out, which would drop the open panel
+        // mid-selection. Name it so the next render can put it back, the same
+        // way the filter search box keeps its focus.
+        pendingMultiFilter = box.name;
+        box.form.requestSubmit();
+    };
+
     document.addEventListener('click', (event) => {
         const target = event.target;
+
+        // ── Multi-select filters ────────────────────────────────────────────
+        // Delegated, like everything else here: swapApp() rebuilds the filter
+        // bar with DOMParser after each request, so a listener bound to the
+        // element itself would be dead the first time a filter is used.
+        const mfilterToggle = target.closest('[data-mfilter-toggle]');
+        if (mfilterToggle) {
+            const mfilter = mfilterToggle.closest('[data-mfilter]');
+            closeMultiFilters(mfilter);
+            mfilter.hasAttribute('data-open') ? closeMultiFilter(mfilter) : openMultiFilter(mfilter);
+            return;
+        }
+        // A click inside the menu is a tick, not a dismissal.
+        if (target.closest('[data-mfilter-menu]')) {
+            const clear = target.closest('[data-mfilter-clear]');
+            if (clear) {
+                const mfilter = clear.closest('[data-mfilter]');
+                const boxes = [...mfilter.querySelectorAll('[data-mfilter-option]')].filter((box) => box.checked);
+                if (!boxes.length) return;
+                boxes.forEach((box) => { box.checked = false; });
+                syncMultiFilter(mfilter);
+                submitMultiFilter(mfilter);
+            }
+            return;
+        }
+        closeMultiFilters();
+
         const addTest = target.closest('[data-test-add]');
         if (addTest) {
             const repeater = addTest.closest('[data-test-repeater]');
@@ -980,6 +1100,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const label = input.closest('.dropzone');
             if (input.files?.[0]) label?.querySelector('strong')?.replaceChildren(input.files[0].name);
         }
+        // A ticked box in a multi-select filter re-runs the list, but the panel
+        // stays open so the next choice does not need a second click.
+        if (input.matches('[data-mfilter-option]')) {
+            const mfilter = input.closest('[data-mfilter]');
+            syncMultiFilter(mfilter);
+            submitMultiFilter(mfilter);
+            return;
+        }
         // [data-crm-filter-control] covers controls that sit outside their filter
         // bar and are tied to it with form="…" — the rows-per-page select above
         // each list. They are not descendants, so the two selectors above miss them.
@@ -1066,6 +1194,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
+            // An open filter panel is the innermost thing Escape should shut, so
+            // it goes first and nothing else on this key runs.
+            const openMultiFilterPanel = document.querySelector('[data-mfilter][data-open]');
+            if (openMultiFilterPanel) {
+                closeMultiFilter(openMultiFilterPanel);
+                openMultiFilterPanel.querySelector('[data-mfilter-toggle]')?.focus();
+                return;
+            }
             const openUserMenu = document.querySelector('[data-user-menu].is-open');
             if (openUserMenu) {
                 openUserMenu.classList.remove('is-open');

@@ -306,8 +306,12 @@ class TestPrepCompareTest extends TestCase
             ->assertSee('IELTS')
             ->getContent();
 
-        // Sanity: the legacy option is a real <option>, not just body text.
-        $this->assertStringContainsString('<option value="GRE Coaching (Legacy)"', $html);
+        // Sanity: the legacy program is a real tickable choice in the filter, not
+        // just body text that happens to appear in the rows below.
+        $this->assertStringContainsString(
+            'name="enrollment_plan[]" value="GRE Coaching (Legacy)"',
+            preg_replace('/\s+/', ' ', $html),
+        );
     }
 
     public function test_test_prep_type_filter_scopes_the_list_to_one_program(): void

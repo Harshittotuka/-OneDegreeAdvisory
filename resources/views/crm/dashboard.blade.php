@@ -322,8 +322,16 @@
                     <form id="crmAuditFilters" class="filters audit-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
                         <input type="hidden" name="view" value="audit">
                         <div class="search-wrap"><input class="control" type="search" name="audit_search" value="{{ request('audit_search') }}" placeholder="Search user, action or record"></div>
-                        <select class="control" name="audit_event"><option value="">All actions</option>@foreach($auditEvents as $key=>$label)<option value="{{ $key }}" @selected(request('audit_event')===$key)>{{ $label }}</option>@endforeach</select>
-                        <select class="control" name="audit_user"><option value="">All users</option>@foreach($team as $member)<option value="{{ $member->id }}" @selected((string)request('audit_user')===(string)$member->id)>{{ $member->name }}</option>@endforeach</select>
+                        @include('crm.partials.multi-filter', [
+                            'name' => 'audit_event', 'options' => $auditEvents, 'selected' => \App\Support\CrmFilter::raw(request(), 'audit_event'),
+                            'placeholder' => 'All actions', 'label' => 'Filter by action', 'noun' => 'actions',
+                        ])
+                        @include('crm.partials.multi-filter', [
+                            'name' => 'audit_user',
+                            'options' => $team->mapWithKeys(fn ($member) => [(string) $member->id => $member->name])->all(),
+                            'selected' => \App\Support\CrmFilter::raw(request(), 'audit_user'),
+                            'placeholder' => 'All users', 'label' => 'Filter by user', 'noun' => 'users',
+                        ])
                     </form>
 
                     @if($auditLogs->count())
@@ -408,30 +416,44 @@
                          recorded" is a choice of its own: it is what most leads are,
                          and the list worth pulling up before a review call. --}}
                     @foreach($doneFields as $field => $fieldLabel)
-                        @php $doneValue = (string) request($field); @endphp
-                        <select class="control" name="{{ $field }}" aria-label="Filter by {{ strtolower($fieldLabel) }}">
-                            <option value="">All {{ strtolower($fieldLabel) }}</option>
-                            @foreach($doneStates as $key=>$label)<option value="{{ $key }}" @selected($doneValue === $key)>{{ $fieldLabel }}: {{ $label }}</option>@endforeach
-                            <option value="{{ $notRecorded }}" @selected($doneValue === $notRecorded)>{{ $fieldLabel }}: not recorded</option>
-                        </select>
+                        @include('crm.partials.multi-filter', [
+                            'name' => $field,
+                            'options' => collect($doneStates)->mapWithKeys(fn ($label, $key) => [$key => $fieldLabel.': '.$label])
+                                ->put($notRecorded, $fieldLabel.': not recorded')->all(),
+                            'selected' => \App\Support\CrmFilter::raw(request(), $field),
+                            'placeholder' => 'All '.strtolower($fieldLabel),
+                            'label' => 'Filter by '.strtolower($fieldLabel),
+                            'noun' => 'chosen',
+                        ])
                     @endforeach
                     {{-- Arriving from the Overdue or Due-today card lands here pre-filtered;
                          this is what makes that state visible and clearable. --}}
                     @if($view === 'followups')<select class="control" name="due"><option value="">Due at any time</option>@foreach(['overdue' => 'Overdue', 'today' => 'Due today', 'week' => 'Due within 7 days'] as $key => $label)<option value="{{ $key }}" @selected(request('due') === $key)>{{ $label }}</option>@endforeach</select>@endif
-                    @if($view === 'students')<select class="control" name="student_stage"><option value="">All journey stages</option>@foreach($studentStages as $key=>$label)<option value="{{ $key }}" @selected(request('student_stage')===$key)>{{ $label }}</option>@endforeach</select>@endif
+                    @if($view === 'students')
+                        @include('crm.partials.multi-filter', [
+                            'name' => 'student_stage', 'options' => $studentStages, 'selected' => \App\Support\CrmFilter::raw(request(), 'student_stage'),
+                            'placeholder' => 'All journey stages', 'label' => 'Filter by journey stage', 'noun' => 'stages',
+                        ])
+                    @endif
                     <label class="followup-date-filter"><span>Next follow-up</span><input class="control" type="date" name="follow_up_date" value="{{ request('follow_up_date') }}"></label>
                     @if($crmUser->isSuperAdmin())
-                        @php $ownerValue = (string) request('assigned_to'); @endphp
-                        <select @class(['control', 'owner-filter', 'is-narrowed' => $ownerValue !== '']) name="assigned_to" aria-label="Filter by lead owner">
-                            {{-- A flat name + count list, nothing else. Counts are each owner's
-                                 workspace total rather than a count within the current view, so
-                                 they stay put as the other filters change. Anyone still holding a
-                                 lead is listed even if their account is switched off, or their
-                                 leads would show an owner the filter cannot select. --}}
-                            <option value="">Every owner</option>
-                            <option value="unassigned" @selected($ownerValue === 'unassigned')>Unassigned · {{ number_format($counsellorFilter['unassigned']) }}</option>
-                            @foreach($counsellorFilter['people'] as $person)<option value="{{ $person['id'] }}" @selected($ownerValue === (string) $person['id'])>{{ $person['name'] }} · {{ number_format($person['total']) }}</option>@endforeach
-                        </select>
+                        {{-- A flat name + count list, nothing else. Counts are each owner's
+                             workspace total rather than a count within the current view, so
+                             they stay put as the other filters change. Anyone still holding a
+                             lead is listed even if their account is switched off, or their
+                             leads would show an owner the filter cannot select. --}}
+                        @php
+                            $ownerValues = \App\Support\CrmFilter::raw(request(), 'assigned_to');
+                            $ownerOptions = ['unassigned' => 'Unassigned · '.number_format($counsellorFilter['unassigned'])];
+                            foreach ($counsellorFilter['people'] as $person) {
+                                $ownerOptions[(string) $person['id']] = $person['name'].' · '.number_format($person['total']);
+                            }
+                        @endphp
+                        @include('crm.partials.multi-filter', [
+                            'name' => 'assigned_to', 'options' => $ownerOptions, 'selected' => $ownerValues,
+                            'placeholder' => 'Every owner', 'label' => 'Filter by lead owner', 'noun' => 'owners',
+                            'triggerClass' => 'owner-filter'.($ownerValues !== [] ? ' is-narrowed' : ''),
+                        ])
                     @endif
                 </form>
 

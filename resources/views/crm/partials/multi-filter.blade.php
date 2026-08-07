@@ -53,7 +53,7 @@
     <div class="mfilter-menu" data-mfilter-menu role="group" aria-label="{{ $label }}" hidden>
         <div class="mfilter-list">
             @foreach($options as $value => $optionLabel)
-                <label @class(['mfilter-opt', $optionClass[$value] ?? ''])>
+                <label @class(array_filter(['mfilter-opt', $optionClass[$value] ?? '']))>
                     <input type="checkbox"
                            name="{{ $name }}[]"
                            value="{{ $value }}"

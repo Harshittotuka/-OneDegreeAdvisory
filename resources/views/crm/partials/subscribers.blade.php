@@ -16,8 +16,17 @@
     <form id="crmSubscriberFilters" class="filters crm-subscriber-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
         <input type="hidden" name="view" value="subscriptions">
         <div class="search-wrap"><input class="control" type="search" name="subscriber_search" value="{{ request('subscriber_search') }}" placeholder="Search email address"></div>
-        <select class="control" name="subscriber_status"><option value="">All statuses</option><option value="active" @selected(request('subscriber_status')==='active')>Active</option><option value="unsubscribed" @selected(request('subscriber_status')==='unsubscribed')>Unsubscribed</option></select>
-        <select class="control" name="subscriber_source"><option value="">All signup sources</option>@foreach($subscriberSources as $source)<option value="{{ $source }}" @selected(request('subscriber_source')===$source)>{{ $source }}</option>@endforeach</select>
+        @include('crm.partials.multi-filter', [
+            'name' => 'subscriber_status', 'options' => ['active' => 'Active', 'unsubscribed' => 'Unsubscribed'],
+            'selected' => \App\Support\CrmFilter::raw(request(), 'subscriber_status'),
+            'placeholder' => 'All statuses', 'label' => 'Filter by status', 'noun' => 'statuses',
+        ])
+        @include('crm.partials.multi-filter', [
+            'name' => 'subscriber_source',
+            'options' => collect($subscriberSources)->mapWithKeys(fn ($source) => [$source => $source])->all(),
+            'selected' => \App\Support\CrmFilter::raw(request(), 'subscriber_source'),
+            'placeholder' => 'All signup sources', 'label' => 'Filter by signup source', 'noun' => 'sources',
+        ])
         <button class="btn btn-outline" type="submit">Filter</button>
     </form>
 

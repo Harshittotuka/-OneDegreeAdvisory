@@ -536,7 +536,7 @@ class CrmTest extends TestCase
         $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'students']))
             ->assertOk()
-            ->assertSee('name="student_stage"', false)
+            ->assertSee('name="student_stage[]"', false)
             ->assertSee('All journey stages')
             ->assertSee('<th>Journey stage</th>', false)
             ->assertSee('<th>Category</th>', false)
@@ -560,11 +560,14 @@ class CrmTest extends TestCase
         $inProcess = $this->leadFor($admin, 'Visa Filed Student', '9876500062');
         $inProcess->update(['is_student' => true, 'status' => 'converted', 'student_stage' => 'visa_filed']);
 
-        // Alumni is offered by the journey-stage filter alongside every other stage.
-        $this->withSession(['crm_user_id' => $admin->id])
+        // Alumni is offered by the journey-stage filter alongside every other
+        // stage — as a real tickable choice, not just text somewhere on the page.
+        $stageFilter = preg_replace('/\s+/', ' ', $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'students']))
             ->assertOk()
-            ->assertSee('<option value="alumni" >Alumni</option>', false);
+            ->getContent());
+        $this->assertStringContainsString('name="student_stage[]" value="alumni"', $stageFilter);
+        $this->assertStringContainsString('<span class="mfilter-opt-text">Alumni</span>', $stageFilter);
 
         // And it lists only the students whose whole process is complete.
         $this->withSession(['crm_user_id' => $admin->id])
