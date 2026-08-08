@@ -408,6 +408,17 @@
     background:linear-gradient(90deg, rgba(255,94,50,.22), rgba(255,94,50,.65));
   }
 
+  /* The rail draws itself as the row scrolls in, racing ahead of the staggered
+     cards. Behind @supports because a browser without :has() would be left with
+     a permanently collapsed rail rather than a static one. */
+  @supports selector(:has(*)){
+    #ref-page .rf-flow::before{
+      transform:scaleX(0); transform-origin:left center;
+      transition:transform 1.1s cubic-bezier(.22,.75,.25,1);
+    }
+    #ref-page .rf-flow:has(.rf-flow__step.is-in)::before{ transform:scaleX(1); }
+  }
+
   /* Column flex, not a plain block: the card takes the leftover height with
      flex:1, so all four end level. `height:100%` on the card cannot do that —
      it resolves against the whole stretched row, which also holds the marker,
@@ -422,9 +433,11 @@
     box-shadow:0 0 0 6px var(--rf-flow-bg), 0 14px 26px -12px var(--rf-flow-glow);
     transition:transform .28s ease, background .28s ease, color .28s ease, box-shadow .28s ease;
   }
-  #ref-page .rf-flow__marker i{ width:25px; height:25px; }
+  /* :is(i,svg) because Lucide swaps the <i> placeholder for an <svg> via
+     outerHTML — a bare `i` selector only ever matches before hydration. */
+  #ref-page .rf-flow__marker :is(i,svg){ width:25px; height:25px; }
   #ref-page .rf-flow__num{
-    position:absolute; top:-3px; right:-3px; width:23px; height:23px; border-radius:50%;
+    position:absolute; z-index:2; top:-3px; right:-3px; width:23px; height:23px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     background:var(--rf-flow-bg); color:var(--rf-flow-accent);
     border:1.5px solid currentColor; font-size:11.5px; font-weight:800; line-height:1;
@@ -467,6 +480,90 @@
   #ref-page .rf-step__link i{ width:14px; height:14px; }
   #ref-page .rf-step__tag{ display:inline-block; margin-top:11px; padding:5px 12px; border-radius:999px;
     font-size:12px; font-weight:800; color:var(--rf-orange); background:var(--rf-orange-soft); }
+
+  /* ── Step motion ──
+     Each of the four steps plays the motion its own icon implies, so the row
+     shows the process happening rather than describing it: the plane is sent,
+     the compass finds north, the cap is thrown, the gift is shaken open.
+
+     One long cycle with the movement packed into its first second and the rest
+     spent at rest — four icons in permanent motion would fight the copy. The
+     --rf-i stagger fires them in order, so the wave travels 1 → 4 along the rail
+     and lands on the reward. */
+  #ref-page .rf-flow--process{ --rf-cycle:5.4s; }
+  #ref-page .rf-flow__step.rf-reveal{ transition-delay:calc(var(--rf-i,0) * .1s); }
+  #ref-page .rf-flow--process .rf-flow__step.is-in .rf-flow__marker :is(i,svg){
+    /* Starts after this step's own reveal has landed. */
+    animation-delay:calc(.5s + var(--rf-i,0) * .42s);
+    animation-duration:var(--rf-cycle);
+    animation-iteration-count:infinite;
+  }
+
+  /* Every animation-name below is gated on .is-in too, so the cycle is created
+     at the moment the row scrolls in. Naming it earlier and only lengthening the
+     duration on reveal would leave the animation's start time back at page load,
+     dropping the first play into the middle of a cycle. */
+
+  /* 1 — sent: away up-right, then back in from the lower left. */
+  #ref-page .is-in .rf-flow__marker[data-rf-anim="send"] :is(i,svg){ animation-name:rf-fly; animation-timing-function:cubic-bezier(.4,0,.3,1); }
+  /* Climbs out through the top of the circle rather than the top-right corner,
+     which is where the number chip sits — the plane crossed straight over it.
+     The gap between leaving and re-entering is a blink: any longer and the empty
+     circle reads as a missing icon rather than a plane in flight. */
+  @keyframes rf-fly{
+    0%,6%   { transform:translate(0,0) rotate(0deg);        opacity:1; }
+    15%     { transform:translate(4px,-15px) rotate(-15deg); opacity:1; }
+    20%     { transform:translate(8px,-33px) rotate(-15deg); opacity:0; }
+    21%     { transform:translate(-17px,17px) rotate(0deg);  opacity:0; }
+    28%     { transform:translate(-6px,6px) rotate(0deg);    opacity:1; }
+    36%,100%{ transform:translate(0,0) rotate(0deg);        opacity:1; }
+  }
+
+  /* 2 — guided: the needle swings past north and settles on it. */
+  #ref-page .is-in .rf-flow__marker[data-rf-anim="compass"] :is(i,svg){ animation-name:rf-seek; animation-timing-function:cubic-bezier(.35,.1,.25,1); }
+  @keyframes rf-seek{
+    0%,6%   { transform:rotate(0deg); }
+    15%     { transform:rotate(-34deg); }
+    25%     { transform:rotate(26deg); }
+    33%     { transform:rotate(-11deg); }
+    42%,100%{ transform:rotate(0deg); }
+  }
+
+  /* 3 — enrolled: the cap goes up, turns, and lands. */
+  #ref-page .is-in .rf-flow__marker[data-rf-anim="graduation-cap"] :is(i,svg){ animation-name:rf-toss; animation-timing-function:cubic-bezier(.3,0,.4,1); }
+  @keyframes rf-toss{
+    0%,7%   { transform:translateY(0) rotate(0deg) scaleY(1); }
+    17%     { transform:translateY(-13px) rotate(-15deg) scaleY(1); }
+    26%     { transform:translateY(-15px) rotate(11deg) scaleY(1); }
+    37%     { transform:translateY(0) rotate(0deg) scaleY(1); }
+    42%     { transform:translateY(0) rotate(0deg) scaleY(.86); }
+    50%,100%{ transform:translateY(0) rotate(0deg) scaleY(1); }
+  }
+
+  /* 4 — rewarded: rattled, then it pops. */
+  #ref-page .is-in .rf-flow__marker[data-rf-anim="gift"] :is(i,svg){ animation-name:rf-unwrap; animation-timing-function:ease-in-out; }
+  @keyframes rf-unwrap{
+    0%,5%   { transform:translateY(0) rotate(0deg) scale(1); }
+    10%     { transform:translateY(-2px) rotate(-10deg) scale(1); }
+    15%     { transform:translateY(0) rotate(9deg) scale(1); }
+    20%     { transform:translateY(-2px) rotate(-7deg) scale(1); }
+    25%     { transform:translateY(0) rotate(6deg) scale(1); }
+    30%     { transform:translateY(-1px) rotate(-3deg) scale(1); }
+    38%     { transform:translateY(0) rotate(0deg) scale(1.24); }
+    50%,100%{ transform:translateY(0) rotate(0deg) scale(1); }
+  }
+  /* A ring leaves the last marker on the pop — the payoff of the whole row. */
+  #ref-page .rf-flow__step.is-in .rf-flow__marker[data-rf-anim="gift"]::after{
+    content:""; position:absolute; z-index:0; inset:-5px; border-radius:50%;
+    border:2px solid var(--rf-orange); opacity:0;
+    animation:rf-halo var(--rf-cycle) ease-out infinite;
+    animation-delay:calc(.5s + var(--rf-i,0) * .42s);
+  }
+  @keyframes rf-halo{
+    0%,32%  { transform:scale(.84); opacity:0; }
+    40%     { opacity:.6; }
+    64%,100%{ transform:scale(1.34); opacity:0; }
+  }
 
   /* ══ Form ══ */
   #ref-page .rf-form{
@@ -569,6 +666,11 @@
     #ref-page .rf-flow--reward::before{
       background:linear-gradient(180deg, rgba(255,94,50,.22), rgba(255,94,50,.65));
     }
+    /* The rail runs downward here, so it has to draw downward too. */
+    @supports selector(:has(*)){
+      #ref-page .rf-flow::before{ transform:scaleY(0); transform-origin:center top; }
+      #ref-page .rf-flow:has(.rf-flow__step.is-in)::before{ transform:scaleY(1); }
+    }
     #ref-page .rf-flow__step{
       display:grid; grid-template-columns:60px minmax(0,1fr); align-items:start;
       column-gap:18px; padding-bottom:22px;
@@ -588,6 +690,11 @@
     #ref-page .rf-wheel{ transition:none !important; }
     #ref-page .rf-reveal{ opacity:1; transform:none; transition:none; }
     #ref-page .rf-btn:hover, #ref-page .rf-who-card:hover{ transform:none; }
+    /* The step icons and the rail draw are decoration; the rail must still be
+       drawn, so it is reset rather than left mid-transition at scale 0. */
+    #ref-page .rf-flow__marker :is(i,svg){ animation:none !important; }
+    #ref-page .rf-flow__marker::after{ display:none !important; }
+    #ref-page .rf-flow::before{ transform:none !important; transition:none; }
   }
 </style>
 @endpush
@@ -724,8 +831,12 @@
 
       <ol class="rf-flow rf-flow--process">
         @foreach($howItWorks as $step)
-          <li class="rf-flow__step rf-reveal">
-            <span class="rf-flow__marker" aria-hidden="true">
+          {{-- --rf-i staggers both the reveal and the icon's motion, so the four
+               steps play as a wave travelling along the rail rather than at once.
+               data-rf-anim keys the motion to the icon: a plane flies, a compass
+               seeks, a cap is tossed, a gift is rattled open. --}}
+          <li class="rf-flow__step rf-reveal" style="--rf-i:{{ $loop->index }}">
+            <span class="rf-flow__marker" data-rf-anim="{{ $step['icon'] }}" aria-hidden="true">
               <i data-lucide="{{ $step['icon'] }}"></i>
               <span class="rf-flow__num">{{ $step['n'] }}</span>
             </span>
@@ -755,7 +866,7 @@
 
       <ol class="rf-flow rf-flow--reward">
         @foreach($rewardSteps as $step)
-          <li class="rf-flow__step rf-reveal">
+          <li class="rf-flow__step rf-reveal" style="--rf-i:{{ $loop->index }}">
             <span class="rf-flow__marker" aria-hidden="true">
               <i data-lucide="{{ $step['icon'] }}"></i>
               <span class="rf-flow__num">{{ $step['n'] }}</span>
