@@ -16,11 +16,10 @@
          .ref-who-icon joins the shared UNIFIED ICON-TILE SYSTEM
        • the 23 flags were pulled from flagcdn.com — 23 cross-origin images, and
          46 <img> elements once the marquee duplicates them. They are now ONE
-         18 KB local sprite (assets/referral/flags.webp), positioned by index
+         21 KB local sprite (assets/referral/flags.webp), positioned by index
        • AOS (a CDN animation library) is gone; reveal-on-scroll is a dozen lines
          of IntersectionObserver, matching the other Student Hub pages
-       • the wheel's random pastel palette was rebuilt from the site's navy →
-         indigo → orange ramp so it stops fighting the brand
+       • the wheel keeps the reference design's pastel wedge palette exactly
        • the form was a client-side fake that only changed a caption; it now
          POSTs to the CRM through the site's shared AJAX handler
        • the inline base64 photo is served as a file under assets/referral/
@@ -197,9 +196,16 @@
   #ref-page .rf-reveal.is-in{ opacity:1; transform:none; }
 
   /* ══ Flag sprite ══
-     One 18 KB WebP strip holds all {{ $spriteCells }} flags at 2x. Each cell is shown by
-     shifting the background by the flag's index, so the marquee, the wheel and
-     the popup all share a single cached image and a single request. */
+     One WebP strip holds all {{ $spriteCells }} flags. Each cell is shown by shifting the
+     background by the flag's index, so the marquee, the wheel and the popup all
+     share a single cached image and a single request.
+
+     Each cell carries a transparent gutter around its flag. Without it the cells
+     sat edge to edge, and scaling a 120px cell down to ~47px on screen made the
+     browser resample ACROSS the cell boundary — pulling a sliver of the next
+     country into every flag. The gutter means that bleed lands on transparency.
+     Element boxes below are therefore sized to the whole cell (3:2), which is
+     slightly larger than the flag it frames. */
   #ref-page .rf-flag{
     display:block; background-image:url('{{ asset('assets/referral/flags.webp') }}');
     background-repeat:no-repeat;
@@ -251,10 +257,14 @@
   #ref-page .rf-flagbtn:hover{ transform:translateY(-4px); }
   #ref-page .rf-pole{ position:relative; width:2px; height:34px; border-radius:2px;
     background:linear-gradient(180deg, var(--rf-navy-soft), rgba(58,31,184,.15)); }
+  /* Sized to the sprite cell (3:2), so the flag inside reads at ~42x28. No
+     box-shadow: it would trace the element box, including the transparent
+     gutter, rather than the flag. A drop-shadow filter would follow the alpha
+     correctly but there are 46 of these and they animate, so the shadow is
+     simply dropped here — at this size on a white card it added nothing. */
   #ref-page .rf-cloth{
-    position:absolute; top:0; left:1px; width:42px; height:28px; border-radius:0 3px 3px 0;
-    box-shadow:0 3px 9px rgba(0,0,0,.22); transform-origin:left center;
-    animation:rfWave 2.6s ease-in-out infinite;
+    position:absolute; top:-1px; left:1px; width:47px; height:31px;
+    transform-origin:left center; animation:rfWave 2.6s ease-in-out infinite;
   }
   #ref-page .rf-flagbtn:nth-child(3n) .rf-cloth{ animation-delay:.3s; }
   #ref-page .rf-flagbtn:nth-child(3n+1) .rf-cloth{ animation-delay:.7s; }
@@ -270,13 +280,21 @@
   #ref-page .rf-hero__sub{ font-size:17.5px; max-width:50ch; margin-bottom:30px; }
   #ref-page .rf-hero__ctas{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:38px; }
   #ref-page .rf-stats{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; max-width:560px; }
+  /* The four cards share a height and put their labels on a common baseline, so
+     a two-line label cannot make one card taller than its neighbours. */
   #ref-page .rf-stat{ background:var(--rf-paper); border:1px solid var(--rf-line); border-radius:16px;
-    padding:18px 12px; text-align:center; box-shadow:var(--rf-shadow-md); }
-  /* Clamped, not fixed: one of the four figures is a word ("Unlimited"), which
-     at a flat 29px crowded the edges of its card. */
-  #ref-page .rf-stat b{ display:block; font-family:var(--rf-serif); font-size:clamp(22px,2.1vw,29px);
-    font-weight:700; line-height:1.05; color:var(--rf-navy); }
-  #ref-page .rf-stat small{ display:block; font-size:11.5px; color:var(--rf-muted); margin-top:6px; line-height:1.35; }
+    padding:18px 12px; text-align:center; box-shadow:var(--rf-shadow-md);
+    display:flex; flex-direction:column; justify-content:center; }
+  #ref-page .rf-stat b{ display:block; font-family:var(--rf-serif); font-size:clamp(24px,2.1vw,30px);
+    font-weight:700; line-height:1.1; color:var(--rf-navy); }
+  /* One of the four values is a word, not a figure. In the display serif at
+     figure size it read as a mismatched headline rather than a stat, so words
+     take the body face a size down — same weight on the page, no pretence of
+     being a number. */
+  #ref-page .rf-stat b.rf-stat--word{ font-family:var(--rf-sans); font-size:clamp(17px,1.5vw,20px);
+    font-weight:800; letter-spacing:-.01em; }
+  #ref-page .rf-stat small{ display:block; font-size:11.5px; color:var(--rf-muted);
+    margin-top:7px; line-height:1.35; text-wrap:balance; min-height:2.7em; }
 
   /* ══ Spin & discover ══ */
   #ref-page .rf-game{
@@ -317,9 +335,11 @@
      container the default flex-shrink:1 crushes every child to zero height. The
      text labels survived by overflowing; the flags, having no content, vanished. */
   #ref-page .rf-seg > *{ flex-shrink:0; }
-  #ref-page .rf-seg .rf-flag{ width:22px; height:15px; border-radius:2px; box-shadow:0 1px 4px rgba(0,0,0,.28); }
-  #ref-page .rf-seg span{ font-size:9.5px; font-weight:800; color:#fff; line-height:1.05;
-    white-space:nowrap; text-shadow:0 1px 3px rgba(10,0,60,.55); }
+  #ref-page .rf-seg .rf-flag{ width:24px; height:16px; }
+  /* Dark ink on the pastel wedges, per the reference design — the wedge colours
+     are light, so white labels washed out against them. */
+  #ref-page .rf-seg span{ font-size:9.5px; font-weight:800; color:#1a0f4d; line-height:1.05;
+    white-space:nowrap; text-shadow:0 1px 2px rgba(255,255,255,.55); }
   #ref-page .rf-wheel-hub{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2;
     width:40px; height:40px; border-radius:50%; background:#fff; color:var(--rf-navy);
@@ -452,8 +472,10 @@
     display:inline-flex; align-items:center; justify-content:center; }
   #ref-page .rf-modal__x:hover{ background:var(--rf-orange); color:#fff; }
   #ref-page .rf-modal__x i{ width:16px; height:16px; }
-  #ref-page .rf-modal__flag{ width:58px; height:39px; border-radius:6px; margin-bottom:16px;
-    box-shadow:0 4px 10px rgba(0,0,0,.2); }
+  /* Cell-sized like the others; drop-shadow (not box-shadow) so it traces the
+     flag rather than the transparent gutter. Only one of these, and static. */
+  #ref-page .rf-modal__flag{ width:64px; height:43px; margin-bottom:16px;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.22)); }
   #ref-page .rf-modal__card h3{ font-size:21px; margin-bottom:3px; padding-right:36px; }
   #ref-page .rf-modal__q{ font-size:14px; margin-bottom:16px; }
   #ref-page .rf-modal__list{ display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
@@ -537,13 +559,13 @@
             <div class="rf-stat"><b>500+</b><small>Students guided</small></div>
             <div class="rf-stat"><b>{{ count($destinations) }}+</b><small>Study destinations</small></div>
             <div class="rf-stat"><b>95%</b><small>Visa success</small></div>
-            <div class="rf-stat"><b>Unlimited</b><small>Referrals per person</small></div>
+            <div class="rf-stat"><b class="rf-stat--word">Unlimited</b><small>Referrals per person</small></div>
           </div>
         </div>
 
         <div class="rf-game">
           <p class="rf-eyebrow">Click to play</p>
-          <h3>Spin &amp; discover a destination</h3>
+          <h3>Spin &amp; discover your destination</h3>
           <div class="rf-wheel-outer">
             <div class="rf-wheel-pointer" aria-hidden="true"></div>
             <div class="rf-wheel" data-rf-wheel>
@@ -570,9 +592,9 @@
             <span class="rf-wheel-hub" aria-hidden="true"><i data-lucide="globe"></i></span>
           </div>
           <button type="button" class="rf-btn rf-btn--primary" data-rf-spin>
-            <i data-lucide="sparkles"></i> Spin the wheel
+            <i data-lucide="sparkles"></i> Spin the Wheel
           </button>
-          <p class="rf-game__result" data-rf-result role="status" aria-live="polite">Give it a spin.</p>
+          <p class="rf-game__result" data-rf-result role="status" aria-live="polite">Give it a spin!</p>
         </div>
       </div>
     </div>
@@ -889,9 +911,9 @@
   var result = root.querySelector('[data-rf-result]');
 
   if (wheel && spinBtn && WHEEL.length) {
-    // Wedge colours walk the site's navy → indigo → orange ramp instead of the
-    // design's random pastels, which fought the rest of the page.
-    var RAMP = ['#1a0088', '#2f1aa8', '#4a2fc4', '#6a46d6', '#a35ab0', '#d15a74', '#f06a4a', '#ff8f5e'];
+    // The reference design's wedge palette, kept exactly: periwinkle, orange,
+    // teal, gold, lilac, pink, mint, sky — in this order, one per segment.
+    var RAMP = ['#7c83fd', '#ff9f68', '#4ecdc4', '#ffd166', '#a39bff', '#ff8fa3', '#5fd9c4', '#74b9ff'];
     var segAngle = 360 / WHEEL.length;
     var stops = WHEEL.map(function (seg, i) {
       return RAMP[i % RAMP.length] + ' ' + (i * segAngle) + 'deg ' + ((i + 1) * segAngle) + 'deg';

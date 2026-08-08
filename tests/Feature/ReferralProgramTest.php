@@ -56,7 +56,7 @@ class ReferralProgramTest extends TestCase
             ->assertSee('Refer a student.')
             ->assertSee('Earn rewards.')
             ->assertSee('Anyone in your circle can refer')
-            ->assertSee('Spin &amp; discover a destination', false)
+            ->assertSee('Spin &amp; discover your destination', false)
             ->assertSee('Submit a referral in minutes')
             ->assertSee('The fine print, made simple');
     }
