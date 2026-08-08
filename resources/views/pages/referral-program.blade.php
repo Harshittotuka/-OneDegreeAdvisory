@@ -91,17 +91,17 @@
     ];
 
     $howItWorks = [
-        ['n' => 1, 'title' => 'Submit the referral', 'text' => "Share the student's details through the form on this page.", 'link' => true],
-        ['n' => 2, 'title' => 'We guide the student', 'text' => 'Our counsellors take over — profiling, shortlisting and applications.'],
-        ['n' => 3, 'title' => 'The student enrols', 'text' => 'They secure an offer, clear the visa, and confirm enrolment.'],
-        ['n' => 4, 'title' => 'You get rewarded', 'text' => 'Your reward is processed once the enrolment is verified.'],
+        ['n' => 1, 'icon' => 'send', 'title' => 'Submit the referral', 'text' => "Share the student's details through the form on this page.", 'link' => true],
+        ['n' => 2, 'icon' => 'compass', 'title' => 'We guide the student', 'text' => 'Our counsellors take over — profiling, shortlisting and applications.'],
+        ['n' => 3, 'icon' => 'graduation-cap', 'title' => 'The student enrols', 'text' => 'They secure an offer, clear the visa, and confirm enrolment.'],
+        ['n' => 4, 'icon' => 'gift', 'title' => 'You get rewarded', 'text' => 'Your reward is processed once the enrolment is verified.'],
     ];
 
     $rewardSteps = [
-        ['n' => 1, 'title' => 'Student receives visa', 'text' => "The referred student's visa is approved and confirmed."],
-        ['n' => 2, 'title' => 'Student reports to university', 'text' => 'Enrolment is confirmed once they join their program.'],
-        ['n' => 3, 'title' => 'Verification', 'text' => 'Our team verifies the enrolment with the university.'],
-        ['n' => 4, 'title' => 'Reward processed', 'text' => 'Your reward is released by bank transfer or UPI.', 'tag' => '4–8 weeks'],
+        ['n' => 1, 'icon' => 'stamp', 'title' => 'Student receives visa', 'text' => "The referred student's visa is approved and confirmed."],
+        ['n' => 2, 'icon' => 'school', 'title' => 'Student reports to university', 'text' => 'Enrolment is confirmed once they join their program.'],
+        ['n' => 3, 'icon' => 'shield-check', 'title' => 'Verification', 'text' => 'Our team verifies the enrolment with the university.'],
+        ['n' => 4, 'icon' => 'banknote', 'title' => 'Reward processed', 'text' => 'Your reward is released by bank transfer or UPI.', 'tag' => '4–8 weeks'],
     ];
 
     // The popup payload for the script, built here rather than inline in @json:
@@ -375,35 +375,97 @@
   #ref-page .rf-who__art img{ position:absolute; inset:0; width:100%; height:100%;
     object-fit:cover; object-position:top center; }
 
-  /* ══ Timelines ══ */
-  #ref-page .rf-timeline{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:22px; position:relative; }
-  #ref-page .rf-timeline::before{
-    content:""; position:absolute; top:27px; left:7%; right:7%; height:2px;
-    background:repeating-linear-gradient(90deg, var(--rf-line) 0 10px, transparent 10px 20px);
+  /* ══ Timelines ══
+     One flow component, two variants. Each step is a marker sitting on a
+     continuous rail with a card beneath it. The marker carries the step's icon
+     with the number as a corner chip, so a glance gets both the sequence and
+     what each stage actually is — the old bare numbered discs carried only the
+     count, and with two four-step timelines on one page they read as the same
+     thing twice.
+
+     --rf-flow-bg is the ring colour that punches each marker out of the rail;
+     it has to follow whichever surface the section sits on. */
+  #ref-page .rf-flow{
+    --rf-flow-bg:var(--rf-cream);
+    --rf-flow-accent:var(--rf-navy);
+    --rf-flow-glow:rgba(26,0,136,.45);
+    list-style:none; margin:0; padding:0; position:relative;
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:clamp(14px,1.8vw,24px);
   }
-  #ref-page .rf-step{ text-align:center; position:relative; }
-  #ref-page .rf-step__dot{
-    width:54px; height:54px; margin:0 auto 18px; border-radius:50%; position:relative; z-index:2;
+  #ref-page .rf-paper .rf-flow{ --rf-flow-bg:var(--rf-paper); }
+  #ref-page .rf-flow--reward{ --rf-flow-accent:var(--rf-orange); --rf-flow-glow:rgba(255,94,50,.5); }
+
+  /* The rail. Runs between the first and last marker centres (a quarter of the
+     grid in from each edge) and warms navy → orange along its length, so both
+     timelines read as travelling toward the reward. */
+  #ref-page .rf-flow::before{
+    content:""; position:absolute; top:29px; left:12.5%; right:12.5%; height:2px; border-radius:2px;
+    background:linear-gradient(90deg, rgba(26,0,136,.30), rgba(26,0,136,.22) 45%, rgba(255,94,50,.55));
+  }
+  /* All orange, deepening left to right: the reward rail sits under orange
+     milestones, so a navy start read as a stray colour rather than a journey. */
+  #ref-page .rf-flow--reward::before{
+    background:linear-gradient(90deg, rgba(255,94,50,.22), rgba(255,94,50,.65));
+  }
+
+  /* Column flex, not a plain block: the card takes the leftover height with
+     flex:1, so all four end level. `height:100%` on the card cannot do that —
+     it resolves against the whole stretched row, which also holds the marker,
+     so every card came out a marker taller than its content needed. */
+  #ref-page .rf-flow__step{ position:relative; display:flex; flex-direction:column; }
+
+  #ref-page .rf-flow__marker{
+    position:relative; z-index:2; margin:0 auto 20px;
+    width:60px; height:60px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-family:var(--rf-sans); font-weight:800; font-size:17px;
-    background:var(--rf-navy); color:#fff; box-shadow:0 12px 24px -8px rgba(26,0,136,.45);
-    transition:transform .28s ease, background .28s ease;
+    background:var(--rf-flow-accent); color:#fff;
+    box-shadow:0 0 0 6px var(--rf-flow-bg), 0 14px 26px -12px var(--rf-flow-glow);
+    transition:transform .28s ease, background .28s ease, color .28s ease, box-shadow .28s ease;
   }
-  #ref-page .rf-step__dot--outline{ background:transparent; color:var(--rf-orange);
-    border:2px solid var(--rf-orange); box-shadow:none; }
-  #ref-page .rf-step__dot--filled{ background:var(--rf-orange); color:#fff; border-color:var(--rf-orange);
-    box-shadow:0 12px 24px -8px rgba(255,94,50,.5); }
-  #ref-page .rf-step h3{ font-size:15.5px; margin-bottom:7px; }
-  #ref-page .rf-step p{ font-size:13.8px; }
-  #ref-page a.rf-step{ display:block; border-radius:18px; padding:10px; margin:-10px;
-    transition:background .22s ease; }
-  #ref-page a.rf-step:hover{ background:var(--rf-orange-soft); }
-  #ref-page a.rf-step:hover .rf-step__dot{ transform:scale(1.08); background:var(--rf-orange);
-    box-shadow:0 12px 24px -8px rgba(255,94,50,.5); }
-  #ref-page .rf-step__link{ display:inline-flex; align-items:center; gap:5px; margin-top:10px;
+  #ref-page .rf-flow__marker i{ width:25px; height:25px; }
+  #ref-page .rf-flow__num{
+    position:absolute; top:-3px; right:-3px; width:23px; height:23px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--rf-flow-bg); color:var(--rf-flow-accent);
+    border:1.5px solid currentColor; font-size:11.5px; font-weight:800; line-height:1;
+  }
+
+  /* Reward variant: hollow milestones that fill only at the payout, so the row
+     reads as a progression rather than four equal beats. */
+  #ref-page .rf-flow--reward .rf-flow__marker{
+    background:var(--rf-flow-bg); color:var(--rf-orange);
+    border:2px solid var(--rf-orange);
+    box-shadow:0 0 0 6px var(--rf-flow-bg);
+  }
+  #ref-page .rf-flow--reward .rf-flow__step:last-child .rf-flow__marker{
+    background:var(--rf-orange); color:#fff;
+    box-shadow:0 0 0 6px var(--rf-flow-bg), 0 14px 26px -12px var(--rf-flow-glow);
+  }
+
+  /* Transparent card so one component works on both the cream and paper
+     sections without inverting its background. */
+  #ref-page .rf-flow__card{
+    display:block; text-align:center; flex:1;
+    padding:20px 16px 22px; border:1px solid var(--rf-line); border-radius:18px;
+    background:transparent; transition:background .25s ease, border-color .25s ease,
+      transform .25s ease, box-shadow .25s ease;
+  }
+  #ref-page .rf-flow__card h3{ font-size:15.5px; margin-bottom:7px; }
+  #ref-page .rf-flow__card p{ font-size:13.8px; }
+
+  #ref-page a.rf-flow__card:hover{
+    background:var(--rf-paper); border-color:transparent;
+    transform:translateY(-4px); box-shadow:var(--rf-shadow-md);
+  }
+  #ref-page .rf-flow__step:has(a.rf-flow__card:hover) .rf-flow__marker{
+    transform:scale(1.07); background:var(--rf-orange); color:#fff;
+    box-shadow:0 0 0 6px var(--rf-flow-bg), 0 14px 26px -12px rgba(255,94,50,.55);
+  }
+
+  #ref-page .rf-step__link{ display:inline-flex; align-items:center; gap:5px; margin-top:11px;
     font-size:13px; font-weight:800; color:var(--rf-orange); }
   #ref-page .rf-step__link i{ width:14px; height:14px; }
-  #ref-page .rf-step__tag{ display:inline-block; margin-top:10px; padding:4px 11px; border-radius:999px;
+  #ref-page .rf-step__tag{ display:inline-block; margin-top:11px; padding:5px 12px; border-radius:999px;
     font-size:12px; font-weight:800; color:var(--rf-orange); background:var(--rf-orange-soft); }
 
   /* ══ Form ══ */
@@ -494,9 +556,26 @@
     #ref-page .rf-who__art{ min-height:300px; order:2; }
     #ref-page .rf-acc{ grid-template-columns:1fr; grid-auto-flow:row; grid-template-rows:none; }
   }
-  @media (max-width:800px){
-    #ref-page .rf-timeline{ grid-template-columns:1fr; gap:32px; }
-    #ref-page .rf-timeline::before{ display:none; }
+  /* Below the four-across breakpoint the flow becomes a real vertical timeline —
+     marker column on the left, card on the right, rail running down between the
+     markers. The previous version simply hid the connector, which left four
+     loose blocks with nothing tying them together on a phone. */
+  @media (max-width:840px){
+    #ref-page .rf-flow{ grid-template-columns:1fr; gap:0; }
+    #ref-page .rf-flow::before{
+      top:30px; bottom:30px; left:29px; right:auto; width:2px; height:auto;
+      background:linear-gradient(180deg, rgba(26,0,136,.30), rgba(26,0,136,.22) 45%, rgba(255,94,50,.55));
+    }
+    #ref-page .rf-flow--reward::before{
+      background:linear-gradient(180deg, rgba(255,94,50,.22), rgba(255,94,50,.65));
+    }
+    #ref-page .rf-flow__step{
+      display:grid; grid-template-columns:60px minmax(0,1fr); align-items:start;
+      column-gap:18px; padding-bottom:22px;
+    }
+    #ref-page .rf-flow__step:last-child{ padding-bottom:0; }
+    #ref-page .rf-flow__marker{ margin:0; }
+    #ref-page .rf-flow__card{ text-align:left; padding:14px 16px 16px; }
   }
   @media (max-width:620px){
     #ref-page .rf-grid{ grid-template-columns:1fr; }
@@ -643,24 +722,25 @@
         <p>From referral to reward — a transparent process, start to finish.</p>
       </div>
 
-      <div class="rf-timeline">
+      <ol class="rf-flow rf-flow--process">
         @foreach($howItWorks as $step)
-          @if($step['link'] ?? false)
-            <a class="rf-step rf-reveal" href="#rf-form">
-              <span class="rf-step__dot">{{ $step['n'] }}</span>
+          <li class="rf-flow__step rf-reveal">
+            <span class="rf-flow__marker" aria-hidden="true">
+              <i data-lucide="{{ $step['icon'] }}"></i>
+              <span class="rf-flow__num">{{ $step['n'] }}</span>
+            </span>
+            {{-- Step one is the only actionable stage, so only it is a link. --}}
+            <{{ ($step['link'] ?? false) ? 'a' : 'div' }} class="rf-flow__card"
+              @if($step['link'] ?? false) href="#rf-form" @endif>
               <h3>{{ $step['title'] }}</h3>
               <p>{{ $step['text'] }}</p>
-              <span class="rf-step__link">Fill the form <i data-lucide="arrow-right"></i></span>
-            </a>
-          @else
-            <div class="rf-step rf-reveal">
-              <span class="rf-step__dot">{{ $step['n'] }}</span>
-              <h3>{{ $step['title'] }}</h3>
-              <p>{{ $step['text'] }}</p>
-            </div>
-          @endif
+              @if($step['link'] ?? false)
+                <span class="rf-step__link">Fill the form <i data-lucide="arrow-right"></i></span>
+              @endif
+            </{{ ($step['link'] ?? false) ? 'a' : 'div' }}>
+          </li>
         @endforeach
-      </div>
+      </ol>
     </div>
   </section>
 
@@ -673,18 +753,23 @@
         <p>The reward follows the student's enrolment, so here is exactly what has to happen first.</p>
       </div>
 
-      <div class="rf-timeline">
+      <ol class="rf-flow rf-flow--reward">
         @foreach($rewardSteps as $step)
-          <div class="rf-step rf-reveal">
-            <span class="rf-step__dot rf-step__dot--outline @if($loop->last) rf-step__dot--filled @endif">{{ $step['n'] }}</span>
-            <h3>{{ $step['title'] }}</h3>
-            <p>{{ $step['text'] }}</p>
-            @if($step['tag'] ?? false)
-              <span class="rf-step__tag">{{ $step['tag'] }}</span>
-            @endif
-          </div>
+          <li class="rf-flow__step rf-reveal">
+            <span class="rf-flow__marker" aria-hidden="true">
+              <i data-lucide="{{ $step['icon'] }}"></i>
+              <span class="rf-flow__num">{{ $step['n'] }}</span>
+            </span>
+            <div class="rf-flow__card">
+              <h3>{{ $step['title'] }}</h3>
+              <p>{{ $step['text'] }}</p>
+              @if($step['tag'] ?? false)
+                <span class="rf-step__tag">{{ $step['tag'] }}</span>
+              @endif
+            </div>
+          </li>
         @endforeach
-      </div>
+      </ol>
     </div>
   </section>
 

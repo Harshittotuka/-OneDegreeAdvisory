@@ -26019,7 +26019,7 @@ main :is(
   .cc-done,
   .rf-head,
   .rf-stat,
-  .rf-step,
+  .rf-flow__card,
   .rf-game
 ) > :is(p, li) {
   text-align: inherit;
