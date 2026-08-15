@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\CmsAuth;
+use App\Http\Middleware\CrmAuth;
+use App\Http\Middleware\ScheduleCmsCrmBackup;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,13 +14,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            ScheduleCmsCrmBackup::class,
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'payments/razorpay/webhook',
         ]);
 
         $middleware->alias([
-            'cms.auth' => \App\Http\Middleware\CmsAuth::class,
-            'crm.auth' => \App\Http\Middleware\CrmAuth::class,
+            'cms.auth' => CmsAuth::class,
+            'crm.auth' => CrmAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

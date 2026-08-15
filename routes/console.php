@@ -4,6 +4,7 @@ use App\Mail\CareerApplicationMail;
 use App\Mail\CareerThankYouMail;
 use App\Mail\ContactEnquiryMail;
 use App\Mail\ContactThankYouMail;
+use App\Support\CmsCrmBackupManager;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
@@ -12,6 +13,42 @@ use Illuminate\Support\Facades\Validator;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('backup:run {--reason=manual}', function (CmsCrmBackupManager $backups) {
+    try {
+        $path = $backups->createSnapshot((string) $this->option('reason'));
+        $this->info('CMS/CRM backup created.');
+        $this->line($path);
+
+        return 0;
+    } catch (Throwable $e) {
+        $this->error('CMS/CRM backup failed: '.$e->getMessage());
+
+        return 1;
+    }
+})->purpose('Create a CMS/CRM database, JSON, and uploads restore point');
+
+Artisan::command('backup:list', function (CmsCrmBackupManager $backups) {
+    $snapshots = $backups->snapshots();
+
+    if ($snapshots === []) {
+        $this->warn('No CMS/CRM backups are available.');
+
+        return 0;
+    }
+
+    $this->table(
+        ['ID', 'Created (UTC)', 'Database', 'Reason'],
+        array_map(fn (array $snapshot) => [
+            $snapshot['id'],
+            $snapshot['created_at'],
+            $snapshot['database_driver'],
+            $snapshot['reason'],
+        ], $snapshots),
+    );
+
+    return 0;
+})->purpose('List the retained CMS/CRM restore points');
 
 Artisan::command('mail:doctor {--mailer=*}', function () {
     $errors = [];

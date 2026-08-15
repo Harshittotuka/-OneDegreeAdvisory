@@ -48,6 +48,7 @@ trait PersistsInlineImages
 
         $name = trim($folder, '/').'/'.bin2hex(random_bytes(8)).'.'.$ext;
         Storage::disk('public')->put($name, $binary);
+        app(CmsCrmBackupManager::class)->markDirty('cms-upload');
 
         return asset('storage/'.$name);
     }

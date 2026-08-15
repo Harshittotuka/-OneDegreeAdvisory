@@ -30,7 +30,9 @@ class CareerCounsellingStore
 
     /** Bounds — a stage tab strip stops being a tab strip past a handful. */
     public const MAX_STAGES = 4;
+
     public const MAX_TIERS = 4;
+
     public const MAX_FEATURES = 10;
 
     private string $path;
@@ -404,9 +406,15 @@ class CareerCounsellingStore
             mkdir(dirname($this->path), 0775, true);
         }
 
-        file_put_contents(
+        $written = file_put_contents(
             $this->path,
             json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         );
+
+        if ($written === false) {
+            throw new \RuntimeException('Could not save the Career Counselling CMS data.');
+        }
+
+        app(CmsCrmBackupManager::class)->markDirty('cms-json');
     }
 }

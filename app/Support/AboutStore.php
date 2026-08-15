@@ -149,9 +149,15 @@ class AboutStore
             mkdir(dirname($this->path), 0775, true);
         }
 
-        file_put_contents(
+        $written = file_put_contents(
             $this->path,
             json_encode(array_values($sections), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         );
+
+        if ($written === false) {
+            throw new \RuntimeException('Could not save the About CMS data.');
+        }
+
+        app(CmsCrmBackupManager::class)->markDirty('cms-json');
     }
 }

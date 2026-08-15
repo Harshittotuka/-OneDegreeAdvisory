@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 class CountryVisibilityStore
 {
     public const GROUP_NON_MBBS = 'non_mbbs';
+
     public const GROUP_MBBS = 'mbbs';
 
     private string $path;
@@ -107,10 +108,16 @@ class CountryVisibilityStore
             mkdir(dirname($this->path), 0775, true);
         }
 
-        file_put_contents(
+        $written = file_put_contents(
             $this->path,
             json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         );
+
+        if ($written === false) {
+            throw new \RuntimeException('Could not save the Country Visibility CMS data.');
+        }
+
+        app(CmsCrmBackupManager::class)->markDirty('cms-json');
     }
 
     private function groups(): array

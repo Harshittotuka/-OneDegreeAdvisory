@@ -21,6 +21,31 @@ php artisan serve
 
 The app supports clean URLs like `/contact` and legacy URLs like `/contact.html` and `/countries/study-in-uk.html`.
 
+## CMS and CRM backups
+
+Successful CMS and CRM data changes create one rolling restore point after the
+HTTP response is sent. Each restore point contains a consistent SQLite copy or
+MySQL SQL dump, the top-level CMS JSON/XLSX files, uploaded CMS assets, and a
+checksummed manifest. Multiple writes made by one user action are coalesced into
+one restore point. Only the newest five are retained by default.
+
+The feature is opt-in. Keep `CMS_CRM_BACKUP_ENABLED=false` (or omit it) on local
+and UAT. Set it to `true` only in the production VPS environment.
+
+```bash
+# Verify that the VPS can create a restore point (and that mysqldump is found).
+php artisan backup:run --reason=deployment-check
+
+# List retained restore points.
+php artisan backup:list
+```
+
+Backups default to `storage/app/backups/cms-crm`. For real server-loss
+protection, set `CMS_CRM_BACKUP_PATH` to a mounted/off-server backup volume.
+Set `CMS_CRM_MYSQLDUMP_PATH=/usr/bin/mysqldump` if the executable is not on the
+PHP-FPM process PATH. Backup failures are written to the Laravel log and never
+undo a CMS/CRM save that already succeeded.
+
 ## Verify
 
 ```bash

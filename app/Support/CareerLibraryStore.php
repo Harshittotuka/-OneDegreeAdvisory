@@ -502,10 +502,16 @@ class CareerLibraryStore
             mkdir(dirname($path), 0775, true);
         }
 
-        file_put_contents(
+        $written = file_put_contents(
             $path,
             json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             LOCK_EX
         );
+
+        if ($written === false) {
+            throw new \RuntimeException('Could not save the Career Library CMS data.');
+        }
+
+        app(CmsCrmBackupManager::class)->markDirty('cms-json');
     }
 }

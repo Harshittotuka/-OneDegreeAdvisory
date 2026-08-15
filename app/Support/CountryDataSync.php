@@ -8,9 +8,13 @@ use Symfony\Component\Process\Process;
 class CountryDataSync
 {
     private const LIVE_BASE = 'leverageedu_study_locations_content';
+
     private const REVIEW_BASE = 'leverageedu_study_locations_content.review';
+
     private const STARTUP_GRACE_SECONDS = 20;
+
     private const MAX_RUN_SECONDS = 1800;
+
     private const SHEETS = [
         'Pages',
         'Sections',
@@ -330,6 +334,8 @@ class CountryDataSync
             $this->copyRequired($this->reviewSnapshotPath(), $this->liveSnapshotPath());
         }
 
+        app(CmsCrmBackupManager::class)->markDirty('cms-country-data');
+
         return $backupDir;
     }
 
@@ -373,6 +379,7 @@ class CountryDataSync
                 $rows[] = $row;
                 $live['sheets'][$sheet] = $rows;
                 $applied++;
+
                 continue;
             }
 
@@ -382,6 +389,7 @@ class CountryDataSync
                     $live['sheets'][$sheet] = array_values($rows);
                     $applied++;
                 }
+
                 continue;
             }
 
@@ -394,6 +402,7 @@ class CountryDataSync
 
         if ($applied > 0) {
             $this->writeJson($this->liveJsonPath(), $live);
+            app(CmsCrmBackupManager::class)->markDirty('cms-country-data');
         }
 
         return $applied;

@@ -21,13 +21,18 @@ class HeroContent
 {
     /** Allowed button styles → public CSS classes. */
     public const STYLES = ['orange', 'ghost', 'disabled'];
+
     public const TEXT_STYLE_KEYS = ['eyebrow', 'heading', 'highlight'];
+
     public const TEXT_STYLE_MODES = ['default', 'solid', 'gradient'];
+
     public const TEXT_ANIMATIONS = ['theme', 'none', 'shimmer', 'pulse', 'lift'];
 
     /** Background slideshow transition styles (default = fade in / fade out). */
     public const SLIDE_ANIMATIONS = ['fade', 'slide', 'vertical', 'zoom', 'blur', 'kenburns'];
+
     public const SLIDESHOW_DEFAULTS = ['animation' => 'fade', 'interval' => 5, 'duration' => 1.2];
+
     public const MAX_SLIDES = 12;
 
     public const TEXT_STYLE_DEFAULTS = [
@@ -139,10 +144,16 @@ class HeroContent
             mkdir(dirname($this->path), 0775, true);
         }
 
-        file_put_contents(
+        $written = file_put_contents(
             $this->path,
             json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         );
+
+        if ($written === false) {
+            throw new \RuntimeException('Could not save the Home Hero CMS data.');
+        }
+
+        app(CmsCrmBackupManager::class)->markDirty('cms-json');
     }
 
     /** Coerce raw editor input into the exact, safe hero shape. */
