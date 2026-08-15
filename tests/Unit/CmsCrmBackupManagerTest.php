@@ -81,6 +81,16 @@ class CmsCrmBackupManagerTest extends TestCase
         $this->assertSame('kept', $snapshot->query('SELECT name FROM backup_example')->fetchColumn());
     }
 
+    public function test_it_refuses_manual_backups_when_the_environment_is_disabled(): void
+    {
+        config(['backup.enabled' => false]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('backups are disabled');
+
+        app(CmsCrmBackupManager::class)->createSnapshot('must-not-run');
+    }
+
     public function test_it_keeps_only_the_five_newest_snapshots(): void
     {
         $manager = app(CmsCrmBackupManager::class);

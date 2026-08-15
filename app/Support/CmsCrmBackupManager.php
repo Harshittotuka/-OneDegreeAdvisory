@@ -83,6 +83,10 @@ class CmsCrmBackupManager
 
     public function createSnapshot(string $reason = 'manual'): string
     {
+        if (! config('backup.enabled')) {
+            throw new RuntimeException('CMS/CRM backups are disabled in this environment.');
+        }
+
         if ($this->running) {
             throw new RuntimeException('A CMS/CRM backup is already running in this process.');
         }
