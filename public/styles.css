@@ -25423,7 +25423,9 @@ html[data-color-theme] :is(
   .mbc-benefit__icon,
   .mbc-daily__icon,
   .mbc-quote,
-  .cc-block__icon
+  .cc-block__icon,
+  .sdp-track__icon,
+  .sdp-benefit__icon
 ) {
   width: 52px;
   height: 52px;
@@ -25454,7 +25456,9 @@ html[data-color-theme] :is(
   .mbc-benefit__icon,
   .mbc-daily__icon,
   .mbc-quote,
-  .cc-block__icon
+  .cc-block__icon,
+  .sdp-track__icon,
+  .sdp-benefit__icon
 ) :is(i, svg) {
   width: 24px !important;
   height: 24px !important;
@@ -25520,7 +25524,9 @@ html[data-color-theme] :is(
   .mbc-benefit:hover .mbc-benefit__icon,
   .mbc-daily__card:hover .mbc-daily__icon,
   .cc-block:hover .cc-block__icon,
-  .rf-who-card:hover .rf-who-icon
+  .rf-who-card:hover .rf-who-icon,
+  .sdp-card:hover .sdp-track__icon,
+  .sdp-benefit:hover .sdp-benefit__icon
 ) {
   transform: scale(1.06) rotate(-3deg);
   background: color-mix(in srgb, #ff5e32 18%, #e8f7f3);

@@ -369,6 +369,24 @@ class PageController extends Controller
     }
 
     /**
+     * Student Development Programme — the skill-track landing page behind the
+     * home hero's "Student Development Programme" button.
+     *
+     * Static by design: the page introduces Infolith and links each course card
+     * to its course catalogue.
+     */
+    public function studentDevelopment(): View
+    {
+        return view('pages.student-development-programme', [
+            'activeNav'       => 'new-tabs',
+            'bodyClass'       => 'sdp-page-body',
+            'pageTitle'       => 'Student Development Programme — Skills for Study Abroad',
+            'pageDescription' => 'Explore practical learning that can help clarify your academic interests, compare overseas university programmes and communicate a focused study-abroad direction.',
+            'mainId'          => 'main',
+        ]);
+    }
+
+    /**
      * AI Visa Mock Interview — a browser-first mock-interview tool under the
      * Student Hub. Video mode provides a live practice preview while answer
      * transcripts are reviewed by our locally hosted Ollama service through

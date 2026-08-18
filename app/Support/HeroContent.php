@@ -111,7 +111,10 @@ class HeroContent
             return [];
         }
 
-        $links = ['career mentoring' => '/career-counselling'];
+        $links = [
+            'career mentoring' => '/career-counselling',
+            'student development programme' => '/student-development-programme',
+        ];
 
         foreach ($actions as $i => $action) {
             if (! is_array($action)) {
@@ -287,7 +290,7 @@ class HeroContent
             'styles' => self::TEXT_STYLE_DEFAULTS,
             'actions' => [
                 ['label' => 'Career Mentoring', 'icon' => 'compass', 'href' => '/career-counselling', 'style' => 'ghost', 'row' => 0],
-                ['label' => 'Student Development Programme', 'icon' => 'graduation-cap', 'href' => '', 'style' => 'disabled', 'row' => 0],
+                ['label' => 'Student Development Programme', 'icon' => 'graduation-cap', 'href' => '/student-development-programme', 'style' => 'ghost', 'row' => 0],
                 ['label' => 'Study Abroad', 'icon' => 'globe', 'href' => '/study-abroad', 'style' => 'orange', 'row' => 0],
             ],
         ];

@@ -127,6 +127,14 @@ Route::post('/loan-accommodation/lead', [LoanAccoController::class, 'lead'])
 // result opens a WhatsApp / email "connect with a counsellor" popup.
 Route::get('/visa', [PageController::class, 'visa'])->name('visa');
 
+// Student Development Programme — the skill-track landing page reached from the
+// home hero's "Student Development Programme" button (HeroContent back-fills
+// that href on read). Fully static: enrolment, payment and certification all
+// happen on the partner platform the cards link out to, so there is no form and
+// no lead capture here — the advisor route is the shared /contact page.
+Route::get('/student-development-programme', [PageController::class, 'studentDevelopment'])
+    ->name('student-development');
+
 // AI Visa Mock Interview — a self-contained, browser-based mock-interview tool
 // (Student Hub). The free round is capped at 10 questions; unlocking the full
 // interview opens a popup that captures contact details, recorded as a lead in
