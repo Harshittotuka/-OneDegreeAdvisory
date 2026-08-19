@@ -209,6 +209,7 @@
   #sdp-page .sdp-head h2{ font-size:clamp(30px,3.6vw,44px); margin-bottom:14px; }
   #sdp-page .sdp-head p{ font-size:17.5px; text-align:center; }
   #sdp-page .sdp-section{ padding:clamp(62px,8vw,96px) 0; }
+  #sdp-page #sdp-tracks{ scroll-margin-top:110px; }
 
   /* ── Buttons ── */
   #sdp-page .sdp-btn{ display:inline-flex; align-items:center; justify-content:center; gap:9px;
@@ -242,58 +243,138 @@
     transition:opacity .8s var(--sdp-in), transform .8s var(--sdp-in); }
   html.js #sdp-page .sdp-reveal.is-in{ opacity:1; transform:none; }
 
-  /* ══════════════════ Hero ══════════════════ */
-  #sdp-page .sdp-hero{ position:relative; overflow:hidden;
-    background:radial-gradient(120% 90% at 50% -10%, var(--sdp-navy-lift) 0%, var(--sdp-navy-mid) 42%, var(--sdp-navy) 100%); }
-  #sdp-page .sdp-hero__layer{ position:absolute; inset:0; pointer-events:none; }
-  /* The receding grid: two repeating gradients on one element, rotated into
-     perspective and drifting on background-position. Masked so the lines fade
-     out before they reach the copy. */
-  #sdp-page .sdp-hero__grid{
-    background-image:
-      repeating-linear-gradient(90deg, rgba(255,255,255,.13) 0 1px, transparent 1px 74px),
-      repeating-linear-gradient(0deg,  rgba(255,255,255,.13) 0 1px, transparent 1px 74px);
-    transform:perspective(700px) rotateX(62deg) scale(2.4); transform-origin:50% 100%;
-    -webkit-mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.35) 46%, transparent 78%);
-    mask-image:linear-gradient(to top, #000 0%, rgba(0,0,0,.35) 46%, transparent 78%);
-    animation:sdpGrid 9s linear infinite; will-change:background-position;
+  /* Hero redesign: an editorial programme introduction paired with a concrete
+     three-step roadmap. The visual explains the offer instead of acting as an
+     abstract technology backdrop, while the two CTAs make the next step clear. */
+  #sdp-page .sdp-hero{
+    position:relative; isolation:isolate; overflow:hidden; perspective:1500px;
+    perspective-origin:66% 46%;
+    min-height:clamp(600px,72vh,720px); display:flex; align-items:center;
+    background:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+      radial-gradient(85% 125% at 12% 30%, #2b2092 0%, #17106d 42%, #090047 100%);
+    background-size:72px 72px,72px 72px,auto;
   }
-  #sdp-page .sdp-hero__orbs span{ position:absolute; border-radius:50%; filter:blur(66px);
-    opacity:.42; will-change:transform; }
-  #sdp-page .sdp-hero__orbs span:nth-child(1){ top:-14%; left:-6%; width:46%; height:70%;
-    background:radial-gradient(circle at center, rgba(111,130,255,.6), rgba(111,130,255,0) 70%);
-    animation:sdpDrift 17s ease-in-out infinite; }
-  #sdp-page .sdp-hero__orbs span:nth-child(2){ top:-24%; right:-8%; width:44%; height:74%;
-    background:radial-gradient(circle at center, rgba(255,94,50,.42), rgba(255,94,50,0) 70%);
-    animation:sdpDrift 21s ease-in-out infinite 3s; }
-  #sdp-page .sdp-hero__orbs span:nth-child(3){ bottom:-30%; left:30%; width:44%; height:66%;
-    background:radial-gradient(circle at center, rgba(175,200,255,.34), rgba(175,200,255,0) 70%);
-    animation:sdpDrift 24s ease-in-out infinite 6s; }
-  /* Floating skill chips. Decorative and dropped below 900px, where they would
-     either overlap the headline or shrink into noise. */
-  #sdp-page .sdp-hero__chip{ position:absolute; display:inline-flex; align-items:center; gap:8px;
-    padding:9px 15px; border-radius:999px; font-size:13px; font-weight:700; color:#fff;
-    background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.2);
-    backdrop-filter:blur(6px); white-space:nowrap; will-change:transform;
-    animation:sdpFloat 8s ease-in-out infinite; }
-  #sdp-page .sdp-hero__chip i{ width:15px; height:15px; color:#ffb59d; }
-  #sdp-page .sdp-hero__chip:nth-of-type(1){ top:19%; left:5%;  animation-delay:0s; }
-  #sdp-page .sdp-hero__chip:nth-of-type(2){ top:66%; left:8%;  animation-delay:1.4s; }
-  #sdp-page .sdp-hero__chip:nth-of-type(3){ top:26%; right:6%; animation-delay:.7s; }
-  #sdp-page .sdp-hero__chip:nth-of-type(4){ top:71%; right:9%; animation-delay:2.1s; }
-  #sdp-page .sdp-hero__inner{ position:relative; z-index:5; max-width:1180px; margin:0 auto;
-    padding:clamp(84px,11vw,124px) var(--sdp-pad) clamp(72px,9vw,100px);
-    display:flex; flex-direction:column; align-items:center; text-align:center; }
-  #sdp-page .sdp-hero .sdp-eyebrow{ color:#ffb59d; }
-  /* Capped in ch, not px: the display serif runs narrow, so a px cap tuned at the
-     top of the clamp wraps to five lines at the bottom of it. */
-  #sdp-page .sdp-hero h1{ color:#fff; font-size:clamp(38px,5.6vw,64px); max-width:24ch; margin-bottom:20px; }
-  #sdp-page .sdp-hero h1 em{ font-style:italic; color:#ffb59d; }
-  #sdp-page .sdp-hero__lead{ color:rgba(255,255,255,.8); font-size:clamp(16px,1.4vw,18.5px);
-    max-width:62ch; text-align:center; margin-bottom:30px; }
-  @keyframes sdpGrid{ from{ background-position:0 0, 0 0; } to{ background-position:0 74px, 0 74px; } }
-  @keyframes sdpDrift{ 0%,100%{ transform:translate3d(0,0,0) scale(1); } 50%{ transform:translate3d(3%,5%,0) scale(1.1); } }
-  @keyframes sdpFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }
+  #sdp-page .sdp-hero::before{ content:""; position:absolute; z-index:-1; inset:0;
+    background:linear-gradient(90deg,rgba(7,0,55,.08),rgba(7,0,55,.44)); }
+  #sdp-page .sdp-hero::after{ content:""; position:absolute; z-index:4; left:0; right:0; bottom:0;
+    height:4px; background:linear-gradient(90deg,var(--sdp-orange) 0 19%,rgba(255,94,50,.18) 19% 100%); }
+  #sdp-page .sdp-hero__backdrop{ position:absolute; inset:0; z-index:-1; pointer-events:none; }
+  #sdp-page .sdp-hero__backdrop::before{ content:""; position:absolute; width:620px; height:620px;
+    right:-170px; top:-240px; border:1px solid rgba(255,255,255,.08); border-radius:50%;
+    box-shadow:0 0 0 74px rgba(255,255,255,.025),0 0 0 148px rgba(255,255,255,.018); }
+  #sdp-page .sdp-hero__orb{ position:absolute; border-radius:50%; filter:blur(2px); }
+  #sdp-page .sdp-hero__orb--one{ width:290px; height:290px; right:11%; bottom:-205px;
+    background:rgba(255,94,50,.22); filter:blur(45px); }
+  #sdp-page .sdp-hero__orb--two{ width:170px; height:170px; left:-85px; top:13%;
+    background:rgba(123,142,255,.22); filter:blur(45px); }
+  #sdp-page .sdp-hero__wrap{ width:min(100%,1440px); margin:0 auto; padding:clamp(58px,7vw,92px) var(--sdp-pad);
+    display:grid; grid-template-columns:minmax(0,1.07fr) minmax(420px,.93fr); align-items:center;
+    gap:clamp(58px,7vw,112px); transform-style:preserve-3d; }
+  #sdp-page .sdp-hero__copy{ position:relative; z-index:2; max-width:680px;
+    animation:sdpHeroCopy .72s var(--sdp-in) both; }
+  #sdp-page .sdp-hero__eyebrow{ display:inline-flex; align-items:center; gap:11px; margin:0 0 24px;
+    color:rgba(255,255,255,.74); font-size:11.5px; font-weight:800; line-height:1;
+    letter-spacing:.17em; text-transform:uppercase; }
+  #sdp-page .sdp-hero__eyebrow span{ display:grid; place-items:center; width:30px; height:30px;
+    color:#fff; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); border-radius:50%; }
+  #sdp-page .sdp-hero__eyebrow i{ width:13px; height:13px; }
+  #sdp-page .sdp-hero h1{ max-width:12.5ch; margin:0 0 25px; transform:none;
+    color:#fff; font-size:clamp(52px,6.2vw,84px); font-weight:700; line-height:.94;
+    letter-spacing:-.035em; text-shadow:none; }
+  #sdp-page .sdp-hero h1 em{ display:inline; color:#ffad92; font-weight:600; }
+  #sdp-page .sdp-hero__lead{ max-width:58ch; margin:0; transform:none;
+    color:rgba(255,255,255,.75); font-size:clamp(16px,1.25vw,18px); line-height:1.7; text-align:left; }
+  #sdp-page .sdp-hero__actions{ display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
+  #sdp-page .sdp-hero__actions .sdp-btn{ min-height:50px; }
+  #sdp-page .sdp-hero__actions .sdp-btn--outline{ border-color:rgba(255,255,255,.3); background:rgba(255,255,255,.04); }
+  #sdp-page .sdp-hero__actions .sdp-btn--outline:hover{
+    color:#fff; background:rgba(255,94,50,.14); border-color:#ffad92;
+    box-shadow:0 14px 30px -18px rgba(255,94,50,.9); }
+  #sdp-page .sdp-hero__proof{ display:flex; flex-wrap:wrap; gap:12px 25px; padding:25px 0 0;
+    margin:30px 0 0; border-top:1px solid rgba(255,255,255,.12); list-style:none; }
+  #sdp-page .sdp-hero__proof li{ display:flex; align-items:center; gap:8px; color:rgba(255,255,255,.66);
+    font-size:12.5px; font-weight:600; }
+  #sdp-page .sdp-hero__proof li > i{ width:15px; height:15px; color:#ffad92; }
+  #sdp-page .sdp-hero__proof strong{ color:#fff; font-size:14px; }
+
+  #sdp-page .sdp-hero__visual{ position:relative; z-index:2; width:100%; max-width:530px; margin-left:auto;
+    transform-style:preserve-3d;
+    animation:sdpHeroVisual .8s .1s var(--sdp-in) backwards; }
+  #sdp-page .sdp-hero__tilt{
+    --sdp-tilt-x:1.5deg; --sdp-tilt-y:-4deg; --sdp-depth:34px; --sdp-lift:0px;
+    --sdp-glow-x:72%; --sdp-glow-y:18%; --sdp-sheen:.1;
+    position:relative; width:100%; transform-style:preserve-3d; will-change:transform;
+    transform:translate3d(0,var(--sdp-lift),var(--sdp-depth))
+      rotateX(var(--sdp-tilt-x)) rotateY(var(--sdp-tilt-y)); }
+  #sdp-page .sdp-hero__tilt::before{ content:""; position:absolute; z-index:-1;
+    inset:18px -18px -18px 18px; border:1px solid rgba(255,255,255,.13); border-radius:9px;
+    background:linear-gradient(145deg,rgba(96,82,190,.24),rgba(7,0,56,.42));
+    box-shadow:24px 34px 70px -28px rgba(0,0,25,.78);
+    transform:translateZ(-42px); }
+  #sdp-page .sdp-hero__tilt::after{ content:""; position:absolute; z-index:-2;
+    inset:37px -34px -34px 37px; border:1px solid rgba(255,173,146,.13); border-radius:10px;
+    transform:translateZ(-76px); }
+  #sdp-page .sdp-roadmap{ position:relative; overflow:hidden; padding:clamp(26px,3vw,38px);
+    color:var(--sdp-navy); background:rgba(255,253,249,.96); border:1px solid rgba(255,255,255,.72);
+    border-radius:8px; box-shadow:0 38px 90px -36px rgba(0,0,25,.72),0 0 0 8px rgba(255,255,255,.04);
+    transform:translateZ(18px); }
+  #sdp-page .sdp-roadmap::before{ content:""; position:absolute; width:180px; height:180px;
+    right:-76px; top:-82px; border:36px solid rgba(255,94,50,.075); border-radius:50%; }
+  #sdp-page .sdp-roadmap::after{ content:""; position:absolute; z-index:0; inset:0; pointer-events:none;
+    opacity:var(--sdp-sheen); transition:opacity .35s ease;
+    background:radial-gradient(340px circle at var(--sdp-glow-x) var(--sdp-glow-y),
+      rgba(255,255,255,.7),rgba(255,173,146,.1) 38%,transparent 70%); }
+  #sdp-page .sdp-roadmap__top,
+  #sdp-page .sdp-roadmap__steps,
+  #sdp-page .sdp-roadmap__foot{ z-index:1; }
+  #sdp-page .sdp-roadmap__top{ position:relative; display:flex; align-items:flex-start; justify-content:space-between;
+    gap:20px; padding-bottom:26px; border-bottom:1px solid #e6e1db; }
+  #sdp-page .sdp-roadmap__kicker{ display:block; margin-bottom:7px; color:var(--sdp-orange);
+    font-size:10.5px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
+  #sdp-page .sdp-roadmap h2{ color:var(--sdp-navy); font-size:clamp(29px,3vw,39px); line-height:1; }
+  #sdp-page .sdp-roadmap__mark{ flex:0 0 43px; display:grid; place-items:center; width:43px; height:43px;
+    color:#fff; background:var(--sdp-orange); border-radius:50%; box-shadow:0 10px 24px -10px rgba(255,94,50,.7); }
+  #sdp-page .sdp-roadmap__mark i{ width:20px; height:20px; }
+  #sdp-page .sdp-roadmap__steps{ position:relative; padding:10px 0; margin:0; list-style:none; }
+  #sdp-page .sdp-roadmap__steps::before{ content:""; position:absolute; top:54px; bottom:54px;
+    left:63px; width:1px; background:linear-gradient(var(--sdp-orange),#d9d3cb); }
+  #sdp-page .sdp-roadmap__steps li{ position:relative; display:grid;
+    grid-template-columns:28px 46px minmax(0,1fr) 20px; align-items:center; gap:11px;
+    min-height:90px; border-bottom:1px solid #ebe7e1; }
+  #sdp-page .sdp-roadmap__steps li:last-child{ border-bottom:0; }
+  #sdp-page .sdp-roadmap__number{ align-self:start; padding-top:27px; color:#9b96aa;
+    font-size:9.5px; font-weight:800; letter-spacing:.08em; }
+  #sdp-page .sdp-roadmap__icon{ position:relative; z-index:1; display:grid; place-items:center;
+    width:46px; height:46px; color:var(--sdp-navy); background:#f3efea; border:1px solid #e5dfd7; border-radius:50%; }
+  #sdp-page .sdp-roadmap__steps li:nth-child(2) .sdp-roadmap__icon{ color:#fff; background:var(--sdp-navy); border-color:var(--sdp-navy); }
+  #sdp-page .sdp-roadmap__icon i{ width:19px; height:19px; }
+  #sdp-page .sdp-roadmap__text{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+  #sdp-page .sdp-roadmap__text strong{ color:var(--sdp-navy); font-size:14px; line-height:1.35; }
+  #sdp-page .sdp-roadmap__text small{ color:#706d79; font-size:11.5px; line-height:1.45; }
+  #sdp-page .sdp-roadmap__check{ width:17px; height:17px; color:var(--sdp-orange); }
+  #sdp-page .sdp-roadmap__foot{ position:relative; display:flex; align-items:center; gap:9px; padding-top:18px;
+    color:#77727d; font-size:10.5px; }
+  #sdp-page .sdp-roadmap__foot strong{ color:var(--sdp-navy); font-size:12px; letter-spacing:.04em; }
+  #sdp-page .sdp-roadmap__line{ flex:1; height:1px; background:#ddd7cf; }
+  #sdp-page .sdp-hero__skill{ position:absolute; z-index:3; display:inline-flex; align-items:center; gap:7px;
+    padding:10px 13px; color:#fff; background:#21147e; border:1px solid rgba(255,255,255,.24);
+    border-radius:4px; box-shadow:0 14px 34px -16px rgba(0,0,30,.9); font-size:11px; font-weight:700;
+    transform:translateZ(68px); animation:sdpSkillFloat 5s ease-in-out infinite; }
+  #sdp-page .sdp-hero__skill i{ width:14px; height:14px; color:#ffad92; }
+  #sdp-page .sdp-hero__skill--ai{ top:-25px; right:38px; }
+  #sdp-page .sdp-hero__skill--code{ left:-52px; top:46%; animation-delay:-1.7s; }
+  #sdp-page .sdp-hero__skill--data{ right:-25px; bottom:-20px; animation-delay:-3.2s; }
+  @keyframes sdpHeroCopy{ from{ opacity:0; transform:translateY(24px); } to{ opacity:1; transform:none; } }
+  @keyframes sdpHeroVisual{
+    from{ opacity:0; transform:translateY(26px) scale(.985); }
+    to{ opacity:1; transform:none; }
+  }
+  @keyframes sdpSkillFloat{
+    0%,100%{ transform:translateZ(68px) translateY(0); }
+    50%{ transform:translateZ(68px) translateY(-7px); }
+  }
 
   /* ══════════════════ Track mosaic ══════════════════ */
   /* minmax(0,1fr), not a bare 1fr: `1fr` means minmax(AUTO,1fr), so a wide
@@ -551,6 +632,21 @@
   #sdp-page .sdp-card--mini .sdp-card__meta{ margin-top:6px; padding-top:0; font-size:10.5px; }
 
   /* ══════════════════ Responsive ══════════════════ */
+  @media (max-width:1100px){
+    #sdp-page .sdp-hero__wrap{ grid-template-columns:minmax(0,1fr) 420px; gap:44px; }
+    #sdp-page .sdp-hero__skill{ display:none; }
+  }
+  @media (max-width:900px){
+    #sdp-page .sdp-hero{ min-height:0; perspective:none; }
+    #sdp-page .sdp-hero__wrap{ grid-template-columns:1fr; gap:58px; padding-block:68px 82px; }
+    #sdp-page .sdp-hero__copy{ max-width:690px; }
+    #sdp-page .sdp-hero h1{ max-width:100%; }
+    #sdp-page .sdp-hero__visual{ max-width:600px; margin:0; }
+    #sdp-page .sdp-hero__tilt{ transform:none; will-change:auto; }
+    #sdp-page .sdp-hero__tilt::before{ inset:10px -8px -10px 8px; transform:none; }
+    #sdp-page .sdp-hero__tilt::after{ display:none; }
+    #sdp-page .sdp-roadmap{ transform:none; }
+  }
   @media (max-width:1079px){
     /* Four columns: the wide branch cards go full width and everything else
        pairs up. Row spans collapse so a card is only ever as tall as its copy. */
@@ -572,12 +668,25 @@
     #sdp-page .sdp-mosaic.is-collapsed{ grid-template-columns:repeat(4,minmax(0,1fr)); }
     #sdp-page .sdp-mosaic.is-collapsed .sdp-card--branch{ grid-column:1 / -1; }
   }
-  /* The chips are pinned to the hero's outer edges; below this the centred
-     headline reaches them and the two overlap, so they go rather than shrink. */
-  @media (max-width:1180px){
-    #sdp-page .sdp-hero__chip{ display:none; }
-  }
   @media (max-width:680px){
+    #sdp-page .sdp-hero{ background-size:52px 52px,52px 52px,auto; }
+    #sdp-page .sdp-hero__wrap{ gap:46px; padding-block:54px 68px; }
+    #sdp-page .sdp-hero__eyebrow{ margin-bottom:20px; font-size:10px; letter-spacing:.14em; }
+    #sdp-page .sdp-hero h1{ margin-bottom:20px; font-size:clamp(46px,14.5vw,64px); }
+    #sdp-page .sdp-hero__lead{ font-size:15.5px; line-height:1.65; }
+    #sdp-page .sdp-hero__actions{ margin-top:26px; }
+    #sdp-page .sdp-hero__proof{ display:grid; grid-template-columns:1fr 1fr; gap:13px 16px; margin-top:26px; padding-top:22px; }
+    #sdp-page .sdp-roadmap{ padding:24px 20px 20px; }
+    #sdp-page .sdp-roadmap__top{ padding-bottom:21px; }
+    #sdp-page .sdp-roadmap__mark{ width:40px; height:40px; flex-basis:40px; }
+    #sdp-page .sdp-roadmap__steps li{ grid-template-columns:23px 42px minmax(0,1fr); gap:9px; min-height:91px; }
+    #sdp-page .sdp-roadmap__steps::before{ left:53px; }
+    #sdp-page .sdp-roadmap__icon{ width:42px; height:42px; }
+    #sdp-page .sdp-roadmap__check{ display:none; }
+    #sdp-page .sdp-roadmap__text strong{ font-size:13px; }
+    #sdp-page .sdp-roadmap__text small{ font-size:10.5px; }
+    #sdp-page .sdp-roadmap__foot{ flex-wrap:wrap; }
+    #sdp-page .sdp-roadmap__foot .sdp-roadmap__line{ min-width:30px; }
     #sdp-page .sdp-mosaic{ grid-template-columns:1fr; grid-auto-rows:auto; gap:12px; }
     #sdp-page .sdp-card,
     #sdp-page .sdp-card--branch,
@@ -599,9 +708,10 @@
   }
 
   @media (prefers-reduced-motion:reduce){
-    #sdp-page .sdp-hero__grid,
-    #sdp-page .sdp-hero__orbs span,
-    #sdp-page .sdp-hero__chip,
+    #sdp-page .sdp-hero__copy,
+    #sdp-page .sdp-hero__visual,
+    #sdp-page .sdp-hero__skill{ animation:none; }
+    #sdp-page .sdp-hero__tilt{ will-change:auto; }
     #sdp-page .sdp-marquee__track{ animation:none; }
     html.js #sdp-page .sdp-reveal{ opacity:1; transform:none; transition:none; }
     #sdp-page .sdp-faq__a, #sdp-page .sdp-faq__a.is-open{ transition:none; }
@@ -620,24 +730,93 @@
 <div id="sdp-page">
 
   {{-- ═══════════════════ Hero ═══════════════════ --}}
-  <section class="sdp-hero">
-    <div class="sdp-hero__layer sdp-hero__grid" aria-hidden="true"></div>
-    <div class="sdp-hero__layer sdp-hero__orbs" aria-hidden="true"><span></span><span></span><span></span></div>
-
-    <div class="sdp-hero__layer" aria-hidden="true">
-      <span class="sdp-hero__chip"><i data-lucide="compass"></i> Programme direction</span>
-      <span class="sdp-hero__chip"><i data-lucide="book-open-check"></i> Academic readiness</span>
-      <span class="sdp-hero__chip"><i data-lucide="file-pen-line"></i> Application clarity</span>
-      <span class="sdp-hero__chip"><i data-lucide="sparkles"></i> Future-ready skills</span>
+  <section class="sdp-hero" aria-labelledby="sdp-hero-title">
+    <div class="sdp-hero__backdrop" aria-hidden="true">
+      <span class="sdp-hero__orb sdp-hero__orb--one"></span>
+      <span class="sdp-hero__orb sdp-hero__orb--two"></span>
     </div>
 
-    <div class="sdp-hero__inner">
-      <p class="sdp-eyebrow">Student Development Programme</p>
-      <h1>Build your <em>skills.</em></h1>
-      <p class="sdp-hero__lead">
-        Explore practical learning that can help you identify the right specialisation,
-        understand overseas curricula and present a clearer academic direction in university applications.
-      </p>
+    <div class="sdp-hero__wrap">
+      <div class="sdp-hero__copy">
+        <p class="sdp-hero__eyebrow">
+          <span><i data-lucide="sparkles"></i></span>
+          Student Development Programme
+        </p>
+        <h1 id="sdp-hero-title">Turn curiosity into <em>capability.</em></h1>
+        <p class="sdp-hero__lead">
+          Explore practical technology tracks that help you choose a specialisation,
+          understand university curricula and tell a stronger academic story.
+        </p>
+
+        <div class="sdp-hero__actions">
+          <a class="sdp-btn sdp-btn--orange" href="#sdp-tracks">
+            Explore skill tracks <i data-lucide="arrow-down-right"></i>
+          </a>
+          <a class="sdp-btn sdp-btn--outline" href="{{ route('contact') }}">
+            Talk to an advisor <i data-lucide="arrow-up-right"></i>
+          </a>
+        </div>
+
+        <ul class="sdp-hero__proof" aria-label="Programme highlights">
+          <li><i data-lucide="hammer"></i><span>Practical learning</span></li>
+          <li><i data-lucide="graduation-cap"></i><span>Study-abroad focused</span></li>
+        </ul>
+      </div>
+
+      <div class="sdp-hero__visual" role="group" aria-label="A three-step student development roadmap">
+        <div class="sdp-hero__tilt" data-sdp-hero-tilt>
+        <span class="sdp-hero__skill sdp-hero__skill--ai"><i data-lucide="brain-circuit"></i> AI &amp; ML</span>
+        <span class="sdp-hero__skill sdp-hero__skill--code"><i data-lucide="code-2"></i> Full stack</span>
+        <span class="sdp-hero__skill sdp-hero__skill--data"><i data-lucide="chart-no-axes-combined"></i> Data &amp; UX</span>
+
+        <div class="sdp-roadmap">
+          <div class="sdp-roadmap__top">
+            <div>
+              <span class="sdp-roadmap__kicker">Your development roadmap</span>
+              <h2>Skills with a purpose.</h2>
+            </div>
+            <span class="sdp-roadmap__mark"><i data-lucide="route"></i></span>
+          </div>
+
+          <ol class="sdp-roadmap__steps">
+            <li>
+              <span class="sdp-roadmap__number">01</span>
+              <span class="sdp-roadmap__icon"><i data-lucide="compass"></i></span>
+              <span class="sdp-roadmap__text">
+                <strong>Find your direction</strong>
+                <small>Explore the fields that fit your interests.</small>
+              </span>
+              <i class="sdp-roadmap__check" data-lucide="check"></i>
+            </li>
+            <li>
+              <span class="sdp-roadmap__number">02</span>
+              <span class="sdp-roadmap__icon"><i data-lucide="terminal-square"></i></span>
+              <span class="sdp-roadmap__text">
+                <strong>Build practical capability</strong>
+                <small>Learn the tools and language of your field.</small>
+              </span>
+              <i class="sdp-roadmap__check" data-lucide="check"></i>
+            </li>
+            <li>
+              <span class="sdp-roadmap__number">03</span>
+              <span class="sdp-roadmap__icon"><i data-lucide="file-pen-line"></i></span>
+              <span class="sdp-roadmap__text">
+                <strong>Strengthen your academic story</strong>
+                <small>Apply with clearer goals and better context.</small>
+              </span>
+              <i class="sdp-roadmap__check" data-lucide="check"></i>
+            </li>
+          </ol>
+
+          <div class="sdp-roadmap__foot">
+            <span>Learning partner</span>
+            <strong>Infolith</strong>
+            <span class="sdp-roadmap__line"></span>
+            <span>One plan. The right next step.</span>
+          </div>
+        </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -803,6 +982,89 @@
   if (!root) return;
 
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Cursor-responsive hero depth. The entrance animation lives on the outer
+     visual while this inner layer owns the tilt, so the two transforms never
+     compete. Values are eased in one rAF loop and the loop sleeps once settled. */
+  var hero = root.querySelector('.sdp-hero');
+  var heroTilt = root.querySelector('[data-sdp-hero-tilt]');
+  var finePointer = window.matchMedia
+    && window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 901px)').matches;
+
+  if (hero && heroTilt && finePointer && !reduceMotion) {
+    var home = { rx: 1.5, ry: -4, depth: 34, lift: 0, gx: 72, gy: 18, sheen: 0.10 };
+    var current = Object.assign({}, home);
+    var target = Object.assign({}, home);
+    var heroFrame = 0;
+    var lastFrame = 0;
+    var heroBox = null;
+
+    var renderHeroTilt = function () {
+      heroTilt.style.setProperty('--sdp-tilt-x', current.rx.toFixed(3) + 'deg');
+      heroTilt.style.setProperty('--sdp-tilt-y', current.ry.toFixed(3) + 'deg');
+      heroTilt.style.setProperty('--sdp-depth', current.depth.toFixed(2) + 'px');
+      heroTilt.style.setProperty('--sdp-lift', current.lift.toFixed(2) + 'px');
+      heroTilt.style.setProperty('--sdp-glow-x', current.gx.toFixed(2) + '%');
+      heroTilt.style.setProperty('--sdp-glow-y', current.gy.toFixed(2) + '%');
+      heroTilt.style.setProperty('--sdp-sheen', current.sheen.toFixed(3));
+    };
+
+    var animateHeroTilt = function (time) {
+      var elapsed = lastFrame ? Math.min(32, time - lastFrame) : 16;
+      lastFrame = time;
+      var ease = 1 - Math.exp(-elapsed / 82);
+      var largestDelta = 0;
+
+      Object.keys(current).forEach(function (key) {
+        var delta = target[key] - current[key];
+        current[key] += delta * ease;
+        largestDelta = Math.max(largestDelta, Math.abs(delta));
+      });
+
+      renderHeroTilt();
+      if (largestDelta > 0.003) {
+        heroFrame = window.requestAnimationFrame(animateHeroTilt);
+      } else {
+        current = Object.assign({}, target);
+        renderHeroTilt();
+        heroFrame = 0;
+        lastFrame = 0;
+      }
+    };
+
+    var startHeroTilt = function () {
+      if (!heroFrame) heroFrame = window.requestAnimationFrame(animateHeroTilt);
+    };
+
+    hero.addEventListener('pointerenter', function () {
+      heroBox = hero.getBoundingClientRect();
+    }, { passive: true });
+
+    hero.addEventListener('pointermove', function (event) {
+      heroBox = heroBox || hero.getBoundingClientRect();
+      if (!heroBox.width || !heroBox.height) return;
+
+      var nx = Math.max(-1, Math.min(1, ((event.clientX - heroBox.left) / heroBox.width - .5) * 2));
+      var ny = Math.max(-1, Math.min(1, ((event.clientY - heroBox.top) / heroBox.height - .5) * 2));
+
+      target.rx = -ny * 3.1;
+      target.ry = nx * 5.4 - .8;
+      target.depth = 45;
+      target.lift = -3;
+      target.gx = (nx + 1) * 50;
+      target.gy = (ny + 1) * 50;
+      target.sheen = .22;
+      startHeroTilt();
+    }, { passive: true });
+
+    hero.addEventListener('pointerleave', function () {
+      heroBox = null;
+      target = Object.assign({}, home);
+      startHeroTilt();
+    }, { passive: true });
+
+    window.addEventListener('resize', function () { heroBox = null; }, { passive: true });
+  }
 
   /* ─────────────── Reveal on scroll · section heads ─────────────── */
   var reveals = root.querySelectorAll('.sdp-reveal');
