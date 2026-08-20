@@ -73,8 +73,16 @@ class ReferralProgramTest extends TestCase
         }
     }
 
+    /** Just the page's own markup — the shared navbar is not what these assert. */
+    private function ownMarkup(string $html): string
+    {
+        $own = substr($html, (int) strpos($html, 'id="ref-page"'));
+
+        return substr($own, 0, (int) strpos($own, '</main>'));
+    }
+
     /**
-     * The 23 flags used to be 23 cross-origin requests from flagcdn.com — and 46
+     * The flags used to be 23 cross-origin requests from flagcdn.com — and 46
      * <img> elements once the marquee duplicates the list. They are now one local
      * sprite, positioned by index.
      */
@@ -88,16 +96,65 @@ class ReferralProgramTest extends TestCase
         // Scoped to this page's own container: the shared navbar's Destinations
         // mega-menu still loads its flags from flagcdn on every page of the site,
         // which is pre-existing chrome and not what this test is about.
-        $own = substr($html, (int) strpos($html, 'id="ref-page"'));
-        $own = substr($own, 0, (int) strpos($own, '</main>'));
+        $own = $this->ownMarkup($html);
         $this->assertDoesNotMatchRegularExpression('~<(img|source)[^>]+flagcdn~', $own);
 
         // The sprite URL lives in the page's CSS; the elements only carry their
-        // cell index. All 23 marquee flags are rendered twice (the marquee needs
-        // a duplicate copy to loop seamlessly), plus 8 on the wheel.
+        // cell index, and the sheet keeps all 23 cells whatever the page features.
         $this->assertStringContainsString('--rf-flag-cells:23', $html);
         $this->assertStringContainsString('class="rf-cloth rf-flag" style="--i:0"', $own);
-        $this->assertSame(23 * 2 + 8, substr_count($own, 'rf-flag" style="--i:'));
+
+        // Every marquee flag is rendered twice (the loop needs a duplicate copy),
+        // plus the wheel's eight.
+        $marquee = substr_count($own, 'class="rf-cloth rf-flag" style="--i:');
+        $this->assertSame($marquee + 8, substr_count($own, 'rf-flag" style="--i:'));
+        $this->assertSame(0, $marquee % 2);
+    }
+
+    /**
+     * The marquee, popup and wheel may only feature destinations the site has a
+     * country guide for. The page used to advertise eight (Singapore, Sweden,
+     * Norway, Denmark, Switzerland, Austria, Japan, South Korea) that the
+     * Destinations nav has no guide behind, which is what this pins shut.
+     */
+    public function test_featured_destinations_all_have_a_country_guide(): void
+    {
+        $own = $this->ownMarkup($this->get(route('referral'))->assertOk()->getContent());
+
+        preg_match_all('~data-rf-country="([a-z]{2})"~', $own, $matches);
+        $codes = array_values(array_unique($matches[1]));
+        $this->assertNotEmpty($codes);
+
+        $guides = [];
+        foreach (app(\App\Support\StudyLocationContent::class)->destinations() as $destination) {
+            $guides[] = ($destination['eu'] ?? false)
+                ? 'eu'
+                : strtolower((string) ($destination['flag'] ?? ''));
+        }
+
+        foreach ($codes as $code) {
+            $this->assertContains($code, $guides, "Featured destination '{$code}' has no country guide.");
+        }
+
+        foreach (['sg', 'se', 'no', 'dk', 'ch', 'at', 'jp', 'kr'] as $orphan) {
+            $this->assertNotContains($orphan, $codes);
+        }
+    }
+
+    /** The form's destination select may not offer a country with no guide either. */
+    public function test_the_form_offers_no_destination_without_a_country_guide(): void
+    {
+        $names = [];
+        foreach (app(\App\Support\StudyLocationContent::class)->destinations() as $destination) {
+            $names[] = (string) ($destination['name'] ?? '');
+        }
+
+        foreach (ReferralController::COUNTRIES as $country) {
+            if ($country === 'Other / not sure yet') {
+                continue;
+            }
+            $this->assertContains($country, $names, "Form offers '{$country}' with no country guide.");
+        }
     }
 
     public function test_the_page_pulls_no_third_party_script_or_stylesheet(): void

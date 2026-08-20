@@ -165,7 +165,8 @@
               <strong>{{ config('site.name') }}</strong><br>
               Website: <a href="{{ url('/') }}" rel="noopener">https://onedegreeadvisory.com</a><br>
               Email: <a href="mailto:{{ config('site.contact.email') }}">{{ config('site.contact.email') }}</a><br>
-              Phone: <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener">{{ config('site.contact.phone') }}</a>
+              Phone: <a href="tel:+{{ config('site.contact.phone_e164') }}">{{ config('site.contact.phone') }}</a>
+              (<a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener">WhatsApp</a>)
             </p>
           </section>
 

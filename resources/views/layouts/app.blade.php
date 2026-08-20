@@ -258,7 +258,13 @@
           'name' => 'Education advisory services',
           'itemListElement' => $serviceOffers,
         ] : null,
-        'sameAs' => array_values(array_filter(array_column(config('site.socials', []), 'href'))),
+        // Profile URLs only — the socials list also carries the tel: dialer
+        // entry, and sameAs must not contain it (the number is already on
+        // telephone / contactPoint above).
+        'sameAs' => array_values(array_filter(
+          array_column(config('site.socials', []), 'href'),
+          fn ($href) => is_string($href) && str_starts_with($href, 'http')
+        )),
       ]);
 
       $orgJsonLd = \App\Support\Seo::jsonLd(['@context' => 'https://schema.org', '@graph' => [

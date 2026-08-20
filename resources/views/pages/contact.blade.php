@@ -26,9 +26,18 @@
                   <span>Request a free review</span>
                   <i data-lucide="arrow-up-right"></i>
                 </a>
-                <a class="contact-head-phone" href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-                  <i data-lucide="phone"></i>
+                <a class="contact-head-phone" href="tel:+{{ config('site.contact.phone_e164') }}" aria-label="Call {{ config('site.name') }} on {{ config('site.contact.phone') }}">
+                  <i data-lucide="phone-call"></i>
                   <span>{{ config('site.contact.phone') }}</span>
+                </a>
+                {{-- Glyph only on desktop, where the three pills share one
+                     458-560px column and a spelled-out label pushed this one
+                     onto a line of its own. aria-label carries the name; the
+                     word itself returns below 920px, where the pills go
+                     full-width. --}}
+                <a class="contact-head-phone contact-head-phone--wa" href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat with {{ config('site.name') }} on WhatsApp">
+                  <i data-lucide="message-circle"></i>
+                  <span class="contact-head-phone__label">WhatsApp</span>
                 </a>
               </div>
             </div>
@@ -44,7 +53,9 @@
                   <i data-lucide="phone"></i>
                   <div>
                     <strong>Phone</strong>
-                    <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">{{ config('site.contact.phone') }}</a>
+                    <a href="tel:+{{ config('site.contact.phone_e164') }}" aria-label="Call {{ config('site.name') }} on {{ config('site.contact.phone') }}">{{ config('site.contact.phone') }}</a>
+                    <span aria-hidden="true">&middot;</span>
+                    <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener">WhatsApp</a>
                   </div>
                 </div>
                 <div class="contact-info-item">

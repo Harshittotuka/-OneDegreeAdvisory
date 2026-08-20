@@ -129,6 +129,9 @@
   #la-page .service-card.loan .go{color:var(--navy);}
   #la-page .service-card.stay .go{color:var(--orange);}
   #la-page .card-foot{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto;}
+  /* The foot holds two round actions now — dial and WhatsApp — so they are
+     grouped, leaving space-between to push the pair to the right as before. */
+  #la-page .foot-actions{display:flex; align-items:center; gap:8px; flex-shrink:0;}
   #la-page .wa-btn{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   #la-page .service-card.loan .wa-btn{background:var(--navy-soft); color:var(--navy);}
   #la-page .service-card.stay .wa-btn{background:var(--orange-soft); color:var(--orange);}
@@ -247,9 +250,14 @@
           <p>Collateral and non-collateral routes, matched to your family's financial profile — from application to disbursal.</p>
           <div class="card-foot">
             <a href="#loan" class="go">Apply for an education loan →</a>
-            <a href="https://wa.me/918233365888?text=Hi%2C%20I%27d%20like%20to%20talk%20to%20the%20education%20loan%20team." target="_blank" rel="noopener" class="wa-btn" title="Connect with the loan team on WhatsApp">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-            </a>
+            <span class="foot-actions">
+              <a href="tel:+918233365888" class="wa-btn" title="Call the education loan team" aria-label="Call the education loan team on +91 8233365888">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 20.5A16.5 16.5 0 0 1 3.5 8.95V6.2a1.7 1.7 0 0 1 1.7-1.7h2.36a1.7 1.7 0 0 1 1.68 1.44c.1.66.28 1.3.51 1.92a1.7 1.7 0 0 1-.38 1.79l-1 1a13.1 13.1 0 0 0 4.98 4.98l1-1a1.7 1.7 0 0 1 1.79-.38c.62.23 1.26.4 1.92.5a1.7 1.7 0 0 1 1.44 1.7v2.35a1.7 1.7 0 0 1-1.7 1.7h-2.75Z"/></svg>
+              </a>
+              <a href="https://wa.me/918233365888?text=Hi%2C%20I%27d%20like%20to%20talk%20to%20the%20education%20loan%20team." target="_blank" rel="noopener" class="wa-btn" title="Connect with the loan team on WhatsApp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </a>
+            </span>
           </div>
         </div>
         <div class="service-card stay">
@@ -260,9 +268,14 @@
           <p>Verified student housing near your university — studios, shared flats, residences and homestays, booked before you land.</p>
           <div class="card-foot">
             <a href="#accommodation" class="go">Find student accommodation →</a>
-            <a href="https://wa.me/918233365888?text=Hi%2C%20I%27d%20like%20to%20talk%20to%20the%20accommodation%20team." target="_blank" rel="noopener" class="wa-btn" title="Connect with the accommodation team on WhatsApp">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-            </a>
+            <span class="foot-actions">
+              <a href="tel:+918233365888" class="wa-btn" title="Call the accommodation team" aria-label="Call the accommodation team on +91 8233365888">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 20.5A16.5 16.5 0 0 1 3.5 8.95V6.2a1.7 1.7 0 0 1 1.7-1.7h2.36a1.7 1.7 0 0 1 1.68 1.44c.1.66.28 1.3.51 1.92a1.7 1.7 0 0 1-.38 1.79l-1 1a13.1 13.1 0 0 0 4.98 4.98l1-1a1.7 1.7 0 0 1 1.79-.38c.62.23 1.26.4 1.92.5a1.7 1.7 0 0 1 1.44 1.7v2.35a1.7 1.7 0 0 1-1.7 1.7h-2.75Z"/></svg>
+              </a>
+              <a href="https://wa.me/918233365888?text=Hi%2C%20I%27d%20like%20to%20talk%20to%20the%20accommodation%20team." target="_blank" rel="noopener" class="wa-btn" title="Connect with the accommodation team on WhatsApp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </a>
+            </span>
           </div>
         </div>
       </div>
@@ -523,10 +536,17 @@
                 <div class="ci-value">admissions@onedegreeadvisory.com</div>
               </div>
             </a>
+            <a class="connect-item" href="tel:+918233365888">
+              <div class="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 20.5A16.5 16.5 0 0 1 3.5 8.95V6.2a1.7 1.7 0 0 1 1.7-1.7h2.36a1.7 1.7 0 0 1 1.68 1.44c.1.66.28 1.3.51 1.92a1.7 1.7 0 0 1-.38 1.79l-1 1a13.1 13.1 0 0 0 4.98 4.98l1-1a1.7 1.7 0 0 1 1.79-.38c.62.23 1.26.4 1.92.5a1.7 1.7 0 0 1 1.44 1.7v2.35a1.7 1.7 0 0 1-1.7 1.7h-2.75Z"/></svg></div>
+              <div class="ci-text">
+                <div class="ci-label">Call</div>
+                <div class="ci-value">+91 82333 65888</div>
+              </div>
+            </a>
             <a class="connect-item" href="https://wa.me/918233365888" target="_blank" rel="noopener">
               <div class="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
               <div class="ci-text">
-                <div class="ci-label">Call / WhatsApp</div>
+                <div class="ci-label">WhatsApp</div>
                 <div class="ci-value">+91 82333 65888</div>
               </div>
             </a>

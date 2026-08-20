@@ -44,7 +44,7 @@
         ['code' => 'au', 'name' => 'Australia', 'why' => ['Multiple universities ranked among the global top tier', 'Post-Study Work stream visa for eligible graduates', 'Strong research funding across sciences and health', 'Clear pathways toward skilled migration']],
         ['code' => 'nz', 'name' => 'New Zealand', 'why' => ['Post-study work rights for eligible graduates', 'Small class sizes with high faculty access', 'Safe, nature-rich environment for international students', 'Straightforward visa and compliance processes']],
         ['code' => 'sg', 'name' => 'Singapore', 'why' => ['Regional hub for finance, tech and logistics', 'Highly ranked universities with strong industry links', 'Safe, English-speaking, multicultural environment', 'Gateway location for Southeast Asian careers']],
-        ['code' => 'ae', 'name' => 'UAE', 'why' => ['Fast-growing hub for business and international trade', 'Branch campuses of respected global universities', 'Tax-free income supports post-study opportunities', 'Strong pathways in business, hospitality and technology']],
+        ['code' => 'ae', 'name' => 'Dubai', 'why' => ['Fast-growing hub for business and international trade', 'Branch campuses of respected global universities', 'Tax-free income supports post-study opportunities', 'Strong pathways in business, hospitality and technology']],
         ['code' => 'eu', 'name' => 'Europe', 'why' => ['Wide choice of countries, cultures and English-taught programs', 'Many destinations offer low-cost or tuition-free public universities', 'Schengen access makes travel across the region easy', 'Strong scholarship and Erasmus-linked opportunities']],
         ['code' => 'it', 'name' => 'Italy', 'why' => ['Historic universities strong in arts, design and engineering', 'Affordable tuition compared to many Western destinations', 'Rich cultural environment and central European location', 'Strong reputation in fashion, design and heritage fields']],
         ['code' => 'nl', 'name' => 'Netherlands', 'why' => ['Large number of English-taught programs', 'Highly ranked universities in business and engineering', 'Search Year visa supports post-study job hunting', 'Strong culture of group work and applied research']],
@@ -60,17 +60,42 @@
         ['code' => 'kr', 'name' => 'South Korea', 'why' => ['Rapidly growing hub for technology and innovation', 'Strong government scholarship support', 'Safe, modern, well-connected cities', 'Strong industry links in electronics and entertainment']],
     ];
 
+    /**
+     * Cell order in assets/referral/flags.webp. Fixed, because the strip is a
+     * generated image: a code's position in THIS list is its cell, whether or not
+     * the destination is featured below. Adding a country means regenerating the
+     * sheet and appending its code here.
+     */
+    $spriteOrder = [
+        'us', 'gb', 'ca', 'de', 'fr', 'ie', 'au', 'nz', 'sg', 'ae', 'eu', 'it',
+        'nl', 'se', 'fi', 'no', 'dk', 'ch', 'at', 'es', 'be', 'jp', 'kr',
+    ];
+
     // Flag sprite geometry — must match the generated sheet.
-    $spriteCells = count($destinations);
+    $spriteCells = count($spriteOrder);
     $spriteCell = 112;
     $spriteHeight = 76;
 
+    /* Feature only destinations the site has a country guide for. $guideSlugs is
+       built from the same source as the Destinations nav (see ReferralController),
+       so the marquee cannot drift away from it again — it used to advertise eight
+       destinations (Singapore, the Nordics, Switzerland, Austria, Japan, South
+       Korea) that had no guide anywhere on the site. Four guides go the other way
+       (Georgia, Poland, Malta, Kazakhstan): they have no cell in the sprite and no
+       "why study here" copy, so they are simply not featured here. */
+    $guideSlugs = $guideSlugs ?? [];
+    $destinations = array_values(array_filter(
+        $destinations,
+        fn (array $d) => isset($guideSlugs[$d['code']])
+    ));
+
     foreach ($destinations as $i => $d) {
-        $destinations[$i]['sprite'] = $i;
+        $destinations[$i]['sprite'] = (int) array_search($d['code'], $spriteOrder, true);
+        $destinations[$i]['guide'] = route('country.show', $guideSlugs[$d['code']]);
     }
 
     // The wheel's eight segments, by index into $destinations.
-    $wheelCodes = ['au', 'gb', 'us', 'ca', 'eu', 'ae', 'sg', 'nz'];
+    $wheelCodes = ['au', 'gb', 'us', 'ca', 'eu', 'ae', 'de', 'nz'];
     $wheel = [];
     foreach ($wheelCodes as $code) {
         foreach ($destinations as $d) {
@@ -113,6 +138,7 @@
             'code' => $d['code'],
             'name' => $d['name'],
             'sprite' => $d['sprite'],
+            'guide' => $d['guide'],
             'why' => $d['why'],
         ];
     }
@@ -255,8 +281,19 @@
     transition:transform .2s ease;
   }
   #ref-page .rf-flagbtn:hover{ transform:translateY(-4px); }
-  #ref-page .rf-pole{ position:relative; width:2px; height:34px; border-radius:2px;
-    background:linear-gradient(180deg, var(--rf-navy-soft), rgba(58,31,184,.15)); }
+  /* The pole box spans the whole flag, not just the 2px hairline.
+     .rf-cloth is absolutely positioned, so while the pole was 2px wide the flag
+     contributed nothing to layout: each button was only as wide as its label and
+     the flag spilled ~24px past it, into the next item. On a phone, where the
+     labels are short next to a 47px flag, that read as overlapping flags. The
+     box now reserves the cloth's width and paints the hairline down its left
+     edge with a pseudo-element, so align-items:center puts pole + flag over the
+     label and nothing crosses the marquee gap. */
+  #ref-page .rf-pole{ position:relative; width:49px; height:34px; flex-shrink:0; }
+  #ref-page .rf-pole::before{
+    content:""; position:absolute; top:0; bottom:0; left:0; width:2px; border-radius:2px;
+    background:linear-gradient(180deg, var(--rf-navy-soft), rgba(58,31,184,.15));
+  }
   /* Sized to the sprite cell (3:2), so the flag inside reads at ~42x28. No
      box-shadow: it would trace the element box, including the transparent
      gutter, rather than the flag. A drop-shadow filter would follow the alpha
@@ -642,6 +679,12 @@
     font-size:14px; color:var(--rf-ink); line-height:1.55; text-align:left; }
   #ref-page .rf-modal__list i{ width:16px; height:16px; flex-shrink:0; margin-top:3px; color:var(--rf-orange); }
   #ref-page .rf-modal__card .rf-btn{ width:100%; }
+  /* Ties the popup back to the destination's real country guide. Every country
+     featured on this page has one — that is exactly what the list is filtered on. */
+  #ref-page .rf-modal__guide{ display:inline-flex; align-items:center; gap:6px; margin-top:13px;
+    font-size:13px; font-weight:700; color:var(--rf-navy); }
+  #ref-page .rf-modal__guide i{ width:14px; height:14px; }
+  #ref-page .rf-modal__guide:hover{ color:var(--rf-orange); }
 
   @media (max-width:1000px){
     #ref-page .rf-hero__grid{ grid-template-columns:1fr; }
@@ -743,7 +786,7 @@
 
           <div class="rf-stats">
             <div class="rf-stat"><b>500+</b><small>Students guided</small></div>
-            <div class="rf-stat"><b>{{ count($destinations) }}+</b><small>Study destinations</small></div>
+            <div class="rf-stat"><b>{{ max(count($guideSlugs), count($destinations)) }}+</b><small>Study destinations</small></div>
             <div class="rf-stat"><b>95%</b><small>Visa success</small></div>
             <div class="rf-stat"><b class="rf-stat--word">Unlimited</b><small>Referrals per person</small></div>
           </div>
@@ -1007,6 +1050,10 @@
       <a class="rf-btn rf-btn--primary" href="#rf-form" data-rf-modal-cta>
         <i data-lucide="gift"></i> Refer a student here
       </a>
+      <a class="rf-modal__guide" href="#" data-rf-modal-guide>
+        <span></span>
+        <i data-lucide="arrow-up-right"></i>
+      </a>
     </div>
   </div>
 
@@ -1060,6 +1107,12 @@
     modal.querySelector('[data-rf-modal-flag]').style.setProperty('--i', data.sprite);
     modal.querySelector('[data-rf-modal-name]').textContent = data.name;
     modal.querySelector('[data-rf-modal-q]').textContent = 'Why study in ' + data.name + '?';
+
+    var guide = modal.querySelector('[data-rf-modal-guide]');
+    if (guide) {
+      guide.setAttribute('href', data.guide);
+      guide.querySelector('span').textContent = 'Read the ' + data.name + ' country guide';
+    }
 
     var list = modal.querySelector('[data-rf-modal-list]');
     list.innerHTML = '';

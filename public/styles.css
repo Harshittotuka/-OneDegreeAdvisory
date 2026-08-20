@@ -5232,7 +5232,11 @@ html.oda-popup-open { overflow: hidden; }
 
 .contact-page-head {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.72fr);
+  /* The aside column carries three action pills in one row (request a review ·
+     dial the number · WhatsApp). At 0.72fr it capped around 490px, which
+     orphaned the last pill onto its own line at every desktop width — the
+     container maxes out at 1280px, so a wider viewport never helped. */
+  grid-template-columns: minmax(0, 1fr) minmax(400px, 0.84fr);
   gap: 54px;
   align-items: end;
   margin: 0 0 58px;
@@ -5288,7 +5292,9 @@ html.oda-popup-open { overflow: hidden; }
 .contact-page-head-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  /* 10px, not 12: the row has to hold all three pills at the narrowest width
+     the two-column header runs at (1121px), where the column is only 458px. */
+  gap: 10px;
   align-items: center;
 }
 
@@ -5299,7 +5305,8 @@ html.oda-popup-open { overflow: hidden; }
   min-height: 46px;
   border: 1px solid rgba(19, 37, 47, 0.14);
   border-radius: 999px;
-  padding: 0 18px;
+  /* Trimmed from 18px so the row keeps a little slack over the column width. */
+  padding: 0 14px;
   background: rgba(255, 255, 255, 0.76);
   color: var(--ink);
   font-size: 0.9rem;
@@ -5311,6 +5318,20 @@ html.oda-popup-open { overflow: hidden; }
   width: 17px;
   height: 17px;
   color: var(--teal-dark);
+}
+
+/* Glyph-only variant of the pill — square, so it reads as one of the row rather
+   than a stubby button. The anchor's aria-label is its accessible name, so the
+   redundant text can be removed outright; the max-width:920px block below puts
+   it back for the single-column header, where every pill goes full width. */
+.contact-head-phone--wa {
+  justify-content: center;
+  width: 46px;
+  padding: 0;
+}
+
+.contact-head-phone--wa .contact-head-phone__label {
+  display: none;
 }
 
 .contact-page-grid {
@@ -6313,6 +6334,23 @@ html.oda-popup-open { overflow: hidden; }
   color: white;
 }
 
+/* Footer "Connect" rows that lead with a lucide glyph (dial the number, open
+   WhatsApp). .site-footer a is already display:flex, so this only needs the
+   cross-axis alignment and the gap the address row uses. */
+.footer-icon-link {
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-icon-link i,
+.footer-icon-link svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  /* Same gold the address pin uses — the footer is dark in every theme. */
+  color: var(--mbbs-gold-soft, #ffd479);
+}
+
 .footer-address {
   display: inline-flex;
   align-items: flex-start;
@@ -6464,6 +6502,12 @@ html.oda-popup-open { overflow: hidden; }
 
 .site-social--whatsapp .site-social-glow {
   background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+}
+
+/* "Call" sits beside WhatsApp everywhere, so it takes the brand orange rather
+   than a second green — the two are then telling apart at a glance. */
+.site-social--call .site-social-glow {
+  background: linear-gradient(135deg, #ff7a4d 0%, #ff5e32 100%);
 }
 
 .site-social:hover,
@@ -7080,6 +7124,16 @@ html[data-color-theme] .site-socials .site-social {
   .contact-page-head-actions .btn,
   .contact-head-phone {
     width: 100%;
+  }
+
+  /* Full-width pills here, so the WhatsApp one is spelled out again. */
+  .contact-head-phone--wa {
+    justify-content: flex-start;
+    padding: 0 14px;
+  }
+
+  .contact-head-phone--wa .contact-head-phone__label {
+    display: inline;
   }
 
   .contact-info-panel,

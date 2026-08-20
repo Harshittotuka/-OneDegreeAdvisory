@@ -1877,7 +1877,12 @@
     // completion-time estimate shown while analysing.
     fastAssessor: @json((bool) config('services.visa_mock_ai.groq.key')),
     // Stamped on the downloaded PDF report; the on-screen copy is in the markup.
-    aiDisclaimer: @json(\App\Support\AiDisclaimer::TEXT)
+    aiDisclaimer: @json(\App\Support\AiDisclaimer::TEXT),
+    // The one shared "use a real email address" line (config site.forms.email_help).
+    // It has to travel through here because the script that uses it is inside a
+    // verbatim block, where Blade directives are emitted as literal text. (Do not
+    // write that directive's name here either — Blade would open a block on it.)
+    emailHelp: @json(config('site.forms.email_help'))
   };
 </script>
 
@@ -1924,6 +1929,10 @@ const state = {
   stream:null, streamReleased:false, audioCtx:null, analyser:null, sourceNode:null, rafId:null,
   recognition:null, recognitionReady:false, recognitionRunning:false,
   recognizing:false, wantRestart:false, transcript:"", finalTranscript:"",
+  // Phones and tablets cannot capture the microphone twice at once, so the mic
+  // is handed to the speech recogniser (see handMicToRecogniser). Once that has
+  // happened the waveform / vocal-energy metrics are gone for the round.
+  micHandedOff:false, restartTimer:null, silenceTimer:null, silenceWarned:false,
   recStartTime:0, recordedDurationSec:0, questionStartedAt:0, timerInterval:null,
   volumeSamples:[],
   confidenceSamples:[],
@@ -2002,6 +2011,9 @@ function releaseMediaStream(){
       state.recognition.stop();
     }
   }catch(e){}
+
+  if(state.restartTimer){ clearTimeout(state.restartTimer); state.restartTimer = null; }
+  if(state.silenceTimer){ clearTimeout(state.silenceTimer); state.silenceTimer = null; }
 }
 
 window.addEventListener("pagehide", releaseMediaStream);
@@ -2233,7 +2245,11 @@ $("btn-start-interview").addEventListener("click", async () => {
   const streamIsLive = state.stream && state.stream.getTracks().some(t=>t.readyState==="live");
   if(state.mode === "video" && streamIsLive){
     $("live-video").srcObject = state.stream;
-    setupAudioAnalyser();
+    /* On a phone the microphone cannot be captured twice, and the transcript is
+       worth more than the waveform, so the audio track goes straight to the
+       speech recogniser and the analyser is never built. See NEEDS_MIC_HANDOFF. */
+    if(NEEDS_MIC_HANDOFF) handMicToRecogniser();
+    else setupAudioAnalyser();
   } else if(state.mode === "video" && !streamIsLive){
     showRecError("Camera/microphone connection was lost — you can still answer using Text mode below, or refresh and re-test your devices.");
   }
@@ -2271,6 +2287,9 @@ function drawWaveform(){
   const dataArray = new Uint8Array(bufferLength);
 
   function loop(){
+    // The analyser is torn down mid-round when the microphone is handed to the
+    // recogniser, and a frame already in flight would read from null.
+    if(!state.analyser) { state.rafId = null; return; }
     state.rafId = requestAnimationFrame(loop);
     state.analyser.getByteTimeDomainData(dataArray);
     canvas.width = canvas.clientWidth;
@@ -2753,6 +2772,81 @@ $("manual-answer").addEventListener("input", (e)=>{
    ============================================================ */
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+/* Phones and tablets can only capture the microphone once at a time. The camera
+   stream this page opens for the video PIP includes an audio track, and on
+   Android and iOS that capture blocks the speech recogniser: it starts, reports
+   no-speech, and the transcript sits on "Listening…" no matter how long the
+   student talks — the reported "not capturing voice on mobile". Desktop Chrome
+   and Edge share the microphone happily, so the workaround is scoped to touch
+   devices rather than applied everywhere. */
+const NEEDS_MIC_HANDOFF = (function(){
+  if(!SpeechRecognition) return false;
+  if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return true;
+  // iPadOS reports itself as a Mac, so fall back to the input capabilities.
+  const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  return !!coarse && (navigator.maxTouchPoints || 0) > 1;
+})();
+
+/* Give the microphone to the recogniser: tear the analyser down and stop just
+   the audio track, leaving the video track (and so the camera PIP) running.
+   Synchronous on purpose — it is called from the Start-recording click, and iOS
+   only lets recognition start inside that same user gesture.
+
+   The waveform and the vocal-energy metric are the only consumers of that
+   track, so they go quiet for the round; computeLocalMetrics already reports
+   hasVoiceMetrics:false when no volume samples were collected, and mergeScores
+   falls back to the assessor's own delivery scores. A transcript with no energy
+   meter beats an energy meter with no transcript. */
+function handMicToRecogniser(){
+  if(state.micHandedOff || !state.stream) return;
+
+  const audioTracks = state.stream.getAudioTracks();
+  if(!audioTracks.length) { state.micHandedOff = true; return; }
+
+  try{ if(state.rafId) cancelAnimationFrame(state.rafId); }catch(e){}
+  state.rafId = null;
+  try{ if(state.sourceNode) state.sourceNode.disconnect(); }catch(e){}
+  try{ if(state.audioCtx && state.audioCtx.state !== "closed") state.audioCtx.close(); }catch(e){}
+  state.audioCtx = null; state.analyser = null; state.sourceNode = null;
+
+  audioTracks.forEach(function(track){
+    try{ state.stream.removeTrack(track); }catch(e){}
+    try{ track.stop(); }catch(e){}
+  });
+
+  state.micHandedOff = true;
+
+  // The meter can only show a flat line from here, so it is removed rather than
+  // left looking broken.
+  const pip = document.querySelector("#vmi-page .vmi-cam-pip");
+  if(pip){
+    const canvas = pip.querySelector(".waveform");
+    const meter = pip.querySelector(".conf-meter");
+    if(canvas) canvas.classList.add("hidden");
+    if(meter) meter.classList.add("hidden");
+  }
+}
+
+/* Nothing transcribed after this long means the recogniser is not hearing the
+   microphone. Rather than leave the student talking at a dead box, say so and
+   point at Type mode. */
+const SILENCE_WARNING_MS = 9000;
+
+function armSilenceWatchdog(){
+  clearSilenceWatchdog();
+  state.silenceWarned = false;
+  state.silenceTimer = setTimeout(function(){
+    if(!state.recognizing) return;
+    if((state.finalTranscript || "").trim().length) return;
+    state.silenceWarned = true;
+    showRecError("We haven't picked up any speech yet. Check that your browser has microphone access and that nothing else is using it — or tap Type to write this answer instead.");
+  }, SILENCE_WARNING_MS);
+}
+
+function clearSilenceWatchdog(){
+  if(state.silenceTimer){ clearTimeout(state.silenceTimer); state.silenceTimer = null; }
+}
+
 function getRecognition(){
   if(!SpeechRecognition) return null;
   if(state.recognition) return state.recognition;
@@ -2780,6 +2874,10 @@ function getRecognition(){
     }
     state.finalTranscript = final;
     const combined = (final+interim).trim();
+    if(combined.length){
+      clearSilenceWatchdog();
+      if(state.silenceWarned){ clearRecError(); state.silenceWarned = false; }
+    }
     $("transcript-box").textContent = combined || "Listening…";
     $("transcript-box").classList.toggle("empty", combined.length===0);
     $("btn-submit-answer").disabled = combined.trim().length < 3;
@@ -2794,7 +2892,14 @@ function getRecognition(){
       state.wantRestart = false;
       showRecError("No microphone could be found. Check your device connection or switch to Type mode.", "error");
     } else if(e.error === "no-speech"){
-      /* benign — recognition will restart via onend if still recording */
+      /* Benign mid-answer — onend restarts it. But a round that has transcribed
+         nothing at all and only reports no-speech is the microphone-conflict
+         symptom, so the watchdog's message is brought forward. */
+      if(state.recognizing && !(state.finalTranscript || "").trim().length && !state.silenceWarned){
+        state.silenceWarned = true;
+        clearSilenceWatchdog();
+        showRecError("We haven't picked up any speech yet. Check that your browser has microphone access and that nothing else is using it — or tap Type to write this answer instead.");
+      }
     } else if(e.error === "network"){
       showRecError("Speech recognition lost its network connection. You can keep speaking — it will try to reconnect — or switch to Type mode.");
     }
@@ -2802,12 +2907,25 @@ function getRecognition(){
 
   rec.onend = () => {
     state.recognitionRunning = false;
-    if(state.wantRestart && state.recognizing){
-      try{
-        rec.start();
-      }catch(err){
-        console.warn("Recognition restart failed", err);
-      }
+    if(!state.wantRestart || !state.recognizing) return;
+
+    /* Android Chrome ignores rec.continuous and ends the session at every pause,
+       so this restart is the whole of continuous capture on a phone. It can also
+       land while the engine is still tearing down (InvalidStateError), which used
+       to end the round's transcription silently — hence the single retry. */
+    try{
+      rec.start();
+    }catch(err){
+      console.warn("Recognition restart failed, retrying", err);
+      if(state.restartTimer) clearTimeout(state.restartTimer);
+      state.restartTimer = setTimeout(function(){
+        state.restartTimer = null;
+        if(!state.wantRestart || !state.recognizing || state.recognitionRunning) return;
+        try{ rec.start(); }catch(err2){
+          console.warn("Recognition restart failed twice", err2);
+          showRecError("Voice transcription stopped unexpectedly. Tap Stop and then Start recording again, or switch to Type mode.");
+        }
+      }, 300);
     }
   };
 
@@ -2859,9 +2977,13 @@ function startRecording(){
   $("transcript-box").classList.add("is-live");
 
   if(SpeechRecognition){
+    // Before the recogniser starts, not after: on a phone it will not hear
+    // anything while the camera stream still holds the microphone.
+    if(NEEDS_MIC_HANDOFF) handMicToRecogniser();
     const rec = getRecognition();
     if(rec && !state.recognitionRunning){
       safeStartRecognition(rec);
+      armSilenceWatchdog();
     }
   } else {
     $("transcript-box").textContent = "Live transcription isn't supported in this browser — please switch to Type instead, or continue speaking and describe your answer in the box after stopping.";
@@ -2877,6 +2999,8 @@ function startRecording(){
 function stopRecording(){
   state.recognizing = false;
   state.wantRestart = false;
+  clearSilenceWatchdog();
+  if(state.restartTimer){ clearTimeout(state.restartTimer); state.restartTimer = null; }
   hide($("btn-stop")); show($("btn-record")); hide($("rec-badge"));
   setAvatarState("idle");
   $("transcript-box").classList.remove("is-live");
@@ -3682,7 +3806,7 @@ function celebrate(){
    ============================================================ */
 const CFG = window.VMI_CONFIG || {};
 // Same copy the server returns for a malformed or placeholder address.
-const EMAIL_HELP = @json(config('site.forms.email_help'));
+const EMAIL_HELP = CFG.emailHelp || "Please use a valid email address.";
 const leadModal = $("vmiLeadModal");
 const leadForm = $("vmiLeadForm");
 const leadFormState = leadModal.querySelector("[data-lead-form-state]");

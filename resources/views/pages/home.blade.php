@@ -485,9 +485,13 @@
                 <i data-lucide="mail"></i>
                 admissions@onedegreeadvisory.com
               </a>
-              <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-                <i data-lucide="phone"></i>
+              <a href="tel:+{{ config('site.contact.phone_e164') }}" aria-label="Call {{ config('site.name') }} on {{ config('site.contact.phone') }}">
+                <i data-lucide="phone-call"></i>
                 {{ config('site.contact.phone') }}
+              </a>
+              <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+                <i data-lucide="message-circle"></i>
+                WhatsApp
               </a>
               <a href="https://www.google.com/maps/search/?api=1&amp;query=26.8692893,75.7895342" target="_blank" rel="noopener" aria-label="Open One Degree Advisory office in Google Maps">
                 <i data-lucide="map-pin"></i>

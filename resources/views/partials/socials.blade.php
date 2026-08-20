@@ -13,13 +13,21 @@
     }
 @endphp
 @if (!empty($socials))
-  <ul class="site-socials site-socials--{{ $variant }}" aria-label="Social media">
+  <ul class="site-socials site-socials--{{ $variant }}" aria-label="Contact and social media">
     @foreach ($socials as $social)
+      @php
+          // "call" is a tel: link, not a profile: it must open the dialer in the
+          // same context (target=_blank on a tel: leaves a blank tab behind on
+          // desktop) and its label reads as an action, not a social account.
+          $isCall = ($social['slug'] ?? '') === 'call';
+      @endphp
       <li>
         <a class="site-social site-social--{{ $social['slug'] }}"
            href="{{ $social['href'] }}"
-           target="_blank" rel="noopener"
-           aria-label="One Degree Advisory on {{ $social['label'] }}">
+           @unless ($isCall) target="_blank" rel="noopener" @endunless
+           aria-label="{{ $isCall
+               ? 'Call One Degree Advisory on '.config('site.contact.phone')
+               : 'One Degree Advisory on '.$social['label'] }}">
           <span class="site-social-glow" aria-hidden="true"></span>
           @if ($social['slug'] === 'instagram')
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -39,8 +47,12 @@
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M17.47 14.38c-.29-.15-1.7-.84-1.96-.93-.26-.1-.45-.15-.64.14-.19.29-.74.93-.9 1.12-.17.19-.33.21-.62.07-.29-.15-1.22-.45-2.32-1.43-.86-.77-1.44-1.71-1.6-2-.17-.29-.02-.45.13-.59.13-.13.29-.34.43-.51.14-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.14-.64-1.55-.88-2.13-.23-.55-.47-.48-.64-.49l-.55-.01c-.19 0-.5.07-.77.36-.26.29-1 .98-1 2.38 0 1.4 1.03 2.76 1.17 2.95.14.19 2.01 3.07 4.88 4.3.68.29 1.21.47 1.63.6.68.22 1.31.19 1.8.12.55-.08 1.7-.69 1.94-1.36.24-.67.24-1.24.17-1.36-.07-.12-.26-.19-.55-.34zM12.04 2.5c-5.25 0-9.5 4.25-9.5 9.5 0 1.67.44 3.31 1.27 4.74L2.5 21.5l4.91-1.29a9.43 9.43 0 0 0 4.63 1.18h.01c5.25 0 9.5-4.25 9.5-9.5 0-2.54-.99-4.92-2.78-6.72A9.43 9.43 0 0 0 12.04 2.5zm0 17.4h-.01a7.86 7.86 0 0 1-4-1.1l-.29-.17-2.96.78.79-2.89-.19-.3a7.84 7.84 0 0 1-1.2-4.18c0-4.35 3.54-7.89 7.9-7.89 2.11 0 4.09.82 5.58 2.31a7.84 7.84 0 0 1 2.31 5.58c0 4.35-3.55 7.9-7.9 7.9z"/>
             </svg>
+          @elseif ($social['slug'] === 'call')
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M6.6 10.8c1.2 2.36 3.24 4.4 5.6 5.6l1.87-1.87a.9.9 0 0 1 .95-.21c1.04.38 2.16.6 3.32.6a.9.9 0 0 1 .9.9V19a.9.9 0 0 1-.9.9C10.9 19.9 4.1 13.1 4.1 4.73c0-.5.4-.9.9-.9h3.2a.9.9 0 0 1 .9.9c0 1.16.21 2.28.6 3.32a.9.9 0 0 1-.22.95L6.6 10.8z"/>
+            </svg>
           @endif
-          <span class="visually-hidden">{{ $social['label'] }}</span>
+          <span class="visually-hidden">{{ $isCall ? 'Call '.config('site.contact.phone') : $social['label'] }}</span>
         </a>
       </li>
     @endforeach

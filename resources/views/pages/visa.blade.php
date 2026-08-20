@@ -259,6 +259,10 @@
   #visa-page .vc-backdrop{position:absolute;inset:0;background:rgba(16,12,56,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
   #visa-page .vc-card{position:relative;width:min(440px,100%);background:var(--card);border-radius:18px;padding:36px 30px 26px;text-align:center;box-shadow:0 40px 90px rgba(16,12,56,.42);transform:translateY(22px) scale(.94);opacity:0;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s ease;overflow:hidden;}
   #visa-page .vc-modal.is-open .vc-card{transform:translateY(0) scale(1);opacity:1;}
+  /* Four options can outgrow a short phone viewport. The shell stays
+     overflow-x:hidden (it clips the glow above the card), but the vertical axis
+     scrolls so the last option can never be cut off. */
+  #visa-page .vc-card{max-height:calc(100vh - 40px);overflow-y:auto;}
   #visa-page .vc-card::before{content:"";position:absolute;top:-70px;left:50%;transform:translateX(-50%);width:280px;height:180px;background:radial-gradient(circle,rgba(255,106,57,.16),transparent 70%);pointer-events:none;}
   #visa-page .vc-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;border:none;background:var(--altbg);color:var(--navy);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease,transform .15s ease;}
   #visa-page .vc-close:hover{background:#e3def3;transform:rotate(90deg);}
@@ -276,6 +280,7 @@
   #visa-page .vc-modal.is-open .vc-opt.o1{transition-delay:.12s;}
   #visa-page .vc-modal.is-open .vc-opt.o2{transition-delay:.2s;}
   #visa-page .vc-modal.is-open .vc-opt.o3{transition-delay:.28s;}
+  #visa-page .vc-modal.is-open .vc-opt.o4{transition-delay:.36s;}
   #visa-page .vc-opt:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);}
   #visa-page .vc-opt-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;}
   #visa-page .vc-opt-icon svg{width:24px;height:24px;}
@@ -285,14 +290,14 @@
   #visa-page .vc-opt--wa .vc-opt-icon{background:linear-gradient(135deg,#25D366,#128C7E);}
   #visa-page .vc-opt--mail:hover{border-color:var(--red);background:#FFF4EF;}
   #visa-page .vc-opt--mail .vc-opt-icon{background:var(--grad-brand);}
+  #visa-page .vc-opt--call:hover{border-color:var(--navy);background:#F4F3FB;}
+  #visa-page .vc-opt--call .vc-opt-icon{background:var(--grad-navy);}
   #visa-page .vc-opt-text{flex:1;min-width:0;}
   #visa-page .vc-opt-text strong{display:block;font-family:var(--font-body);font-size:16px;color:var(--navy);}
   #visa-page .vc-opt-text small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   #visa-page .vc-opt-arrow{color:var(--muted);flex-shrink:0;transition:transform .18s ease,color .18s ease;}
   #visa-page .vc-opt-arrow svg{width:18px;height:18px;}
   #visa-page .vc-opt:hover .vc-opt-arrow{transform:translateX(4px);color:var(--red-deep);}
-  #visa-page .vc-foot{font-size:13px;color:var(--muted);margin-top:20px;}
-  #visa-page .vc-foot a{color:var(--navy);font-weight:600;}
   @media(prefers-reduced-motion:reduce){
     #visa-page .vc-badge .pulse{animation:none;}
     #visa-page .vc-card,#visa-page .vc-opt{transition:opacity .2s ease;}
@@ -602,7 +607,18 @@
             <span class="vc-opt-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
           </a>
 
-          <a class="vc-opt vc-opt--wa o2" href="{{ $waLink }}" target="_blank" rel="noopener" data-vc-go>
+          <a class="vc-opt vc-opt--call o2" href="tel:+{{ $waE164 }}" data-vc-go>
+            <span class="vc-opt-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15.05 20.5A16.5 16.5 0 0 1 3.5 8.95V6.2a1.7 1.7 0 0 1 1.7-1.7h2.36a1.7 1.7 0 0 1 1.68 1.44c.1.66.28 1.3.51 1.92a1.7 1.7 0 0 1-.38 1.79l-1 1a13.1 13.1 0 0 0 4.98 4.98l1-1a1.7 1.7 0 0 1 1.79-.38c.62.23 1.26.4 1.92.5a1.7 1.7 0 0 1 1.44 1.7v2.35a1.7 1.7 0 0 1-1.7 1.7h-2.75Z"/></svg>
+            </span>
+            <span class="vc-opt-text">
+              <strong>Call us</strong>
+              <small>{{ $waPhone }} &middot; opens your dialer</small>
+            </span>
+            <span class="vc-opt-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
+          </a>
+
+          <a class="vc-opt vc-opt--wa o3" href="{{ $waLink }}" target="_blank" rel="noopener" data-vc-go>
             <span class="vc-opt-icon">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.39 1.26 4.82L2 22l5.4-1.42a9.9 9.9 0 0 0 4.64 1.18h.01c5.46 0 9.9-4.45 9.9-9.9 0-2.65-1.03-5.13-2.9-7-1.87-1.87-4.35-2.86-7.01-2.86Zm5.8 14.13c-.24.68-1.4 1.3-1.93 1.34-.5.05-.97.24-3.26-.68-2.75-1.08-4.5-3.9-4.63-4.08-.14-.18-1.12-1.49-1.12-2.84 0-1.35.71-2.02.96-2.29.25-.27.55-.34.73-.34h.53c.17 0 .4-.06.62.48.24.58.8 2.02.87 2.17.07.14.12.31.02.5-.09.18-.14.3-.28.46-.14.16-.29.36-.42.48-.14.14-.28.29-.12.57.16.27.72 1.18 1.55 1.92 1.06.94 1.96 1.24 2.24 1.38.27.14.43.12.59-.07.16-.18.68-.79.86-1.06.18-.27.36-.23.61-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.17 1.34Z"/></svg>
             </span>
@@ -613,7 +629,7 @@
             <span class="vc-opt-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></span>
           </a>
 
-          <a class="vc-opt vc-opt--mail o3" href="{{ $mailLink }}" data-vc-go>
+          <a class="vc-opt vc-opt--mail o4" href="{{ $mailLink }}" data-vc-go>
             <span class="vc-opt-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
             </span>
@@ -625,7 +641,6 @@
           </a>
         </div>
 
-        <p class="vc-foot">Prefer a call? <a href="tel:+{{ $waE164 }}">{{ $waPhone }}</a></p>
       </div>
     </div>
 

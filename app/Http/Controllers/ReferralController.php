@@ -6,6 +6,7 @@ use App\Mail\ReferralReferrerMail;
 use App\Mail\ReferralStudentMail;
 use App\Mail\ReferralTeamMail;
 use App\Services\WebsiteLeadManager;
+use App\Support\StudyLocationContent;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,12 +32,21 @@ class ReferralController extends Controller
     /** Study levels and destinations offered by the referral form's selects. */
     public const LEVELS = ['Bachelor', 'Master', 'MBA', 'PhD / Doctoral', 'Diploma / Foundation'];
 
+    /**
+     * Mirrors the country guides in the Destinations nav (App\Support\StudyLocationContent),
+     * so the referral form cannot offer a destination the site has no guide for.
+     * Deliberately a static list rather than derived from that content file: the
+     * same list drives `in:` validation on submit, and an unreadable content file
+     * would otherwise empty the select and reject every referral.
+     * Add a country guide, add it here.
+     */
     public const COUNTRIES = [
         'USA', 'UK', 'Canada', 'Australia', 'New Zealand', 'Germany', 'Ireland', 'France',
-        'Italy', 'Netherlands', 'Singapore', 'UAE', 'Europe', 'Other / not sure yet',
+        'Netherlands', 'Belgium', 'Italy', 'Spain', 'Finland', 'Poland', 'Malta',
+        'Georgia', 'Kazakhstan', 'Dubai', 'Europe', 'Other / not sure yet',
     ];
 
-    public function index(): View
+    public function index(StudyLocationContent $guides): View
     {
         return view('pages.referral-program', [
             'activeNav' => 'new-tabs',
@@ -45,7 +55,37 @@ class ReferralController extends Controller
             'pageDescription' => 'Refer a student to One Degree Advisory and earn a reward once they enrol. Open to students, alumni, parents, professionals and anyone with someone in their circle planning to study abroad.',
             'levels' => self::LEVELS,
             'countries' => self::COUNTRIES,
+            'guideSlugs' => $this->guideSlugsByFlag($guides),
         ]);
+    }
+
+    /**
+     * flagcdn code (or 'eu' for the Europe guide) => country-guide page slug, for
+     * the destinations currently visible in the Destinations nav.
+     *
+     * The page's flag marquee, popup and wheel are all filtered through this, so
+     * they can only feature destinations the site actually has a guide for — the
+     * marquee previously advertised eight (Singapore, Sweden, Norway, Denmark,
+     * Switzerland, Austria, Japan, South Korea) with nothing behind them.
+     *
+     * @return array<string, string>
+     */
+    private function guideSlugsByFlag(StudyLocationContent $guides): array
+    {
+        $map = [];
+
+        foreach ($guides->destinations() as $destination) {
+            $slug = trim((string) ($destination['slug'] ?? ''));
+            $key = ($destination['eu'] ?? false)
+                ? 'eu'
+                : strtolower(trim((string) ($destination['flag'] ?? '')));
+
+            if ($key !== '' && $slug !== '') {
+                $map[$key] = $slug;
+            }
+        }
+
+        return $map;
     }
 
     /**

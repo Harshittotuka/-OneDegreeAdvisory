@@ -19,6 +19,7 @@
 
 @php
     $waE164   = config('site.contact.phone_e164', '918233365888');
+    $waPhone  = config('site.contact.phone', '+91 8233365888');
     $waEmail  = config('site.contact.email', 'admissions@onedegreeadvisory.com');
     $waLink   = 'https://wa.me/'.$waE164.'?text='.rawurlencode('Hi One Degree Advisory, I would like to talk to an advisor about my Statement of Purpose / admissions writing.');
     $mailLink = 'mailto:'.$waEmail.'?subject='.rawurlencode('Statement of Purpose enquiry').'&body='.rawurlencode("Hi One Degree Advisory,\n\nI'd like help with my application writing. A few details:\n\nService needed (SOP / Visa SOP / LOR / Resume / Essay): \nTarget program & intake: \n\nThanks!");
@@ -1185,7 +1186,7 @@
               <button type="submit" class="btn btn-brass" id="sop-submit-btn"><span>Request Call Back</span></button>
               <span style="font-size:12.5px;color:#9A9280;">No spam. Ever.</span>
             </div>
-            <p class="sop-fallback">Prefer to talk now? <a href="{{ $waLink }}" target="_blank" rel="noopener">WhatsApp an advisor</a> or <a href="{{ $mailLink }}">email us</a>.</p>
+            <p class="sop-fallback">Prefer to talk now? <a href="tel:+{{ $waE164 }}">call {{ $waPhone }}</a>, <a href="{{ $waLink }}" target="_blank" rel="noopener">WhatsApp an advisor</a> or <a href="{{ $mailLink }}">email us</a>.</p>
           </form>
         </div>
 

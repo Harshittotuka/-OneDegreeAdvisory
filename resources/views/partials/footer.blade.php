@@ -34,7 +34,14 @@
     <div>
       <h2>Connect</h2>
       <a class="footer-email" href="mailto:{{ config('site.contact.email') }}">{{ config('site.contact.email') }}</a>
-      <a href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">{{ config('site.contact.phone') }}</a>
+      <a class="footer-icon-link" href="tel:+{{ config('site.contact.phone_e164') }}" aria-label="Call {{ config('site.name') }} on {{ config('site.contact.phone') }}">
+        <i data-lucide="phone-call" aria-hidden="true"></i>
+        <span>{{ config('site.contact.phone') }}</span>
+      </a>
+      <a class="footer-icon-link" href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+        <i data-lucide="message-circle" aria-hidden="true"></i>
+        <span>WhatsApp</span>
+      </a>
       <a class="footer-address" href="https://www.google.com/maps/search/?api=1&amp;query=26.8692893,75.7895342" target="_blank" rel="noopener" aria-label="Open One Degree Advisory office in Google Maps">
         <i data-lucide="map-pin" aria-hidden="true"></i>
         <span>{{ config('site.contact.address') }}</span>

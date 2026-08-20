@@ -220,9 +220,13 @@
             <span>Book a consultation</span>
             <i data-lucide="message-circle" aria-hidden="true"></i>
           </a>
-          <a class="adm-btn adm-btn--ghost" href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener">
-            <i data-lucide="phone" aria-hidden="true"></i>
+          <a class="adm-btn adm-btn--ghost" href="tel:+{{ config('site.contact.phone_e164') }}" aria-label="Call {{ config('site.name') }} on {{ config('site.contact.phone') }}">
+            <i data-lucide="phone-call" aria-hidden="true"></i>
             <span>{{ config('site.contact.phone') }}</span>
+          </a>
+          <a class="adm-btn adm-btn--ghost" href="https://wa.me/{{ config('site.contact.phone_e164') }}" target="_blank" rel="noopener">
+            <i data-lucide="message-circle" aria-hidden="true"></i>
+            <span>WhatsApp</span>
           </a>
         </div>
       </div>

@@ -178,11 +178,16 @@ return [
         ],
     ],
 
+    /* The social row rendered by partials/socials.blade.php — footer, notice
+       bar and the contact aside all read this one list, so an icon added here
+       appears everywhere at once. Only the http(s) entries are emitted as
+       schema.org sameAs (see layouts/app.blade.php); 'call' is a dialer link,
+       not a profile. */
     'socials' => [
         [
             'slug'  => 'instagram',
             'label' => 'Instagram',
-            'href'  => 'https://www.instagram.com/onedegreeadvisory',
+            'href'  => 'https://www.instagram.com/onedegree.advisory/',
         ],
         [
             'slug'  => 'facebook',
@@ -199,6 +204,12 @@ return [
             'label' => 'WhatsApp',
             /* Number mirrors contact.phone_e164 (digits only, country code first). */
             'href'  => 'https://wa.me/918233365888',
+        ],
+        [
+            'slug'  => 'call',
+            'label' => 'Call',
+            /* Opens the device dialer. Number mirrors contact.phone_e164. */
+            'href'  => 'tel:+918233365888',
         ],
     ],
 
