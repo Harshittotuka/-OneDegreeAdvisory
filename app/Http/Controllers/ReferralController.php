@@ -58,10 +58,10 @@ class ReferralController extends Controller
         $validated = $request->validate([
             'referrer_name' => 'required|string|max:120',
             'referrer_phone' => 'required|string|max:40|regex:/^[0-9+()\-\s]{7,40}$/',
-            'referrer_email' => 'required|email:rfc|max:190',
+            'referrer_email' => 'required|email:rfc|max:190|real_email',
             'student_name' => 'required|string|max:120',
             'student_phone' => 'required|string|max:40|regex:/^[0-9+()\-\s]{7,40}$/',
-            'student_email' => 'required|email:rfc|max:190',
+            'student_email' => 'required|email:rfc|max:190|real_email',
             'level' => 'required|string|in:'.implode(',', self::LEVELS),
             'country' => 'required|string|in:'.implode(',', self::COUNTRIES),
             'notes' => 'nullable|string|max:1000',

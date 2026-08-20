@@ -141,6 +141,13 @@ return [
            THREE emails from this mailbox: the team notification, a confirmation
            to the referrer, and an introduction to the referred student. */
     'forms' => [
+        /* Shown whenever an address is malformed OR a placeholder (anything
+           containing "example"), which bounces after the relay has already
+           accepted it. Server rule, native field validity and every custom
+           form script all read this one line so the copy cannot drift. */
+        'email_help' => 'Please use a valid email address, or email us at '
+            .mb_strtolower(env('CONTACT_FORM_TO', 'Admissions@onedegreeadvisory.com')).'.',
+
         'contact' => [
             'mailer'    => env('CONTACT_FORM_MAILER'),
             'to'        => env('CONTACT_FORM_TO', 'Admissions@onedegreeadvisory.com'),

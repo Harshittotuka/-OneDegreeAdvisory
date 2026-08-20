@@ -118,7 +118,7 @@
                         <label for="login">Mobile number or email</label>
                         <div class="input-wrap">
                             <span class="phone-code" data-login-prefix>+91</span>
-                            <input id="login" name="login" type="text" value="{{ old('login') }}" autocomplete="username" placeholder="98765 43210 or name@example.com" autofocus required>
+                            <input id="login" name="login" type="text" value="{{ old('login') }}" autocomplete="username" placeholder="98765 43210 or name@domain.com" autofocus required>
                         </div>
                     </div>
                     <button class="btn btn-navy btn-block" type="submit">Send secure OTP <span aria-hidden="true">→</span></button>

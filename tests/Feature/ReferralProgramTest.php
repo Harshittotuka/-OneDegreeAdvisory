@@ -36,10 +36,10 @@ class ReferralProgramTest extends TestCase
         return array_merge([
             'referrer_name' => 'Meera Iyer',
             'referrer_phone' => '+91 90000 11111',
-            'referrer_email' => 'meera@example.test',
+            'referrer_email' => 'meera@mailbox.test',
             'student_name' => 'Rohan Gupta',
             'student_phone' => '+91 98765 43210',
-            'student_email' => 'rohan@example.test',
+            'student_email' => 'rohan@mailbox.test',
             'level' => 'Master',
             'country' => 'Germany',
             'notes' => 'Targeting the September intake.',
@@ -146,7 +146,7 @@ class ReferralProgramTest extends TestCase
         $this->assertSame('Referral Program', $submission->source_label);
 
         // The STUDENT is the lead — they are the prospect a counsellor works.
-        $lead = CrmLead::query()->where('email', 'rohan@example.test')->firstOrFail();
+        $lead = CrmLead::query()->where('email', 'rohan@mailbox.test')->firstOrFail();
         $this->assertSame('Rohan Gupta', $lead->name);
         $this->assertSame('9876543210', $lead->phone);
         $this->assertSame('referral', $lead->lead_type);
@@ -156,13 +156,13 @@ class ReferralProgramTest extends TestCase
         $this->assertSame('Germany', $lead->country_interest);
 
         // The referrer must NOT become a lead of their own...
-        $this->assertNull(CrmLead::query()->where('email', 'meera@example.test')->first());
+        $this->assertNull(CrmLead::query()->where('email', 'meera@mailbox.test')->first());
         // ...but must be recorded, or nobody knows who to pay.
         $sections = $submission->sections;
         $this->assertCount(2, $sections);
         $referrer = collect($sections[1]['answers'])->pluck('value')->flatten()->all();
         $this->assertContains('Meera Iyer', $referrer);
-        $this->assertContains('meera@example.test', $referrer);
+        $this->assertContains('meera@mailbox.test', $referrer);
         $this->assertContains('+91 90000 11111', $referrer);
     }
 
@@ -179,16 +179,16 @@ class ReferralProgramTest extends TestCase
         //    goes to the person waiting on one.
         Mail::assertSent(ReferralTeamMail::class, function (ReferralTeamMail $mail) {
             return $mail->hasTo(config('site.forms.referral.to'))
-                && $mail->hasReplyTo('meera@example.test')
+                && $mail->hasReplyTo('meera@mailbox.test')
                 && $mail->data['student_name'] === 'Rohan Gupta';
         });
 
         // 2. The person who filled the form in.
-        Mail::assertSent(ReferralReferrerMail::class, fn (ReferralReferrerMail $mail) => $mail->hasTo('meera@example.test'));
+        Mail::assertSent(ReferralReferrerMail::class, fn (ReferralReferrerMail $mail) => $mail->hasTo('meera@mailbox.test'));
 
         // 3. The referred student.
         Mail::assertSent(ReferralStudentMail::class, function (ReferralStudentMail $mail) {
-            return $mail->hasTo('rohan@example.test')
+            return $mail->hasTo('rohan@mailbox.test')
                 // Named in the subject so the introduction never reads as spam.
                 && str_contains($mail->envelope()->subject, 'Meera Iyer');
         });
@@ -222,7 +222,7 @@ class ReferralProgramTest extends TestCase
             ->assertOk()
             ->assertJson(['ok' => true]);
 
-        $this->assertDatabaseHas('crm_leads', ['email' => 'rohan@example.test']);
+        $this->assertDatabaseHas('crm_leads', ['email' => 'rohan@mailbox.test']);
     }
 
     public function test_a_rejected_referral_sends_nothing(): void
@@ -231,7 +231,7 @@ class ReferralProgramTest extends TestCase
         Mail::fake();
 
         // Self-referral.
-        $this->postJson(route('referral.submit'), $this->payload(['student_email' => 'meera@example.test']))
+        $this->postJson(route('referral.submit'), $this->payload(['student_email' => 'meera@mailbox.test']))
             ->assertStatus(422);
 
         Mail::assertNothingSent();
@@ -245,12 +245,12 @@ class ReferralProgramTest extends TestCase
         $this->postJson(route('referral.submit'), $this->payload([
             'referrer_name' => 'Second Referrer',
             'referrer_phone' => '+91 90000 22222',
-            'referrer_email' => 'second@example.test',
+            'referrer_email' => 'second@mailbox.test',
         ]))->assertOk();
 
         // One student, one lead — but both referrals on file, so a counsellor can
         // see who submitted first (the terms credit the earlier one).
-        $this->assertSame(1, CrmLead::query()->where('email', 'rohan@example.test')->count());
+        $this->assertSame(1, CrmLead::query()->where('email', 'rohan@mailbox.test')->count());
         $this->assertSame(2, CrmWebsiteSubmission::query()->where('source', 'referral')->count());
     }
 
@@ -259,7 +259,7 @@ class ReferralProgramTest extends TestCase
         $this->migrate();
 
         // Same email for referrer and student.
-        $this->postJson(route('referral.submit'), $this->payload(['student_email' => 'meera@example.test']))
+        $this->postJson(route('referral.submit'), $this->payload(['student_email' => 'meera@mailbox.test']))
             ->assertStatus(422)
             ->assertJsonPath('title', 'Self-referrals are not eligible');
 

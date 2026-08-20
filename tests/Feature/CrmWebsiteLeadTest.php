@@ -17,12 +17,12 @@ class CrmWebsiteLeadTest extends TestCase
     public function test_website_forms_create_and_enrich_one_crm_lead(): void
     {
         $this->postJson(route('loan-acco.lead'), [
-            'form' => 'loan', 'name' => 'Aarav Sharma', 'email' => 'aarav@example.com',
+            'form' => 'loan', 'name' => 'Aarav Sharma', 'email' => 'aarav@mailbox.test',
             'phone' => '+91 98765 43210', 'country' => 'United Kingdom', 'course' => 'MBA',
         ])->assertOk();
 
         $this->postJson(route('visa-mock.lead'), [
-            'name' => 'Aarav Sharma', 'email' => 'aarav@example.com', 'phone' => '9876543210',
+            'name' => 'Aarav Sharma', 'email' => 'aarav@mailbox.test', 'phone' => '9876543210',
             'destination' => 'United Kingdom', 'level' => 'Postgraduate',
         ])->assertOk();
 
@@ -40,16 +40,16 @@ class CrmWebsiteLeadTest extends TestCase
     {
         CrmLead::query()->create([
             'lead_number' => 'OD-10001', 'name' => 'Phone Owner', 'phone' => '9876543210',
-            'email' => 'phone-owner@example.com', 'priority' => 'medium', 'status' => 'new',
+            'email' => 'phone-owner@mailbox.test', 'priority' => 'medium', 'status' => 'new',
         ]);
         CrmLead::query()->create([
             'lead_number' => 'OD-10002', 'name' => 'Email Owner', 'phone' => '9876543211',
-            'email' => 'email-owner@example.com', 'priority' => 'medium', 'status' => 'new',
+            'email' => 'email-owner@mailbox.test', 'priority' => 'medium', 'status' => 'new',
         ]);
 
         $this->postJson(route('loan-acco.lead'), [
             'form' => 'loan', 'name' => 'Conflicting Person', 'phone' => '9876543210',
-            'email' => 'email-owner@example.com',
+            'email' => 'email-owner@mailbox.test',
         ])->assertUnprocessable()->assertJsonValidationErrors('contact');
 
         $this->assertDatabaseCount('crm_leads', 2);
@@ -60,14 +60,14 @@ class CrmWebsiteLeadTest extends TestCase
 
     public function test_newsletter_is_a_deduplicated_subscriber_and_not_a_lead(): void
     {
-        $payload = ['email' => 'reader@example.com', 'source' => 'Blog newsletter'];
+        $payload = ['email' => 'reader@mailbox.test', 'source' => 'Blog newsletter'];
         $this->postJson(route('newsletter.subscribe'), $payload)->assertOk();
         $this->postJson(route('newsletter.subscribe'), $payload)->assertOk();
 
         $this->assertDatabaseCount('crm_leads', 0);
         $this->assertDatabaseCount('crm_website_submissions', 0);
         $this->assertDatabaseCount('crm_subscribers', 1);
-        $this->assertDatabaseHas('crm_subscribers', ['email' => 'reader@example.com', 'source' => 'Blog newsletter', 'status' => 'active']);
+        $this->assertDatabaseHas('crm_subscribers', ['email' => 'reader@mailbox.test', 'source' => 'Blog newsletter', 'status' => 'active']);
     }
 
     public function test_crm_manages_website_submissions_and_exports_while_legacy_routes_are_gone(): void
@@ -75,8 +75,8 @@ class CrmWebsiteLeadTest extends TestCase
         $submission = app(\App\Services\WebsiteLeadManager::class)->capture('sop', 'Statement of Purpose', 'Visa SOP', [[
             'eyebrow' => 'SOP', 'title' => 'Strategy call',
             'answers' => [['label' => 'Service needed', 'value' => ['Visa SOP']]],
-        ]], ['name' => 'Mira Patel', 'email' => 'mira@example.com']);
-        $admin = CrmUser::query()->create(['name' => 'CRM Owner', 'phone' => '9999999999', 'email' => 'owner@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        ]], ['name' => 'Mira Patel', 'email' => 'mira@mailbox.test']);
+        $admin = CrmUser::query()->create(['name' => 'CRM Owner', 'phone' => '9999999999', 'email' => 'owner@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
         $session = ['crm_user_id' => $admin->id];
 
         $this->withSession($session)->get(route('crm.dashboard', ['view' => 'leads', 'lead_type' => 'statement_of_purpose']))
@@ -85,9 +85,9 @@ class CrmWebsiteLeadTest extends TestCase
         $this->withSession($session)->get(route('crm.website.export.excel'))->assertOk()->assertDownload();
         $this->withSession($session)->get(route('crm.website.download', $submission))->assertOk()->assertDownload();
 
-        CrmSubscriber::query()->create(['email' => 'reader@example.com', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now()]);
+        CrmSubscriber::query()->create(['email' => 'reader@mailbox.test', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now()]);
         $this->withSession($session)->get(route('crm.dashboard', ['view' => 'subscriptions']))
-            ->assertOk()->assertSee('Subscriptions')->assertSee('Newsletter subscriptions')->assertSee('reader@example.com')->assertDontSee('Mira Patel');
+            ->assertOk()->assertSee('Subscriptions')->assertSee('Newsletter subscriptions')->assertSee('reader@mailbox.test')->assertDontSee('Mira Patel');
         $this->withSession($session)->get(route('crm.subscribers.export'))->assertOk()->assertDownload();
 
         foreach (['/admin/enrollments', '/admin/enrollments/test-prep', '/admin/submissions/student-profiler', '/admin/submissions/loan-acco', '/admin/submissions/statement-of-purpose', '/admin/submissions/visa-mock', '/admin/newsletter'] as $url) {
@@ -114,7 +114,7 @@ class CrmWebsiteLeadTest extends TestCase
         ]];
 
         $lead = $manager->capture('profiler', 'Student Profiler', 'Postgraduate', $sections, [
-            'name' => 'Aarav Sharma', 'email' => 'aarav@example.com', 'phone' => '9876500077',
+            'name' => 'Aarav Sharma', 'email' => 'aarav@mailbox.test', 'phone' => '9876500077',
         ])->lead;
 
         $this->assertSame('88.4', $lead->tenth_score);
@@ -133,7 +133,7 @@ class CrmWebsiteLeadTest extends TestCase
 
         $lead->update(['tenth_score' => '90 (verified marksheet)', 'tenth_passing_year' => 2019]);
         $manager->capture('profiler', 'Student Profiler', 'Postgraduate', $sections, [
-            'name' => 'Aarav Sharma', 'email' => 'aarav@example.com', 'phone' => '9876500077',
+            'name' => 'Aarav Sharma', 'email' => 'aarav@mailbox.test', 'phone' => '9876500077',
         ]);
 
         $this->assertSame('90 (verified marksheet)', $lead->fresh()->tenth_score);
@@ -146,7 +146,7 @@ class CrmWebsiteLeadTest extends TestCase
             'request_token' => str_repeat('a', 64), 'session_hash' => str_repeat('b', 64),
             'page_slug' => 'test-preparation', 'block_id' => 'compare-plans', 'option_index' => 1,
             'item_name' => 'IELTS Coaching', 'amount' => 1800000, 'currency' => 'INR',
-            'customer_name' => 'Rhea Kapoor', 'customer_email' => 'rhea@example.com',
+            'customer_name' => 'Rhea Kapoor', 'customer_email' => 'rhea@mailbox.test',
             'customer_phone' => '9876543210', 'status' => 'order_created',
         ]);
 
@@ -156,7 +156,7 @@ class CrmWebsiteLeadTest extends TestCase
         $this->assertDatabaseCount('crm_website_submissions', 0);
         $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'crm_lead_id' => $lead->id]);
 
-        $admin = CrmUser::query()->create(['name' => 'CRM Owner', 'phone' => '9999999999', 'email' => 'owner@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'CRM Owner', 'phone' => '9999999999', 'email' => 'owner@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
         $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard', [
             'view' => 'enrollments', 'enrollment_source' => 'test-preparation', 'payment_status' => 'order_created',
         ]))->assertOk()->assertSee('Rhea Kapoor')->assertSee('IELTS Coaching')->assertSee('Test Preparation')->assertSee('Awaiting payment');
@@ -164,8 +164,8 @@ class CrmWebsiteLeadTest extends TestCase
 
     public function test_super_admin_can_manage_subscriber_status(): void
     {
-        $subscriber = CrmSubscriber::query()->create(['email' => 'reader@example.com', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now()]);
-        $admin = CrmUser::query()->create(['name' => 'CRM Owner', 'phone' => '9999999999', 'email' => 'owner@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $subscriber = CrmSubscriber::query()->create(['email' => 'reader@mailbox.test', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now()]);
+        $admin = CrmUser::query()->create(['name' => 'CRM Owner', 'phone' => '9999999999', 'email' => 'owner@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.subscribers.update', $subscriber), ['status' => 'unsubscribed'])->assertRedirect();
         $this->assertDatabaseHas('crm_subscribers', ['id' => $subscriber->id, 'status' => 'unsubscribed']);
@@ -173,14 +173,14 @@ class CrmWebsiteLeadTest extends TestCase
 
     public function test_counsellors_cannot_see_or_export_subscribers(): void
     {
-        CrmSubscriber::query()->create(['email' => 'private-reader@example.com', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now()]);
-        $counsellor = CrmUser::query()->create(['name' => 'Counsellor', 'phone' => '9999999998', 'email' => 'counsellor@example.com', 'role' => 'counsellor', 'is_active' => true]);
+        CrmSubscriber::query()->create(['email' => 'private-reader@mailbox.test', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now()]);
+        $counsellor = CrmUser::query()->create(['name' => 'Counsellor', 'phone' => '9999999998', 'email' => 'counsellor@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
         $session = ['crm_user_id' => $counsellor->id];
 
         $this->withSession($session)->get(route('crm.dashboard', ['view' => 'subscriptions']))
             ->assertOk()
             ->assertDontSee('Newsletter subscriptions')
-            ->assertDontSee('private-reader@example.com')
+            ->assertDontSee('private-reader@mailbox.test')
             ->assertDontSee('nav-subscriptions', false);
         $this->withSession($session)->get(route('crm.subscribers.export'))->assertForbidden();
     }

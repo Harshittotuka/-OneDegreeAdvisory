@@ -209,7 +209,7 @@
         @csrf
         <input type="hidden" name="source" value="Blog newsletter">
         <label class="visually-hidden" for="blog-newsletter-email">Email address</label>
-        <input id="blog-newsletter-email" type="email" name="email" required placeholder="you@example.com">
+        <input id="blog-newsletter-email" type="email" name="email" required placeholder="you@domain.com">
         <button class="btn btn-primary" type="submit">
           <span>Subscribe</span>
           <i data-lucide="arrow-up-right"></i>

@@ -387,7 +387,7 @@ class CareerCounsellingTest extends TestCase
             'block_id' => CareerCounsellingStore::BLOCK_ID,
             'option_index' => 1,
             'name' => 'Test Parent',
-            'email' => 'parent@example.test',
+            'email' => 'parent@mailbox.test',
             'phone' => '+91 9876543210',
         ])->assertOk();
 
@@ -401,7 +401,7 @@ class CareerCounsellingTest extends TestCase
         ]);
 
         // Starting checkout files the buyer in the CRM as an enrolment lead.
-        $lead = CrmLead::query()->where('email', 'parent@example.test')->firstOrFail();
+        $lead = CrmLead::query()->where('email', 'parent@mailbox.test')->firstOrFail();
         $this->assertSame('career_counselling', $lead->category);
         $this->assertSame('enrollment', $lead->lead_origin);
         $this->assertSame('Career Counselling · Class 10–12 · Explore (3 Sessions)', $lead->course_interest);
@@ -426,7 +426,7 @@ class CareerCounsellingTest extends TestCase
             'block_id' => CareerCounsellingStore::BLOCK_ID,
             'option_index' => 0,
             'name' => 'Test Parent',
-            'email' => 'parent@example.test',
+            'email' => 'parent@mailbox.test',
         ])->assertStatus(422);
 
         // A wrong block id cannot borrow the page's pricing either.
@@ -435,7 +435,7 @@ class CareerCounsellingTest extends TestCase
             'block_id' => 'not-plans',
             'option_index' => 0,
             'name' => 'Test Parent',
-            'email' => 'parent@example.test',
+            'email' => 'parent@mailbox.test',
         ])->assertStatus(422);
 
         $this->assertDatabaseCount('payment_attempts', 0);
@@ -449,7 +449,7 @@ class CareerCounsellingTest extends TestCase
 
         $this->postJson(route('career-counselling.lead'), [
             'name' => 'Asha Verma',
-            'email' => 'asha@example.test',
+            'email' => 'asha@mailbox.test',
             'phone' => '+91 98765 43210',
             'stage' => 'Class 10–12',
             'message' => 'Deciding between engineering and design.',
@@ -458,7 +458,7 @@ class CareerCounsellingTest extends TestCase
         $submission = CrmWebsiteSubmission::query()->where('source', 'career-counselling')->firstOrFail();
         $this->assertSame('Career Counselling', $submission->source_label);
 
-        $lead = CrmLead::query()->where('email', 'asha@example.test')->firstOrFail();
+        $lead = CrmLead::query()->where('email', 'asha@mailbox.test')->firstOrFail();
         $this->assertSame('career_counselling', $lead->lead_type);
         $this->assertSame('career_counselling', $lead->category);
         $this->assertSame('website', $lead->lead_origin);

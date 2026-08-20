@@ -20,7 +20,7 @@ class CrmMockInviteController extends Controller
 
         $validated = $request->validate([
             'recipient_name' => 'required|string|max:150',
-            'recipient_email' => 'nullable|email|max:190',
+            'recipient_email' => 'nullable|email|max:190|real_email',
             'recipient_phone' => 'nullable|string|max:20',
             'question_count' => ['required', 'integer', Rule::in(MockInterviewQuestions::INVITE_COUNTS)],
             'destination' => 'nullable|string|max:120',

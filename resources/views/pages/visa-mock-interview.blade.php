@@ -3681,6 +3681,8 @@ function celebrate(){
    LEAD CAPTURE + UNLOCK MORE QUESTIONS
    ============================================================ */
 const CFG = window.VMI_CONFIG || {};
+// Same copy the server returns for a malformed or placeholder address.
+const EMAIL_HELP = @json(config('site.forms.email_help'));
 const leadModal = $("vmiLeadModal");
 const leadForm = $("vmiLeadForm");
 const leadFormState = leadModal.querySelector("[data-lead-form-state]");
@@ -3746,7 +3748,7 @@ if(leadForm){
     const level = ($("vmi-lead-level").value || "").trim();
 
     if(name.length < 2){ return showLeadError("Please enter your full name."); }
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ return showLeadError("Please enter a valid email address."); }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ return showLeadError(EMAIL_HELP); }
     if(phone.replace(/\D/g,"").length < 7){ return showLeadError("Please enter a valid phone number."); }
 
     const label = leadSubmit.querySelector(".vmi-lead-submit-label");

@@ -138,7 +138,7 @@ class CrmMultiFilterTest extends TestCase
                 'session_hash' => str_repeat('d', 64),
                 'page_slug' => 'test-preparation', 'block_id' => 'b', 'item_name' => $name,
                 'option_index' => 0, 'amount' => 1000, 'currency' => 'INR', 'status' => $status,
-                'customer_name' => $name, 'customer_email' => strtolower($name).'@example.com',
+                'customer_name' => $name, 'customer_email' => strtolower($name).'@mailbox.test',
             ]);
         }
 
@@ -151,7 +151,7 @@ class CrmMultiFilterTest extends TestCase
 
     public function test_subscriptions_filter_on_several_sources(): void
     {
-        foreach ([['a@example.com', 'footer'], ['b@example.com', 'blog'], ['c@example.com', 'popup']] as [$email, $source]) {
+        foreach ([['a@mailbox.test', 'footer'], ['b@mailbox.test', 'blog'], ['c@mailbox.test', 'popup']] as [$email, $source]) {
             CrmSubscriber::query()->create(['email' => $email, 'source' => $source, 'status' => 'active', 'subscribed_at' => now()]);
         }
 
@@ -159,7 +159,7 @@ class CrmMultiFilterTest extends TestCase
             ->get(route('crm.dashboard', ['view' => 'subscriptions', 'subscriber_source' => ['footer', 'popup']]));
         $response->assertOk();
 
-        $this->assertSame(['a@example.com', 'c@example.com'], $response->viewData('subscribers')->pluck('email')->sort()->values()->all());
+        $this->assertSame(['a@mailbox.test', 'c@mailbox.test'], $response->viewData('subscribers')->pluck('email')->sort()->values()->all());
     }
 
     public function test_the_bar_renders_checkboxes_that_post_an_array(): void

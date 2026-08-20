@@ -69,9 +69,9 @@ class CrmTest extends TestCase
 
     public function test_team_member_can_request_an_otp_with_their_email(): void
     {
-        $user = CrmUser::query()->create(['name' => 'Email Admin', 'phone' => '9876543215', 'email' => 'email-admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $user = CrmUser::query()->create(['name' => 'Email Admin', 'phone' => '9876543215', 'email' => 'email-admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
-        $this->post(route('crm.otp.request'), ['login' => 'EMAIL-ADMIN@example.com'])
+        $this->post(route('crm.otp.request'), ['login' => 'EMAIL-ADMIN@mailbox.test'])
             ->assertRedirect()->assertSessionHas('otp_sent')->assertSessionHas('crm_otp_user_id', $user->id);
         Mail::assertSent(CrmOtpMail::class, fn (CrmOtpMail $mail): bool => $mail->hasTo($user->email));
 
@@ -82,7 +82,7 @@ class CrmTest extends TestCase
 
     public function test_unknown_email_cannot_request_an_otp(): void
     {
-        $this->post(route('crm.otp.request'), ['login' => 'stranger@example.com'])
+        $this->post(route('crm.otp.request'), ['login' => 'stranger@mailbox.test'])
             ->assertSessionHasErrors('login');
     }
 
@@ -120,9 +120,9 @@ class CrmTest extends TestCase
     {
         config()->set('crm.otp.master.code', '9829027413');
         config()->set('crm.otp.master.emails', ['harshittotuka1@gmail.com']);
-        $user = CrmUser::query()->create(['name' => 'Other Admin', 'phone' => '9876543215', 'email' => 'other-admin@example.com', 'role' => 'counsellor', 'is_active' => true]);
+        $user = CrmUser::query()->create(['name' => 'Other Admin', 'phone' => '9876543215', 'email' => 'other-admin@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
 
-        $this->post(route('crm.otp.request'), ['login' => 'other-admin@example.com'])
+        $this->post(route('crm.otp.request'), ['login' => 'other-admin@mailbox.test'])
             ->assertSessionHas('crm_otp_user_id', $user->id);
 
         $this->post(route('crm.otp.verify'), ['otp' => '9829027413'])
@@ -153,7 +153,7 @@ class CrmTest extends TestCase
         config()->set('crm.sms.msg91.flow_id', 'test-flow-id');
         config()->set('crm.sms.msg91.otp_variable', 'OTP');
         Http::fake(['control.msg91.com/*' => Http::response(['type' => 'success'], 200)]);
-        $user = CrmUser::query()->create(['name' => 'SMS Admin', 'phone' => '9876543210', 'email' => 'sms-admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $user = CrmUser::query()->create(['name' => 'SMS Admin', 'phone' => '9876543210', 'email' => 'sms-admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         $this->assertSame(['sms'], app(CrmOtpSender::class)->send($user, '654321'));
         Http::assertSent(fn ($request): bool => $request->hasHeader('authkey', 'test-auth-key')
@@ -186,7 +186,7 @@ class CrmTest extends TestCase
 
     public function test_lead_mobile_number_has_no_strict_format_validation(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.leads.store'), [
             'name' => 'Short Mobile Lead', 'phone' => '123', 'priority' => 'medium', 'status' => 'new',
@@ -197,14 +197,14 @@ class CrmTest extends TestCase
 
     public function test_manual_leads_cannot_duplicate_an_existing_email_address(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
         CrmLead::query()->create([
             'lead_number' => 'OD-10001', 'name' => 'Existing Lead', 'phone' => '9876500001',
-            'email' => 'student@example.com', 'priority' => 'medium', 'status' => 'new',
+            'email' => 'student@mailbox.test', 'priority' => 'medium', 'status' => 'new',
         ]);
 
         $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.leads.store'), [
-            'name' => 'Duplicate Email', 'phone' => '9876500002', 'email' => 'STUDENT@example.com',
+            'name' => 'Duplicate Email', 'phone' => '9876500002', 'email' => 'STUDENT@mailbox.test',
             'priority' => 'medium', 'status' => 'new',
         ])->assertSessionHasErrors(['email'], errorBag: 'leadCreate');
 
@@ -215,11 +215,11 @@ class CrmTest extends TestCase
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
         $lead = $this->leadFor($admin, 'Legacy One', '9876500011');
-        $lead->update(['email' => 'legacy@example.com']);
-        $this->leadFor($admin, 'Legacy Two', '9876500012')->update(['email' => 'legacy@example.com']);
+        $lead->update(['email' => 'legacy@mailbox.test']);
+        $this->leadFor($admin, 'Legacy Two', '9876500012')->update(['email' => 'legacy@mailbox.test']);
 
         $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
-            'name' => 'Legacy One Updated', 'phone' => $lead->phone, 'email' => 'legacy@example.com',
+            'name' => 'Legacy One Updated', 'phone' => $lead->phone, 'email' => 'legacy@mailbox.test',
             'priority' => 'high', 'status' => 'interested',
             // An open follow-up status has to carry a date; see the follow-up pairing test.
             'follow_up_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
@@ -299,10 +299,10 @@ class CrmTest extends TestCase
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
         $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.team.store'), [
-            'name' => 'New Counsellor', 'phone' => '+91 98765 43211', 'email' => 'counsellor@example.com', 'role' => 'counsellor',
+            'name' => 'New Counsellor', 'phone' => '+91 98765 43211', 'email' => 'counsellor@mailbox.test', 'role' => 'counsellor',
         ])->assertSessionHasNoErrors();
         $counsellor = CrmUser::query()->where('phone', '9876543211')->firstOrFail();
-        $this->assertSame('counsellor@example.com', $counsellor->email);
+        $this->assertSame('counsellor@mailbox.test', $counsellor->email);
         $lead = $this->leadFor($admin, 'Transfer Me', '9876500003');
 
         $this->withSession(['crm_user_id' => $admin->id])->put(route('crm.leads.update', $lead), [
@@ -316,25 +316,25 @@ class CrmTest extends TestCase
 
     public function test_super_admin_can_create_and_see_another_super_admin(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.team.store'), [
-            'name' => 'Second Admin', 'phone' => '9876543219', 'email' => 'second-admin@example.com', 'role' => 'super_admin',
+            'name' => 'Second Admin', 'phone' => '9876543219', 'email' => 'second-admin@mailbox.test', 'role' => 'super_admin',
         ])->assertSessionHasNoErrors();
 
-        $member = CrmUser::query()->where('email', 'second-admin@example.com')->firstOrFail();
+        $member = CrmUser::query()->where('email', 'second-admin@mailbox.test')->firstOrFail();
         $this->assertTrue($member->isSuperAdmin());
         $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard'))
             ->assertOk()
             ->assertSee('Second Admin')
-            ->assertSee('second-admin@example.com')
+            ->assertSee('second-admin@mailbox.test')
             ->assertSee('Super admin');
     }
 
     public function test_super_admin_can_promote_and_demote_a_team_member(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
-        $member = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@example.com', 'role' => 'counsellor', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
+        $member = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
 
         $this->withSession(['crm_user_id' => $admin->id])
             ->patch(route('crm.team.role', $member))
@@ -351,9 +351,9 @@ class CrmTest extends TestCase
     public function test_role_changes_are_guarded(): void
     {
         config()->set('crm.super_admin.phone', '9876543210');
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
-        $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@example.com', 'role' => 'counsellor', 'is_active' => true]);
-        $peer = CrmUser::query()->create(['name' => 'Second', 'phone' => '9876543212', 'email' => 'second@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
+        $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
+        $peer = CrmUser::query()->create(['name' => 'Second', 'phone' => '9876543212', 'email' => 'second@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         // Nobody can change their own role, and counsellors cannot change roles at all.
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.role', $admin))->assertForbidden();
@@ -368,21 +368,21 @@ class CrmTest extends TestCase
 
     public function test_super_admin_can_change_a_member_phone_number(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
-        $member = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@example.com', 'role' => 'counsellor', 'is_active' => true]);
-        $other = CrmUser::query()->create(['name' => 'Ravi', 'phone' => '9876543212', 'email' => 'ravi@example.com', 'role' => 'counsellor', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
+        $member = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
+        $other = CrmUser::query()->create(['name' => 'Ravi', 'phone' => '9876543212', 'email' => 'ravi@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
 
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
-            'name' => 'Asha', 'phone' => '+91 91234 56789', 'email' => 'asha@example.com',
+            'name' => 'Asha', 'phone' => '+91 91234 56789', 'email' => 'asha@mailbox.test',
         ])->assertSessionHasNoErrors();
         $this->assertSame('9123456789', $member->fresh()->phone);
 
         // Another member's number is rejected, as is a number that is too short.
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
-            'name' => 'Asha', 'phone' => $other->phone, 'email' => 'asha@example.com',
+            'name' => 'Asha', 'phone' => $other->phone, 'email' => 'asha@mailbox.test',
         ])->assertSessionHasErrors('team');
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
-            'name' => 'Asha', 'phone' => '12345', 'email' => 'asha@example.com',
+            'name' => 'Asha', 'phone' => '12345', 'email' => 'asha@mailbox.test',
         ])->assertSessionHasErrors('team');
         $this->assertSame('9123456789', $member->fresh()->phone);
     }
@@ -461,7 +461,7 @@ class CrmTest extends TestCase
     {
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'role' => 'super_admin', 'is_active' => true]);
         $owner = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'role' => 'counsellor', 'is_active' => true]);
-        $csv = "name,phone,email,course,priority,source\nImported Student,9876500010,student@example.com,MBA,high,Education Fair\nDuplicate Student,9876500010,duplicate@example.com,MBA,low,Referral\n";
+        $csv = "name,phone,email,course,priority,source\nImported Student,9876500010,student@mailbox.test,MBA,high,Education Fair\nDuplicate Student,9876500010,duplicate@mailbox.test,MBA,low,Referral\n";
 
         $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.leads.import'), [
             'file' => UploadedFile::fake()->createWithContent('leads.csv', $csv),
@@ -476,7 +476,7 @@ class CrmTest extends TestCase
 
     public function test_super_admin_can_delete_a_team_member_and_their_leads_are_unassigned(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
         $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'role' => 'counsellor', 'is_active' => true]);
         $lead = $this->leadFor($counsellor, 'Owned Lead', '9876500021');
 
@@ -804,7 +804,7 @@ class CrmTest extends TestCase
     public function test_every_view_offers_a_soft_refresh_button_in_all_three_themes(): void
     {
         $admin = CrmUser::query()->create([
-            'name' => 'Refresh Admin', 'phone' => '9811111111', 'email' => 'refresh@example.com',
+            'name' => 'Refresh Admin', 'phone' => '9811111111', 'email' => 'refresh@mailbox.test',
             'role' => 'super_admin', 'is_active' => true,
         ]);
 
@@ -862,7 +862,7 @@ class CrmTest extends TestCase
 
     public function test_every_sidebar_badge_counts_the_view_it_opens(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         // Two open conversations, only one of them overdue — the case where the
         // Follow-ups badge used to read 1 beside a list of 2, because it counted
@@ -898,7 +898,7 @@ class CrmTest extends TestCase
 
     public function test_the_follow_up_card_the_badge_and_the_planner_all_report_the_same_number(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         $n = 0;
         foreach (\App\Support\CrmOptions::FOLLOW_UP_STATUSES as $status) {
@@ -943,7 +943,7 @@ class CrmTest extends TestCase
 
     public function test_every_dashboard_number_lands_on_a_list_of_exactly_that_many_leads(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
         $n = 0;
         $make = function (array $attrs) use (&$n, $admin): void {
@@ -1003,9 +1003,9 @@ class CrmTest extends TestCase
 
     public function test_the_owner_filter_reaches_unassigned_leads_and_deactivated_owners(): void
     {
-        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@example.com', 'role' => 'super_admin', 'is_active' => true]);
-        $active = CrmUser::query()->create(['name' => 'Active Counsellor', 'phone' => '9876543211', 'email' => 'ac@example.com', 'role' => 'counsellor', 'is_active' => true]);
-        $former = CrmUser::query()->create(['name' => 'Former Counsellor', 'phone' => '9876543212', 'email' => 'fc@example.com', 'role' => 'counsellor', 'is_active' => false]);
+        $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'a@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
+        $active = CrmUser::query()->create(['name' => 'Active Counsellor', 'phone' => '9876543211', 'email' => 'ac@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
+        $former = CrmUser::query()->create(['name' => 'Former Counsellor', 'phone' => '9876543212', 'email' => 'fc@mailbox.test', 'role' => 'counsellor', 'is_active' => false]);
 
         $this->leadFor($active, 'Owned Lead', '9876510161');
         $legacy = $this->leadFor($former, 'Inherited Lead', '9876510162');
@@ -1218,7 +1218,7 @@ class CrmTest extends TestCase
     public function test_every_crm_list_numbers_its_rows(): void
     {
         $admin = CrmUser::query()->create([
-            'name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@example.com',
+            'name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test',
             'role' => 'super_admin', 'is_active' => true,
         ]);
         $this->leadFor($admin, 'Numbered Lead', '9876510131')
@@ -1229,11 +1229,11 @@ class CrmTest extends TestCase
             'request_token' => str_repeat('c', 64), 'session_hash' => str_repeat('d', 64),
             'page_slug' => 'test-preparation', 'block_id' => 'compare-plans', 'option_index' => 0,
             'item_name' => 'IELTS Coaching', 'amount' => 1800000, 'currency' => 'INR',
-            'customer_name' => 'Rhea Kapoor', 'customer_email' => 'rhea@example.com',
+            'customer_name' => 'Rhea Kapoor', 'customer_email' => 'rhea@mailbox.test',
             'customer_phone' => '9876543219', 'status' => 'order_created',
         ]);
         \App\Models\CrmSubscriber::query()->create([
-            'email' => 'reader@example.com', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now(),
+            'email' => 'reader@mailbox.test', 'source' => 'Blog newsletter', 'status' => 'active', 'subscribed_at' => now(),
         ]);
         \App\Models\CrmMockInterviewInvite::query()->create([
             'token' => \App\Models\CrmMockInterviewInvite::freshToken(), 'recipient_name' => 'Rahul Student',
@@ -1300,15 +1300,15 @@ class CrmTest extends TestCase
         \App\Models\CrmAuditLog::query()->create([
             'crm_user_id' => $admin->id, 'event' => 'crm_login', 'description' => 'Signed in.',
         ]);
-        \App\Models\CrmSubscriber::query()->create(['email' => 'reader@example.com', 'status' => 'active', 'subscribed_at' => now()]);
+        \App\Models\CrmSubscriber::query()->create(['email' => 'reader@mailbox.test', 'status' => 'active', 'subscribed_at' => now()]);
         \App\Models\PaymentAttempt::query()->create([
             'request_token' => str_repeat('e', 64), 'session_hash' => str_repeat('f', 64),
             'page_slug' => 'test-preparation', 'block_id' => 'compare', 'option_index' => 0,
             'item_name' => 'IELTS intensive', 'amount' => 500000, 'currency' => 'INR', 'status' => 'paid',
-            'customer_name' => 'Paid Student', 'customer_email' => 'paid@example.com', 'customer_phone' => '9876500011',
+            'customer_name' => 'Paid Student', 'customer_email' => 'paid@mailbox.test', 'customer_phone' => '9876500011',
         ]);
         \App\Models\CrmMockInterviewInvite::query()->create([
-            'token' => str()->random(32), 'recipient_name' => 'Invited Student', 'recipient_email' => 'invited@example.com',
+            'token' => str()->random(32), 'recipient_name' => 'Invited Student', 'recipient_email' => 'invited@mailbox.test',
             'question_count' => 20, 'max_attempts' => 3, 'created_by' => $admin->id,
         ]);
 

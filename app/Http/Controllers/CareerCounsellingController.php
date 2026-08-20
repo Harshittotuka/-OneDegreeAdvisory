@@ -52,7 +52,7 @@ class CareerCounsellingController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:120',
-            'email' => 'required|email|max:190',
+            'email' => 'required|email|max:190|real_email',
             'phone' => 'nullable|string|max:40',
             'stage' => 'nullable|string|max:60',
             'message' => 'nullable|string|max:2000',

@@ -83,7 +83,7 @@ class PageController extends Controller
     {
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:120'],
-            'email'       => ['required', 'email', 'max:190'],
+            'email'       => ['required', 'email', 'max:190', 'real_email'],
             'phone'       => ['required', 'string', 'max:40'],
             'city'        => ['nullable', 'string', 'max:120'],
             'residence'   => ['nullable', 'string', 'max:120'],
@@ -136,7 +136,7 @@ class PageController extends Controller
         // required. The PHP upload ceiling is 2 MB, so the file rule matches.
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:120'],
-            'email'       => ['required', 'email', 'max:190'],
+            'email'       => ['required', 'email', 'max:190', 'real_email'],
             'phone'       => ['required', 'string', 'max:40'],
             'linkedin'    => ['nullable', 'url', 'max:255'],
             'role'        => ['required', 'string', 'max:160'],
@@ -220,7 +220,7 @@ class PageController extends Controller
     public function subscribeNewsletter(Request $request, WebsiteLeadManager $leads): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
-            'email'  => ['required', 'email', 'max:190'],
+            'email'  => ['required', 'email', 'max:190', 'real_email'],
             'source' => ['nullable', 'string', 'max:80'],
         ]);
 
@@ -420,7 +420,7 @@ class PageController extends Controller
     {
         $validated = $request->validate([
             'name'  => 'required|string|max:120',
-            'email' => 'required|email|max:190',
+            'email' => 'required|email|max:190|real_email',
             'phone' => 'required|string|max:40',
             // Optional context about the practice round they were unlocking.
             'destination' => 'nullable|string|max:120',

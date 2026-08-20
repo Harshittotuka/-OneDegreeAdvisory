@@ -7,7 +7,7 @@
     </label>
     <label class="contact-field" for="{{ ($formId ?? 'contact').'-email' }}">
       <span>Email address *</span>
-      <input id="{{ ($formId ?? 'contact').'-email' }}" name="email" type="email" required placeholder="you@example.com">
+      <input id="{{ ($formId ?? 'contact').'-email' }}" name="email" type="email" required placeholder="you@domain.com">
     </label>
   </div>
 

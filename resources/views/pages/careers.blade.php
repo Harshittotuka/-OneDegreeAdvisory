@@ -177,7 +177,7 @@
             </label>
             <label class="cr-field" for="applicant-email">
               <span>Email address *</span>
-              <input id="applicant-email" name="email" type="email" required placeholder="you@example.com">
+              <input id="applicant-email" name="email" type="email" required placeholder="you@domain.com">
             </label>
           </div>
 

@@ -229,7 +229,7 @@ class TestPrepCompareTest extends TestCase
             'block_id' => TestPrepCompareStore::BLOCK_ID,
             'option_index' => 1,
             'name' => 'Test Student',
-            'email' => 'student@example.test',
+            'email' => 'student@mailbox.test',
             'phone' => '+91 9876543210',
         ])->assertOk();
 
@@ -267,7 +267,7 @@ class TestPrepCompareTest extends TestCase
             'block_id' => TestPrepCompareStore::BLOCK_ID,
             'option_index' => 0,
             'name' => 'Test Student',
-            'email' => 'student@example.test',
+            'email' => 'student@mailbox.test',
         ])->assertStatus(422);
 
         $this->assertDatabaseCount('payment_attempts', 0);
@@ -296,7 +296,7 @@ class TestPrepCompareTest extends TestCase
         $this->seedTestPrepAttempt('GRE', 'a@x.test');
         $this->seedTestPrepAttempt('GRE Coaching (Legacy)', 'b@x.test');
 
-        $admin = CrmUser::create(['name' => 'Owner', 'phone' => '9999999999', 'email' => 'owner@example.test', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::create(['name' => 'Owner', 'phone' => '9999999999', 'email' => 'owner@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
         $html = $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'enrollments']))
             ->assertOk()
@@ -330,7 +330,7 @@ class TestPrepCompareTest extends TestCase
         $this->seedTestPrepAttempt('GRE Coaching (Legacy)', 'legacy@x.test', 'Legacy Student');
 
         // Filtering by the legacy type shows only that student, not the GRE one.
-        $admin = CrmUser::create(['name' => 'Owner', 'phone' => '9999999999', 'email' => 'owner@example.test', 'role' => 'super_admin', 'is_active' => true]);
+        $admin = CrmUser::create(['name' => 'Owner', 'phone' => '9999999999', 'email' => 'owner@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
         $this->withSession(['crm_user_id' => $admin->id])
             ->get(route('crm.dashboard', ['view' => 'enrollments', 'enrollment_plan' => 'GRE Coaching (Legacy)']))
             ->assertOk()

@@ -19,7 +19,7 @@ class CrmUserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', 'max:30'],
-            'email' => ['required', 'email', 'max:190', 'unique:crm_users,email'],
+            'email' => ['required', 'email', 'max:190', 'real_email', 'unique:crm_users,email'],
             'role' => ['required', Rule::in(['counsellor', 'super_admin'])],
         ]);
         $phone = $this->normalisePhone($data['phone']);
@@ -52,7 +52,7 @@ class CrmUserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', 'max:30'],
-            'email' => ['required', 'email', 'max:190', Rule::unique('crm_users', 'email')->ignore($member->id)],
+            'email' => ['required', 'email', 'max:190', 'real_email', Rule::unique('crm_users', 'email')->ignore($member->id)],
         ]);
         $phone = $this->normalisePhone($data['phone']);
         if (strlen($phone) !== 10) {

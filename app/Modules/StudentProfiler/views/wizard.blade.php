@@ -27,7 +27,8 @@
             config: @json($config),
             state: @json($state),
             endpoint: @json(url('/profiler')),
-            csrf: @json(csrf_token())
+            csrf: @json(csrf_token()),
+            emailHelp: @json(config('site.forms.email_help'))
         };
     </script>
     <script src="{{ $spAsset('assets/student-profiler/student-profiler.js') }}" defer></script>

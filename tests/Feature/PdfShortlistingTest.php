@@ -21,7 +21,7 @@ class PdfShortlistingTest extends TestCase
         return CrmUser::query()->create([
             'name' => 'Counsellor',
             'phone' => '9876500000',
-            'email' => 'counsellor@example.com',
+            'email' => 'counsellor@mailbox.test',
             'role' => 'counsellor',
             'is_active' => true,
         ]);

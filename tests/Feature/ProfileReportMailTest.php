@@ -26,7 +26,7 @@ class ProfileReportMailTest extends TestCase
             'degree'  => 'masters',
             'section' => 6,
             'answers' => ['q_ec_level' => 'Just Participated'],
-            'contact' => ['name' => 'Alex Student', 'email' => 'alex@example.com', 'phone' => '+91 90000 00000'],
+            'contact' => ['name' => 'Alex Student', 'email' => 'alex@testmail.dev', 'phone' => '+91 90000 00000'],
         ])->assertOk()->assertJson(['ok' => true]);
 
         Mail::assertSent(ProfileReportTeamMail::class, function (ProfileReportTeamMail $mail) {
@@ -40,7 +40,7 @@ class ProfileReportMailTest extends TestCase
         });
 
         Mail::assertSent(ProfileReportThankYouMail::class, function (ProfileReportThankYouMail $mail) {
-            return $mail->hasTo('alex@example.com')
+            return $mail->hasTo('alex@testmail.dev')
                 && $mail->data['name'] === 'Alex Student'
                 && $mail->pdf !== null;
         });
@@ -72,9 +72,31 @@ class ProfileReportMailTest extends TestCase
             'degree'  => 'hacker',
             'section' => 1,
             'answers' => ['x' => 'y'],
-            'contact' => ['name' => 'X', 'email' => 'x@example.com', 'phone' => '1'],
+            'contact' => ['name' => 'X', 'email' => 'x@testmail.dev', 'phone' => '1'],
         ])->assertOk()->assertJson(['ok' => true]);
 
         Mail::assertNothingSent();
+    }
+
+    /**
+     * Placeholder addresses are undeliverable: the relay accepts them, retries
+     * for hours, then bounces. The profiler refuses them outright so no mail is
+     * sent and no lead is recorded.
+     */
+    public function test_placeholder_email_is_rejected_and_sends_nothing(): void
+    {
+        foreach (['rohan@example.test', 'a@example.com', 'EXAMPLE@gmail.com', 'sub@mail.example.co.in'] as $email) {
+            Mail::fake();
+
+            $this->post('/profiler', [
+                'action'  => 'submit',
+                'degree'  => 'masters',
+                'section' => 6,
+                'answers' => ['q_ec_level' => 'Just Participated'],
+                'contact' => ['name' => 'Alex Student', 'email' => $email, 'phone' => '+91 90000 00000'],
+            ])->assertStatus(422)->assertJson(['ok' => false, 'field' => 'email']);
+
+            Mail::assertNothingSent();
+        }
     }
 }

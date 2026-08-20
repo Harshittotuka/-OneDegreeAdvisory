@@ -35,6 +35,8 @@
     @endphp
     <meta name="theme-color" content="#1a0088">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Read by script.js so the email guidance matches the server rule. --}}
+    <meta name="email-help" content="{{ config('site.forms.email_help') }}">
     <meta name="robots" content="{{ $robotsValue }}">
     <meta name="description" content="{{ $metaDescription }}">
     @if($googleSiteVerification !== '')

@@ -21,7 +21,7 @@ class FormMailTest extends TestCase
 
         $payload = [
             'name' => 'Alex Student',
-            'email' => 'alex@example.com',
+            'email' => 'alex@mailbox.test',
             'phone' => '+91 90000 00000',
             'city' => 'Jaipur',
             'destination' => 'United Kingdom',
@@ -52,7 +52,7 @@ class FormMailTest extends TestCase
 
         $payload = [
             'name' => 'Priya Applicant',
-            'email' => 'priya@example.com',
+            'email' => 'priya@mailbox.test',
             'phone' => '+91 91111 11111',
             'linkedin' => 'https://www.linkedin.com/in/priya-applicant',
             'role' => 'Admissions Counsellor',
@@ -84,18 +84,18 @@ class FormMailTest extends TestCase
         Mail::shouldReceive('mailer')->times(4)->andThrow(new RuntimeException('SMTP offline'));
 
         $this->postJson('/contact', [
-            'name' => 'Offline Contact', 'email' => 'offline-contact@example.com', 'phone' => '9000000001',
+            'name' => 'Offline Contact', 'email' => 'offline-contact@mailbox.test', 'phone' => '9000000001',
             'level' => 'Postgraduate', 'consent' => '1',
         ])->assertOk()->assertJsonPath('ok', true);
 
         $this->postJson('/careers', [
-            'name' => 'Offline Applicant', 'email' => 'offline-career@example.com', 'phone' => '9000000002',
+            'name' => 'Offline Applicant', 'email' => 'offline-career@mailbox.test', 'phone' => '9000000002',
             'role' => 'Counsellor', 'experience' => '2 years', 'message' => 'Application details',
             'resume_link' => 'https://example.com/resume.pdf', 'consent' => '1',
         ])->assertOk()->assertJsonPath('ok', true);
 
-        $this->assertDatabaseHas('crm_leads', ['email' => 'offline-contact@example.com', 'lead_type' => 'general']);
-        $this->assertDatabaseHas('crm_leads', ['email' => 'offline-career@example.com', 'lead_type' => 'general']);
+        $this->assertDatabaseHas('crm_leads', ['email' => 'offline-contact@mailbox.test', 'lead_type' => 'general']);
+        $this->assertDatabaseHas('crm_leads', ['email' => 'offline-career@mailbox.test', 'lead_type' => 'general']);
         $this->assertDatabaseCount('crm_website_submissions', 2);
     }
 
@@ -139,19 +139,19 @@ class FormMailTest extends TestCase
 
         $this->artisan('mail:test-flow', [
             'type' => 'contact',
-            'email' => 'student@example.com',
-            '--team-to' => 'team@example.com',
+            'email' => 'student@mailbox.test',
+            '--team-to' => 'team@mailbox.test',
         ])->assertExitCode(0);
 
         $this->artisan('mail:test-flow', [
             'type' => 'careers',
-            'email' => 'applicant@example.com',
-            '--team-to' => 'hr@example.com',
+            'email' => 'applicant@mailbox.test',
+            '--team-to' => 'hr@mailbox.test',
         ])->assertExitCode(0);
 
-        Mail::assertSent(ContactEnquiryMail::class, fn (ContactEnquiryMail $mail) => $mail->hasTo('team@example.com'));
-        Mail::assertSent(ContactThankYouMail::class, fn (ContactThankYouMail $mail) => $mail->hasTo('student@example.com'));
-        Mail::assertSent(CareerApplicationMail::class, fn (CareerApplicationMail $mail) => $mail->hasTo('hr@example.com'));
-        Mail::assertSent(CareerThankYouMail::class, fn (CareerThankYouMail $mail) => $mail->hasTo('applicant@example.com'));
+        Mail::assertSent(ContactEnquiryMail::class, fn (ContactEnquiryMail $mail) => $mail->hasTo('team@mailbox.test'));
+        Mail::assertSent(ContactThankYouMail::class, fn (ContactThankYouMail $mail) => $mail->hasTo('student@mailbox.test'));
+        Mail::assertSent(CareerApplicationMail::class, fn (CareerApplicationMail $mail) => $mail->hasTo('hr@mailbox.test'));
+        Mail::assertSent(CareerThankYouMail::class, fn (CareerThankYouMail $mail) => $mail->hasTo('applicant@mailbox.test'));
     }
 }

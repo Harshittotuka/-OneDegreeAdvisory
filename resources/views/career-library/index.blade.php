@@ -92,7 +92,7 @@
         </div>
         <div class="cl-idx-field">
           <label for="cl-idx-email">Email</label>
-          <input type="email" id="cl-idx-email" name="email" required autocomplete="email" placeholder="you@example.com">
+          <input type="email" id="cl-idx-email" name="email" required autocomplete="email" placeholder="you@domain.com">
         </div>
         <div class="cl-idx-field">
           <label for="cl-idx-phone">Phone</label>
@@ -175,6 +175,8 @@
     const ENSURE_URL = @json(route('career-library.ensure'));
     const DETAIL_ENABLED = @json((bool) ($settings['detail_pages_enabled'] ?? false));
     const CSRF = @json(csrf_token());
+    // Same copy the server returns for a malformed or placeholder address.
+    const EMAIL_HELP = @json(config('site.forms.email_help'));
     const INITIAL_ERROR = @json($jsError);
 
     // --- STATE & UTILS ---
@@ -366,7 +368,9 @@
             const phone = (document.getElementById('cl-idx-phone').value || '').trim();
 
             if (!name || !email || !phone) { showLeadError('Please fill in your name, email and phone.'); return; }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showLeadError('Please enter a valid email address.'); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showLeadError(EMAIL_HELP); return; }
+            // Placeholder addresses bounce, so they are refused server-side too.
+            if (/example/i.test(email)) { showLeadError(EMAIL_HELP); return; }
 
             leadSubmit.disabled = true;
             setSubmitLabel('Submitting…');
@@ -382,9 +386,17 @@
                         language: leadContext.language || '',
                     }),
                 });
-                if (!res.ok) throw new Error('Request failed');
                 let data = {};
                 try { data = await res.json(); } catch (_) {}
+                if (!res.ok) {
+                    // Surface the server's validation message (e.g. a rejected
+                    // placeholder email) rather than a generic failure.
+                    const invalid = data.errors ? Object.values(data.errors).flat()[0] : '';
+                    leadSubmit.disabled = false;
+                    setSubmitLabel('Submit details');
+                    showLeadError(invalid || data.message || 'Something went wrong. Please try again.');
+                    return;
+                }
                 try { sessionStorage.setItem('cl_lead_captured', '1'); } catch (_) {}
                 showLeadSuccess(data.redirect || null);
             } catch (err) {

@@ -36,7 +36,7 @@ class PaymentController extends Controller
             'block_id' => ['required', 'string', 'max:120', 'regex:/^[a-zA-Z0-9-]+$/'],
             'option_index' => ['required', 'integer', 'min:0', 'max:30'],
             'name' => ['required', 'string', 'max:160'],
-            'email' => ['required', 'email:rfc', 'max:190'],
+            'email' => ['required', 'email:rfc', 'max:190', 'real_email'],
             'phone' => ['nullable', 'string', 'max:40', 'regex:/^[0-9+()\-\s]{7,40}$/'],
         ]);
 

@@ -57,7 +57,7 @@ class PaymentFlowTest extends TestCase
             'block_id' => 'europe-payment',
             'option_index' => 1,
             'name' => 'Test Student',
-            'email' => 'student@example.test',
+            'email' => 'student@mailbox.test',
             'phone' => '+91 9876543210',
         ])->assertOk();
 
@@ -129,7 +129,7 @@ class PaymentFlowTest extends TestCase
             'currency' => 'INR',
             'theme_color' => '#F05A28',
             'customer_name' => 'Test Student',
-            'customer_email' => 'student@example.test',
+            'customer_email' => 'student@mailbox.test',
             'razorpay_order_id' => 'order_webhook123',
             'status' => 'order_created',
         ]);
@@ -161,11 +161,11 @@ class PaymentFlowTest extends TestCase
     {
         CrmLead::query()->create([
             'lead_number' => 'OD-10001', 'name' => 'Phone Owner', 'phone' => '9876543210',
-            'email' => 'phone@example.test', 'priority' => 'medium', 'status' => 'new',
+            'email' => 'phone@mailbox.test', 'priority' => 'medium', 'status' => 'new',
         ]);
         CrmLead::query()->create([
             'lead_number' => 'OD-10002', 'name' => 'Email Owner', 'phone' => '9876543211',
-            'email' => 'email@example.test', 'priority' => 'medium', 'status' => 'new',
+            'email' => 'email@mailbox.test', 'priority' => 'medium', 'status' => 'new',
         ]);
         $this->mock(PaymentBlockResolver::class, function (MockInterface $mock): void {
             $mock->shouldReceive('resolve')->once()->andReturn([
@@ -176,7 +176,7 @@ class PaymentFlowTest extends TestCase
 
         $this->postJson(route('payments.order'), [
             'page_slug' => 'europe', 'block_id' => 'europe-payment', 'option_index' => 0,
-            'name' => 'Conflict', 'phone' => '9876543210', 'email' => 'email@example.test',
+            'name' => 'Conflict', 'phone' => '9876543210', 'email' => 'email@mailbox.test',
         ])->assertUnprocessable()->assertJsonValidationErrors('contact');
 
         $this->assertDatabaseCount('payment_attempts', 0);

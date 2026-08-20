@@ -43,7 +43,7 @@ class LoanAccoController extends Controller
         $validated = $request->validate([
             'form'  => 'required|string|in:loan,accommodation',
             'name'  => 'required|string|max:120',
-            'email' => 'required|email|max:190',
+            'email' => 'required|email|max:190|real_email',
             'phone' => 'required|string|max:40',
         ]);
 

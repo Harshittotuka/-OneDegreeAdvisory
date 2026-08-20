@@ -123,7 +123,7 @@ class CareerLibraryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:120',
-            'email' => 'required|email|max:190',
+            'email' => 'required|email|max:190|real_email',
             'phone' => 'required|string|max:40',
             // Context — which career/place they were about to open. Optional so a
             // lead is still captured even if the front-end couldn't supply it.

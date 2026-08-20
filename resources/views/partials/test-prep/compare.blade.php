@@ -263,7 +263,7 @@
 
           <div class="tpc-pay-fields">
             <label><span>Full name</span><input type="text" data-tpc-name maxlength="160" autocomplete="name" placeholder="Your name" required></label>
-            <label><span>Email</span><input type="email" data-tpc-email maxlength="190" autocomplete="email" placeholder="you@example.com" required></label>
+            <label><span>Email</span><input type="email" data-tpc-email maxlength="190" autocomplete="email" placeholder="you@domain.com" required></label>
             <label><span>Phone / WhatsApp</span><input type="tel" data-tpc-phone maxlength="40" autocomplete="tel" placeholder="+91 98765 43210"></label>
           </div>
 

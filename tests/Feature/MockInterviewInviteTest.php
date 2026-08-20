@@ -21,7 +21,7 @@ class MockInterviewInviteTest extends TestCase
         return $this->counsellor ??= CrmUser::query()->create([
             'name' => 'Priya Counsellor',
             'phone' => '9800000001',
-            'email' => 'priya@example.com',
+            'email' => 'priya@mailbox.test',
             'role' => 'super_admin',
             'is_active' => true,
         ]);
@@ -446,7 +446,7 @@ class MockInterviewInviteTest extends TestCase
             ->post(route('crm.mock-invites.store'), [
                 'recipient_name' => 'Aisha Khan',
                 'question_count' => 39,
-                'recipient_email' => 'aisha@example.com',
+                'recipient_email' => 'aisha@mailbox.test',
                 'destination' => 'Canada',
                 'expires_in_days' => 14,
             ])
@@ -508,11 +508,11 @@ class MockInterviewInviteTest extends TestCase
     public function test_a_counsellor_only_sees_their_own_links(): void
     {
         $mine = CrmUser::query()->create([
-            'name' => 'Counsellor One', 'phone' => '9800000011', 'email' => 'one@example.com',
+            'name' => 'Counsellor One', 'phone' => '9800000011', 'email' => 'one@mailbox.test',
             'role' => 'counsellor', 'is_active' => true,
         ]);
         $other = CrmUser::query()->create([
-            'name' => 'Counsellor Two', 'phone' => '9800000012', 'email' => 'two@example.com',
+            'name' => 'Counsellor Two', 'phone' => '9800000012', 'email' => 'two@mailbox.test',
             'role' => 'counsellor', 'is_active' => true,
         ]);
 
@@ -529,7 +529,7 @@ class MockInterviewInviteTest extends TestCase
     public function test_a_counsellor_cannot_revoke_someone_elses_link(): void
     {
         $mine = CrmUser::query()->create([
-            'name' => 'Counsellor One', 'phone' => '9800000021', 'email' => 'one2@example.com',
+            'name' => 'Counsellor One', 'phone' => '9800000021', 'email' => 'one2@mailbox.test',
             'role' => 'counsellor', 'is_active' => true,
         ]);
         $invite = $this->invite();

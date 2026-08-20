@@ -680,7 +680,7 @@
             </div>
             <div class="cl-gate-field">
                 <label for="cl-lead-email">Email</label>
-                <input type="email" id="cl-lead-email" name="email" required autocomplete="email" placeholder="you@example.com">
+                <input type="email" id="cl-lead-email" name="email" required autocomplete="email" placeholder="you@domain.com">
             </div>
             <div class="cl-gate-field">
                 <label for="cl-lead-phone">Phone</label>
@@ -729,6 +729,8 @@
         const LEAD_URL = @json(route('career-library.lead'));
         const INDEX_URL = @json(route('career-library.index'));
         const CSRF = @json(csrf_token());
+        // Same copy the server returns for a malformed or placeholder address.
+        const EMAIL_HELP = @json(config('site.forms.email_help'));
         const CONTEXT = @json($jsLeadContext);
 
         const submitBtn = document.getElementById('cl-lead-submit');
@@ -788,7 +790,12 @@
                 return;
             }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('Please enter a valid email address.');
+                showError(EMAIL_HELP);
+                return;
+            }
+            // Placeholder addresses bounce, so they are refused server-side too.
+            if (/example/i.test(email)) {
+                showError(EMAIL_HELP);
                 return;
             }
 
@@ -808,7 +815,17 @@
                     body: JSON.stringify({ name, email, phone, ...CONTEXT }),
                 });
 
-                if (!res.ok) throw new Error('Request failed');
+                if (!res.ok) {
+                    // Surface the server's validation message (e.g. a rejected
+                    // placeholder email) rather than a generic failure.
+                    let data = {};
+                    try { data = await res.json(); } catch (e) {}
+                    const invalid = data.errors ? Object.values(data.errors).flat()[0] : '';
+                    submitBtn.disabled = false;
+                    if (label) label.textContent = prev;
+                    showError(invalid || data.message || 'Something went wrong. Please try again.');
+                    return;
+                }
 
                 // Never unlock the report. Flag the thank-you and send the
                 // visitor back to the main Trending Career page, where the

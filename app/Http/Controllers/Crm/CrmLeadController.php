@@ -375,7 +375,7 @@ class CrmLeadController extends Controller
         $rules = [
             'name' => ['required', 'string', 'max:150'],
             'phone' => ['nullable', 'required_without:email', 'string', 'max:30'],
-            'email' => ['nullable', 'required_without:phone', 'email', 'max:190'], 'city' => ['nullable', 'string', 'max:120'],
+            'email' => ['nullable', 'required_without:phone', 'email', 'max:190', 'real_email'], 'city' => ['nullable', 'string', 'max:120'],
             'course_interest' => ['nullable', 'string', 'max:180'], 'country_interest' => ['nullable', 'string', 'max:120'],
             'category' => ['nullable', Rule::in(array_keys(CrmOptions::CATEGORIES))],
             'lead_type' => ['nullable', Rule::in(array_keys(CrmOptions::LEAD_TYPES))],

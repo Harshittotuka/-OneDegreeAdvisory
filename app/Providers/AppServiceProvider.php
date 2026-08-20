@@ -13,6 +13,7 @@ use App\Models\PaymentAttempt;
 use App\Support\CmsCrmBackupManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerCmsCrmBackupObservers();
+        $this->registerRealEmailRule();
 
         if ($this->app->runningInConsole() && config('backup.enabled')) {
             $this->app->terminating(fn () => $this->app->make(CmsCrmBackupManager::class)->flush());
@@ -50,6 +52,30 @@ class AppServiceProvider extends ServiceProvider
                 URL::forceRootUrl($appUrl);
             }
         }
+    }
+
+    /**
+     * Placeholder addresses (anything containing "example") are undeliverable.
+     * The relay accepts them, retries for hours, then bounces - leaving a trail
+     * of delivery failures for a lead that was never reachable. Every public
+     * form that collects an address applies this rule.
+     */
+    private function registerRealEmailRule(): void
+    {
+        // One message covers both failure modes - a malformed address and a
+        // placeholder one - so a visitor whose own inbox will not work still
+        // has a way to reach us instead of a dead end.
+        $message = (string) config('site.forms.email_help')
+            ?: 'Please use a valid email address.';
+
+        Validator::extend(
+            'real_email',
+            fn ($attribute, $value): bool => ! str_contains(mb_strtolower((string) $value), 'example'),
+            $message,
+        );
+
+        // The matching message for a malformed address lives in
+        // lang/en/validation.php, which merges over the framework's defaults.
     }
 
     private function registerCmsCrmBackupObservers(): void

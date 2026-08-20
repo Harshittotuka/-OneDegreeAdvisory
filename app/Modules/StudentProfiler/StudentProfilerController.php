@@ -74,6 +74,17 @@ class StudentProfilerController
         }
         $contact = $this->cleanContact($request->input('contact', []));
 
+        // Placeholder addresses (anything containing "example") are undeliverable.
+        // The relay accepts them, retries for hours, then bounces — so they are
+        // refused here: no lead is captured and no mail is sent.
+        if ($contact['email'] !== '' && str_contains(mb_strtolower($contact['email']), 'example')) {
+            return response()->json([
+                'ok'      => false,
+                'field'   => 'email',
+                'message' => config('site.forms.email_help'),
+            ], 422);
+        }
+
         // Record the completed profile as a human-readable snapshot for the
         // admin panel — no scoring is performed.
         if ($degree) {

@@ -31,7 +31,7 @@
         <form method="post" action="{{ route('crm.team.update',$member) }}" data-ajax-preserve-modal="teamModal">@csrf @method('PATCH')
             <label><span>Name</span><input name="name" value="{{ $member->name }}" required></label>
             <label><span>Mobile number</span><input name="phone" value="{{ $member->phone }}" inputmode="tel" placeholder="98765 43210" required></label>
-            <label><span>Email address</span><input type="email" name="email" value="{{ $member->email }}" placeholder="name@example.com" required></label>
+            <label><span>Email address</span><input type="email" name="email" value="{{ $member->email }}" placeholder="name@domain.com" required></label>
             <button class="btn btn-outline" type="submit">Save changes</button>
         </form>
     </details>

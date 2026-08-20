@@ -42,7 +42,7 @@ class SopController extends Controller
     {
         $validated = $request->validate([
             'name'    => 'required|string|max:120',
-            'email'   => 'required|email|max:190',
+            'email'   => 'required|email|max:190|real_email',
             'service' => 'nullable|string|max:160',
             'message' => 'required|string|max:2000',
         ]);

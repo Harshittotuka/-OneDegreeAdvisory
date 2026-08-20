@@ -67,7 +67,11 @@
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": DATA.csrf || "", "X-Requested-With": "XMLHttpRequest", Accept: "application/json" },
             body: JSON.stringify({ action: action || "save", degree: state.degree, section: state.section, answers: state.answers, contact: state.contact })
-        }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+        }).then(function (r) {
+            // Parse the body even on 4xx, so a server rejection (e.g. a blocked
+            // placeholder email) reaches the caller instead of collapsing to null.
+            return r.json().catch(function () { return null; });
+        }).catch(function () { return null; });
     }
 
     /* ===================== ENTRY (degree select) ===================== */
@@ -762,6 +766,9 @@
 
     // Name, valid email, and phone are required. Returns false (and flags the
     // fields) when the lead details are incomplete.
+    // Same copy the server returns, for both a malformed and a placeholder address.
+    var EMAIL_HELP = DATA.emailHelp || "Please use a valid email address.";
+
     function validateContact() {
         Array.prototype.forEach.call(stage.querySelectorAll(".sp-cfield"), function (f) {
             f.classList.remove("is-error");
@@ -770,7 +777,10 @@
         });
         var bad = [];
         if (!(state.contact.name || "").trim()) bad.push(setCErr("name", "Please enter your name"));
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((state.contact.email || "").trim())) bad.push(setCErr("email", "Please enter a valid email"));
+        var email = (state.contact.email || "").trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) bad.push(setCErr("email", EMAIL_HELP));
+        // Placeholder addresses bounce and leave the relay retrying — never send to them.
+        else if (/example/i.test(email)) bad.push(setCErr("email", EMAIL_HELP));
         state.contact.phone = cleanPhone(state.contact.phone);
         if (!phoneValid(state.contact.phone)) bad.push(setCErr("phone", "Please enter a valid phone number"));
         bad = bad.filter(Boolean);
@@ -825,8 +835,14 @@
         if (!validateContact()) return;
         var originalHtml = btn ? btn.innerHTML : "";
         if (btn) { btn.disabled = true; btn.innerHTML = "Submitting…"; }
-        save("submit").then(function () {
+        save("submit").then(function (res) {
             if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+            // An explicit server rejection must never render as a successful submit.
+            if (res && res.ok === false) {
+                var fld = setCErr(res.field || "email", res.message || "Please check your details.");
+                if (fld) fld.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
             showSuccess();
         });
     }

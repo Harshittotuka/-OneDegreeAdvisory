@@ -1044,6 +1044,25 @@ ready(() => {
     });
   };
 
+  // Every email input site-wide shares one message for a malformed OR
+  // placeholder address, replacing the browser's native "include an @" text so
+  // a visitor whose own inbox will not work is told how else to reach us.
+  const emailHelpMeta = document.querySelector('meta[name="email-help"]');
+  const EMAIL_HELP =
+    (emailHelpMeta && emailHelpMeta.getAttribute("content")) ||
+    "Please use a valid email address.";
+  document.querySelectorAll('input[type="email"]').forEach((input) => {
+    const refreshEmailValidity = () => {
+      const value = input.value.trim();
+      const unusable = input.validity.typeMismatch || (value !== "" && /example/i.test(value));
+      // Must clear to "" when usable, otherwise the field stays invalid forever.
+      input.setCustomValidity(unusable ? EMAIL_HELP : "");
+    };
+    input.addEventListener("input", refreshEmailValidity);
+    input.addEventListener("blur", refreshEmailValidity);
+    refreshEmailValidity();
+  });
+
   wireFormSubmit(consultForm);
   wireFormSubmit(document.querySelector("[data-career-form]"));
   // Blog newsletter sign-ups ("Stay Current On…" + "Stay in the loop") — same
