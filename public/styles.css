@@ -5298,39 +5298,63 @@ html.oda-popup-open { overflow: hidden; }
   align-items: center;
 }
 
-.contact-head-phone {
+
+/* Reach pill — the number and WhatsApp joined into one control, so the row is
+   two objects (primary CTA + reach) instead of three competing pills. Two
+   labelled pills plus the CTA never fitted the aside column on one line, and a
+   detached glyph circle beside them read as an unrelated chat button. */
+.contact-head-reach {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
+  overflow: hidden;
   min-height: 46px;
   border: 1px solid rgba(19, 37, 47, 0.14);
   border-radius: 999px;
-  /* Trimmed from 18px so the row keeps a little slack over the column width. */
-  padding: 0 14px;
   background: rgba(255, 255, 255, 0.76);
-  color: var(--ink);
-  font-size: 0.9rem;
-  font-weight: 900;
   box-shadow: 0 12px 28px rgba(7, 25, 34, 0.06);
 }
 
-.contact-head-phone svg {
+.contact-head-reach__call {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.contact-head-reach__call svg {
   width: 17px;
   height: 17px;
   color: var(--teal-dark);
 }
 
-/* Glyph-only variant of the pill — square, so it reads as one of the row rather
-   than a stubby button. The anchor's aria-label is its accessible name, so the
-   redundant text can be removed outright; the max-width:920px block below puts
-   it back for the single-column header, where every pill goes full width. */
-.contact-head-phone--wa {
+/* The WhatsApp half: brand green on the glyph, and the whole segment fills on
+   hover so the two halves are visibly separate targets. */
+.contact-head-reach__wa {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  gap: 7px;
   width: 46px;
-  padding: 0;
+  border-left: 1px solid rgba(19, 37, 47, 0.12);
+  color: #1f9d5b;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
-.contact-head-phone--wa .contact-head-phone__label {
+.contact-head-reach__wa svg {
+  width: 19px;
+  height: 19px;
+}
+
+.contact-head-reach__wa:hover,
+.contact-head-reach__wa:focus-visible {
+  background: linear-gradient(135deg, #25d366 0%, #12a052 100%);
+  color: #ffffff;
+}
+
+.contact-head-reach__label {
   display: none;
 }
 
@@ -7121,18 +7145,29 @@ html[data-color-theme] .site-socials .site-social {
   }
 
   .contact-page-head-actions,
-  .contact-page-head-actions .btn,
-  .contact-head-phone {
+  .contact-page-head-actions .btn {
     width: 100%;
   }
 
-  /* Full-width pills here, so the WhatsApp one is spelled out again. */
-  .contact-head-phone--wa {
-    justify-content: flex-start;
-    padding: 0 14px;
+  /* Full-width here, so the number takes the slack and WhatsApp is spelled out. */
+  .contact-head-reach {
+    width: 100%;
   }
 
-  .contact-head-phone--wa .contact-head-phone__label {
+  .contact-head-reach__call {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .contact-head-reach__wa {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 0 16px;
+    font-size: 0.9rem;
+    font-weight: 900;
+  }
+
+  .contact-head-reach__label {
     display: inline;
   }
 
@@ -15585,7 +15620,7 @@ html[data-color-theme] .feature-cta,
 html[data-color-theme] .text-link,
 html[data-color-theme] .insights-feature-copy a,
 html[data-color-theme] .insights-article-body a,
-html[data-color-theme] .contact-head-phone svg,
+html[data-color-theme] .contact-head-reach__call svg,
 html[data-color-theme] .contact-list svg,
 html[data-color-theme] .form-status {
   color: var(--teal-dark);
@@ -15962,7 +15997,7 @@ html[data-color-theme] :is(
   .contact-page-grid,
   .contact-form-panel,
   .contact-response-card,
-  .contact-head-phone,
+  .contact-head-reach,
   .uni-img-card,
   .course-card,
   .edu-level-card,
