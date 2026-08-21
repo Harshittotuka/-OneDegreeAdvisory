@@ -52,13 +52,15 @@
 <IfModule mod_mime.c>
     AddType image/webp .webp
 
-    # LiteSpeed serves .js as text/javascript, and its server-level expires
-    # config only lists application/javascript — so no cache rule matched and
-    # every script came back with NO Cache-Control at all (measured on
-    # production: script.js, stripe-nav.js and lucide.min.js were all uncached,
-    # while .css got the server default). The Header/Expires blocks below are
-    # ignored for static files on that host, so naming the type it does know is
-    # the only lever .htaccess has. Both types are equivalent to browsers.
+    # Correct for Apache (local XAMPP), but it does NOT fix the VPS: tested on
+    # UAT 2026-08-21 and LiteSpeed still served text/javascript, because it
+    # resolves static-file MIME types from its own table and ignores AddType
+    # here — just as it ignores the Header/Expires blocks below. The real cause
+    # of scripts arriving with no Cache-Control at all was that
+    # /usr/local/lsws/conf/httpd_config.conf listed application/javascript but
+    # not text/javascript in expiresByType; text/javascript=A604800 was added
+    # there on 2026-08-21 and every .js now caches. Do not re-try this line as
+    # a fix — it is kept only so Apache agrees with LiteSpeed's behaviour.
     AddType application/javascript .js
 </IfModule>
 
