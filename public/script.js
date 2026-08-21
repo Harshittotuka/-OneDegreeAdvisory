@@ -530,7 +530,11 @@ ready(() => {
     };
 
     setRandomClass();
-    window.setInterval(setRandomClass, 2000);
+    // Purely decorative, so there is nothing to keep up with while the tab is
+    // in the background — it only woke the main thread every two seconds.
+    window.setInterval(() => {
+      if (!document.hidden) setRandomClass();
+    }, 2000);
   });
 
   const revealItems = Array.from(document.querySelectorAll(".reveal"));
@@ -2306,23 +2310,51 @@ ready(() => {
 
     const isLight = (c) => (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) > 165;
 
+    // Runs on every scroll frame, so it is split into phases instead of doing
+    // read → write → read → write per rail. Interleaved like that, each rail's
+    // class write invalidated layout for the next rail's getBoundingClientRect,
+    // forcing a synchronous reflow per rail per frame. Same probing behaviour
+    // (one rail's pointer-events suppressed at a time, same probe point), just
+    // with every measurement taken before any style is written.
     const updateRailContrast = () => {
+      const probes = [];
+
+      // Phase 1 — measure only.
       rails.forEach((rail) => {
         if (rail.closest(".country-hero")) {
           rail.classList.remove("on-light");
           return;
         }
-
         const rect = rail.getBoundingClientRect();
-        const probeX = Math.max(2, rect.left - 12);
-        const probeY = rect.top + rect.height / 2;
-        const prevPe = rail.style.pointerEvents;
-        rail.style.pointerEvents = "none";
-        const behind = document.elementFromPoint(probeX, probeY);
-        rail.style.pointerEvents = prevPe;
-        if (!behind) return;
-        const bg = getOpaqueBg(behind);
-        rail.classList.toggle("on-light", isLight(bg));
+        probes.push({
+          rail,
+          x: Math.max(2, rect.left - 12),
+          y: rect.top + rect.height / 2,
+        });
+      });
+      if (!probes.length) return;
+
+      // Phase 2 — hit-test. pointer-events is not a layout property, so
+      // toggling it here does not dirty the geometry read above.
+      probes.forEach((p) => {
+        const prevPe = p.rail.style.pointerEvents;
+        p.rail.style.pointerEvents = "none";
+        p.behind = document.elementFromPoint(p.x, p.y);
+        p.rail.style.pointerEvents = prevPe;
+      });
+
+      // Phase 3 — resolve colours, reusing the answer for a shared ancestor.
+      const bgCache = new Map();
+      probes.forEach((p) => {
+        if (!p.behind) return;
+        if (!bgCache.has(p.behind)) bgCache.set(p.behind, getOpaqueBg(p.behind));
+        p.light = isLight(bgCache.get(p.behind));
+      });
+
+      // Phase 4 — write.
+      probes.forEach((p) => {
+        if (p.light === undefined) return;
+        p.rail.classList.toggle("on-light", p.light);
       });
     };
 

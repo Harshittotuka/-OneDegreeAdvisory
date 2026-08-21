@@ -1886,6 +1886,22 @@ button {
   will-change: opacity, transform;
 }
 
+/* The public page fills each layer with a responsive <img> rather than a CSS
+   background, so the LCP photo is visible to the preload scanner and can be
+   delivered at the viewport's own width. object-fit/object-position reproduce
+   `background-size: cover` + `background-position: center` exactly, and the
+   layer's transform/filter/opacity still drive the transition. The live CMS
+   editor keeps the background-image form, which is why both styles exist. */
+.hero-slide > img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 .hero-slide.is-active {
   opacity: 1;
 }

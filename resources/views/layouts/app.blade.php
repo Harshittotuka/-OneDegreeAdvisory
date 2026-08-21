@@ -77,7 +77,11 @@
     @if($googleTagManagerId !== '' || $googleTagId !== '')
       <link rel="preconnect" href="https://www.googletagmanager.com">
     @endif
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;450;500;600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- Inter is deliberately absent: no rule under this layout ever asks for it.
+         It used to be requested here at five weights on every page, which only
+         inflated this render-blocking stylesheet. The one place that does use
+         Inter (the career library) has its own layout and its own font link. --}}
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       (function () {
         var root = document.documentElement;

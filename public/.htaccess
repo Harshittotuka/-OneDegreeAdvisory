@@ -51,6 +51,15 @@
 
 <IfModule mod_mime.c>
     AddType image/webp .webp
+
+    # LiteSpeed serves .js as text/javascript, and its server-level expires
+    # config only lists application/javascript — so no cache rule matched and
+    # every script came back with NO Cache-Control at all (measured on
+    # production: script.js, stripe-nav.js and lucide.min.js were all uncached,
+    # while .css got the server default). The Header/Expires blocks below are
+    # ignored for static files on that host, so naming the type it does know is
+    # the only lever .htaccess has. Both types are equivalent to browsers.
+    AddType application/javascript .js
 </IfModule>
 
 <IfModule mod_expires.c>

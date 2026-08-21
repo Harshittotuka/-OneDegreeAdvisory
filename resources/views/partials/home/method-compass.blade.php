@@ -85,7 +85,12 @@
 
     <div class="odm-layout reveal">
       <div class="odm-compass" role="group" aria-label="The One Degree Method — interactive 4D compass">
-        <svg class="odm-dial" viewBox="0 0 440 440" aria-hidden="true" focusable="false">
+        {{-- Not aria-hidden: the two .odm-thread ribbons below are real controls
+             (role=button, tabindex=0), so hiding the whole dial left them
+             tabbable but silent to a screen reader. The bare shapes carry no
+             role or accessible name, so the tree still only gains the two
+             links; .odm-compass above already names the group. --}}
+        <svg class="odm-dial" viewBox="0 0 440 440" focusable="false">
           <defs>
             {{-- Top-arch arcs (sweep 1 = ∩) — one per ring circumference --}}
             <path id="odm-arc-horizon" d="M 64,163.2 A 166,166 0 0,1 376,163.2" fill="none"></path>

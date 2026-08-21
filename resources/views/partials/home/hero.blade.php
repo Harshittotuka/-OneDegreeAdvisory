@@ -2,6 +2,7 @@
      One source of truth for both the public page and the live CMS preview. --}}
 @php
   use App\Support\HeroContent;
+  use App\Support\RemoteImage;
 
   $d = $data ?? [];
   $edit = $edit ?? false;
@@ -87,6 +88,22 @@
   $ssDuration = is_numeric($ss['duration'] ?? null) ? max(0.2, min(5, (float) $ss['duration'])) : HeroContent::SLIDESHOW_DEFAULTS['duration'];
   $isShow = count($slides) > 1;
 @endphp
+@if(! $edit && ! empty($slides))
+  @php
+    $lcpUrl = $slides[0];
+    $lcpSet = RemoteImage::srcset($lcpUrl);
+  @endphp
+  @push('head')
+    {{-- The hero photo is the homepage LCP. As a CSS background it was invisible
+         to the preload scanner, so it could not even begin downloading until the
+         render-blocking stylesheet had arrived and parsed. Preloading it here
+         starts the fetch alongside the HTML, and the srcset means a phone asks
+         for a phone-sized file instead of the 2200px desktop original. --}}
+    <link rel="preload" as="image" fetchpriority="high"
+          href="{{ $lcpSet !== '' ? RemoteImage::fallback($lcpUrl) : $lcpUrl }}"
+          @if($lcpSet !== '') imagesrcset="{{ $lcpSet }}" imagesizes="100vw" @endif>
+  @endpush
+@endif
 <section class="hero" id="top" aria-label="One Degree Advisory">
   <div class="hero-slides{{ $isShow ? '' : ' hero-slides--single' }}" aria-hidden="true"
        data-hero-anim="{{ $ssAnim }}"
@@ -94,7 +111,21 @@
        @if($isShow && ! $edit) data-hero-slideshow data-hero-interval="{{ $ssInterval }}" @endif
        @if($edit) data-he-slides @endif>
     @forelse($slides as $i => $url)
-      <div class="hero-slide{{ $i === 0 ? ' is-active' : '' }}" style="background-image: url('{{ $url }}');"></div>
+      @if($edit)
+        {{-- The live editor re-renders this stack itself as background-image
+             divs (see admin/home-hero/_editor_chrome), so its markup stays as
+             it was; the two forms paint identically. --}}
+        <div class="hero-slide{{ $i === 0 ? ' is-active' : '' }}" style="background-image: url('{{ $url }}');"></div>
+      @else
+        @php $set = RemoteImage::srcset($url); @endphp
+        <div class="hero-slide{{ $i === 0 ? ' is-active' : '' }}">
+          <img src="{{ $set !== '' ? RemoteImage::fallback($url) : $url }}"
+               @if($set !== '') srcset="{{ $set }}" sizes="100vw" @endif
+               alt=""
+               @if($i === 0) fetchpriority="high" @else loading="lazy" @endif
+               decoding="async">
+        </div>
+      @endif
     @empty
       <div class="hero-slide is-active"></div>
     @endforelse

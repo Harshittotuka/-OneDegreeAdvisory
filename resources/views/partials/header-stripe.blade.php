@@ -108,7 +108,8 @@
                           @if ($destination['eu'] ?? false)
                             @include('partials.eu-flag')
                           @elseif (! empty($destination['flag']))
-                            <img src="https://flagcdn.com/w40/{{ $destination['flag'] }}.png" alt="">
+                            <img src="https://flagcdn.com/w40/{{ $destination['flag'] }}.png" alt=""
+                                 width="24" height="18" loading="lazy" decoding="async">
                           @endif
                         </span>
                         <span class="dest-meta"><strong>{{ $destination['name'] }}</strong></span>
@@ -133,9 +134,11 @@
                       <a class="dest-card" href="{{ route('mbbs.country', $country['slug']) }}">
                         <span class="dest-flag" aria-hidden="true">
                           @if(! empty($country['flag']))
-                            <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt="">
+                            <img src="https://flagcdn.com/w40/{{ $country['flag'] }}.png" alt=""
+                                 width="24" height="18" loading="lazy" decoding="async">
                           @elseif(! empty($country['flag_url']))
-                            <img src="{{ $country['flag_url'] }}" alt="">
+                            <img src="{{ $country['flag_url'] }}" alt=""
+                                 width="24" height="18" loading="lazy" decoding="async">
                           @else
                             <i data-lucide="map-pin"></i>
                           @endif
