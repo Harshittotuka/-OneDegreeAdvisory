@@ -29,6 +29,9 @@
     @case('team')
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1.5A4.5 4.5 0 0 1 7 14h4"/><circle cx="17.5" cy="16.5" r="3"/><path d="M17.5 12v1.5M17.5 19.5V21M13 16.5h1.5M20.5 16.5H22M14.3 13.3l1 1M19.7 18.7l1 1M20.7 13.3l-1 1M15.3 18.7l-1 1"/></svg>
         @break
+    @case('spam')
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6.5v5c0 5 3.4 8.5 8 9.5 4.6-1 8-4.5 8-9.5v-5L12 3Z"/><path d="M9.5 12.5 11 14l3.5-3.5"/></svg>
+        @break
     @case('logout')
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M14 8l4 4-4 4M8 12h10"/></svg>
         @break

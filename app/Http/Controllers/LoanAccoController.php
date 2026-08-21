@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\WebsiteLeadManager;
+use App\Support\HoneypotGuard;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,20 @@ class LoanAccoController extends Controller
      */
     public function lead(Request $request): JsonResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'loan-acco');
+
+            $isLoan = $request->input('form') !== 'accommodation';
+
+            return response()->json([
+                'ok'      => true,
+                'title'   => 'Request received',
+                'message' => $isLoan
+                    ? 'A loan advisor will call you within 48–72 hours to walk through your eligibility and next steps.'
+                    : 'Our accommodation team will shortlist verified options and reach out within 48–72 hours.',
+            ]);
+        }
+
         $validated = $request->validate([
             'form'  => 'required|string|in:loan,accommodation',
             'name'  => 'required|string|max:120',

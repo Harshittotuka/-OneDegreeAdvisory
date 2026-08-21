@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CrmAuditLog;
 use App\Models\CrmLead;
 use App\Models\CrmMockInterviewInvite;
+use App\Models\CrmSpamAttempt;
 use App\Models\CrmSubscriber;
 use App\Models\CrmUser;
 use App\Models\PaymentAttempt;
@@ -48,7 +49,7 @@ class CrmDashboardController extends Controller
         }
         $allowedViews = ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting', 'mock-invites'];
         if ($user->isSuperAdmin()) {
-            $allowedViews = [...$allowedViews, 'subscriptions', 'audit'];
+            $allowedViews = [...$allowedViews, 'subscriptions', 'audit', 'spam'];
         }
         $requestedView = match ($request->query('view')) {
             'website' => 'leads',
@@ -150,6 +151,15 @@ class CrmDashboardController extends Controller
             $enrollmentQuery->where(fn (Builder $q) => $q->where('customer_name', 'like', "%{$enrollmentSearch}%")->orWhere('customer_email', 'like', "%{$enrollmentSearch}%")->orWhere('customer_phone', 'like', "%{$enrollmentSearch}%")->orWhere('item_name', 'like', "%{$enrollmentSearch}%")->orWhere('razorpay_payment_id', 'like', "%{$enrollmentSearch}%"));
         }
 
+        $spamQuery = CrmSpamAttempt::query()->latest();
+        if ($user->isSuperAdmin()) {
+            if ($spamSearch = trim((string) $request->query('spam_search'))) {
+                $spamQuery->where(fn (Builder $q) => $q->where('ip_address', 'like', "%{$spamSearch}%")->orWhere('source', 'like', "%{$spamSearch}%"));
+            }
+        } else {
+            $spamQuery->whereRaw('1 = 0');
+        }
+
         $subscriberQuery = CrmSubscriber::query()->latest('subscribed_at');
         if ($user->isSuperAdmin()) {
             CrmSubscriberController::applyFilters($subscriberQuery, $request);
@@ -227,6 +237,8 @@ class CrmDashboardController extends Controller
             'mockInviteCount' => $mockInviteCount,
             'mockInviteCounts' => MockInterviewQuestions::INVITE_COUNTS,
             'mockQuestionTotal' => MockInterviewQuestions::total(),
+            'spamAttempts' => $spamQuery->paginate($perPage, ['*'], 'spam_page')->withQueryString(),
+            'spamCount' => $user->isSuperAdmin() ? CrmSpamAttempt::query()->count() : 0,
         ]);
     }
 

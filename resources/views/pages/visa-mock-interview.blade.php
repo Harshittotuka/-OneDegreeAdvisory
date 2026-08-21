@@ -1769,6 +1769,7 @@
           <p class="vmi-modal__sub">The free round covers up to 10 questions. Share a few details and our visa team will reach out with proper consulting, a complete mock interview and the next steps to get you fully prepared.</p>
 
           <form id="vmiLeadForm" novalidate>
+            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" id="vmi-lead-hp" name="website" tabindex="-1" autocomplete="off"></label></div>
             <label for="vmi-lead-name">Full name</label>
             <input type="text" id="vmi-lead-name" name="name" autocomplete="name" required>
 
@@ -3870,6 +3871,7 @@ if(leadForm){
     const phone = ($("vmi-lead-phone").value || "").trim();
     const destination = ($("vmi-lead-dest").value || "").trim();
     const level = ($("vmi-lead-level").value || "").trim();
+    const website = ($("vmi-lead-hp").value || "").trim();
 
     if(name.length < 2){ return showLeadError("Please enter your full name."); }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ return showLeadError(EMAIL_HELP); }
@@ -3889,7 +3891,7 @@ if(leadForm){
           "X-Requested-With":"XMLHttpRequest",
           "X-CSRF-TOKEN": CFG.csrf || ""
         },
-        body: JSON.stringify({ name, email, phone, destination, level, plan: (state.requestedLength ? state.requestedLength + " questions (consulting)" : "full interview (consulting)") })
+        body: JSON.stringify({ name, email, phone, destination, level, website, plan: (state.requestedLength ? state.requestedLength + " questions (consulting)" : "full interview (consulting)") })
       });
 
       if(res.status === 422){

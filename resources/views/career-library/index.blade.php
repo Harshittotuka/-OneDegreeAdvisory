@@ -86,6 +86,7 @@
         <p>Share your details and our team will help you explore <strong data-idx-career>this career</strong>.</p>
       </div>
       <form id="cl-idx-form" class="cl-idx-body" novalidate>
+        <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" id="cl-idx-hp" name="website" tabindex="-1" autocomplete="off"></label></div>
         <div class="cl-idx-field">
           <label for="cl-idx-name">Full name</label>
           <input type="text" id="cl-idx-name" name="name" required autocomplete="name" placeholder="Your name">
@@ -366,6 +367,7 @@
             const name = (document.getElementById('cl-idx-name').value || '').trim();
             const email = (document.getElementById('cl-idx-email').value || '').trim();
             const phone = (document.getElementById('cl-idx-phone').value || '').trim();
+            const website = (document.getElementById('cl-idx-hp').value || '').trim();
 
             if (!name || !email || !phone) { showLeadError('Please fill in your name, email and phone.'); return; }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showLeadError(EMAIL_HELP); return; }
@@ -380,7 +382,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                     body: JSON.stringify({
-                        name, email, phone,
+                        name, email, phone, website,
                         career: leadContext.career || '',
                         country: leadContext.country || '',
                         language: leadContext.language || '',

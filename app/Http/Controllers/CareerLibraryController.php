@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\CareerLibraryStore;
+use App\Support\HoneypotGuard;
 use App\Services\WebsiteLeadManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -121,6 +122,12 @@ class CareerLibraryController extends Controller
      */
     public function lead(Request $request): JsonResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'career-library');
+
+            return response()->json(['ok' => true]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:120',
             'email' => 'required|email|max:190|real_email',

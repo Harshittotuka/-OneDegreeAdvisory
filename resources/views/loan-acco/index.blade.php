@@ -319,6 +319,7 @@
 
           <form id="loanForm" method="POST" action="{{ route('loan-acco.lead') }}" data-loan-acco-form>
             @csrf
+            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
             <input type="hidden" name="form" value="loan">
             <div class="form-grid">
               <div class="field">
@@ -417,6 +418,7 @@
 
           <form id="stayForm" method="POST" action="{{ route('loan-acco.lead') }}" data-loan-acco-form>
             @csrf
+            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
             <input type="hidden" name="form" value="accommodation">
             <div class="form-grid">
               <div class="field">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\RazorpayGateway;
 use App\Services\WebsiteLeadManager;
 use App\Support\CareerCounsellingStore;
+use App\Support\HoneypotGuard;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,16 @@ class CareerCounsellingController extends Controller
      */
     public function lead(Request $request): JsonResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'career-counselling');
+
+            return response()->json([
+                'ok' => true,
+                'title' => 'Request received',
+                'message' => 'Thank you — a certified career counsellor will contact you within one working day to schedule your session.',
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:120',
             'email' => 'required|email|max:190|real_email',

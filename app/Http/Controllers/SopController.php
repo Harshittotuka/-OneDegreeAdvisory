@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\WebsiteLeadManager;
+use App\Support\HoneypotGuard;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,16 @@ class SopController extends Controller
      */
     public function lead(Request $request): JsonResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'sop');
+
+            return response()->json([
+                'ok'      => true,
+                'title'   => 'Request received',
+                'message' => 'Thank you — your request has been queued. An advisor will email you within one business day with next steps and a fit assessment.',
+            ]);
+        }
+
         $validated = $request->validate([
             'name'    => 'required|string|max:120',
             'email'   => 'required|email|max:190|real_email',

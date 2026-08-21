@@ -9,7 +9,7 @@ class CrmWebsiteSubmission extends Model
 {
     protected $fillable = [
         'crm_lead_id', 'external_id', 'source', 'source_label', 'degree',
-        'sections', 'meta', 'submitted_at',
+        'sections', 'meta', 'ip_address', 'user_agent', 'submitted_at',
     ];
 
     protected function casts(): array

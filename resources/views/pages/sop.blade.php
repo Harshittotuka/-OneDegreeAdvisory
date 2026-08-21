@@ -1157,6 +1157,7 @@
 
           <form id="sop-contact-form" method="POST" action="{{ route('sop.lead') }}" data-sop-form novalidate>
             @csrf
+            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
             <div class="field">
               <label for="sop-name">Full Name</label>
               <input type="text" id="sop-name" name="name" placeholder="Ananya Sharma" required maxlength="120">

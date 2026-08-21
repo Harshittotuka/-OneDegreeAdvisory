@@ -1,8 +1,8 @@
 @php
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
-    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Website payments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
+    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Website payments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'spam' => ['Blocked submissions', 'Public-form submissions caught by the honeypot field'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored']];
     $currentTitle = $titles[$view];
-    $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'shortlisting'], true);
+    $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'spam', 'shortlisting'], true);
     $filterQuery = request()->except(['page', 'lead']);
     $calendarQuery = request()->except(['page', 'lead', 'month']);
     $followUpLayoutQuery = request()->except(['page', 'lead', 'layout', 'month']);
@@ -137,6 +137,7 @@
                     @if($crmUser->isSuperAdmin())
                         <span class="user-menu-label">Administration</span>
                         <a class="user-menu-item {{ $view === 'audit' ? 'is-current' : '' }}" href="{{ route('crm.dashboard', ['view' => 'audit']) }}" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'audit'])</span>Audit log</a>
+                        <a class="user-menu-item {{ $view === 'spam' ? 'is-current' : '' }}" href="{{ route('crm.dashboard', ['view' => 'spam']) }}" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'spam'])</span>Blocked submissions @if($spamCount)<span class="nav-badge">{{ $spamCount }}</span>@endif</a>
                         <button type="button" class="user-menu-item" data-modal-open="teamModal" role="menuitem"><span class="user-menu-item-icon">@include('crm.partials.nav-icon',['name'=>'team'])</span>Team management</button>
                         <div class="user-menu-sep"></div>
                     @endif
@@ -313,6 +314,8 @@
                 @include('crm.partials.mock-invites')
             @elseif($view === 'subscriptions')
                 @include('crm.partials.subscribers')
+            @elseif($view === 'spam')
+                @include('crm.partials.spam-attempts')
             @elseif($view === 'audit' && $auditLogs)
                 <section class="workspace audit-workspace">
                     <div class="workspace-head">
@@ -876,7 +879,7 @@
                         <div class="section-heading"><span class="section-icon">⌁</span><div><h3>Website submission history</h3><p>Original form answers captured from the website.</p></div></div>
                         <div class="crm-submission-history">
                             @foreach($selectedLead->websiteSubmissions as $submission)
-                                <details><summary><span><strong>{{ $submission->source_label }}</strong><small>{{ $submission->submitted_at->format('d M Y, g:i A') }}@if($submission->degree) · {{ $submission->degree }}@endif</small></span><a href="{{ route('crm.website.download', $submission) }}" data-native-navigation>Download</a></summary>
+                                <details><summary><span><strong>{{ $submission->source_label }}</strong><small>{{ $submission->submitted_at->format('d M Y, g:i A') }}@if($submission->degree) · {{ $submission->degree }}@endif @if($submission->ip_address) · IP {{ $submission->ip_address }}@endif</small></span><a href="{{ route('crm.website.download', $submission) }}" data-native-navigation>Download</a></summary>
                                     @foreach($submission->sections ?: [] as $section)<div class="crm-answer-section"><b>{{ $section['title'] ?? ($section['eyebrow'] ?? 'Answers') }}</b>@foreach($section['answers'] ?? [] as $answer)<p><span>{{ $answer['label'] ?? '' }}</span><strong>{{ implode(', ', (array)($answer['value'] ?? [])) ?: '—' }}</strong></p>@endforeach</div>@endforeach
                                 </details>
                             @endforeach

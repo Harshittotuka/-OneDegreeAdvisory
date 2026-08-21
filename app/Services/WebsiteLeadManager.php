@@ -85,6 +85,7 @@ class WebsiteLeadManager
             }
 
             $when = $submittedAt ? Carbon::parse($submittedAt) : now();
+            $request = request();
             $submission = CrmWebsiteSubmission::query()->create([
                 'crm_lead_id' => $lead->id,
                 'external_id' => $externalId,
@@ -93,6 +94,8 @@ class WebsiteLeadManager
                 'degree' => $degree,
                 'sections' => $sections ?: null,
                 'meta' => $meta ?: null,
+                'ip_address' => $request?->ip(),
+                'user_agent' => mb_substr((string) $request?->userAgent(), 0, 255),
                 'submitted_at' => $when,
             ]);
 

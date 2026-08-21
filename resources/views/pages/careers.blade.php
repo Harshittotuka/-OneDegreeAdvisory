@@ -170,6 +170,7 @@
       <div class="cr-apply-form-card">
         <form action="{{ route('careers.submit') }}" method="POST" enctype="multipart/form-data" class="cr-apply-form" data-career-form novalidate>
           @csrf
+          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
           <div class="cr-form-row">
             <label class="cr-field" for="applicant-name">
               <span>Full name *</span>

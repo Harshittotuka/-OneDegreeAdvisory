@@ -939,6 +939,7 @@
       <form class="rf-form rf-reveal" method="POST" action="{{ route('referral.submit') }}"
             data-referral-form novalidate>
         @csrf
+        <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
         <p class="rf-form__legend"><i data-lucide="user-check"></i> Your details</p>
         <div class="rf-grid">

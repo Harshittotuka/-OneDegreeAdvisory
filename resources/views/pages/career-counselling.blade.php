@@ -711,6 +711,7 @@
         <form class="cc-consult__form cc-reveal" method="POST"
               action="{{ route('career-counselling.lead') }}" data-career-counselling-form novalidate>
           @csrf
+          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this field blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
           <div class="cc-consult__row">
             <div class="cc-field">
               <label for="cc-lead-name">Full name</label>

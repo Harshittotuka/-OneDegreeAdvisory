@@ -6,6 +6,7 @@ use App\Mail\ReferralReferrerMail;
 use App\Mail\ReferralStudentMail;
 use App\Mail\ReferralTeamMail;
 use App\Services\WebsiteLeadManager;
+use App\Support\HoneypotGuard;
 use App\Support\StudyLocationContent;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -95,6 +96,16 @@ class ReferralController extends Controller
      */
     public function submit(Request $request): JsonResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'referral');
+
+            return response()->json([
+                'ok' => true,
+                'title' => 'Referral received',
+                'message' => 'Thank you. We have logged your referral and a counsellor will reach out shortly. You will hear from us as their application progresses.',
+            ]);
+        }
+
         $validated = $request->validate([
             'referrer_name' => 'required|string|max:120',
             'referrer_phone' => 'required|string|max:40|regex:/^[0-9+()\-\s]{7,40}$/',

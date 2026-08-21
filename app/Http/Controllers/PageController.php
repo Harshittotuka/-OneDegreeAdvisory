@@ -9,6 +9,7 @@ use App\Mail\ContactThankYouMail;
 use App\Support\AboutContent;
 use App\Support\BlogContent;
 use App\Support\HeroContent;
+use App\Support\HoneypotGuard;
 use App\Support\MbbsCountryContent;
 use App\Support\MockInterviewQuestions;
 use App\Services\WebsiteLeadManager;
@@ -81,6 +82,14 @@ class PageController extends Controller
      */
     public function submitContact(Request $request, WebsiteLeadManager $leads): JsonResponse|RedirectResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'contact');
+
+            return $this->formResponse($request, true,
+                'Your enquiry is safely recorded and the One Degree Advisory team will follow up with you shortly.',
+                'Thank you!');
+        }
+
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:120'],
             'email'       => ['required', 'email', 'max:190', 'real_email'],
@@ -132,6 +141,14 @@ class PageController extends Controller
      */
     public function submitCareer(Request $request, WebsiteLeadManager $leads): JsonResponse|RedirectResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'careers');
+
+            return $this->formResponse($request, true,
+                "Your application is safely recorded. If there's a fit, we'll be in touch within ten working days.",
+                'Thank you!');
+        }
+
         // A resume can arrive as an uploaded file OR a link — at least one is
         // required. The PHP upload ceiling is 2 MB, so the file rule matches.
         $validated = $request->validate([
@@ -418,6 +435,16 @@ class PageController extends Controller
      */
     public function visaMockLead(Request $request, WebsiteLeadManager $leads): JsonResponse
     {
+        if (HoneypotGuard::triggered($request)) {
+            HoneypotGuard::log($request, 'visa-mock');
+
+            return response()->json([
+                'ok' => true,
+                'title' => "Thanks — we've got your details",
+                'message' => 'Our visa team will reach out to you shortly with proper consulting and the next steps to prepare for your interview. In the meantime, you can keep practising the free round.',
+            ]);
+        }
+
         $validated = $request->validate([
             'name'  => 'required|string|max:120',
             'email' => 'required|email|max:190|real_email',
