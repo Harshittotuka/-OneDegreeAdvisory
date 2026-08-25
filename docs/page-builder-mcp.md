@@ -189,6 +189,7 @@ the endpoint at the firewall. Not currently applied — the token is the control
 | --- | --- | --- |
 | `PAGE_MCP_ENABLED` | `true` | Set false to take `/mcp` down entirely |
 | `PAGE_MCP_RATE_LIMIT` | `120` | Requests per minute per IP |
+| `PAGE_MCP_ALLOWED_ORIGINS` | Claude + ChatGPT hosts | Hosts accepted in an `Origin` header, comma separated |
 | `PAGE_API_DRAFTS_ONLY` | `true` | Blocks publishing and edits to live pages |
 
 There is no server-wide credential: the endpoint authenticates with the

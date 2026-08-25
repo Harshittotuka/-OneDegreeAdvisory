@@ -137,10 +137,37 @@ class PageBuilderMcpTest extends TestCase
         $this->rpc('does/not/exist')->assertOk()->assertJsonPath('error.code', -32601);
     }
 
-    public function test_a_foreign_origin_is_refused(): void
+    /**
+     * The Origin check is spec-required but must not be vendor-specific: the
+     * same endpoint serves Claude and ChatGPT's developer-mode connectors, and
+     * a server-to-server caller sends no Origin at all.
+     */
+    public function test_known_client_origins_are_accepted_and_others_refused(): void
     {
+        foreach (['https://claude.ai', 'https://claude.com', 'https://chatgpt.com', 'https://chat.openai.com'] as $origin) {
+            $this->rpc('ping', [], ['Origin' => $origin])
+                ->assertOk("Origin {$origin} should be accepted.");
+        }
+
+        // No Origin header at all — how a server-to-server client calls.
+        $this->rpc('ping')->assertOk();
+
         $this->rpc('ping', [], ['Origin' => 'https://evil.example.com'])->assertStatus(403);
-        $this->rpc('ping', [], ['Origin' => 'https://claude.ai'])->assertOk();
+    }
+
+    public function test_the_origin_allowlist_is_configurable(): void
+    {
+        config(['page_api.mcp.allowed_origins' => ['some-new-client.example']]);
+
+        $this->rpc('ping', [], ['Origin' => 'https://some-new-client.example'])->assertOk();
+        $this->rpc('ping', [], ['Origin' => 'https://claude.ai'])->assertStatus(403);
+    }
+
+    public function test_the_sites_own_host_is_always_an_allowed_origin(): void
+    {
+        config(['page_api.mcp.allowed_origins' => []]);
+
+        $this->rpc('ping', [], ['Origin' => (string) config('app.url')])->assertOk();
     }
 
     public function test_the_endpoint_can_be_switched_off(): void

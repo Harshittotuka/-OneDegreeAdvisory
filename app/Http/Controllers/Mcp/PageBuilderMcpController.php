@@ -450,13 +450,16 @@ class PageBuilderMcpController extends Controller
             return false;
         }
 
-        $allowed = array_filter([
-            'claude.ai',
-            'www.claude.ai',
-            'claude.com',
-            config('site.canonical_host'),
-            parse_url((string) config('app.url'), PHP_URL_HOST),
-        ]);
+        // Configurable rather than hard-coded to one vendor: the same endpoint
+        // serves Claude, ChatGPT's developer-mode connectors and Codex. The
+        // site's own host is always allowed.
+        $allowed = array_filter(array_merge(
+            (array) config('page_api.mcp.allowed_origins', []),
+            [
+                config('site.canonical_host'),
+                parse_url((string) config('app.url'), PHP_URL_HOST),
+            ],
+        ));
 
         return in_array(strtolower($host), array_map('strtolower', $allowed), true);
     }
