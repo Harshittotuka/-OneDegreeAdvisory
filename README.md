@@ -21,6 +21,19 @@ php artisan serve
 
 The app supports clean URLs like `/contact` and legacy URLs like `/contact.html` and `/countries/study-in-uk.html`.
 
+## Page Builder · Claude access
+
+`/admin/pages` has a machine-facing half: an MCP endpoint at `/mcp` that lets a
+**claude.ai Project** build pages here. Generate an expiring token in
+`/admin/pages` → **Claude access**, paste it into a Claude custom connector, and
+ask for pages in plain English. No Anthropic API key involved.
+
+Claude writes **hidden drafts** only — it cannot publish, cannot edit a page
+that is already live, and cannot add a payment section. Publishing stays a human
+action in the studio.
+
+See [docs/page-builder-mcp.md](docs/page-builder-mcp.md).
+
 ## CMS and CRM backups
 
 Successful CMS and CRM data changes create one rolling restore point after the

@@ -11,7 +11,10 @@ use App\Models\CrmUser;
 use App\Models\CrmWebsiteSubmission;
 use App\Models\PaymentAttempt;
 use App\Support\CmsCrmBackupManager;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerCmsCrmBackupObservers();
         $this->registerRealEmailRule();
+        $this->registerPageMcpRateLimiter();
 
         if ($this->app->runningInConsole() && config('backup.enabled')) {
             $this->app->terminating(fn () => $this->app->make(CmsCrmBackupManager::class)->flush());
@@ -52,6 +56,18 @@ class AppServiceProvider extends ServiceProvider
                 URL::forceRootUrl($appUrl);
             }
         }
+    }
+
+    /**
+     * Throttle for the Page Builder MCP endpoint. Keyed by IP rather than by
+     * token, because `initialize` and `tools/list` are deliberately open there
+     * so a connector can be added — there is not always a token to key on.
+     */
+    private function registerPageMcpRateLimiter(): void
+    {
+        RateLimiter::for('page-mcp', fn (Request $request) => Limit::perMinute(
+            (int) config('page_api.mcp.rate_limit', 120)
+        )->by((string) $request->ip()));
     }
 
     /**

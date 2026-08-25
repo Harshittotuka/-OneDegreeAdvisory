@@ -7,6 +7,12 @@
       <h2 style="margin:0;font-size:1.3rem;">Page Builder</h2>
       <p class="hint" style="margin:4px 0 0;">Build and manage premium “brief” pages from composable blocks — cards, tables, callouts, images and more.</p>
     </div>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+    @if(session('cms_super_admin'))
+      <a class="btn btn-ghost" href="{{ route('admin.pages.tokens.index') }}" title="Let a Claude project build pages here">
+        <i data-lucide="key-round"></i> Claude access
+      </a>
+    @endif
     <form method="POST" action="{{ route('admin.pages.store') }}" style="display:flex;gap:8px;align-items:flex-end;">
       @csrf
       <div>
@@ -15,6 +21,7 @@
       </div>
       <button class="btn btn-primary" type="submit"><i data-lucide="plus"></i> Create</button>
     </form>
+    </div>
   </div>
 
   <div class="panel" style="overflow:hidden;">

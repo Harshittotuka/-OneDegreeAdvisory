@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\HomeHeroCmsController;
 use App\Http\Controllers\Admin\MbbsCountryDataSyncController;
 use App\Http\Controllers\Admin\NoticeBarCmsController;
 use App\Http\Controllers\Admin\TestPrepCompareCmsController;
+use App\Http\Controllers\Admin\PageBuilderTokenController;
 use App\Http\Controllers\Admin\UnlinkedPagesController;
 use App\Http\Controllers\Admin\BriefPageCmsController;
 use App\Http\Controllers\Admin\CareerLibraryCmsController;
@@ -296,6 +297,13 @@ Route::prefix('admin')->group(function () {
             ->middleware('throttle:5,10')->name('admin.pages.payment-otp.request');
         Route::post('pages/payment-otp/verify', [BriefPageCmsController::class, 'verifyPaymentOtp'])
             ->middleware('throttle:10,10')->name('admin.pages.payment-otp.verify');
+        // Claude access tokens for the MCP connector (super-admin only; the
+        // controller enforces it). Declared before pages/{slug} so "tokens" is
+        // not read as a page slug.
+        Route::get('pages/tokens', [PageBuilderTokenController::class, 'index'])->name('admin.pages.tokens.index');
+        Route::post('pages/tokens', [PageBuilderTokenController::class, 'store'])->name('admin.pages.tokens.store');
+        Route::delete('pages/tokens/{id}', [PageBuilderTokenController::class, 'destroy'])
+            ->whereNumber('id')->name('admin.pages.tokens.destroy');
         Route::get('pages/block', [BriefPageCmsController::class, 'block'])->name('admin.pages.block');
         Route::get('pages/preset', [BriefPageCmsController::class, 'preset'])->name('admin.pages.preset');
         Route::post('pages/render', [BriefPageCmsController::class, 'render'])->name('admin.pages.render');

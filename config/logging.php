@@ -118,6 +118,18 @@ return [
             'replace_placeholders' => true,
         ],
 
+        /* Every Page Builder write made from outside the studio (the /mcp
+           connector), plus token issue/revoke, so an assistant-authored change
+           is always traceable. Kept out of the main log so it can be read — and
+           retained — on its own. */
+        'page_api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/page-api.log'),
+            'level' => 'info',
+            'days' => 90,
+            'replace_placeholders' => true,
+        ],
+
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
