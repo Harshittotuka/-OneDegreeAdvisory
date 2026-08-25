@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\PageBuilderToken;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Issues and verifies the expiring tokens that let claude.ai (or any other
@@ -43,7 +44,9 @@ class PageBuilderTokens
             'created_by' => $createdBy,
         ]);
 
-        Log::channel('page_api')->info('page-api.token_issued', [
+        // Non-fatal: the token row is already committed, and losing the log
+        // line must not cost the admin the token they just generated.
+        $this->log('page-api.token_issued', [
             'id' => $model->id,
             'label' => $model->label,
             'expires_at' => $model->expires_at->toIso8601String(),
@@ -89,7 +92,7 @@ class PageBuilderTokens
         $token->revoked_at = now();
         $token->save();
 
-        Log::channel('page_api')->info('page-api.token_revoked', [
+        $this->log('page-api.token_revoked', [
             'id' => $token->id,
             'label' => $token->label,
         ]);
@@ -115,6 +118,16 @@ class PageBuilderTokens
     public function anyUsable(): bool
     {
         return $this->usableCount() > 0;
+    }
+
+    /** Audit logging that cannot take down the operation it is recording. */
+    private function log(string $message, array $context): void
+    {
+        try {
+            Log::channel('page_api')->info($message, $context);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private static function hash(string $plain): string

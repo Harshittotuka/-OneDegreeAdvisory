@@ -6,6 +6,7 @@ use App\Models\PageBuilderToken;
 use App\Support\BriefPageStore;
 use App\Support\PageBuilderTokens;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -285,6 +286,36 @@ class PageBuilderMcpTest extends TestCase
         $rendered->assertSee('Right note', false);
         $rendered->assertSee('Total cost', false);
         $rendered->assertSee('budget', false);
+    }
+
+    /**
+     * Regression: found on the first UAT deploy. The audit log runs after the
+     * page is already saved, so a log write that throws — an unwritable log
+     * file, in that case — reported a successful create as an internal error.
+     * A caller seeing that error would retry and duplicate the page.
+     */
+    public function test_a_page_is_still_created_when_the_audit_log_cannot_be_written(): void
+    {
+        // Mint the token first: issuing one also logs.
+        $token = $this->freshToken();
+
+        // Break the channel for real rather than mocking the Log facade: a
+        // mocked LogManager is built without its container and explodes on its
+        // own. Note the failure has to happen on *write*, not on resolution —
+        // LogManager catches resolution errors and quietly falls back to an
+        // emergency logger, which is why an unknown driver would prove nothing.
+        // Pointing the path at a directory makes the append-mode open fail, the
+        // same way UAT's root-owned log file did.
+        config(['logging.channels.page_api' => ['driver' => 'single', 'path' => storage_path('logs')]]);
+        // Issuing the token above already resolved and cached the channel, so
+        // the new config only takes hold once the built one is discarded.
+        Log::forgetChannel('page_api');
+        $this->assertThrows(fn () => Log::channel('page_api')->info('probe'));
+
+        $result = $this->tool('create_page', ['title' => 'Mcp Unwritable Log'], $token);
+
+        $this->assertFalse($result['isError'], 'A logging failure must not fail the write.');
+        $this->assertNotNull(app(BriefPageStore::class)->find('mcp-unwritable-log'));
     }
 
     public function test_a_payment_block_is_refused_over_mcp(): void

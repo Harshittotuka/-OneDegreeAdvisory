@@ -6,6 +6,7 @@ use App\Exceptions\PageBuilderException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * All Page Builder reads and writes that happen without a browser, in one
@@ -308,8 +309,25 @@ class PageBuilderWriter
         return $n;
     }
 
-    /** Every write is logged so an assistant-authored change is traceable. */
+    /**
+     * Every write is logged so an assistant-authored change is traceable.
+     *
+     * Deliberately swallows its own failures. The audit call happens after the
+     * page is already saved, so letting it throw would report a successful
+     * write as an error — the caller would retry and duplicate the page. An
+     * unwritable log file is a problem for the operator, not a reason to fail
+     * the operation, so it degrades to the default log instead.
+     */
     private function audit(string $event, array $page, string $actor, array $extra = []): void
+    {
+        try {
+            $this->writeAudit($event, $page, $actor, $extra);
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
+    private function writeAudit(string $event, array $page, string $actor, array $extra): void
     {
         Log::channel('page_api')->info('page-api.'.$event, [
             'slug' => $page['slug'] ?? null,
