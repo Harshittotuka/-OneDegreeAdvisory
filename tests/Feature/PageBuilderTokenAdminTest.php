@@ -20,14 +20,51 @@ class PageBuilderTokenAdminTest extends TestCase
         return $this->withSession(['cms_authenticated' => true, 'cms_super_admin' => true]);
     }
 
-    public function test_the_screen_shows_the_connector_url_and_the_generate_form(): void
+    public function test_the_screen_is_a_usable_setup_guide(): void
     {
         $response = $this->asSuperAdmin()->get(route('admin.pages.tokens.index'))->assertOk();
 
-        $response->assertSee('Claude access');
+        $response->assertSee('AI access');
         $response->assertSee(rtrim((string) config('app.url'), '/').'/mcp');
-        $response->assertSee('Generate token');
+        $response->assertSee('Make token');
         $response->assertSee('No tokens yet', false);
+
+        // Both clients have to be walked through, not just Claude.
+        $response->assertSee('In Claude', false);
+        $response->assertSee('In ChatGPT', false);
+        $response->assertSee('Developer mode', false);
+    }
+
+    /**
+     * The paste block is what actually steers the assistant, so the rules that
+     * are easy to get wrong have to be in it — above all the single-record rule,
+     * since a model's default habit is to emit separate .html/.css/.js files
+     * and a page here has exactly one code field per block.
+     */
+    public function test_the_pasteable_instructions_carry_the_single_record_rule(): void
+    {
+        $response = $this->asSuperAdmin()->get(route('admin.pages.tokens.index'))->assertOk();
+
+        $response->assertSee('single record', false);
+        $response->assertSee('ONE `embed` block', false);
+        $response->assertSee('separate .css or .js files', false);
+        $response->assertSee('list_block_types', false);
+        $response->assertSee('PASTE_YOUR_TOKEN_HERE', false);
+    }
+
+    public function test_a_freshly_generated_token_is_prefilled_into_the_instructions(): void
+    {
+        $this->asSuperAdmin()->post(route('admin.pages.tokens.store'), [
+            'label' => 'Prefill check',
+            'days' => 15,
+        ]);
+
+        $token = session('page_builder_fresh_token')['token'];
+
+        $this->get(route('admin.pages.tokens.index'))
+            ->assertOk()
+            ->assertSee($token, false)
+            ->assertDontSee('PASTE_YOUR_TOKEN_HERE', false);
     }
 
     public function test_a_standard_admin_cannot_manage_tokens(): void
@@ -111,7 +148,7 @@ class PageBuilderTokenAdminTest extends TestCase
             ->get(route('admin.pages.tokens.index'))
             ->assertOk()
             ->assertSee('Visible in list')
-            ->assertSee('Active')
+            ->assertSee('Working')
             ->assertSee($issued['model']->hint)
             ->assertDontSee($issued['token']);
     }

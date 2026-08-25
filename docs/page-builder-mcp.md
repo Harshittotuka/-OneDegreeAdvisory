@@ -10,7 +10,7 @@ No Anthropic API key is involved — this rides your normal Claude subscription.
 
 ### 1. Generate a token
 
-`/admin/pages` → **Claude access** (super-admin only) → name it, choose a
+`/admin/pages` → **AI access** (super-admin only) → name it, choose a
 lifetime (7 / 15 / 30 / 90 days, default 15), **Generate**.
 
 The token is shown **once**. Only a SHA-256 hash is stored, so it cannot be
@@ -96,6 +96,16 @@ anything the studio itself would refuse.
 `payment` is absent from `list_block_types` and refused by the writers, so the
 studio's OTP authorization flow stays the only route to a live payment gateway.
 
+### One page is one record
+
+There is no filesystem behind a page and one block holds exactly one code field,
+so custom markup has to be a single self-contained `embed` block — HTML, a
+`<style>` tag and a `<script>` tag all in the same field. An assistant left to
+its own habits will try to emit separate `.html`, `.css` and `.js` files, so this
+rule is stated in the server's own `initialize` instructions and again in the
+paste-block on /admin/pages/tokens. Both come from
+`App\Support\PageBuilderGuidance`, so they cannot drift apart.
+
 ## Layout shape
 
 Useful when reading what Claude produced, or writing a layout by hand.
@@ -147,7 +157,7 @@ where you are already signed in, then publish from `/admin/pages`.
 
 ## Managing tokens
 
-The **Claude access** screen lists every token with its status, expiry, last-used
+The **AI access** screen lists every token with its status, expiry, last-used
 time and use count, so you can tell an idle token from a working one before
 revoking it. Revoking takes effect on the next call.
 

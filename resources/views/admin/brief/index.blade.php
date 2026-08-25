@@ -9,8 +9,8 @@
     </div>
     <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
     @if(session('cms_super_admin'))
-      <a class="btn btn-ghost" href="{{ route('admin.pages.tokens.index') }}" title="Let a Claude project build pages here">
-        <i data-lucide="key-round"></i> Claude access
+      <a class="btn btn-ghost" href="{{ route('admin.pages.tokens.index') }}" title="Let Claude or ChatGPT build pages here">
+        <i data-lucide="key-round"></i> AI access
       </a>
     @endif
     <form method="POST" action="{{ route('admin.pages.store') }}" style="display:flex;gap:8px;align-items:flex-end;">

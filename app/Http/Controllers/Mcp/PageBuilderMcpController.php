@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mcp;
 
 use App\Exceptions\PageBuilderException;
 use App\Http\Controllers\Controller;
+use App\Support\PageBuilderGuidance;
 use App\Support\PageBuilderTokens;
 use App\Support\PageBuilderWriter;
 use Illuminate\Http\JsonResponse;
@@ -158,23 +159,7 @@ class PageBuilderMcpController extends Controller
     /** Guidance the client shows the model once, at connection time. */
     private function instructions(): string
     {
-        return <<<'TXT'
-        This server builds pages on the One Degree Advisory website.
-
-        Every tool needs an access token. If the connector was not configured
-        with an Authorization header, pass the token issued in /admin/pages as
-        the `token` argument on each call.
-
-        Before composing a page, call list_block_types, then get_block_schema
-        for the specific types you intend to use. Only the field keys that
-        schema lists are stored — anything else is silently dropped, so check
-        the layout you get back to confirm what was actually saved.
-
-        Pages are always created hidden. You cannot publish, and you cannot
-        edit a page that is already live — duplicate it into a draft instead.
-        After writing, give the human the preview_url and tell them to publish
-        from /admin/pages once they are happy with it.
-        TXT;
+        return PageBuilderGuidance::serverInstructions();
     }
 
     /* ───────────────────────── Tools ───────────────────────── */

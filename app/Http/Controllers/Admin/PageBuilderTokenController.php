@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\PageBuilderGuidance;
 use App\Support\PageBuilderTokens;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
- * "Claude access" in the Page Builder: issue, review and revoke the expiring
- * tokens that let a claude.ai Project author pages here.
+ * "AI access" in the Page Builder: the setup guide plus the expiring tokens
+ * that let a Claude or ChatGPT project author pages here.
  *
  * Super-admin only. Every other Page Builder screen is open to any CMS admin,
  * but a token is a long-lived credential that leaves the building — it belongs
@@ -32,6 +33,7 @@ class PageBuilderTokenController extends Controller
             'defaultDays' => PageBuilderTokens::DEFAULT_DAYS,
             'mcpUrl' => rtrim((string) config('app.url'), '/').'/mcp',
             'mcpEnabled' => (bool) config('page_api.mcp.enabled', true),
+            'projectInstructions' => PageBuilderGuidance::projectInstructions(),
             // Shown once, immediately after generating. Never persisted.
             'freshToken' => session('page_builder_fresh_token'),
         ]);
@@ -90,6 +92,6 @@ class PageBuilderTokenController extends Controller
     {
         return redirect()
             ->route('admin.pages.index')
-            ->with('status', 'Claude access tokens are managed by the super-admin.');
+            ->with('status', 'AI access tokens are managed by the super-admin.');
     }
 }
