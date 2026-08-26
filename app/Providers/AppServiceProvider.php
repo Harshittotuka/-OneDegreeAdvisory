@@ -14,6 +14,7 @@ use App\Support\CmsCrmBackupManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
@@ -34,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->sealOutboundMailInTests();
         $this->registerCmsCrmBackupObservers();
         $this->registerRealEmailRule();
         $this->registerPageMcpRateLimiter();
@@ -55,6 +57,43 @@ class AppServiceProvider extends ServiceProvider
             if ($appUrl !== '') {
                 URL::forceRootUrl($appUrl);
             }
+        }
+    }
+
+    /**
+     * Hard stop on outbound mail whenever the test runner is driving the app.
+     *
+     * MAIL_MAILER=array only swaps the DEFAULT mailer, and no form uses the
+     * default: contact, careers, profiler, referral, payment and CRM all call
+     * Mail::mailer('contact_form') and friends explicitly, and those are
+     * hardcoded smtp transports reading credentials from .env. A test that
+     * posted to a form route therefore sent REAL email to the live admissions
+     * inbox - which is exactly what happened on 26 Aug 2026.
+     *
+     * So rather than trust every test to remember Mail::fake(), rewrite every
+     * configured mailer to the array transport. Keyed on the test runner and
+     * not on APP_ENV, so `--env=production` cannot punch a hole in it either.
+     */
+    private function sealOutboundMailInTests(): void
+    {
+        if (! $this->app->runningUnitTests() && ! defined('PHPUNIT_COMPOSER_INSTALL')) {
+            return;
+        }
+
+        // Every name the app can pass to Mail::mailer() is a key of
+        // mail.mailers, so rewriting the lot leaves no reachable transport.
+        $sealed = [];
+        foreach (array_keys((array) config('mail.mailers', [])) as $name) {
+            $sealed[$name] = ['transport' => 'array'];
+        }
+        $sealed['array'] = ['transport' => 'array'];
+
+        config(['mail.default' => 'array', 'mail.mailers' => $sealed]);
+
+        // A mailer resolved before this ran would still hold its live
+        // transport, so drop any that the manager has already built.
+        if ($this->app->resolved('mail.manager')) {
+            Mail::forgetMailers();
         }
     }
 

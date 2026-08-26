@@ -33,6 +33,28 @@
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
+        <!-- Belt and braces behind AppServiceProvider::sealOutboundMailInTests().
+             MAIL_MAILER only covers the DEFAULT mailer, so point every form at
+             the array mailer by name too, and strip the SMTP credentials so a
+             transport that somehow slipped through has nothing to send with. -->
+        <env name="CONTACT_FORM_MAILER" value="array"/>
+        <env name="CAREERS_FORM_MAILER" value="array"/>
+        <env name="PROFILER_FORM_MAILER" value="array"/>
+        <env name="REFERRAL_FORM_MAILER" value="array"/>
+        <env name="PAYMENT_SECTION_OTP_MAILER" value="array"/>
+        <env name="CRM_MAILER" value="array"/>
+        <env name="MAIL_HOST" value="127.0.0.1"/>
+        <env name="MAIL_USERNAME" value=""/>
+        <env name="MAIL_PASSWORD" value=""/>
+        <env name="CONTACT_MAIL_HOST" value="127.0.0.1"/>
+        <env name="CONTACT_MAIL_USERNAME" value=""/>
+        <env name="CONTACT_MAIL_PASSWORD" value=""/>
+        <env name="CAREERS_MAIL_HOST" value="127.0.0.1"/>
+        <env name="CAREERS_MAIL_USERNAME" value=""/>
+        <env name="CAREERS_MAIL_PASSWORD" value=""/>
+        <env name="CRM_MAIL_HOST" value="127.0.0.1"/>
+        <env name="CRM_MAIL_USERNAME" value=""/>
+        <env name="CRM_MAIL_PASSWORD" value=""/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
