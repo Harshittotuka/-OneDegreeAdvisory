@@ -108,6 +108,18 @@ class SeoController extends Controller
             'courses.mba' => ['priority' => '0.72', 'changefreq' => 'monthly'],
             'courses.doctoral' => ['priority' => '0.68', 'changefreq' => 'monthly'],
             'mbbs.student' => ['priority' => '0.82', 'changefreq' => 'monthly'],
+            // Student Hub tools and landing pages. These shipped after the
+            // original list and were never added, so none of them was ever
+            // advertised to search engines.
+            'profiler' => ['priority' => '0.80', 'changefreq' => 'monthly'],
+            'career-counselling' => ['priority' => '0.80', 'changefreq' => 'monthly'],
+            'career-library.index' => ['priority' => '0.78', 'changefreq' => 'weekly'],
+            'sop.index' => ['priority' => '0.76', 'changefreq' => 'monthly'],
+            'visa' => ['priority' => '0.76', 'changefreq' => 'monthly'],
+            'visa-mock' => ['priority' => '0.74', 'changefreq' => 'monthly'],
+            'loan-acco.index' => ['priority' => '0.72', 'changefreq' => 'monthly'],
+            'student-development' => ['priority' => '0.72', 'changefreq' => 'monthly'],
+            'referral' => ['priority' => '0.60', 'changefreq' => 'monthly'],
             'careers' => ['priority' => '0.50', 'changefreq' => 'monthly'],
             'contact' => ['priority' => '0.82', 'changefreq' => 'monthly'],
             'privacy' => ['priority' => '0.30', 'changefreq' => 'yearly'],
