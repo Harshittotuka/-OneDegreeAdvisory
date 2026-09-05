@@ -50,7 +50,7 @@ class StudentProfilerController
                 'submitted' => false,
             ],
             'pageTitle'       => 'Student Profiler',
-            'pageDescription' => 'Build your study-abroad profile in minutes. Tell us your degree level, academics, test scores, preferences and budget — our advisors will personally review your profile and get back to you.',
+            'pageDescription' => 'Build your profile in minutes. Tell us your degree level, academics, test scores, preferences and aspirations — our advisors will personally review your profile and get back to you.',
             'activeNav'       => null,
             'bodyClass'       => 'sp-page',
         ]);
