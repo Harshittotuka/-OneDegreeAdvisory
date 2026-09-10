@@ -188,6 +188,27 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => map.invalidateSize(), 100);
     };
 
+    /**
+     * Full-screen the "Where students want to study" panel.
+     *
+     * Leaflet sizes its canvas once and caches it, so the map draws into the old
+     * box until invalidateSize() runs — after the CSS transition, not with it.
+     */
+    const setMapExpanded = (expanded) => {
+        const panel = document.querySelector('.dashboard-map-panel');
+        if (!panel) return;
+        panel.classList.toggle('is-map-expanded', expanded);
+        document.body.classList.toggle('crm-map-locked', expanded);
+        const button = panel.querySelector('[data-map-expand]');
+        if (button) {
+            button.setAttribute('aria-pressed', expanded ? 'true' : 'false');
+            button.setAttribute('aria-label', expanded ? 'Restore the map to its panel' : 'Expand the map to full screen');
+            button.title = expanded ? 'Restore map' : 'Expand map';
+        }
+        const map = panel.querySelector('[data-lead-world-map]')?._crmLeafletMap;
+        if (map) window.setTimeout(() => map.invalidateSize(), 260);
+    };
+
     const markScrollableTables = () => {
         document.querySelectorAll('.table-wrap').forEach((wrap) => {
             const scrollable = wrap.scrollWidth > wrap.clientWidth + 1 || wrap.scrollHeight > wrap.clientHeight + 1;
@@ -315,6 +336,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const replace = () => {
             currentApp.querySelector('[data-lead-world-map]')?._crmLeafletMap?.remove();
+            // The incoming markup always renders the map collapsed, so the scroll
+            // lock has to come off with it or the new page cannot be scrolled.
+            document.body.classList.remove('crm-map-locked');
             currentApp.replaceWith(nextApp);
             document.title = parsed.title || document.title;
             if (options.historyMode === 'push') history.pushState({}, '', nextUrl.href);
@@ -927,13 +951,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const teamFilterChip = target.closest('.team-filter-chip');
-        if (teamFilterChip) {
-            teamFilterChip.parentElement?.querySelectorAll('.team-filter-chip').forEach((chip) => chip.classList.toggle('is-active', chip === teamFilterChip));
-            applyTeamFilter();
+        if (target.closest('[data-map-expand]')) {
+            setMapExpanded(!document.querySelector('.dashboard-map-panel.is-map-expanded'));
             return;
         }
-
         const modalButton = target.closest('[data-modal-open]');
         if (modalButton) {
             event.preventDefault();
@@ -1127,6 +1148,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // bar and are tied to it with form="…" — the rows-per-page select above
         // each list. They are not descendants, so the two selectors above miss them.
         if (input.matches('[data-crm-filter-form] select, [data-crm-filter-form] input[type="date"], [data-crm-filter-control]')) input.form?.requestSubmit();
+        // The partner read / edit choice only exists for a partner account, so the
+        // field on the create form appears with the role and is cleared away with
+        // it. The server excludes the value for any other role regardless.
+        if (input.matches('[data-team-role-select]')) {
+            const accessField = input.form?.querySelector('[data-partner-access-field]');
+            if (accessField) accessField.hidden = input.value !== 'partner';
+        }
         if (input.matches('[data-test-select]')) syncTestRow(input);
         if (input.matches('[data-paid-values]')) syncEnrollmentRequirements(input);
         // Statuses that keep a lead in the Follow-up planner carry a brown tint.
@@ -1153,27 +1181,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    /**
+     * Live search over Team management.
+     *
+     * Only the search box is handled here. The role chips are links that carry
+     * ?role= in the URL, because a chip has to change the main frame too — as a
+     * client-side toggle it could not, and left the frame stuck on the Add form
+     * or an open account while the sidebar narrowed underneath it.
+     */
     const applyTeamFilter = () => {
         const toolbar = document.querySelector('[data-team-toolbar]');
         if (!toolbar) return;
         const query = (toolbar.querySelector('[data-team-search-input]')?.value || '').trim().toLowerCase();
-        const role = toolbar.querySelector('.team-filter-chip.is-active')?.dataset.teamFilter || 'all';
+        // One pass drives both surfaces: the sidebar rows, and the cards in the
+        // main frame whenever it is browsing rather than editing an account.
+        const matches = (el) => !query || (el.dataset.teamSearch || '').includes(query);
+
         let visible = 0;
         document.querySelectorAll('[data-team-member]').forEach((member) => {
-            const matchesRole = role === 'all' || member.dataset.teamRole === role;
-            const matchesQuery = !query || (member.dataset.teamSearch || '').includes(query);
-            const show = matchesRole && matchesQuery;
+            const show = matches(member);
             member.hidden = !show;
             if (show) visible++;
         });
-        document.querySelectorAll('[data-team-group]').forEach((group) => {
-            const roleMatch = role === 'all' || role === group.dataset.role;
-            const hasMembers = !!group.querySelector('[data-team-member]');
-            const anyVisible = !!group.querySelector('[data-team-member]:not([hidden])');
-            group.hidden = !roleMatch || (hasMembers && !anyVisible);
+        document.querySelectorAll('[data-team-card]').forEach((card) => {
+            card.hidden = !matches(card);
         });
-        const noResults = document.querySelector('[data-team-no-results]');
-        if (noResults) noResults.hidden = !(visible === 0 && query !== '');
+        // One of these sits under the sidebar list and one under the card grid.
+        // The server already shows it when the chosen role has no accounts.
+        document.querySelectorAll('[data-team-no-results]').forEach((empty) => {
+            empty.hidden = visible !== 0;
+        });
+        document.querySelectorAll('[data-team-visible-count]').forEach((count) => {
+            count.textContent = String(visible);
+        });
     };
 
     let filterSearchTimer = null;
@@ -1221,6 +1261,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (openUserMenu) {
                 openUserMenu.classList.remove('is-open');
                 openUserMenu.querySelector('[data-user-menu-toggle]')?.setAttribute('aria-expanded', 'false');
+            }
+            if (document.querySelector('.dashboard-map-panel.is-map-expanded')) {
+                setMapExpanded(false);
+                document.querySelector('[data-map-expand]')?.focus();
+                return;
             }
             const expandedDrawer = document.querySelector('#leadDrawer.is-expanded');
             if (expandedDrawer) {

@@ -19,7 +19,7 @@ class CrmLeadController extends Controller
 {
     /** Human field names used by the timeline story and the audit log. */
     private const FIELD_LABELS = [
-        'assigned_to' => 'Owner', 'follow_up_at' => 'Follow-up', 'course_interest' => 'Course',
+        'assigned_to' => 'Owner', 'partner_id' => 'Partner', 'follow_up_at' => 'Follow-up', 'course_interest' => 'Course',
         'country_interest' => 'Country', 'student_stage' => 'Student stage', 'lead_type' => 'Lead type',
         'status' => 'Status', 'priority' => 'Priority', 'category' => 'Category', 'source' => 'Source',
         'city' => 'City', 'name' => 'Name', 'phone' => 'Phone', 'email' => 'Email',
@@ -45,6 +45,9 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
+        // A partner only ever watches leads that were pointed at them; putting new
+        // records into the workspace stays with the team.
+        abort_if($user->isPartner(), 403);
         if ($request->input('status') === 'converted') {
             return back()->withErrors(['status' => 'Use “Convert to Student” from the Student tab to enroll this lead.'], 'leadCreate')->withInput();
         }
@@ -85,7 +88,7 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        $this->guardLead($lead, $user);
+        $this->guardLeadWrite($lead, $user);
         if (! $lead->is_student && $lead->status !== 'converted' && $request->input('status') === 'converted') {
             return back()->withErrors(['status' => 'Use “Convert to Student” from the Student tab to enroll this lead.'])->withInput();
         }
@@ -94,6 +97,11 @@ class CrmLeadController extends Controller
         $data['email'] = $this->normaliseEmail((string) ($data['email'] ?? '')) ?: null;
         if (! $user->isSuperAdmin()) {
             unset($data['assigned_to']);
+        }
+        // The Partner field decides which partner can see this lead at all, so a
+        // partner must never be able to move it — not even onto themselves.
+        if ($user->isPartner()) {
+            unset($data['partner_id']);
         }
 
         $phoneChanged = $data['phone'] !== ($this->normalisePhone((string) $lead->phone) ?: null);
@@ -166,7 +174,7 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        $this->guardLead($lead, $user);
+        $this->guardLeadWrite($lead, $user);
         $data = $request->validate(['comment' => ['required', 'string', 'max:3000']]);
         $activity = $this->activity($lead, $user, 'comment', trim($data['comment']));
         $lead->update(['last_contacted_at' => now()]);
@@ -197,7 +205,7 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        $this->guardLead($lead, $user);
+        $this->guardTeamAction($lead, $user);
         $before = ['follow_up_completed_at' => $lead->getRawOriginal('follow_up_completed_at')];
         $lead->update(['follow_up_completed_at' => now(), 'last_contacted_at' => now()]);
         $this->activity($lead, $user, 'follow_up_done', 'Follow-up marked complete.');
@@ -213,7 +221,7 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        $this->guardLead($lead, $user);
+        $this->guardTeamAction($lead, $user);
         // Enrolling twice would overwrite the recorded enrollment with a blank
         // form's worth of data; the button is gone once it is done, but the route
         // is not, and a resubmitted POST would land right here.
@@ -237,7 +245,7 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        $this->guardLead($lead, $user);
+        $this->guardTeamAction($lead, $user);
         abort_unless($lead->is_student, 422);
 
         // The same mandatory set the conversion asked for: what a conversion has
@@ -274,6 +282,7 @@ class CrmLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
+        abort_if($user->isPartner(), 403);
         $data = $request->validate([
             'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
             'assigned_to' => ['nullable', Rule::exists('crm_users', 'id')->where(fn ($q) => $q->where('role', 'counsellor')->where('is_active', true))],
@@ -382,6 +391,17 @@ class CrmLeadController extends Controller
             'priority' => ['required', Rule::in(array_keys(CrmOptions::PRIORITIES))],
             'source' => ['nullable', 'string', 'max:100'], 'status' => ['required', Rule::in($allowedStatuses)],
             'assigned_to' => [$user->isSuperAdmin() ? 'nullable' : 'prohibited', Rule::exists('crm_users', 'id')->where(fn ($q) => $q->where('role', 'counsellor')->where('is_active', true))],
+            // "Partner name": a counsellor's and a super admin's field to set, and
+            // never the partner's own — it is the only thing deciding which
+            // partner can see this lead. Only active partners can be chosen, but a
+            // partner who has since been switched off stays where they are rather
+            // than being silently dropped the next time the lead is saved.
+            'partner_id' => [$user->isPartner() ? 'prohibited' : 'nullable', Rule::exists('crm_users', 'id')->where(function ($query) use ($lead): void {
+                $query->where('role', 'partner');
+                $lead?->partner_id
+                    ? $query->where(fn ($allowed) => $allowed->where('is_active', true)->orWhere('id', $lead->partner_id))
+                    : $query->where('is_active', true);
+            })],
             // An open follow-up status is a promise to talk again, so it has to carry a date.
             'follow_up_at' => ['nullable', Rule::requiredIf(
                 fn (): bool => in_array((string) $request->input('status'), CrmOptions::FOLLOW_UP_STATUSES, true)
@@ -499,9 +519,42 @@ class CrmLeadController extends Controller
         return strtolower(trim($email));
     }
 
+    /**
+     * Whether this lead is theirs to open at all — the single-record twin of
+     * CrmLead::scopeVisibleTo, which narrows every list.
+     */
     private function guardLead(CrmLead $lead, CrmUser $user): void
     {
-        abort_unless($user->isSuperAdmin() || $lead->assigned_to === $user->id, 403);
+        abort_unless(match (true) {
+            $user->isSuperAdmin() => true,
+            $user->isPartner() => $lead->partner_id === $user->id,
+            default => $lead->assigned_to === $user->id,
+        }, 403);
+    }
+
+    /**
+     * Theirs to open AND theirs to change.
+     *
+     * A read-only partner reaches every screen the drawer renders, with the form
+     * fields disabled. Disabled fields are a courtesy, not a boundary — this is
+     * what stops the same form being posted back by hand.
+     */
+    private function guardLeadWrite(CrmLead $lead, CrmUser $user): void
+    {
+        $this->guardLead($lead, $user);
+        abort_unless($user->canEditLeads(), 403);
+    }
+
+    /**
+     * Actions that stay with the team however much access a partner was given:
+     * the follow-up planner is the counsellor's own workflow, and enrolling a
+     * student is a financial record. A partner watches both from the drawer
+     * without being able to move either.
+     */
+    private function guardTeamAction(CrmLead $lead, CrmUser $user): void
+    {
+        $this->guardLead($lead, $user);
+        abort_if($user->isPartner(), 403);
     }
 
     private function activity(CrmLead $lead, CrmUser $user, string $type, string $body, array $metadata = []): CrmLeadActivity
@@ -526,10 +579,16 @@ class CrmLeadController extends Controller
             return '';
         }
 
-        // Resolve counsellor names for any owner change in one query.
+        // Resolve CRM account names for any owner or partner change in one query.
         $userNames = [];
-        if (in_array('assigned_to', $fields, true)) {
-            $ids = array_filter([$before['assigned_to'] ?? null, $changes['assigned_to'] ?? null]);
+        $peopleFields = array_values(array_intersect(['assigned_to', 'partner_id'], $fields));
+        if ($peopleFields !== []) {
+            $ids = [];
+            foreach ($peopleFields as $peopleField) {
+                $ids[] = $before[$peopleField] ?? null;
+                $ids[] = $changes[$peopleField] ?? null;
+            }
+            $ids = array_filter($ids);
             $userNames = $ids === []
                 ? []
                 : CrmUser::query()->whereKey($ids)->pluck('name', 'id')->all();
@@ -551,6 +610,7 @@ class CrmLeadController extends Controller
                 'english_tests' => CrmOptions::describeTests($value, CrmOptions::ENGLISH_TESTS),
                 'aptitude_tests' => CrmOptions::describeTests($value, CrmOptions::APTITUDE_TESTS),
                 'assigned_to' => $userNames[$value] ?? 'counsellor #'.$value,
+                'partner_id' => $userNames[$value] ?? 'partner #'.$value,
                 'follow_up_at' => \Illuminate\Support\Carbon::parse($value)->format('d M Y, g:i A'),
                 'phone' => '+91 '.$value,
                 default => (string) $value,

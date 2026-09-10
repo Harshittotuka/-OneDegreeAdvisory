@@ -177,7 +177,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f2f2ff}tbody tr:last-child td
 .modal-body{padding:19px 20px}.modal-foot{padding:13px 20px;display:flex;justify-content:flex-end;gap:7px;border-top:1px solid var(--orbit-line);background:#f1f2fc}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 13px}.form-grid .full{grid-column:1/-1}.field textarea{min-height:78px;resize:vertical}.required{color:var(--orbit-coral)}.field-error{color:var(--orbit-red);font-size:.62rem}.has-error input,.has-error select{border-color:#e98b99}.label-note{color:#a1a4b7;font-size:.58rem;font-weight:500}.help{color:var(--orbit-muted);font-size:.61rem;line-height:1.5}
 .dropzone{display:block;padding:25px 17px;border:1px dashed #aeb2d0;border-radius:12px;background:#f1f2ff;text-align:center}.dropzone:hover{border-color:var(--orbit-violet);background:#eae9ff}.dropzone strong{display:block;font-size:.74rem}.dropzone span{display:block;margin-top:4px;color:var(--orbit-muted);font-size:.63rem}.csv-template{margin-top:13px;padding:9px;overflow:auto;border-radius:7px;background:#e8e9f6;color:var(--orbit-muted);font-size:.61rem;white-space:nowrap}
-.team-list{margin-bottom:18px;display:flex;flex-direction:column;gap:7px}.team-member{padding:9px;display:flex;align-items:center;gap:9px;border:1px solid var(--orbit-line);border-radius:9px;background:#fff}.team-member-info{min-width:0;flex:1}.team-member-info strong{display:block;font-size:.7rem}.team-member-info span{color:var(--orbit-muted);font-size:.6rem}.state{padding:3px 6px;border-radius:5px;background:#e1f6ef;color:#24795f;font-size:.56rem}.state.off{background:#eceef4;color:var(--orbit-muted)}
+.state{padding:3px 6px;border-radius:5px;background:#e1f6ef;color:#24795f;font-size:.56rem}.state.off{background:#eceef4;color:var(--orbit-muted)}
 
 /* ---------------- Lead workspace drawer ---------------- */
 .drawer-overlay{position:fixed;inset:0;z-index:60;background:rgba(20,21,40,.54);backdrop-filter:blur(4px)}
@@ -238,3 +238,227 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f2f2ff}tbody tr:last-child td
 @media(max-width:420px){.stats{grid-template-columns:1fr;grid-auto-rows:142px}.top-actions{gap:5px}.lead-snapshot{grid-template-columns:1fr;text-align:center}.lead-orbit{margin:auto}.snapshot-chips{justify-content:center}.drawer-lead p{flex-wrap:wrap}}
 @media(max-width:480px){.top-actions>.btn{width:39px;min-width:39px;padding:0}.top-actions>.btn span{display:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+/* ============================================================
+   Gaps — components the app renders that this theme never styled
+   ------------------------------------------------------------
+   Each CRM theme is a COMPLETE, standalone stylesheet: the loader swaps
+   this file for crm.css or crm-classic.css rather than layering them.
+   Anything missing here therefore fell back to browser defaults while
+   Orbit was selected. A coverage check found 182 such selectors; the
+   ones with visible or functional consequences were:
+
+     · the KPI label   — rendered at full body size, so "Total leads" was
+                         nearly as large as the number it sat under.
+     · .field.has-error / .field-error:before
+                       — a rejected form showed no red field, no marker.
+     · .btn.is-busy    — no spinner while a submit was in flight.
+     · .pipeline-step:first-child:before
+                       — the first step drew a connector to nothing.
+     · .badge:before   — the status dot the badge's own gap allows for.
+     · .drawer-tabs.is-stuck …
+                       — crm.js sets .is-stuck on scroll and nothing changed.
+     · .journey-step.complete, .journey-hero.journey-alert,
+       .next-action-card.today / .upcoming
+                       — states that silently rendered as their neutral base.
+
+   Everything below is written in Orbit's own vocabulary (--orbit-* tokens,
+   its lilac canvas and violet accent) rather than ported from another theme.
+   ============================================================ */
+
+*:before,*:after{box-sizing:border-box}
+
+/* ---- Buttons: press, hover and the in-flight spinner ---- */
+.btn:active{transform:translateY(1px)}
+.btn-ghost:hover{color:var(--orbit-violet);background:rgba(111,90,215,.1)}
+.btn-danger:hover{background:var(--orbit-red);border-color:var(--orbit-red);color:#fff}
+.btn.is-busy{position:relative;padding-right:34px;cursor:progress}
+.btn.is-busy:after{content:"";position:absolute;right:13px;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:orbit-spin .55s linear infinite}
+
+/* ---- Validation. Without these a rejected form looked accepted. ---- */
+.field.has-error input,.field.has-error select,.field.has-error textarea{border-color:var(--orbit-red);background:#fff5f6;box-shadow:0 0 0 3px rgba(233,86,105,.12)}
+.field.has-error label{color:var(--orbit-red)}
+.field-error:before{content:"!";flex:0 0 auto;width:14px;height:14px;border-radius:50%;display:grid;place-items:center;background:var(--orbit-red);color:#fff;font-size:.56rem;font-weight:900}
+.field .money-input input{border:0;border-radius:0;box-shadow:none}
+.comment-box textarea[aria-invalid="true"]{border-color:var(--orbit-red);background:#fff5f6;box-shadow:0 0 0 3px rgba(233,86,105,.12)}
+
+/* ---- Login ---- */
+.login-panel:after{content:none}
+.login-brand .brand-mark{animation:orbit-rise .45s .05s both}
+.login-card .eyebrow{animation:orbit-rise .4s .1s both}
+.login-card h1{animation:orbit-rise .4s .14s both}
+.login-card .login-intro{animation:orbit-rise .4s .18s both}
+.login-card form,.login-card .login-meta,.login-card .alert{animation:orbit-rise .4s .22s both}
+.login-meta a:hover{color:var(--orbit-violet-2);text-decoration:underline}
+.auth-step{animation:orbit-rise .42s cubic-bezier(.22,.8,.3,1) both}
+.visual-card:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.09)}
+
+/* ---- Sidebar ---- */
+.sidebar:before,.sidebar:after{content:none}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+.nav-link.active .nav-icon{color:var(--orbit-violet)}
+.nav-link.active .nav-badge{background:var(--orbit-violet);color:#fff}
+
+/* ---- Stat tiles. The label was the visible bug. ---- */
+.stat>span:not(.stat-top){display:block;margin-top:6px;color:var(--orbit-muted);font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;font-weight:750}
+.stat:after,.stat.hot:after,.stat.danger:after,.stat:hover:after{content:none}
+
+/* ---- Status dot: .badge already reserves a 6px gap for it. ---- */
+.badge:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 auto}
+
+/* ---- Content entrance, and its AJAX suppression ---- */
+.content>section,.content>.flash{animation:orbit-rise .18s cubic-bezier(.22,.8,.3,1) both}
+.content>.workspace{animation-delay:.02s}
+.crm-app.is-ajax-rendered .content>section,.crm-app.is-ajax-rendered .content>.flash,.crm-app.is-ajax-rendered .stat{animation:none}
+
+/* ---- Lead drawer chrome ---- */
+.drawer-head:before{content:none}
+.drawer-head>*{position:relative;z-index:1}
+.drawer-head .close-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.drawer-head-actions .restore-view-icon{display:none}
+.drawer-lead p>span:not(.drawer-status-dot){position:relative}
+.drawer-lead p>span:not(.drawer-status-dot)+span:not(.drawer-status-dot):before{content:"";position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.4);left:-7px;top:5px}
+.drawer-feedback div{flex:1}
+.drawer-card h3{margin:0 0 13px;font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--orbit-muted)}
+.drawer-card .form-grid{gap:0 11px}
+
+/* ---- Drawer tabs. crm.js toggles .is-stuck on scroll; nothing responded. ---- */
+.drawer-tabs .tab{display:flex;align-items:center;justify-content:center;gap:7px;border-radius:9px}
+.drawer-tabs .tab>span:last-child{text-align:left;line-height:1.05}
+.drawer-tabs .tab-symbol{width:22px;height:22px;margin:0;border-radius:7px;display:grid;place-items:center;background:rgba(255,255,255,.75);color:var(--orbit-muted)}
+.drawer-tabs .tab.active .tab-symbol{background:var(--orbit-violet);color:#fff}
+.drawer-tabs.is-stuck{gap:4px;padding:4px;border:1px solid var(--orbit-line);border-radius:13px;background:rgba(249,249,255,.94);box-shadow:var(--orbit-card-shadow);backdrop-filter:blur(12px)}
+.drawer-tabs.is-stuck .tab{position:relative;min-width:0;min-height:40px;padding:7px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--orbit-muted)}
+.drawer-tabs.is-stuck .tab:hover{border-color:var(--orbit-line);background:var(--orbit-panel-2);color:var(--orbit-ink)}
+.drawer-tabs.is-stuck .tab.active{border-color:var(--orbit-line);background:#fff;color:var(--orbit-ink);box-shadow:0 4px 12px rgba(54,58,108,.1)}
+.drawer-tabs.is-stuck .tab.active:after{content:"";position:absolute;left:50%;bottom:-1px;width:24px;height:2px;border-radius:2px 2px 0 0;background:var(--orbit-violet);transform:translateX(-50%)}
+.drawer-tabs.is-stuck .tab-symbol{width:22px;height:22px;flex:0 0 22px;background:var(--orbit-panel-2);color:var(--orbit-muted)}
+.drawer-tabs.is-stuck .tab.active .tab-symbol{background:var(--orbit-violet);color:#fff}
+.drawer-tabs.is-stuck .tab>span:last-child{overflow:hidden;text-align:left;text-overflow:ellipsis;white-space:nowrap}
+.drawer-tabs.is-stuck .tab small{display:none}
+.drawer-tabs.is-stuck .tab b{display:none}
+.drawer-overlay.is-expanded .drawer-tabs{top:calc(var(--drawer-head-height,96px) + 8px)}
+
+/* ---- Tab panel motion ---- */
+.tab-panel.tab-motion-forward{animation:orbit-slide-in .2s cubic-bezier(.22,.8,.3,1) both}
+.tab-panel.tab-motion-back{animation:orbit-slide-in-back .2s cubic-bezier(.22,.8,.3,1) both}
+.tab-panel[class*=tab-motion] .drawer-card{animation:orbit-rise .3s both}
+.tab-panel[class*=tab-motion] .drawer-card:nth-child(2){animation-delay:.05s}
+
+/* ---- Lead snapshot ---- */
+.lead-snapshot:after{content:none}
+.lead-snapshot.is-closed{border-color:rgba(233,86,105,.4);background:#fff7f8}
+.lead-snapshot-copy{position:relative;z-index:1}
+.lead-snapshot-copy>p{margin:0;color:var(--orbit-muted);font-size:.72rem;line-height:1.55}
+.lead-orbit circle{fill:none;stroke-width:6}
+.snapshot-chips .priority-chip.high{color:var(--orbit-red);border-color:rgba(233,86,105,.35)}
+.snapshot-chips .priority-chip.medium{color:#a9781a;border-color:rgba(245,200,79,.5)}
+.snapshot-chips .priority-chip.low{color:var(--orbit-muted)}
+
+/* ---- Mini pipeline. The first step drew a connector to nothing. ---- */
+.pipeline-step:first-child:before{display:none}
+.pipeline-step.current:before{background:var(--orbit-violet)}
+.pipeline-step.complete small,.pipeline-step.current small{color:var(--orbit-ink);font-weight:700}
+
+/* ---- Follow-up states that silently rendered as the neutral base ---- */
+.next-action-card.today{background:#fffaeb;border-color:rgba(245,200,79,.5)}
+.next-action-card.today .next-action-icon{background:#fff;color:#a9781a}
+.next-action-card.upcoming{background:#eff9fe;border-color:rgba(83,199,237,.4)}
+.next-action-card.upcoming .next-action-icon{background:#fff;color:#1f7fa3}
+
+/* ---- Save bar dirty state ---- */
+[data-track-changes].is-dirty .save-state{color:#a9781a}
+[data-track-changes].is-dirty .save-state i{background:var(--orbit-yellow)}
+.lead-save-bar .btn b{font-size:1rem}
+.conversion-save-bar .save-state i{background:var(--orbit-violet)}
+
+/* ---- Timeline. Orbit builds the stream from .activity-item, but the older
+        .timeline markup still renders inside the same list. ---- */
+.timeline li{position:relative}
+.timeline li:before{content:none}
+.timeline li:last-child{padding-bottom:0}
+.timeline p{font-size:.73rem;color:var(--orbit-muted);line-height:1.55;margin:5px 0 0;white-space:pre-wrap}
+.timeline-head{display:flex;justify-content:space-between;gap:10px}
+.timeline-head strong{font-size:.73rem;font-weight:700}
+.timeline-head time{font-size:.61rem;color:var(--orbit-muted)}
+.timeline.activity-stream{position:relative}
+.timeline.activity-stream:before{content:none}
+.timeline.activity-stream .activity-item:before{left:14px;top:29px;bottom:-10px}
+.timeline.activity-stream .activity-item[hidden]{display:none!important}
+.timeline.activity-stream .activity-card>p{margin:9px 0 0;color:var(--orbit-muted);font-size:.7rem;line-height:1.55;white-space:pre-wrap}
+.timeline.activity-stream .timeline-empty-state{margin:0;padding:26px;border:1px dashed var(--orbit-line);border-radius:13px;text-align:center;background:var(--orbit-panel)}
+.timeline.activity-stream .timeline-empty-state:before{content:none}
+.activity-conversation .activity-marker{background:rgba(111,90,215,.12);color:var(--orbit-violet);border-color:rgba(111,90,215,.3)}
+.activity-milestones .activity-marker{background:rgba(46,180,139,.12);color:var(--orbit-green);border-color:rgba(46,180,139,.32)}
+.activity-card:hover{border-color:rgba(111,90,215,.34)}
+.activity-head div small{margin-top:2px;color:var(--orbit-muted);font-size:.55rem}
+.activity-head time small{margin-top:2px;color:var(--orbit-muted);font-size:.52rem;display:block}
+.timeline-item-new{animation:orbit-rise .18s ease-out both}
+.timeline-item-new .activity-card{animation:orbit-highlight .55s ease-out}
+.enhanced-composer{padding:18px}
+.comment-box .comment-input-wrap textarea{min-height:100px;margin:0;padding:12px 13px 28px;border-radius:12px;line-height:1.55}
+.comment-input-wrap>[data-comment-count]{position:absolute;right:12px;bottom:9px;color:var(--orbit-muted);font-size:.55rem}
+
+/* ---- Student journey ---- */
+.journey-hero .section-kicker{color:var(--orbit-peach)}
+.journey-hero.journey-alert{background:linear-gradient(140deg,#5c2230,#8d3346);border-color:#a5455a}
+.journey-graphic:before,.journey-graphic:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.16);border-radius:50%}
+.journey-graphic:before{width:78px;height:32px;left:6px;top:28px}
+.journey-graphic:after{width:32px;height:78px;left:29px;top:5px}
+.journey-step.complete{border-color:rgba(46,180,139,.36);background:rgba(46,180,139,.1);color:#1c7d61}
+.conversion-hero>p{max-width:520px;margin:0 auto;color:var(--orbit-muted);font-size:.7rem;line-height:1.6}
+.conversion-benefits span{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:9px;background:var(--orbit-panel-2);border:1px solid var(--orbit-line);color:var(--orbit-muted);text-align:left;font-size:.56rem;font-weight:650}
+.conversion-form-card{margin-top:12px}
+
+/* ---- Transition screen. The .quick variant is the thin top progress bar
+        crm.js uses for in-app navigation; without it every AJAX hop dimmed
+        the whole screen behind a full-size card. ---- */
+.is-transitioning{overflow:hidden}
+.transition-screen.active .transition-card{animation:orbit-rise .2s ease-out forwards}
+.transition-screen.quick{display:block;background:transparent;overflow:visible;transition:none}
+.transition-screen.quick.active{pointer-events:none}
+.transition-screen.quick .transition-card{display:none}
+.transition-screen.quick:before{content:"";position:fixed;z-index:2;left:0;top:0;width:100%;height:2px;background:linear-gradient(90deg,var(--orbit-violet),var(--orbit-cyan));transform-origin:left center;animation:orbit-progress .42s ease-out both}
+.transition-screen.quick:after{display:none}
+
+@keyframes orbit-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes orbit-slide-in{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes orbit-slide-in-back{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes orbit-highlight{0%{background:rgba(111,90,215,.12)}100%{background:#fff}}
+
+/* ---- Second pass: structural rules, not decoration ----
+   These carry layout or interaction rather than looks, so their absence was
+   felt rather than seen. .modal>form is the one that mattered most: without
+   the flex chain the modal body does not scroll, so a long form (Add lead)
+   pushed its own footer off the bottom of the dialog. */
+.modal>form{display:flex;flex-direction:column;min-height:0}
+.modal>form>.modal-body{flex:1 1 auto}
+.section-card{padding:18px;border-radius:14px}
+.top-actions .icon-btn{width:38px;height:38px}
+.logout-btn:active{transform:translateY(1px)}
+.money-input:focus-within{border-color:var(--orbit-violet);box-shadow:0 0 0 3px rgba(111,90,215,.14)}
+.next-action-card>div{min-width:0;flex:1}
+.quick-action>span:last-child{min-width:0}
+.quick-action:hover .quick-action-icon{background:var(--orbit-violet);color:#fff}
+.snapshot-chips span{border:1px solid var(--orbit-line);border-radius:8px;background:var(--orbit-panel-2);padding:4px 9px;color:var(--orbit-muted);font-size:.59rem;font-weight:700}
+.stage-guidance{background:rgba(245,200,79,.14);color:#8a6410}
+.stage-guidance>span{background:rgba(245,200,79,.3)}
+
+/* A whole table row is clickable; it has to say so. */
+[data-crm-href]{cursor:pointer}
+[data-crm-href]:focus-visible{outline:2px solid var(--orbit-violet);outline-offset:-2px}
+::selection{background:rgba(111,90,215,.22);color:var(--orbit-ink)}
+::view-transition-group(crm-app){animation-duration:.16s;animation-timing-function:ease-out}
+
+/* ---- Final pass ----
+   Orbit clears the native outline on its inputs and controls but never
+   replaced it, so keyboard focus was invisible everywhere except two
+   one-off rules. This is the global ring. */
+:focus-visible{outline:2px solid var(--orbit-violet);outline-offset:2px}
+body.crm-ajax-loading{cursor:progress}
+/* The travelling dot on the login rings — the rings were drawn, the dots
+   that ride them were left as unstyled inline spans. */
+.orbit i{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--orbit-cyan);top:50%;left:-4px;box-shadow:0 0 14px rgba(83,199,237,.8)}
+.orbit-two i{background:var(--orbit-peach);box-shadow:0 0 14px rgba(255,177,136,.75)}
+.orbit-three i{width:6px;height:6px;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.7)}

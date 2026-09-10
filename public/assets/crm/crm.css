@@ -204,7 +204,7 @@ button{cursor:pointer}
 .stat.danger .stat-icon{background:#f8e5e2;color:var(--red)}
 .stat.danger:after{background:rgba(178,58,53,.06)}
 .stat strong{display:block;font-family:var(--font-display);font-weight:600;font-size:1.72rem;margin-top:12px;letter-spacing:-.02em;color:#182722}
-.stat span{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:750}
+.stat>span:not(.stat-top){font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:750}
 .stat:hover{border-color:#b9ccb9;box-shadow:0 12px 30px rgba(23,82,68,.1);transform:translateY(-2px)}
 .stat:hover:after{transform:scale(1.35)}
 
@@ -312,12 +312,6 @@ tbody tr:last-child td{border-bottom:0}
 .csv-template{font-size:.67rem;color:var(--muted);background:var(--paper);padding:10px 12px;border-radius:10px;overflow:auto;white-space:nowrap;margin-top:14px;border:1px solid var(--line-soft)}
 
 /* Team modal */
-.team-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-.team-member{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:#fffefa}
-.team-member .avatar{background:var(--pine);color:#f0e6c8}
-.team-member-info{min-width:0;flex:1}
-.team-member-info strong{font-size:.76rem;display:block}
-.team-member-info span{font-size:.66rem;color:var(--muted)}
 .state{font-size:.61rem;border-radius:999px;padding:3px 9px;background:#e8f3ec;color:var(--green);font-weight:750}
 .state.off{background:#f0f0e6;color:var(--muted)}
 

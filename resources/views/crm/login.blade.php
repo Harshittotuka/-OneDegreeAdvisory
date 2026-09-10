@@ -88,6 +88,10 @@
                     @if($otpDelivery === [])
                         {{-- Nothing could be delivered; only a master OTP gets in here. --}}
                         We could not send a code just now. Enter your one-time password to continue.
+                    @elseif(in_array('debug', $otpDelivery, true))
+                        {{-- CRM_OTP_DEBUG: nothing was sent anywhere, so saying "check your
+                             email" would be a plain lie next to the code printed above. --}}
+                        Debug sign-in — no code was sent. Use the one shown above.
                     @else
                         Enter the six-digit code sent securely to your registered {{ in_array('sms', $otpDelivery, true) && in_array('email', $otpDelivery, true) ? 'email and mobile number' : (in_array('sms', $otpDelivery, true) ? 'mobile number' : 'email address') }}.
                     @endif

@@ -29,6 +29,13 @@
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="CMS_CRM_BACKUP_ENABLED" value="false"/>
+        <!-- The OTP suites assert what actually goes out over email and MSG91, so
+             they must not inherit a developer's CRM_OTP_DEBUG=true (which makes
+             CrmOtpSender deliver on no channel at all). The same goes for the
+             standing master OTP: a real one in .env would let the wrong code pass
+             the verification tests. Both are pinned off here. -->
+        <env name="CRM_OTP_DEBUG" value="false"/>
+        <env name="CRM_MASTER_OTP" value=""/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>

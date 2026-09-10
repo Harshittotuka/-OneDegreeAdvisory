@@ -2,16 +2,22 @@
     <div class="workspace-head">
         <div class="workspace-title">
             <h2>Blocked submissions</h2>
-            <p>{{ number_format($spamAttempts->total()) }} caught by the honeypot field{{ $spamAttempts->total() === 1 ? '' : '' }} · {{ number_format($spamCount) }} total</p>
+            <p>{{ number_format($spamAttempts->total()) }} of {{ number_format($spamCount) }} caught by the honeypot field</p>
         </div>
         <span class="audit-private-label">Super admin only</span>
     </div>
 
-    <p class="subtext" style="margin:-8px 0 16px;max-width:60ch;">
-        Every public lead form carries a hidden field real visitors never see. A submission that fills it never
-        reaches the CRM or sends mail — it's logged here instead, so repeat bot/script traffic from the same
-        IP is visible without cluttering your leads.
-    </p>
+    {{-- A padded band rather than a loose paragraph: with no padding of its own
+         and a negative top margin it used to sit flush against the panel edge and
+         run over the header rule above it. --}}
+    <div class="workspace-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+        <p>
+            Every public lead form carries a hidden field real visitors never see. A submission that fills it
+            never reaches the CRM or sends mail — it is logged here instead, so repeat bot or script traffic
+            from the same IP is visible without cluttering your leads.
+        </p>
+    </div>
 
     <form id="crmSpamFilters" class="filters crm-subscriber-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
         <input type="hidden" name="view" value="spam">

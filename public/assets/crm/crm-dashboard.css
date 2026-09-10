@@ -1,5 +1,18 @@
 /* Shared data-rich CRM dashboard, adapted to all three design systems. */
-.dashboard-insights{
+
+/* ── One theme-aware palette, shared by every panelled surface defined here ──
+   Each theme (crm.css / crm-classic.css / crm-orbit.css) is a complete
+   stylesheet of its own with its own token vocabulary — evergreen speaks
+   --pine/--paper, orbit speaks --orbit-*. So a component defined in THIS file
+   has to carry its own tokens, or it silently falls back to a light palette
+   that clashes with two of the three themes. Team management did exactly that:
+   white cards and purple badges on evergreen's cream and pine.
+
+   The tokens live on a selector list; the layout that used to sit in the same
+   block stays on .dashboard-insights alone. */
+.dashboard-insights,
+.team-workspace,
+.crm-subscriber-workspace{
     --dash-panel:#fff;
     --dash-panel-soft:#f6f7fb;
     --dash-ink:#172033;
@@ -12,29 +25,24 @@
     --dash-danger:#c03f49;
     --dash-radius:16px;
     --dash-shadow:0 12px 34px rgba(26,31,61,.08);
-    display:grid;
-    grid-template-columns:repeat(12,minmax(0,1fr));
-    gap:16px;
-    margin-top:24px;
-    color:var(--dash-ink);
 }
 
-html[data-crm-theme="classic"] .dashboard-insights{
+html[data-crm-theme="classic"] :is(.dashboard-insights,.team-workspace,.crm-subscriber-workspace){
     --dash-panel:#fff;
-    --dash-panel-soft:#f5f7fb;
-    --dash-ink:#172033;
-    --dash-muted:#596579;
-    --dash-line:#e1e5ed;
-    --dash-accent:#21147f;
-    --dash-accent-2:#f65b35;
-    --dash-accent-soft:#efedff;
-    --dash-positive:#16845b;
-    --dash-danger:#c03f49;
-    --dash-radius:15px;
-    --dash-shadow:0 10px 28px rgba(25,30,56,.09);
+    --dash-panel-soft:#f7f8fa;
+    --dash-ink:#151a22;
+    --dash-muted:#6a7484;
+    --dash-line:#e1e5ec;
+    --dash-accent:#2f6bdd;
+    --dash-accent-2:#a86a12;
+    --dash-accent-soft:#eff4ff;
+    --dash-positive:#0f7a52;
+    --dash-danger:#b3352f;
+    --dash-radius:10px;
+    --dash-shadow:0 1px 2px rgba(21,26,34,.04);
 }
 
-html[data-crm-theme="evergreen"] .dashboard-insights{
+html[data-crm-theme="evergreen"] :is(.dashboard-insights,.team-workspace,.crm-subscriber-workspace){
     --dash-panel:#fffdf7;
     --dash-panel-soft:#f2efe6;
     --dash-ink:#1b2620;
@@ -49,7 +57,7 @@ html[data-crm-theme="evergreen"] .dashboard-insights{
     --dash-shadow:0 16px 42px rgba(52,48,30,.09);
 }
 
-html[data-crm-theme="orbit"] .dashboard-insights{
+html[data-crm-theme="orbit"] :is(.dashboard-insights,.team-workspace,.crm-subscriber-workspace){
     --dash-panel:#fbfbff;
     --dash-panel-soft:#eef0ff;
     --dash-ink:#1d203d;
@@ -62,9 +70,18 @@ html[data-crm-theme="orbit"] .dashboard-insights{
     --dash-danger:#e95669;
     --dash-radius:16px;
     --dash-shadow:0 12px 34px rgba(65,69,126,.09);
-    gap:15px;
-    margin-top:20px;
 }
+
+/* Layout of the dashboard grid itself — never inherited by the other surfaces. */
+.dashboard-insights{
+    display:grid;
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    gap:16px;
+    margin-top:24px;
+    color:var(--dash-ink);
+}
+
+html[data-crm-theme="orbit"] .dashboard-insights{gap:15px;margin-top:20px}
 
 .dashboard-panel{
     min-width:0;
@@ -321,85 +338,10 @@ html[data-crm-theme="orbit"] .followup-calendar-head h3{font-family:var(--orbit-
 .followup-calendar-legend i.is-overdue{background:var(--cal-danger)}
 
 .crm-app .overlay,.crm-app .drawer-overlay{z-index:1000}
-.team-management-modal{width:min(960px,calc(100% - 40px));max-height:min(90dvh,880px)}
-.team-management-modal .modal-head{padding:22px 26px}
-.team-management-modal .modal-body{padding:22px 26px 26px;scrollbar-gutter:stable}
-/* Search + filter toolbar (scales for large teams) */
-.team-toolbar{position:sticky;top:-22px;z-index:6;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:-22px -26px 20px;padding:18px 26px 14px;background:var(--dash-panel,#fff);border-bottom:1px solid rgba(127,127,127,.16)}
-.team-search{flex:1 1 240px;display:flex;align-items:center;gap:9px;min-width:0;height:40px;padding:0 13px;border:1px solid rgba(127,127,127,.26);border-radius:11px;background:#fff}
-.team-search:focus-within{border-color:var(--dash-accent,#175244)}
-.team-search svg{flex:0 0 auto;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:.55}
-.team-search input{flex:1 1 auto;min-width:0;border:0;background:transparent;outline:0;color:inherit;font-size:.74rem;font-weight:600}
-.team-filter{display:flex;flex-wrap:wrap;gap:6px}
-.team-filter-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid rgba(127,127,127,.24);border-radius:999px;background:#fff;color:inherit;font-size:.66rem;font-weight:800;letter-spacing:.01em;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
-.team-filter-chip:hover{border-color:currentColor}
-.team-filter-chip.is-active{background:var(--dash-accent,#175244);border-color:var(--dash-accent,#175244);color:#fff}
-.team-filter-chip .chip-count{min-width:18px;padding:1px 6px;border-radius:999px;background:rgba(127,127,127,.16);font-size:.6rem;font-weight:850}
-.team-filter-chip.is-active .chip-count{background:rgba(255,255,255,.22)}
-.team-no-results{margin:4px 0 0;padding:26px 16px;border:1px dashed rgba(127,127,127,.28);border-radius:12px;text-align:center;opacity:.62;font-size:.72rem;font-weight:600}
-.team-group[hidden],.team-member[hidden]{display:none!important}
-/* Grouped team sections */
-.team-groups{display:flex;flex-direction:column;gap:24px;margin-bottom:24px}
-.team-group{--team-accent:#6d7382;--team-accent-soft:rgba(109,115,130,.1)}
-.team-group[data-role="super-admin"]{--team-accent:#8248b8;--team-accent-soft:rgba(130,72,184,.1)}
-.team-group[data-role="counsellor"]{--team-accent:#1f7bb0;--team-accent-soft:rgba(31,123,176,.1)}
-.team-group-head{display:flex;align-items:center;gap:12px;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid rgba(127,127,127,.16)}
-.team-group-icon{flex:0 0 auto;width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:var(--team-accent-soft);color:var(--team-accent)}
-.team-group-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
-.team-group-heading{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
-.team-group-heading strong{font-size:.9rem;letter-spacing:-.01em}
-.team-group-heading small{opacity:.6;font-size:.64rem}
-.team-group-count{flex:0 0 auto;min-width:26px;height:26px;padding:0 9px;display:inline-grid;place-items:center;border-radius:999px;background:var(--team-accent-soft);color:var(--team-accent);font-size:.72rem;font-weight:850}
-.team-group-empty{margin:0;padding:16px;border:1px dashed rgba(127,127,127,.28);border-radius:12px;text-align:center;opacity:.6;font-size:.68rem}
-.team-management-modal .team-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;margin-bottom:0;align-items:start}
-.team-management-modal .team-member{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;align-items:center;gap:8px 12px;padding:12px 14px}
-.team-management-modal .team-member>.avatar{width:44px;height:44px}
-.team-management-modal .team-member-info{min-width:0}
-.team-management-modal .team-member-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.team-management-modal .team-member.role-super-admin{border-left:4px solid #9a63cb;background:linear-gradient(100deg,rgba(249,241,255,.72),rgba(255,255,255,.96) 34%)}
-.team-management-modal .team-member.role-counsellor{border-left:4px solid #3f91c7;background:linear-gradient(100deg,rgba(235,247,255,.74),rgba(255,255,255,.96) 34%)}
-.team-management-modal .team-member.role-super-admin>.avatar{background:linear-gradient(145deg,#a75dc5,#7652ca);color:#fff;box-shadow:0 6px 15px rgba(126,78,182,.2)}
-.team-management-modal .team-member.role-counsellor>.avatar{background:linear-gradient(145deg,#3f9bc6,#2874ad);color:#fff;box-shadow:0 6px 15px rgba(42,119,174,.18)}
-.team-management-modal .team-member.is-disabled{opacity:.62}
-.team-management-modal .team-member.is-disabled>.avatar{filter:grayscale(.55)}
-.team-member-info .team-member-title{display:flex!important;align-items:center;gap:6px;margin-bottom:6px;overflow:visible!important}
-.team-member-title strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.team-member-title em{flex:0 0 auto;padding:2px 5px;border-radius:5px;background:rgba(95,101,120,.1);color:#6d7382;font-size:.5rem;font-style:normal;font-weight:850;text-transform:uppercase;letter-spacing:.04em}
-.team-member-info .team-member-role{display:inline-flex!important;align-items:center;gap:5px;width:max-content;max-width:100%;margin-bottom:6px;padding:4px 8px;border:1px solid;border-radius:999px;font-size:.57rem!important;font-weight:850;text-transform:uppercase;letter-spacing:.055em;overflow:visible!important}
-.team-member-role svg{flex:0 0 auto;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.team-member-role.is-super-admin{border-color:#d9b9ed;background:#f4eaff;color:#75419c}
-.team-member-role.is-counsellor{border-color:#b8dbef;background:#eaf7ff;color:#17658f}
-.team-member-info .team-member-contact{color:inherit;opacity:.62;font-size:.6rem!important}
-.team-management-modal .team-member>.state{justify-self:end;white-space:nowrap}
-.team-member-actions{display:flex;align-items:center;gap:6px;justify-self:end}
-.team-member-actions form{margin:0}
-.team-action-btn{width:34px;height:34px;padding:0;display:grid;place-items:center;border:1px solid rgba(127,127,127,.24);border-radius:9px;background:#fff;color:inherit;font-size:.95rem;line-height:1;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
-.team-action-btn:hover{border-color:currentColor;background:rgba(127,127,127,.06)}
-.team-action-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.team-action-btn.is-danger{color:#c0392b;border-color:rgba(192,57,43,.32)}
-.team-action-btn.is-danger:hover{background:#c0392b;border-color:#c0392b;color:#fff}
-.team-member-edit{grid-column:2/-1;min-width:0;margin-top:2px;border-top:1px solid rgba(127,127,127,.16);padding-top:9px}
-.team-member-edit summary{width:max-content;max-width:100%;cursor:pointer;color:inherit;opacity:.72;font-size:.65rem;font-weight:750}
-.team-member-edit form{display:grid;grid-template-columns:1fr;align-items:end;gap:10px;margin-top:10px}
-.team-member-edit .btn{justify-self:start}
-.team-member-edit label{display:grid;gap:5px;min-width:0;color:inherit;font-size:.61rem;font-weight:750}
-.team-member-edit input{min-width:0;width:100%;height:38px;border:1px solid rgba(127,127,127,.26);border-radius:9px;background:#fff;padding:8px 10px;color:inherit;font-size:.7rem;outline:0}
-.team-member-edit input:focus{border-color:currentColor}
-.team-member-edit .btn{min-height:38px;padding:7px 12px;font-size:.65rem;white-space:nowrap}
-.team-create-form{padding:18px;border:1px solid rgba(127,127,127,.18);border-radius:14px;background:rgba(127,127,127,.035)}
-.team-create-heading{margin-bottom:14px}
-.team-create-heading h3{margin:0;font-size:.82rem}
-.team-create-heading p{margin:4px 0 0;opacity:.62;font-size:.65rem}
-.team-create-form .btn-block{margin-top:2px}
-.team-role-guide{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px}
-.team-role-guide>span{min-width:0;padding:9px 10px;border:1px solid rgba(127,127,127,.16);border-radius:10px;background:#fff}
-.team-role-guide b,.team-role-guide small{display:block}
-.team-role-guide b{font-size:.61rem}.team-role-guide small{margin-top:3px;opacity:.62;font-size:.55rem;line-height:1.4}
-.team-role-guide .is-counsellor b{color:#17658f}.team-role-guide .is-super-admin b{color:#75419c}
 
 /* Super-admin audit log */
 .audit-workspace{--audit-accent:#175244;--audit-soft:#eef3ea;--audit-line:rgba(75,86,80,.16);--audit-muted:#68736c;--audit-surface:rgba(255,255,255,.66)}
-html[data-crm-theme="classic"] .audit-workspace{--audit-accent:#21147f;--audit-soft:#f0edff;--audit-line:rgba(52,60,78,.14);--audit-muted:#7a8394;--audit-surface:#fff}
+html[data-crm-theme="classic"] .audit-workspace{--audit-accent:#2f6bdd;--audit-soft:#eff4ff;--audit-line:#e1e5ec;--audit-muted:#6a7484;--audit-surface:#fff}
 html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-soft:#efedff;--audit-line:rgba(98,84,207,.16);--audit-muted:#727792;--audit-surface:rgba(255,255,255,.72)}
 .audit-private-label{display:inline-flex;align-items:center;padding:6px 10px;border:1px solid var(--audit-line);border-radius:999px;background:var(--audit-soft);color:var(--audit-accent);font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
 .audit-filters{grid-template-columns:minmax(260px,1.6fr) minmax(180px,.75fr) minmax(180px,.75fr)!important}
@@ -441,18 +383,6 @@ html[data-crm-theme="orbit"] .audit-workspace{--audit-accent:#6254cf;--audit-sof
     .followup-calendar-grid{min-width:760px;grid-template-columns:repeat(7,minmax(108px,1fr))}
     .followup-calendar-day{min-height:128px;padding:7px}
     .followup-calendar-legend{justify-content:flex-start;gap:10px;overflow:auto;white-space:nowrap}
-    .team-management-modal{width:calc(100% - 16px);max-height:calc(100dvh - 16px);border-radius:16px}
-    .team-management-modal .modal-head{padding:17px}
-    .team-management-modal .modal-body{padding:15px 15px 18px;scrollbar-gutter:auto}
-    .team-management-modal .team-member{grid-template-columns:40px minmax(0,1fr) auto;padding:11px;gap:7px 10px}
-    .team-management-modal .team-member>.avatar{width:40px;height:40px;grid-row:1/3}
-    .team-management-modal .team-member>.state{grid-column:3;grid-row:1}
-    .team-management-modal .team-member>form{grid-column:3;grid-row:2}
-    .team-member-edit{grid-column:1/-1;margin-top:3px}
-    .team-member-edit form{grid-template-columns:1fr}
-    .team-member-edit .btn{width:100%}
-    .team-create-form{padding:15px}
-    .team-role-guide{grid-template-columns:1fr}
     .audit-filters{grid-template-columns:1fr!important}
     .audit-filters>.search-wrap,.audit-filters>.control{display:block!important;grid-column:auto!important}
     .audit-entry-main{grid-template-columns:22px 36px minmax(0,1fr);gap:9px;padding:13px 14px}
@@ -604,6 +534,15 @@ html[data-crm-theme="orbit"] .crm-app .theme-opt[data-theme-option="orbit"]{colo
   html[data-crm-theme="orbit"] .crm-app .side-user-trigger{padding:0 0 0 17px;border:0;border-left:1px solid rgba(255,255,255,.12)}
   html[data-crm-theme="orbit"] .crm-app .user-menu{top:calc(100% + 12px);bottom:auto;left:auto;right:0;width:262px}
 }
+/* Classic runs a LIGHT sidebar. The four rules above are sized for evergreen's
+   and orbit's dark rails — a cream hairline and a cream caret — which would be
+   invisible on white, so they are restated here in the theme's own tokens. */
+html[data-crm-theme="classic"] .crm-app .side-user-trigger{border-top-color:var(--line,#e4e7ec)}
+html[data-crm-theme="classic"] .crm-app .side-user-trigger:hover{background:var(--soft-2,#f1f3f6)}
+html[data-crm-theme="classic"] .crm-app .side-user-caret{color:var(--muted,#6b7280)}
+html[data-crm-theme="classic"] .crm-app .side-user-wrap.is-open .side-user-caret{color:var(--navy,#2563eb)}
+html[data-crm-theme="classic"] .crm-app .user-menu-avatar{background:var(--navy,#2563eb)}
+
 html[data-crm-theme="orbit"] .crm-app .nav-link{gap:5px}
 html[data-crm-theme="orbit"] .crm-app .nav-icon{width:32px;height:32px;border-radius:10px}
 html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
@@ -755,7 +694,11 @@ html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
    the other two override. Set on .mfilter rather than :root so a theme swap
    cannot leave this block reading a variable the new sheet does not define. */
 .mfilter{--mf-accent:#175244;--mf-accent-line:#a8c3b4;--mf-accent-bg:#eef3ea;--mf-accent-soft:#e3ece3}
-html[data-crm-theme="classic"] .mfilter{--mf-accent:#21147f;--mf-accent-line:#b9b2e8;--mf-accent-bg:#f7f6ff;--mf-accent-soft:#efedff}
+html[data-crm-theme="classic"] .mfilter{--mf-accent:#2f6bdd;--mf-accent-line:#bed3fc;--mf-accent-bg:#fcfcfd;--mf-accent-soft:#eff4ff}
+/* Classic was reading the shared defaults for these two, which are the old
+   indigo the theme no longer uses. */
+html[data-crm-theme="classic"] .followup-calendar{--cal-accent:#2f6bdd;--cal-accent-soft:#eff4ff;--cal-warn:#a86a12;--cal-danger:#b3352f;--cal-line:#e1e5ec;--cal-muted:#6a7484}
+html[data-crm-theme="classic"] .crm-stage-summary{--stage-bg:#fff;--stage-soft:#eff4ff;--stage-line:#e1e5ec;--stage-ink:#151a22;--stage-muted:#6a7484;--stage-accent:#2f6bdd}
 html[data-crm-theme="orbit"] .mfilter{--mf-accent:#6f5ad7;--mf-accent-line:#bdb2ef;--mf-accent-bg:#f4f2ff;--mf-accent-soft:#ebe7ff}
 .mfilter{position:relative;min-width:0}
 .mfilter-trigger{display:flex;align-items:center;gap:7px;width:100%;text-align:left;cursor:pointer;line-height:1.25}
@@ -802,3 +745,225 @@ html[data-crm-theme="orbit"] .mfilter{--mf-accent:#6f5ad7;--mf-accent-line:#bdb2
 /* The workspace clips its own corners, which would cut the menu off on a short
    list. Only while a menu is open, and only then, let it through. */
 .workspace:has(.mfilter[data-open]){overflow:visible}
+
+/* Amber marks a referral partner wherever one appears — a card, a badge, a
+   table column — so it never reads as one of the two in-house roles. */
+
+/* The Partner column on the leads tables. */
+.crm-app .lead-partner{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid #f0d49b;border-radius:999px;background:#fff7e8;color:#8a5a12;font-size:.62rem;font-weight:800}
+
+/* A partner's own drawer: one banner saying what this account may do, so the
+   locked fields below read as a rule rather than a bug. */
+.drawer-access-note{display:flex;gap:11px;align-items:flex-start;margin-bottom:14px;padding:12px 14px;border:1px solid #f0d49b;border-left-width:4px;border-radius:12px;background:#fff9ef;color:#7a4f10}
+.drawer-access-note.is-edit{border-color:#bfe0cd;border-left-color:#2f7d55;background:#f2fbf6;color:#1f5c3d}
+.drawer-access-note strong{display:block;font-size:.7rem;font-weight:850;letter-spacing:.01em}
+.drawer-access-note p{margin:4px 0 0;font-size:.66rem;line-height:1.5;opacity:.82}
+.drawer-access-icon{flex:0 0 auto;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(122,79,16,.1);font-size:.8rem}
+.drawer-access-note.is-edit .drawer-access-icon{background:rgba(31,92,61,.1)}
+
+/* One fieldset wraps every field of the lead-details form so a read-only
+   partner can be locked out in a single place. It must add no box of its own. */
+.crm-app .drawer-fieldset{min-width:0;margin:0;padding:0;border:0}
+.crm-app .drawer-fieldset:disabled{opacity:.94}
+.crm-app .drawer-fieldset:disabled input,
+.crm-app .drawer-fieldset:disabled select,
+.crm-app .drawer-fieldset:disabled textarea{background:rgba(127,127,127,.07);cursor:not-allowed}
+
+/* The "not enrolled yet" panel a partner gets where the team sees the
+   conversion form: no graphic, no benefits list, just the explanation. */
+.conversion-hero.is-partner-view{display:block;text-align:left}
+
+/* Team management is a full view now, not a modal. The list container keeps the
+   grid it always had; only the chrome around it changed. */
+
+/* ─────────── Expandable world map ───────────
+   The panel head grew a tool button; the panel itself can take over the
+   viewport, because at card size the markers for neighbouring countries sit on
+   top of one another and cannot be told apart. */
+.dashboard-panel-tools{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px}
+.dashboard-panel-btn{flex:0 0 auto;width:32px;height:32px;padding:0;display:inline-grid;place-items:center;border:1px solid var(--dash-line);border-radius:8px;background:var(--dash-panel-soft);color:var(--dash-accent);cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.dashboard-panel-btn:hover{border-color:var(--dash-accent);background:var(--dash-accent-soft);transform:translateY(-1px)}
+.dashboard-panel-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dashboard-panel-btn .restore-view-icon{display:none}
+
+.dashboard-map-panel.is-map-expanded{position:fixed;inset:14px;z-index:40;margin:0;max-height:none;box-shadow:0 26px 70px rgba(12,26,22,.34)}
+.dashboard-map-panel.is-map-expanded .world-map-layout{height:calc(100% - 84px);grid-template-columns:minmax(0,1fr) 250px}
+.dashboard-map-panel.is-map-expanded .lead-world-map,
+.dashboard-map-panel.is-map-expanded .dashboard-leaflet-map{height:100%;min-height:0}
+.dashboard-map-panel.is-map-expanded .country-ranking{overflow-y:auto}
+.dashboard-map-panel.is-map-expanded .dashboard-panel-btn .expand-view-icon{display:none}
+.dashboard-map-panel.is-map-expanded .dashboard-panel-btn .restore-view-icon{display:block}
+/* Scrolling the page behind a full-screen map just moves it out from under the
+   pointer, so hold the page still while it is open. */
+body.crm-map-locked{overflow:hidden}
+
+@media(max-width:900px){
+    .dashboard-map-panel.is-map-expanded{inset:8px}
+    .dashboard-map-panel.is-map-expanded .world-map-layout{display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;height:calc(100% - 76px)}
+    .dashboard-map-panel.is-map-expanded .country-ranking{max-height:38%}
+}
+@media(prefers-reduced-motion:reduce){.dashboard-panel-btn{transition:none}}
+
+/* ═══════════════════ Team management ═══════════════════
+   A two-pane master–detail: a flat list of accounts on the left, everything
+   about the selected one on the right.
+
+   Styled here rather than in the three theme files so one definition serves
+   all of them — it reads the shared --dash-* palette declared at the top,
+   which each theme overrides. Role colour is one custom property, --role, and
+   every tinted surface is mixed from it against the theme's own panel colour,
+   so the roles stay distinguishable without hardcoding a light background that
+   fights evergreen's cream or orbit's lilac. */
+.team-workspace{color:var(--dash-ink)}
+.workspace-head-actions{display:flex;align-items:center;gap:12px}
+
+/* The two panes. The list is a fixed rail so the detail form keeps a stable
+   width as you move between people — a fluid list makes every field jump. */
+.team-panes{display:grid;grid-template-columns:288px minmax(0,1fr);align-items:stretch;min-height:520px}
+.team-list-pane{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--dash-line);background:var(--dash-panel-soft)}
+.team-detail-pane{min-width:0;padding:22px 24px 26px}
+
+/* Search + role chips, pinned above the list. */
+.team-toolbar{position:sticky;top:var(--topbar-h,80px);z-index:4;display:flex;flex-direction:column;gap:9px;padding:14px;border-bottom:1px solid var(--dash-line);background:var(--dash-panel-soft)}
+.team-search{display:flex;align-items:center;gap:8px;min-width:0;height:36px;padding:0 11px;border:1px solid var(--dash-line);border-radius:8px;background:var(--dash-panel);color:var(--dash-muted)}
+.team-search:focus-within{border-color:var(--dash-accent);color:var(--dash-accent)}
+.team-search svg{flex:0 0 auto;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}
+.team-search input{flex:1 1 auto;min-width:0;border:0;background:transparent;outline:0;color:var(--dash-ink);font:inherit;font-size:.72rem}
+.team-filter{display:flex;flex-wrap:wrap;gap:5px}
+.team-filter-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid var(--dash-line);border-radius:999px;background:var(--dash-panel);color:var(--dash-muted);font:inherit;font-size:.63rem;font-weight:750;cursor:pointer;transition:border-color .14s,background .14s,color .14s}
+.team-filter-chip:hover{border-color:var(--dash-accent);color:var(--dash-accent)}
+.team-filter-chip.is-active{background:var(--dash-accent);border-color:var(--dash-accent);color:#fff}
+.team-filter-chip .chip-count{min-width:16px;padding:0 4px;border-radius:999px;background:color-mix(in srgb,currentColor 15%,transparent);font-size:.58rem;font-weight:850}
+.team-filter-chip.is-active .chip-count{background:rgba(255,255,255,.26)}
+
+/* One flat list — no role groups to scan past. */
+.team-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow-y:auto;padding:8px}
+.team-row{--role:#6d7382;display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid transparent;border-radius:9px;color:var(--dash-ink);text-decoration:none;transition:background .14s,border-color .14s}
+.team-row+.team-row{margin-top:2px}
+.team-row.role-super-admin{--role:#8248b8}
+.team-row.role-counsellor{--role:#1f7bb0}
+.team-row.role-partner{--role:#b8741a}
+.team-row:hover{background:var(--dash-panel)}
+.team-row.is-selected{background:var(--dash-panel);border-color:var(--dash-line);box-shadow:inset 3px 0 0 var(--role)}
+.team-row.is-disabled{opacity:.6}
+.team-row>.avatar{flex:0 0 auto;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:color-mix(in srgb,var(--role) 14%,var(--dash-panel));color:var(--role);font-size:.65rem;font-weight:850}
+.team-row-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
+.team-row-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:.76rem;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-row-name em{flex:0 0 auto;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--dash-ink) 9%,transparent);color:var(--dash-muted);font-size:.5rem;font-style:normal;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
+.team-row-meta{color:var(--role);font-size:.6rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-row-off{flex:0 0 auto;margin-left:auto;padding:2px 6px;border-radius:4px;background:color-mix(in srgb,var(--dash-ink) 8%,transparent);color:var(--dash-muted);font-size:.53rem;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
+.team-row[hidden]{display:none!important}
+.team-no-results{margin:6px 4px 0;padding:22px 12px;border:1px dashed var(--dash-line);border-radius:10px;text-align:center;color:var(--dash-muted);font-size:.68rem}
+
+/* The detail pane. */
+.team-detail{max-width:760px}
+.team-detail-head{display:flex;align-items:center;gap:13px;margin-bottom:20px;padding-bottom:17px;border-bottom:1px solid var(--dash-line)}
+.team-detail-head>.avatar{--role:#6d7382;flex:0 0 auto;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--role) 14%,var(--dash-panel));color:var(--role);font-size:.85rem;font-weight:850}
+.team-detail-head>.avatar.role-super-admin{--role:#8248b8}
+.team-detail-head>.avatar.role-counsellor{--role:#1f7bb0}
+.team-detail-head>.avatar.role-partner{--role:#b8741a}
+.team-detail-head>.avatar.is-new{background:var(--dash-accent-soft);color:var(--dash-accent);font-size:1.1rem}
+.team-detail-id{min-width:0}
+.team-detail-id h3{display:flex;align-items:center;gap:8px;margin:0;font-size:1.06rem;font-weight:700;letter-spacing:-.02em}
+.team-detail-id h3 em{padding:2px 6px;border-radius:5px;background:color-mix(in srgb,var(--dash-ink) 9%,transparent);color:var(--dash-muted);font-size:.52rem;font-style:normal;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
+.team-detail-id p{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:7px 0 0}
+.team-role-tag{--role:#6d7382;display:inline-flex;align-items:center;padding:3px 9px;border:1px solid color-mix(in srgb,var(--role) 32%,var(--dash-panel));border-radius:999px;background:color-mix(in srgb,var(--role) 11%,var(--dash-panel));color:var(--role);font-size:.57rem;font-weight:850;text-transform:uppercase;letter-spacing:.055em}
+.team-role-tag.is-super-admin{--role:#8248b8}
+.team-role-tag.is-counsellor{--role:#1f7bb0}
+.team-role-tag.is-partner{--role:#b8741a}
+.team-detail-state{color:var(--dash-muted);font-size:.68rem}
+.team-detail-state.is-off{color:var(--dash-danger);font-weight:700}
+.team-detail-count{padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--dash-ink) 7%,transparent);color:var(--dash-muted);font-size:.6rem;font-weight:700}
+
+/* One form, one Save — the whole point of the redesign. */
+.team-detail-form .form-grid{gap:0 16px}
+.team-detail-save{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:4px}
+.team-detail-hint{color:var(--dash-muted);font-size:.63rem}
+
+/* Destructive actions, kept away from the save above. */
+.team-detail-danger{margin-top:26px;border:1px solid var(--dash-line);border-radius:12px;overflow:hidden}
+.team-danger-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:var(--dash-panel)}
+.team-danger-row+.team-danger-row{border-top:1px solid var(--dash-line)}
+.team-danger-row strong{display:block;font-size:.73rem;font-weight:700}
+.team-danger-row small{display:block;margin-top:3px;max-width:52ch;color:var(--dash-muted);font-size:.63rem;line-height:1.5}
+.team-danger-row form{margin:0}
+.team-danger-row .btn{flex:0 0 auto}
+
+/* The role guide under the Add-member dropdown. */
+.team-role-guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:8px;margin-top:9px}
+.team-role-guide>span{min-width:0;padding:9px 11px;border:1px solid var(--dash-line);border-radius:9px;background:var(--dash-panel)}
+.team-role-guide b,.team-role-guide small{display:block}
+.team-role-guide b{font-size:.63rem}
+.team-role-guide small{margin-top:3px;color:var(--dash-muted);font-size:.57rem;line-height:1.45}
+.team-role-guide .is-super-admin b{color:#8248b8}
+.team-role-guide .is-counsellor b{color:#1f7bb0}
+.team-role-guide .is-partner b{color:#b8741a}
+.crm-app .field-note{display:block;margin-top:6px;color:var(--dash-muted,#5f687c);font-size:.61rem;line-height:1.45}
+
+/* An explanatory note under a workspace head. It used to be a bare <p> with an
+   inline negative margin and no padding, so on Blocked submissions it sat flush
+   against the panel edge and overlapped the header rule above it. */
+.workspace-note{display:flex;gap:11px;align-items:flex-start;margin:0;padding:15px 22px;border-bottom:1px solid var(--dash-line,rgba(127,127,127,.16));background:var(--dash-panel-soft,rgba(127,127,127,.04))}
+.workspace-note svg{flex:0 0 auto;width:17px;height:17px;margin-top:1px;fill:none;stroke:var(--dash-accent,currentColor);stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
+.workspace-note p{margin:0;max-width:78ch;color:var(--dash-muted,inherit);font-size:.7rem;line-height:1.6}
+
+
+/* ---- Browse state: the main frame answers the sidebar filter ----
+   The chips and the search box narrow these cards and the sidebar rows in the
+   same client-side pass, so picking "Admins" changes both at once. A card only
+   opens the detail pane; every control lives there, which is what keeps the
+   card small enough to scan. */
+.team-browse{display:flex;flex-direction:column;gap:14px}
+.team-browse-head h3{margin:0;font-size:.95rem;font-weight:700;letter-spacing:-.015em}
+.team-browse-head p{margin:4px 0 0;color:var(--dash-muted);font-size:.69rem}
+.team-browse-head strong{color:var(--dash-ink);font-weight:750}
+.team-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,246px),1fr));gap:12px;align-items:stretch}
+.team-card{--role:#6d7382;display:flex;flex-direction:column;gap:6px;padding:14px 15px;border:1px solid var(--dash-line);border-left:3px solid var(--role);border-radius:11px;background:var(--dash-panel);color:var(--dash-ink);text-decoration:none;transition:border-color .14s,box-shadow .14s,transform .14s}
+.team-card.role-super-admin{--role:#8248b8}
+.team-card.role-counsellor{--role:#1f7bb0}
+.team-card.role-partner{--role:#b8741a}
+.team-card:hover{border-color:color-mix(in srgb,var(--role) 45%,var(--dash-line));box-shadow:0 4px 14px color-mix(in srgb,var(--dash-ink) 8%,transparent);transform:translateY(-1px)}
+.team-card.is-disabled{opacity:.62}
+.team-card[hidden]{display:none!important}
+.team-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.team-card-top>.avatar{flex:0 0 auto;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--role) 14%,var(--dash-panel));color:var(--role);font-size:.68rem;font-weight:850}
+.team-card-name{display:flex;align-items:center;gap:6px;min-width:0;margin-top:3px;font-size:.83rem;font-weight:700;letter-spacing:-.012em}
+.team-card-name em{flex:0 0 auto;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--dash-ink) 9%,transparent);color:var(--dash-muted);font-size:.5rem;font-style:normal;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
+.team-card-contact{min-width:0;color:var(--dash-muted);font-size:.66rem;line-height:1.4;overflow-wrap:anywhere}
+.team-card-foot{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:auto;padding-top:10px;border-top:1px solid var(--dash-line)}
+.team-card-note{color:var(--role);font-size:.6rem;font-weight:700}
+.team-card-open{margin-left:auto;color:var(--dash-accent);font-size:.63rem;font-weight:750;opacity:0;transition:opacity .14s}
+.team-card:hover .team-card-open,.team-card:focus-visible .team-card-open{opacity:1}
+
+/* The add tile sits in the grid rather than under it, so creating someone is
+   never a scroll past every existing account. */
+.team-card.is-add{--role:var(--dash-accent);align-items:flex-start;justify-content:center;border-style:dashed;border-left-style:dashed;background:transparent;color:var(--dash-muted)}
+.team-card.is-add:hover{border-color:var(--dash-accent);background:var(--dash-accent-soft);color:var(--dash-accent);transform:translateY(-1px)}
+.team-card-add-mark{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:var(--dash-accent-soft);color:var(--dash-accent);font-size:1rem;font-weight:800}
+.team-card.is-add .team-card-name{color:var(--dash-ink)}
+
+/* Back out of a detail pane to the grid. */
+.team-back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;color:var(--dash-muted);font-size:.68rem;font-weight:650}
+.team-back:hover{color:var(--dash-accent)}
+
+/* Below the two-pane threshold the list becomes a horizontal strip above the
+   detail, so a phone gets the full width for the form it is actually filling. */
+@media(max-width:1080px){
+    .team-panes{grid-template-columns:1fr;min-height:0}
+    .team-list-pane{border-right:0;border-bottom:1px solid var(--dash-line)}
+    .team-toolbar{position:static}
+    .team-list{max-height:none;padding:10px}
+    .team-detail-pane{padding:18px 16px 22px}
+}
+@media(max-width:640px){
+    .team-cards{grid-template-columns:1fr}
+    .team-card-open{opacity:1}
+    .team-detail-head{align-items:flex-start}
+    .team-detail-id h3{font-size:.98rem}
+    .team-danger-row{align-items:flex-start;flex-direction:column}
+    .team-danger-row .btn{width:100%}
+    .team-role-guide{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+    .team-filter-chip,.team-row{transition:none}
+}

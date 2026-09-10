@@ -17,6 +17,9 @@ class CrmMockInviteController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
+        // An in-house tool: the "Mock interviews" tab is not part of a partner's
+        // workspace, so the route it posts to is closed to them too.
+        abort_if($user->isPartner(), 403);
 
         $validated = $request->validate([
             'recipient_name' => 'required|string|max:150',

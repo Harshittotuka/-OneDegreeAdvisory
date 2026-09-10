@@ -44,12 +44,20 @@ class CrmDashboardController extends Controller
         $todayEnd = $now->copy()->endOfDay();
         $tomorrowEnd = $now->copy()->addDay()->endOfDay();
 
-        if ($request->query('view') === 'audit') {
+        // The two super-admin-only screens say so out loud rather than bouncing
+        // back to the dashboard: asking for them is deliberate, and silently
+        // landing somewhere else reads as a broken link.
+        if (in_array($request->query('view'), ['audit', 'team'], true)) {
             abort_unless($user->isSuperAdmin(), 403);
         }
-        $allowedViews = ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting', 'mock-invites'];
+        // A partner's workspace is their own students and nothing else: the
+        // follow-up planner, the report builder, the mock-interview links and the
+        // payment log are all in-house tools.
+        $allowedViews = $user->isPartner()
+            ? ['dashboard', 'leads', 'students']
+            : ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting', 'mock-invites'];
         if ($user->isSuperAdmin()) {
-            $allowedViews = [...$allowedViews, 'subscriptions', 'audit', 'spam'];
+            $allowedViews = [...$allowedViews, 'subscriptions', 'audit', 'spam', 'team'];
         }
         $requestedView = match ($request->query('view')) {
             'website' => 'leads',
@@ -89,7 +97,7 @@ class CrmDashboardController extends Controller
 
         $dashboard = $this->dashboardData($base, $stats, $todayStart, $todayEnd, $view === 'dashboard');
 
-        $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'websiteSubmissions', 'latestActivity'])->withCount('activities');
+        $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'partner', 'websiteSubmissions', 'latestActivity'])->withCount('activities');
         if ($view === 'followups') {
             // Dated follow-ups first, oldest first; undated open conversations last.
             $leads->openConversation()->orderByRaw('follow_up_at is null')->orderBy('follow_up_at');
@@ -114,6 +122,7 @@ class CrmDashboardController extends Controller
             'team_member_created' => 'Team member created',
             'team_member_updated' => 'Team member updated',
             'team_member_role_changed' => 'Team role changed',
+            'partner_access_changed' => 'Partner access changed',
             'team_member_access_changed' => 'Team access changed',
             'crm_login' => 'CRM login',
             'crm_logout' => 'CRM logout',
@@ -140,7 +149,11 @@ class CrmDashboardController extends Controller
         }
 
         $enrollmentQuery = PaymentAttempt::query()->with(['lead.assignee'])->latest();
-        if (! $user->isSuperAdmin()) {
+        if ($user->isPartner()) {
+            // What a student paid us is in-house information, so the whole log is
+            // closed to a partner rather than narrowed to their own students.
+            $enrollmentQuery->whereRaw('1 = 0');
+        } elseif (! $user->isSuperAdmin()) {
             $enrollmentQuery->whereHas('lead', fn (Builder $lead) => $lead->visibleTo($user));
         }
         $enrollmentCount = (clone $enrollmentQuery)->count();
@@ -170,7 +183,9 @@ class CrmDashboardController extends Controller
         // Mock-interview invite links. A counsellor sees the links they issued;
         // a super admin sees every link.
         $mockInviteQuery = CrmMockInterviewInvite::query()->with(['creator', 'attempts'])->latest();
-        if (! $user->isSuperAdmin()) {
+        if ($user->isPartner()) {
+            $mockInviteQuery->whereRaw('1 = 0');
+        } elseif (! $user->isSuperAdmin()) {
             $mockInviteQuery->where('created_by', $user->id);
         }
         $mockInviteCount = (clone $mockInviteQuery)->count();
@@ -181,10 +196,14 @@ class CrmDashboardController extends Controller
                 ->orWhere('recipient_phone', 'like', "%{$inviteSearch}%"));
         }
 
+        $team = $user->isSuperAdmin()
+            ? CrmUser::query()->withCount('partnerLeads')->orderByDesc('is_active')->orderBy('name')->get()
+            : collect();
+
         $selectedLead = null;
         if ($request->filled('lead')) {
             $selectedLead = CrmLead::query()->visibleTo($user)
-                ->with(['assignee', 'activities.user', 'websiteSubmissions'])->find($request->integer('lead'));
+                ->with(['assignee', 'partner', 'activities.user', 'websiteSubmissions'])->find($request->integer('lead'));
         }
 
         return view('crm.dashboard', [
@@ -197,7 +216,12 @@ class CrmDashboardController extends Controller
             'followUpCalendar' => $followUpCalendar,
             'selectedLead' => $selectedLead,
             'counsellors' => CrmUser::query()->where('role', 'counsellor')->where('is_active', true)->orderBy('name')->get(),
-            'team' => $user->isSuperAdmin() ? CrmUser::query()->orderByDesc('is_active')->orderBy('name')->get() : collect(),
+            'partners' => $this->partnerOptions($user),
+            'team' => $team,
+            // Which account the Team view's detail pane is showing. Picked out of
+            // the collection already loaded rather than queried again, so an id
+            // that is not on the list simply selects nothing.
+            'teamMember' => $team->firstWhere('id', $request->integer('member')),
             'auditLogs' => $auditLogs,
             'auditEvents' => $auditEvents,
             'view' => $view,
@@ -256,6 +280,35 @@ class CrmDashboardController extends Controller
      *
      * @return array{unassigned: int, people: \Illuminate\Support\Collection<int, array>}
      */
+    /**
+     * The names offered by the "Partner name" field and its filter.
+     *
+     * Active partners, plus anyone already named on a lead: a partner who has
+     * since been switched off has to stay listed, or the next save of one of
+     * their leads would silently blank the field (the dropdown could not
+     * re-select a name it was not offering). CrmLeadController's validation
+     * allows exactly this set.
+     *
+     * A partner gets an empty list — their own view is already narrowed to them,
+     * and they have nothing to choose here.
+     *
+     * @return \Illuminate\Support\Collection<int, CrmUser>
+     */
+    private function partnerOptions(CrmUser $user): \Illuminate\Support\Collection
+    {
+        if ($user->isPartner()) {
+            return collect();
+        }
+
+        return CrmUser::query()
+            ->where('role', 'partner')
+            ->where(fn (Builder $offered) => $offered
+                ->where('is_active', true)
+                ->orWhereIn('id', CrmLead::query()->whereNotNull('partner_id')->distinct()->pluck('partner_id')))
+            ->orderBy('name')
+            ->get();
+    }
+
     private function counsellorFilter(Builder $base, CrmUser $user): array
     {
         if (! $user->isSuperAdmin()) {
@@ -483,14 +536,14 @@ class CrmDashboardController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        $query = CrmLead::query()->visibleTo($user)->with('assignee')->latest();
+        $query = CrmLead::query()->visibleTo($user)->with(['assignee', 'partner'])->latest();
         $this->applyFilters($query, $request, $user);
         $rows = $query->get();
 
         return response()->streamDownload(function () use ($rows): void {
             $out = fopen('php://output', 'w');
             fputcsv($out, [
-                'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Follow-up', 'Created',
+                'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Partner', 'Follow-up', 'Created',
                 '10th %', '10th passing year', '12th %', '12th passing year', 'Graduation CGPA / %', 'Graduation passing year', 'Backlogs', 'Intake',
                 'Counselling', 'Shortlisting', 'English proficiency tests', 'Aptitude tests',
             ]);
@@ -498,7 +551,7 @@ class CrmDashboardController extends Controller
                 fputcsv($out, [
                     $lead->lead_number, $lead->name, $lead->phone, $lead->email, $lead->city,
                     $lead->course_interest, $lead->country_interest, $lead->category, $lead->lead_type, $lead->lead_origin, $lead->priority,
-                    $lead->source, $lead->status, $lead->assignee?->name,
+                    $lead->source, $lead->status, $lead->assignee?->name, $lead->partner?->name,
                     $lead->follow_up_at?->format('Y-m-d H:i'), $lead->created_at->format('Y-m-d H:i'),
                     $lead->tenth_score, $lead->tenth_passing_year, $lead->twelfth_score, $lead->twelfth_passing_year,
                     $lead->graduation_score, $lead->graduation_passing_year, $lead->backlogs, $lead->intake,
@@ -598,6 +651,23 @@ class CrmDashboardController extends Controller
                     $recorded === [] ? $doneQuery->whereNull($field) : $doneQuery->orWhereNull($field);
                 }
             });
+        }
+        // The Partner field, for the team. A partner's own list is already narrowed
+        // to them, so there is nothing here for them to choose. "none" is a real
+        // choice rather than an id — the leads no partner referred.
+        if (! $user->isPartner()) {
+            $wantsNoPartner = in_array('none', CrmFilter::raw($request, 'partner_id'), true);
+            $partnerIds = CrmFilter::ids($request, 'partner_id');
+            if ($partnerIds !== [] || $wantsNoPartner) {
+                $query->where(function (Builder $partnerQuery) use ($partnerIds, $wantsNoPartner): void {
+                    if ($partnerIds !== []) {
+                        $partnerQuery->whereIn('partner_id', $partnerIds);
+                    }
+                    if ($wantsNoPartner) {
+                        $partnerIds === [] ? $partnerQuery->whereNull('partner_id') : $partnerQuery->orWhereNull('partner_id');
+                    }
+                });
+            }
         }
         if ($user->isSuperAdmin()) {
             // "unassigned" is a real choice in the owner filter, not an id, and it

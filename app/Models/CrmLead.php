@@ -18,7 +18,7 @@ class CrmLead extends Model
         'tenth_score', 'tenth_passing_year', 'twelfth_score', 'twelfth_passing_year',
         'graduation_score', 'graduation_passing_year', 'backlogs', 'intake',
         'counselling', 'shortlisting', 'english_tests', 'aptitude_tests',
-        'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'created_by', 'follow_up_at',
+        'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'partner_id', 'created_by', 'follow_up_at',
         'follow_up_completed_at', 'last_contacted_at', 'tags', 'profile', 'is_student',
         'student_stage', 'student_category', 'enrollment_amount', 'enrollment_date',
         'payment_reference', 'conversion_remarks',
@@ -45,6 +45,15 @@ class CrmLead extends Model
         return $this->belongsTo(CrmUser::class, 'created_by');
     }
 
+    /**
+     * The referral partner this lead belongs to — the "Partner name" field. Set
+     * by a counsellor or a super admin; never by the partner themselves.
+     */
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(CrmUser::class, 'partner_id');
+    }
+
     public function activities(): HasMany
     {
         return $this->hasMany(CrmLeadActivity::class)->latest();
@@ -66,9 +75,21 @@ class CrmLead extends Model
         return $this->hasMany(PaymentAttempt::class, 'crm_lead_id');
     }
 
+    /**
+     * A super admin sees the whole workspace, a counsellor the leads assigned to
+     * them, and a partner the leads naming them in the Partner field. Every list,
+     * count, export and single-record lookup goes through here, so a partner's
+     * reach is decided in one place rather than per screen.
+     */
     public function scopeVisibleTo(Builder $query, CrmUser $user): Builder
     {
-        return $user->isSuperAdmin() ? $query : $query->where('assigned_to', $user->id);
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        return $user->isPartner()
+            ? $query->where('partner_id', $user->id)
+            : $query->where('assigned_to', $user->id);
     }
 
     /**

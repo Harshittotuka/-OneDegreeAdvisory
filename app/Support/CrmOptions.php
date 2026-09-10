@@ -13,6 +13,28 @@ class CrmOptions
 
     public const PRIORITIES = ['high' => 'High', 'medium' => 'Medium', 'low' => 'Low'];
 
+    /**
+     * Every role a CRM account can sign in as, in the order the team modal
+     * groups them.
+     *
+     * "partner" is not a member of the team: it is an outside referral partner
+     * who sees only the leads carrying their name in the lead's Partner field,
+     * and what they may do there is set per account by PARTNER_ACCESS.
+     */
+    public const ROLES = [
+        'super_admin' => 'Super admin',
+        'counsellor' => 'Counsellor',
+        'partner' => 'Partner',
+    ];
+
+    /**
+     * What a partner account may do with the students it can see. A super admin
+     * sets it, and it is meaningless on any other role. Anything but an explicit
+     * "edit" reads as read-only, so a partner can never end up with more access
+     * than was chosen for them.
+     */
+    public const PARTNER_ACCESS = ['read' => 'Read only', 'edit' => 'Read and edit'];
+
     /** Statuses counsellors may set directly before a lead enters the student journey. */
     public static function pipelineStatuses(): array
     {

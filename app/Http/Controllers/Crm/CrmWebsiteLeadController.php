@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
+use App\Models\CrmLead;
 use App\Models\CrmUser;
 use App\Models\CrmWebsiteSubmission;
 use App\Support\SimpleXlsx;
@@ -93,6 +94,9 @@ class CrmWebsiteLeadController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        abort_unless($user->isSuperAdmin() || $submission->lead->assigned_to === $user->id, 403);
+        // Whoever may open the lead may read the answers it came from — the
+        // drawer already shows them inline. That includes a partner whose name
+        // is on the lead, read-only access and all.
+        abort_unless(CrmLead::query()->visibleTo($user)->whereKey($submission->crm_lead_id)->exists(), 403);
     }
 }

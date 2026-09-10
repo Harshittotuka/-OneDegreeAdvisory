@@ -256,9 +256,10 @@ class CrmTest extends TestCase
             ->assertSee('data-leaflet-canvas', false)
             ->assertSee('data-map-points=', false)
             ->assertSee('leaflet@1.9.4', false)
-            ->assertSee('team-management-modal', false)
-            ->assertSee('team-create-form', false)
-            ->assertSee('Save changes')
+            ->assertSee('data-map-expand', false)
+            // Team management is a view of its own now; the dashboard only links to it.
+            ->assertSee(route('crm.dashboard', ['view' => 'team']), false)
+            ->assertDontSee('team-panes', false)
             ->assertSee('Where students want to study')
             ->assertSee('Pipeline health')
             ->assertSee('Lead sources')
@@ -274,6 +275,13 @@ class CrmTest extends TestCase
             ->assertDontSee('aria-label="Lead summary"', false)
             ->assertDontSee('data-dashboard-insights', false)
             ->assertDontSee('onclick="location.href=', false);
+
+        $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard', ['view' => 'team']))
+            ->assertOk()
+            ->assertSee('team-workspace', false)
+            ->assertSee('team-panes', false)
+            ->assertSee('Add a team member')
+            ->assertDontSee('id="teamModal"', false);
     }
 
     public function test_counsellor_only_sees_owned_leads_and_super_admin_sees_all(): void
@@ -324,7 +332,7 @@ class CrmTest extends TestCase
 
         $member = CrmUser::query()->where('email', 'second-admin@mailbox.test')->firstOrFail();
         $this->assertTrue($member->isSuperAdmin());
-        $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard'))
+        $this->withSession(['crm_user_id' => $admin->id])->get(route('crm.dashboard', ['view' => 'team']))
             ->assertOk()
             ->assertSee('Second Admin')
             ->assertSee('second-admin@mailbox.test')
@@ -336,14 +344,19 @@ class CrmTest extends TestCase
         $admin = CrmUser::query()->create(['name' => 'Admin', 'phone' => '9876543210', 'email' => 'admin@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
         $member = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
 
+        // Role now travels with the rest of the account in one save.
+        $save = fn (string $role): array => [
+            'name' => $member->name, 'phone' => $member->phone, 'email' => $member->email, 'role' => $role,
+        ];
+
         $this->withSession(['crm_user_id' => $admin->id])
-            ->patch(route('crm.team.role', $member))
+            ->patch(route('crm.team.update', $member), $save('super_admin'))
             ->assertSessionHasNoErrors();
         $this->assertTrue($member->fresh()->isSuperAdmin());
         $this->assertDatabaseHas('crm_audit_logs', ['event' => 'team_member_role_changed', 'subject_id' => $member->id]);
 
         $this->withSession(['crm_user_id' => $admin->id])
-            ->patch(route('crm.team.role', $member))
+            ->patch(route('crm.team.update', $member), $save('counsellor'))
             ->assertSessionHasNoErrors();
         $this->assertFalse($member->fresh()->isSuperAdmin());
     }
@@ -355,13 +368,22 @@ class CrmTest extends TestCase
         $counsellor = CrmUser::query()->create(['name' => 'Asha', 'phone' => '9876543211', 'email' => 'asha@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
         $peer = CrmUser::query()->create(['name' => 'Second', 'phone' => '9876543212', 'email' => 'second@mailbox.test', 'role' => 'super_admin', 'is_active' => true]);
 
+        $save = fn (CrmUser $m, string $role): array => [
+            'name' => $m->name, 'phone' => $m->phone, 'email' => $m->email, 'role' => $role,
+        ];
+
         // Nobody can change their own role, and counsellors cannot change roles at all.
-        $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.role', $admin))->assertForbidden();
-        $this->withSession(['crm_user_id' => $counsellor->id])->patch(route('crm.team.role', $peer))->assertForbidden();
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->patch(route('crm.team.update', $admin), $save($admin, 'counsellor'))
+            ->assertSessionHasErrors('team');
+        $this->assertTrue($admin->fresh()->isSuperAdmin());
+        $this->withSession(['crm_user_id' => $counsellor->id])
+            ->patch(route('crm.team.update', $peer), $save($peer, 'counsellor'))
+            ->assertForbidden();
 
         // Config-defined super admins cannot be demoted (sync would re-promote them anyway).
         $this->withSession(['crm_user_id' => $peer->id])
-            ->patch(route('crm.team.role', $admin))
+            ->patch(route('crm.team.update', $admin), $save($admin, 'counsellor'))
             ->assertSessionHasErrors('team');
         $this->assertTrue($admin->fresh()->isSuperAdmin());
     }
@@ -373,16 +395,16 @@ class CrmTest extends TestCase
         $other = CrmUser::query()->create(['name' => 'Ravi', 'phone' => '9876543212', 'email' => 'ravi@mailbox.test', 'role' => 'counsellor', 'is_active' => true]);
 
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
-            'name' => 'Asha', 'phone' => '+91 91234 56789', 'email' => 'asha@mailbox.test',
+            'name' => 'Asha', 'phone' => '+91 91234 56789', 'email' => 'asha@mailbox.test', 'role' => 'counsellor',
         ])->assertSessionHasNoErrors();
         $this->assertSame('9123456789', $member->fresh()->phone);
 
         // Another member's number is rejected, as is a number that is too short.
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
-            'name' => 'Asha', 'phone' => $other->phone, 'email' => 'asha@mailbox.test',
+            'name' => 'Asha', 'phone' => $other->phone, 'email' => 'asha@mailbox.test', 'role' => 'counsellor',
         ])->assertSessionHasErrors('team');
         $this->withSession(['crm_user_id' => $admin->id])->patch(route('crm.team.update', $member), [
-            'name' => 'Asha', 'phone' => '12345', 'email' => 'asha@mailbox.test',
+            'name' => 'Asha', 'phone' => '12345', 'email' => 'asha@mailbox.test', 'role' => 'counsellor',
         ])->assertSessionHasErrors('team');
         $this->assertSame('9123456789', $member->fresh()->phone);
     }

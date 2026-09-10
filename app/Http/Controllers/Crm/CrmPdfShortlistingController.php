@@ -28,6 +28,12 @@ final class CrmPdfShortlistingController extends Controller
         PdfStudentName $studentName,
         PdfLastPageReplacer $replacer,
     ): BinaryFileResponse|RedirectResponse {
+        /** @var \App\Models\CrmUser $user */
+        $user = $request->attributes->get('crm_user');
+        // Report production is in-house work; the tab is not in a partner's
+        // workspace and neither is the endpoint behind it.
+        abort_if($user->isPartner(), 403);
+
         // Errors go into the dedicated "shortlist" bag so they render in the
         // shortlisting view without tripping the CRM's default error toast.
         $validated = $request->validateWithBag('shortlist', [
