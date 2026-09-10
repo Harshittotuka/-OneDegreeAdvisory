@@ -2,6 +2,7 @@
 
 namespace App\Modules\StudentProfiler;
 
+use App\Models\CrmPartnerCode;
 use App\Support\ProfileReportBuilder;
 use App\Support\ProfileReportNotifier;
 use App\Services\WebsiteLeadManager;
@@ -23,6 +24,11 @@ use Illuminate\Support\Facades\View;
  * the wizard, and the page always renders fresh. Only a completed profile is
  * recorded (on submit) as a CRM website submission.
  *
+ * Referral partners: /profiler?partner=CODE marks the visit as coming through a
+ * partner's link. The code is handed to the wizard, comes back with the submit
+ * payload, and on submit credits the lead to that partner and notifies their
+ * mailbox alongside our own. An unknown or paused code changes nothing.
+ *
  *   GET  /profiler  → renders the wizard (always a fresh start)
  *   POST /profiler  → JSON endpoint: action = submit records; save/reset are no-ops
  */
@@ -39,8 +45,14 @@ class StudentProfilerController
             return $this->handle($request);
         }
 
+        // The code travels with the link, so it is read off the query string and
+        // handed to the wizard, which echoes it back on submit. Resolved here as
+        // well so an unknown or paused code is simply not carried at all.
+        $partner = CrmPartnerCode::resolve($request->query('partner'));
+
         return View::make('student-profiler::wizard', [
             'config' => $this->config(),
+            'partner' => $partner?->code,
             'state'  => [
                 // Progress is not cached — the wizard always starts fresh.
                 'degree'    => null,
@@ -85,6 +97,11 @@ class StudentProfilerController
             ], 422);
         }
 
+        // Which partner's link this profile came through, if any. The wizard
+        // sends back the code it was given; the query string is honoured too, so
+        // a POST made straight to /profiler?partner=CODE works the same way.
+        $partner = CrmPartnerCode::resolve($request->input('partner', $request->query('partner')));
+
         // Record the completed profile as a human-readable snapshot for the
         // admin panel — no scoring is performed.
         if ($degree) {
@@ -95,10 +112,12 @@ class StudentProfilerController
                 'Student Profiler',
                 $degree,
                 $sections,
-                $contact
+                $contact,
+                partnerCode: $partner,
             );
 
-            // Email a profile report to the team + a thank-you to the student
+            // Email a profile report to the team + a thank-you to the student,
+            // and a referral notice to the partner when the link carried a code
             // (direct SMTP, no queue). Best-effort: never blocks the response.
             ProfileReportNotifier::notify(ProfileReportBuilder::build(
                 'profiler',
@@ -106,7 +125,7 @@ class StudentProfilerController
                 $config['degrees'][$degree]['label'] ?? null,
                 $sections,
                 $contact
-            ));
+            ), $partner);
         }
 
         // No scoring/rating — the profile is handed to the team for a manual

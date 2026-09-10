@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CrmAuditLog;
 use App\Models\CrmLead;
 use App\Models\CrmMockInterviewInvite;
+use App\Models\CrmPartnerCode;
 use App\Models\CrmSpamAttempt;
 use App\Models\CrmSubscriber;
 use App\Models\CrmUser;
@@ -44,10 +45,10 @@ class CrmDashboardController extends Controller
         $todayEnd = $now->copy()->endOfDay();
         $tomorrowEnd = $now->copy()->addDay()->endOfDay();
 
-        // The two super-admin-only screens say so out loud rather than bouncing
-        // back to the dashboard: asking for them is deliberate, and silently
-        // landing somewhere else reads as a broken link.
-        if (in_array($request->query('view'), ['audit', 'team'], true)) {
+        // The super-admin-only screens say so out loud rather than bouncing back
+        // to the dashboard: asking for them is deliberate, and silently landing
+        // somewhere else reads as a broken link.
+        if (in_array($request->query('view'), ['audit', 'team', 'partner-codes'], true)) {
             abort_unless($user->isSuperAdmin(), 403);
         }
         // A partner's workspace is their own students and nothing else: the
@@ -57,7 +58,7 @@ class CrmDashboardController extends Controller
             ? ['dashboard', 'leads', 'students']
             : ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting', 'mock-invites'];
         if ($user->isSuperAdmin()) {
-            $allowedViews = [...$allowedViews, 'subscriptions', 'audit', 'spam', 'team'];
+            $allowedViews = [...$allowedViews, 'subscriptions', 'audit', 'spam', 'team', 'partner-codes'];
         }
         $requestedView = match ($request->query('view')) {
             'website' => 'leads',
@@ -97,7 +98,7 @@ class CrmDashboardController extends Controller
 
         $dashboard = $this->dashboardData($base, $stats, $todayStart, $todayEnd, $view === 'dashboard');
 
-        $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'partner', 'websiteSubmissions', 'latestActivity'])->withCount('activities');
+        $leads = CrmLead::query()->visibleTo($user)->with(['assignee', 'partner', 'partnerCode', 'websiteSubmissions', 'latestActivity'])->withCount('activities');
         if ($view === 'followups') {
             // Dated follow-ups first, oldest first; undated open conversations last.
             $leads->openConversation()->orderByRaw('follow_up_at is null')->orderBy('follow_up_at');
@@ -123,6 +124,10 @@ class CrmDashboardController extends Controller
             'team_member_updated' => 'Team member updated',
             'team_member_role_changed' => 'Team role changed',
             'partner_access_changed' => 'Partner access changed',
+            'partner_code_created' => 'Partner code created',
+            'partner_code_updated' => 'Partner code updated',
+            'partner_code_access_changed' => 'Partner code paused or resumed',
+            'partner_code_deleted' => 'Partner code deleted',
             'team_member_access_changed' => 'Team access changed',
             'crm_login' => 'CRM login',
             'crm_logout' => 'CRM logout',
@@ -173,6 +178,20 @@ class CrmDashboardController extends Controller
             $spamQuery->whereRaw('1 = 0');
         }
 
+        // Partner codes — the referral companies whose code travels in a public
+        // link. Super admin only, like the Team screen that creates the partner
+        // accounts: a code decides which outside address gets a student's enquiry.
+        $partnerCodeQuery = CrmPartnerCode::query()->withCount('leads')->orderByDesc('is_active')->orderBy('company_name');
+        if (! $user->isSuperAdmin()) {
+            $partnerCodeQuery->whereRaw('1 = 0');
+        } elseif ($partnerCodeSearch = trim((string) $request->query('partner_code_search'))) {
+            $partnerCodeQuery->where(fn (Builder $q) => $q
+                ->where('company_name', 'like', "%{$partnerCodeSearch}%")
+                ->orWhere('code', 'like', "%{$partnerCodeSearch}%")
+                ->orWhere('email', 'like', "%{$partnerCodeSearch}%")
+                ->orWhere('contact_name', 'like', "%{$partnerCodeSearch}%"));
+        }
+
         $subscriberQuery = CrmSubscriber::query()->latest('subscribed_at');
         if ($user->isSuperAdmin()) {
             CrmSubscriberController::applyFilters($subscriberQuery, $request);
@@ -203,7 +222,7 @@ class CrmDashboardController extends Controller
         $selectedLead = null;
         if ($request->filled('lead')) {
             $selectedLead = CrmLead::query()->visibleTo($user)
-                ->with(['assignee', 'partner', 'activities.user', 'websiteSubmissions'])->find($request->integer('lead'));
+                ->with(['assignee', 'partner', 'partnerCode', 'activities.user', 'websiteSubmissions'])->find($request->integer('lead'));
         }
 
         return view('crm.dashboard', [
@@ -234,6 +253,13 @@ class CrmDashboardController extends Controller
             'leadOrigins' => CrmOptions::LEAD_ORIGINS,
             'leadTypes' => CrmOptions::LEAD_TYPES,
             'counsellorFilter' => $this->counsellorFilter($base, $user),
+            'partnerCodes' => $partnerCodeQuery->paginate($perPage, ['*'], 'partner_code_page')->withQueryString(),
+            'partnerCodeCount' => $user->isSuperAdmin() ? CrmPartnerCode::query()->count() : 0,
+            'partnerCodeActiveCount' => $user->isSuperAdmin() ? CrmPartnerCode::query()->active()->count() : 0,
+            'partnerCodeOptions' => $this->partnerCodeOptions($user),
+            'newPartnerCode' => $user->isSuperAdmin() && session('new_partner_code')
+                ? CrmPartnerCode::query()->find(session('new_partner_code'))
+                : null,
             // Suggestions only — the field itself stays free text. Queried just for
             // the open drawer, so the list view does not pay for it.
             'intakeSuggestions' => $selectedLead ? $this->intakeSuggestions($user) : collect(),
@@ -306,6 +332,34 @@ class CrmDashboardController extends Controller
                 ->where('is_active', true)
                 ->orWhereIn('id', CrmLead::query()->whereNotNull('partner_id')->distinct()->pluck('partner_id')))
             ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * The companies offered by the "Partner code" field and its filter.
+     *
+     * Same rule as the partner accounts above: active codes, plus any code a
+     * lead already carries. A paused code has to stay listed, or the next save
+     * of one of its leads would silently drop the attribution the dropdown could
+     * no longer re-select — and the filter could not find those leads at all.
+     * CrmLeadController's validation allows exactly this set.
+     *
+     * A partner sees nothing here — attribution is the team's record of where a
+     * lead came from, not something a partner reads or sets.
+     *
+     * @return \Illuminate\Support\Collection<int, CrmPartnerCode>
+     */
+    private function partnerCodeOptions(CrmUser $user): \Illuminate\Support\Collection
+    {
+        if ($user->isPartner()) {
+            return collect();
+        }
+
+        return CrmPartnerCode::query()
+            ->where(fn (Builder $offered) => $offered
+                ->where('is_active', true)
+                ->orWhereIn('id', CrmLead::query()->whereNotNull('partner_code_id')->distinct()->pluck('partner_code_id')))
+            ->orderBy('company_name')
             ->get();
     }
 
@@ -536,14 +590,14 @@ class CrmDashboardController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
-        $query = CrmLead::query()->visibleTo($user)->with(['assignee', 'partner'])->latest();
+        $query = CrmLead::query()->visibleTo($user)->with(['assignee', 'partner', 'partnerCode'])->latest();
         $this->applyFilters($query, $request, $user);
         $rows = $query->get();
 
         return response()->streamDownload(function () use ($rows): void {
             $out = fopen('php://output', 'w');
             fputcsv($out, [
-                'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Partner', 'Follow-up', 'Created',
+                'Lead ID', 'Name', 'Phone', 'Email', 'City', 'Course', 'Country', 'Category', 'Lead type', 'Origin', 'Priority', 'Source', 'Status', 'Counsellor', 'Partner', 'Partner code', 'Referral company', 'Follow-up', 'Created',
                 '10th %', '10th passing year', '12th %', '12th passing year', 'Graduation CGPA / %', 'Graduation passing year', 'Backlogs', 'Intake',
                 'Counselling', 'Shortlisting', 'English proficiency tests', 'Aptitude tests',
             ]);
@@ -552,6 +606,7 @@ class CrmDashboardController extends Controller
                     $lead->lead_number, $lead->name, $lead->phone, $lead->email, $lead->city,
                     $lead->course_interest, $lead->country_interest, $lead->category, $lead->lead_type, $lead->lead_origin, $lead->priority,
                     $lead->source, $lead->status, $lead->assignee?->name, $lead->partner?->name,
+                    $lead->partnerCode?->code, $lead->partnerCode?->company_name,
                     $lead->follow_up_at?->format('Y-m-d H:i'), $lead->created_at->format('Y-m-d H:i'),
                     $lead->tenth_score, $lead->tenth_passing_year, $lead->twelfth_score, $lead->twelfth_passing_year,
                     $lead->graduation_score, $lead->graduation_passing_year, $lead->backlogs, $lead->intake,
@@ -665,6 +720,22 @@ class CrmDashboardController extends Controller
                     }
                     if ($wantsNoPartner) {
                         $partnerIds === [] ? $partnerQuery->whereNull('partner_id') : $partnerQuery->orWhereNull('partner_id');
+                    }
+                });
+            }
+        }
+        // The Partner code field, same shape as the Partner filter above: "none"
+        // is the leads that arrived without a referral code on the URL.
+        if (! $user->isPartner()) {
+            $wantsNoCode = in_array('none', CrmFilter::raw($request, 'partner_code_id'), true);
+            $codeIds = CrmFilter::ids($request, 'partner_code_id');
+            if ($codeIds !== [] || $wantsNoCode) {
+                $query->where(function (Builder $codeQuery) use ($codeIds, $wantsNoCode): void {
+                    if ($codeIds !== []) {
+                        $codeQuery->whereIn('partner_code_id', $codeIds);
+                    }
+                    if ($wantsNoCode) {
+                        $codeIds === [] ? $codeQuery->whereNull('partner_code_id') : $codeQuery->orWhereNull('partner_code_id');
                     }
                 });
             }

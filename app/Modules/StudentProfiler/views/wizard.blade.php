@@ -28,7 +28,12 @@
             state: @json($state),
             endpoint: @json(url('/profiler')),
             csrf: @json(csrf_token()),
-            emailHelp: @json(config('site.forms.email_help'))
+            emailHelp: @json(config('site.forms.email_help')),
+            // Referral code off ?partner= — already checked against the active
+            // partner codes, so it is either a real one or null. The wizard sends
+            // it back on submit, which is what credits the lead and notifies the
+            // partner. Nothing about the questionnaire changes because of it.
+            partner: @json($partner ?? null)
         };
     </script>
     <script src="{{ $spAsset('assets/student-profiler/student-profiler.js') }}" defer></script>

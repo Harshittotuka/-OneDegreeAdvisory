@@ -353,6 +353,7 @@
         <span class="toc-label">Admin tools</span>
         <a href="#enrollments">Website payments</a>
         <a href="#subscribers">Newsletter subscribers</a>
+        <a href="#partner-codes">Partner codes</a>
         <a href="#team">Team management</a>
         <a href="#audit">Audit log</a>
         <a href="#shortlisting">PDF shortlisting</a>
@@ -435,6 +436,7 @@
             <tr><td>PDF shortlisting tool</td><td class="tick">✓</td><td class="tick">✓</td></tr>
             <tr><td>Newsletter subscribers</td><td class="cross">Hidden</td><td class="tick">✓</td></tr>
             <tr><td>Manage payments / enrolments</td><td>View own only</td><td class="tick">✓ edit &amp; remove</td></tr>
+            <tr><td>Partner codes</td><td class="cross">✗</td><td class="tick">✓</td></tr>
             <tr><td>Team management</td><td class="cross">✗</td><td class="tick">✓</td></tr>
             <tr><td>Audit log</td><td class="cross">✗</td><td class="tick">✓</td></tr>
           </tbody>
@@ -513,6 +515,7 @@
         <div class="card feature"><h4><span class="ic">🎓</span> Enrolled students</h4><p>Leads that became students, with their current journey stage.</p></div>
         <div class="card feature"><h4><span class="ic">💳</span> Website payments</h4><p>Online course payments and their status.</p></div>
         <div class="card feature"><h4><span class="ic">📰</span> Subscriptions <span class="badge-admin">Admin</span></h4><p>Newsletter sign-ups from the website.</p></div>
+        <div class="card feature"><h4><span class="ic">🏷️</span> Partner codes <span class="badge-admin">Admin</span></h4><p>Referral companies, the tracking link each one gets, and the leads it brought in.</p></div>
       </div>
 
       <h3>The leads list at a glance</h3>
@@ -719,9 +722,25 @@
       <p>Every newsletter sign-up from the website is collected here with its source and status. Super admins can mark someone <b>active</b> or <b>unsubscribed</b>, remove entries, and export the list. Counsellors don't see this area.</p>
     </section>
 
+    <!-- PARTNER CODES -->
+    <section id="partner-codes">
+      <h2><span class="num">13</span> Partner codes <span class="badge-admin">Super admin</span></h2>
+      <p>A partner code is a referral company plus a code we give them. Their code turns the Student Profiler into <em>their</em> link, and every profile submitted through it is tracked back to them.</p>
+      <ul>
+        <li><b>Add a partner</b> with their company name, email, custom code, phone, contact name and company link. The code becomes the link to hand out — <code>/profiler?partner=CODE</code> — and <b>Copy link</b> puts it on your clipboard.</li>
+        <li><b>What happens on a submission:</b> the company is emailed a referral notice with the student's name, email, phone and headline preferences; our admissions mailbox gets its usual full report; and the lead is recorded in the CRM naming that partner code.</li>
+        <li><b>Watch the results</b> from the Leads column on each row — it opens the leads list filtered to that code.</li>
+        <li><b>Pause</b> a code to retire the link while keeping every lead it already brought in, or <b>Delete</b> the company outright (its leads stay, they just stop naming a code).</li>
+      </ul>
+      <div class="note watch">
+        <span class="tag">Good to know</span>
+        <p>Codes are matched whatever the capitals, so <code>acme10</code> and <code>ACME10</code> are the same link. A student who comes back through a different partner's link stays credited to whoever sent them first. And a code nobody issued — or one that's paused — changes nothing: the profile is still captured and we're still notified, it simply carries no partner. The partner's own notice never includes the full profile report; that stays internal.</p>
+      </div>
+    </section>
+
     <!-- TEAM -->
     <section id="team">
-      <h2><span class="num">13</span> Team management <span class="badge-admin">Super admin</span></h2>
+      <h2><span class="num">14</span> Team management <span class="badge-admin">Super admin</span></h2>
       <p>Super admins add and manage the people who can use the CRM.</p>
       <ul>
         <li><b>Add a member</b> with a name, mobile, email and role (counsellor or super admin). They can sign in immediately with the OTP.</li>
@@ -736,13 +755,13 @@
 
     <!-- AUDIT -->
     <section id="audit">
-      <h2><span class="num">14</span> Audit log <span class="badge-admin">Super admin</span></h2>
+      <h2><span class="num">15</span> Audit log <span class="badge-admin">Super admin</span></h2>
       <p>The audit log is a complete, searchable record of important actions across the CRM: sign-ins, lead creation and edits, conversions, follow-up completions, imports, and every team-management change. Each entry shows who did it, when, and — where relevant — what changed. Filter by action type, by person, or search the text. It's the go-to for "who did what, and when?".</p>
     </section>
 
     <!-- SHORTLISTING -->
     <section id="shortlisting">
-      <h2><span class="num">15</span> PDF shortlisting tool</h2>
+      <h2><span class="num">16</span> PDF shortlisting tool</h2>
       <p>This tool builds a branded university-comparison sheet for a student. Upload the student's report <b>PDF</b> plus a <b>shortlist spreadsheet</b>, and it produces a polished PDF with a comparison table on the final page — ready to send. Available to everyone signed in.</p>
       <ul>
         <li>The spreadsheet lists one university per column, with the compared attributes down the first column.</li>
@@ -753,7 +772,7 @@
 
     <!-- TIPS -->
     <section id="tips">
-      <h2><span class="num">16</span> Good to know</h2>
+      <h2><span class="num">17</span> Good to know</h2>
       <div class="grid cols-2">
         <div class="card feature">
           <h4><span class="ic">📧</span> Your code comes by email</h4>

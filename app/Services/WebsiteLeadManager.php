@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
+use App\Models\CrmPartnerCode;
 use App\Models\CrmSubscriber;
 use App\Models\CrmWebsiteSubmission;
 use App\Models\PaymentAttempt;
@@ -16,6 +17,13 @@ use Illuminate\Validation\ValidationException;
 
 class WebsiteLeadManager
 {
+    /**
+     * Record a completed public form as a website submission against a lead.
+     *
+     * $partnerCode is the referral company resolved from a ?partner=CODE link.
+     * When one is passed the lead is credited to it — once, on the first capture
+     * (see below) — and the code is written into the submission's meta.
+     */
     public function capture(
         string $source,
         string $sourceLabel,
@@ -25,8 +33,9 @@ class WebsiteLeadManager
         ?string $externalId = null,
         CarbonInterface|string|null $submittedAt = null,
         bool $forceNewLead = false,
+        ?CrmPartnerCode $partnerCode = null,
     ): CrmWebsiteSubmission {
-        return DB::transaction(function () use ($source, $sourceLabel, $degree, $sections, $meta, $externalId, $submittedAt, $forceNewLead): CrmWebsiteSubmission {
+        return DB::transaction(function () use ($source, $sourceLabel, $degree, $sections, $meta, $externalId, $submittedAt, $forceNewLead, $partnerCode): CrmWebsiteSubmission {
             if ($externalId !== null && ($existing = CrmWebsiteSubmission::query()->where('external_id', $externalId)->first())) {
                 return $existing;
             }
@@ -54,6 +63,7 @@ class WebsiteLeadManager
                     'lead_origin' => 'website',
                     'lead_type' => $this->leadType($source),
                     'status' => 'new',
+                    'partner_code_id' => $partnerCode?->id,
                     'profile' => ['latest_source' => $source, 'latest_degree' => $degree],
                     ...$academic,
                 ]);
@@ -71,6 +81,11 @@ class WebsiteLeadManager
                     'course_interest' => $lead->course_interest ?: $this->answer($sections, ['Course / program', 'Career', 'Service needed', 'Study level']),
                     'country_interest' => $lead->country_interest ?: $this->answer($sections, ['Country of study', 'Destination country', 'Preferred country']),
                     ...$freshAcademic,
+                    // First referral wins. A student who comes back through a
+                    // different partner's link — or through none — stays credited
+                    // to whoever originally sent them, and a code can never
+                    // overwrite an attribution the team corrected by hand.
+                    'partner_code_id' => $lead->partner_code_id ?: $partnerCode?->id,
                 ], fn ($value) => $value !== null && $value !== '');
                 if ($source !== 'newsletter') {
                     $updates['lead_type'] = $this->leadType($source);
@@ -93,7 +108,12 @@ class WebsiteLeadManager
                 'source_label' => $sourceLabel,
                 'degree' => $degree,
                 'sections' => $sections ?: null,
-                'meta' => $meta ?: null,
+                // The code is kept on the submission as well as the lead, so the
+                // record of which link this particular form came through survives
+                // the lead's attribution being corrected later.
+                'meta' => $partnerCode
+                    ? [...$meta, 'partner_code' => $partnerCode->code, 'partner_company' => $partnerCode->company_name]
+                    : ($meta ?: null),
                 'ip_address' => $request?->ip(),
                 'user_agent' => mb_substr((string) $request?->userAgent(), 0, 255),
                 'submitted_at' => $when,
@@ -102,8 +122,13 @@ class WebsiteLeadManager
             CrmLeadActivity::query()->create([
                 'crm_lead_id' => $lead->id,
                 'type' => 'website_submission',
-                'body' => 'Received a '.$sourceLabel.' website submission.',
-                'metadata' => ['submission_id' => $submission->id, 'source' => $source],
+                'body' => 'Received a '.$sourceLabel.' website submission.'
+                    .($partnerCode ? ' Referred by '.$partnerCode->label().'.' : ''),
+                'metadata' => array_filter([
+                    'submission_id' => $submission->id,
+                    'source' => $source,
+                    'partner_code' => $partnerCode?->code,
+                ]),
                 'created_at' => $when,
                 'updated_at' => $when,
             ]);

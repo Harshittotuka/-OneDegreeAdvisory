@@ -66,7 +66,11 @@
         return fetch(DATA.endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": DATA.csrf || "", "X-Requested-With": "XMLHttpRequest", Accept: "application/json" },
-            body: JSON.stringify({ action: action || "save", degree: state.degree, section: state.section, answers: state.answers, contact: state.contact })
+            // `partner` is the referral code the page was opened with (?partner=),
+            // handed back so the submit can credit the lead and notify that
+            // partner. The POST goes to a bare /profiler, so it has to travel in
+            // the body — the query string the visitor arrived on is not resent.
+            body: JSON.stringify({ action: action || "save", degree: state.degree, section: state.section, answers: state.answers, contact: state.contact, partner: DATA.partner || null })
         }).then(function (r) {
             // Parse the body even on 4xx, so a server rejection (e.g. a blocked
             // placeholder email) reaches the caller instead of collapsing to null.

@@ -25,9 +25,20 @@
       <td style="padding:12px 14px;border-bottom:1px solid #e5edf1;color:#102a43;font-weight:700;">{{ $data['email'] ?: '—' }}</td>
     </tr>
     <tr>
-      <td style="padding:12px 14px;background:#f7fafb;color:#60717d;font-weight:700;">Phone</td>
-      <td style="padding:12px 14px;color:#102a43;font-weight:700;">{{ $data['phone'] ?: '—' }}</td>
+      <td style="padding:12px 14px;background:#f7fafb;@if(!empty($data['partner']))border-bottom:1px solid #e5edf1;@endif color:#60717d;font-weight:700;">Phone</td>
+      <td style="padding:12px 14px;@if(!empty($data['partner']))border-bottom:1px solid #e5edf1;@endif color:#102a43;font-weight:700;">{{ $data['phone'] ?: '—' }}</td>
     </tr>
+    {{-- Only present when the link carried a partner code. The same company has
+         been emailed its own referral notice and the lead is credited to it. --}}
+    @if(!empty($data['partner']))
+      <tr>
+        <td style="padding:12px 14px;background:#f7fafb;color:#60717d;font-weight:700;">Referred by</td>
+        <td style="padding:12px 14px;color:#102a43;font-weight:700;">
+          {{ $data['partner']['company'] }} ({{ $data['partner']['code'] }})
+          <span style="display:block;margin-top:3px;color:#5f6f7a;font-weight:400;">Notified at {{ $data['partner']['email'] }}</span>
+        </td>
+      </tr>
+    @endif
   </table>
 
   @if($pdf === null)

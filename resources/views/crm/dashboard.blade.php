@@ -1,8 +1,8 @@
 @php
     $initials = static fn (?string $name): string => collect(preg_split('/\s+/', trim((string) $name)))->filter()->take(2)->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('') ?: '?';
-    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Website payments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'spam' => ['Blocked submissions', 'Public-form submissions caught by the honeypot field'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored'], 'team' => ['Team management', 'Create counsellors, super admins and referral partners, and control their CRM access']];
+    $titles = ['dashboard' => ['Dashboard', 'Your lead performance at a glance'], 'leads' => ['Leads', 'Website and manually created enquiries in one place'], 'enrollments' => ['Website payments', 'Payment records classified by program and source page'], 'subscriptions' => ['Subscriptions', 'Manage newsletter subscriptions in one simple list'], 'followups' => ['Follow-up planner', 'Every open conversation, upcoming and overdue'], 'students' => ['Enrolled students', 'Track students through admissions and visa stages'], 'audit' => ['Audit log', 'See every CRM action and who performed it'], 'spam' => ['Blocked submissions', 'Public-form submissions caught by the honeypot field'], 'shortlisting' => ['PDF shortlisting', 'Replace a report PDF\'s last page with a university shortlist'], 'mock-invites' => ['Mock interviews', 'Issue extended mock-interview links and see how students scored'], 'team' => ['Team management', 'Create counsellors, super admins and referral partners, and control their CRM access'], 'partner-codes' => ['Partner codes', 'Referral companies and the tracking link each of their codes gives them']];
     $currentTitle = $titles[$view];
-    $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'spam', 'shortlisting', 'team'], true);
+    $isListView = ! in_array($view, ['dashboard', 'enrollments', 'subscriptions', 'audit', 'spam', 'shortlisting', 'team', 'partner-codes'], true);
     // A partner has no Follow-up planner, so every card, reminder and queue row
     // that would open it lands on their own leads list instead of bouncing off
     // the view allow-list back to the dashboard.
@@ -25,6 +25,22 @@
         if (! $done) return '<span class="lead-ms lead-ms-no">—</span>';
         $sub = $date ? '<span class="subtext">'.e($date->format('d M Y')).'</span>' : '';
         return '<span class="lead-ms lead-ms-yes">✓ Yes</span>'.$sub;
+    };
+    // Leads-table "Partner" cell. Two separate facts share the column: the
+    // partner ACCOUNT the lead was pointed at (who can see it), and the partner
+    // CODE its link carried (where it came from). A lead can have either, both,
+    // or neither, so both are rendered rather than one standing in for the other.
+    // Trusted markup, rendered with {!! !!}.
+    $partnerCell = static function (\App\Models\CrmLead $lead): string {
+        $parts = [];
+        if ($lead->partner) {
+            $parts[] = '<span class="lead-partner">'.e($lead->partner->name).'</span>';
+        }
+        if ($lead->partnerCode) {
+            $parts[] = '<span class="lead-partner-code" title="Referred through code '.e($lead->partnerCode->code).'">'
+                .e($lead->partnerCode->company_name).'</span><span class="subtext">Code '.e($lead->partnerCode->code).'</span>';
+        }
+        return $parts === [] ? '<span class="subtext">—</span>' : implode('', $parts);
     };
     // Leads-table cell for a hand-recorded answer (counselling, shortlisting).
     // Unlike a milestone, blank is its own state and must not read as "no".
@@ -130,6 +146,7 @@
             <a class="nav-link nav-mock-invites {{ $view === 'mock-invites' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'mock-invites']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'mock-invites'])</span><span class="nav-text">Mock interviews</span>@if($mockInviteCount)<span class="nav-badge">{{ $mockInviteCount }}</span>@endif</a>
             <a class="nav-link nav-enrollments {{ $view === 'enrollments' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'enrollments']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'enrollments'])</span><span class="nav-text">Website payments</span><span class="nav-badge">{{ $enrollmentCount }}</span></a>
             @endunless
+            @if($crmUser->isSuperAdmin())<a class="nav-link nav-partner-codes {{ $view === 'partner-codes' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'partner-codes']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'partner-codes'])</span><span class="nav-text">Partner codes</span>@if($partnerCodeCount)<span class="nav-badge">{{ $partnerCodeCount }}</span>@endif</a>@endif
             @if($crmUser->isSuperAdmin())<a class="nav-link nav-subscriptions {{ $view === 'subscriptions' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'subscriptions']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'subscriptions'])</span><span class="nav-text">Subscriptions</span><span class="nav-badge">{{ $subscriberCount }}</span></a>@endif
         </nav>
         <div class="sidebar-bottom">
@@ -393,6 +410,8 @@
                 </section>
             @elseif($view === 'team')
                 @include('crm.partials.team')
+            @elseif($view === 'partner-codes')
+                @include('crm.partials.partner-codes')
             @else
             <section class="workspace">
                 <form id="crmLeadFilters" @class(['filters', 'lead-classification-filters' => $isListView]) method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
@@ -464,6 +483,16 @@
                             'options' => ['none' => 'No partner'] + $partners->mapWithKeys(fn ($partner) => [(string) $partner->id => $partner->name])->all(),
                             'selected' => \App\Support\CrmFilter::raw(request(), 'partner_id'),
                             'placeholder' => 'Every partner', 'label' => 'Filter by partner', 'noun' => 'partners',
+                        ])
+                    @endif
+                    {{-- And the same for the referral code the lead arrived through.
+                         "No partner code" is the direct traffic. --}}
+                    @if($partnerCodeOptions->isNotEmpty())
+                        @include('crm.partials.multi-filter', [
+                            'name' => 'partner_code_id',
+                            'options' => ['none' => 'No partner code'] + $partnerCodeOptions->mapWithKeys(fn ($code) => [(string) $code->id => $code->label()])->all(),
+                            'selected' => \App\Support\CrmFilter::raw(request(), 'partner_code_id'),
+                            'placeholder' => 'Every partner code', 'label' => 'Filter by partner code', 'noun' => 'codes',
                         ])
                     @endif
                     @if($crmUser->isSuperAdmin())
@@ -571,7 +600,7 @@
                                     <td>{!! $recorded($lead->counselling) !!}</td>
                                     <td>{!! $recorded($lead->shortlisting) !!}</td>
                                     <td>{!! $milestone((bool) $isEnrolled, $lead->enrollment_date) !!}</td>
-                                    @unless($crmUser->isPartner())<td>@if($lead->partner)<span class="lead-partner">{{ $lead->partner->name }}</span>@else<span class="subtext">—</span>@endif</td>@endunless
+                                    @unless($crmUser->isPartner())<td>{!! $partnerCell($lead) !!}</td>@endunless
                                     <td @class(['lead-remark', 'has-remark-pop' => $latestActivity])@if($latestActivity) data-remark-full="{{ $latestActivity->body }}" data-remark-time="{{ $latestActivity->created_at->format('d M Y, g:i A') }}"@endif>@if($latestActivity)<span class="lead-remark-text">{{ \Illuminate\Support\Str::limit($latestActivity->body, 90) }}</span><span class="subtext">{{ $latestActivity->created_at->diffForHumans() }}</span>@else<span class="subtext">No activity yet</span>@endif</td>
                                     <td><a class="row-open" href="{{ $openUrl }}" aria-label="Open {{ $lead->name }}">→</a></td>
                                 </tr>
@@ -596,7 +625,7 @@
                                         <td><span class="badge status-{{ $lead->status }}">{{ $lead->status === 'converted' && !$lead->is_student ? 'Conversion incomplete' : ($statuses[$lead->status] ?? ucfirst($lead->status)) }}</span><span class="priority {{ $lead->priority }}">{{ $priorities[$lead->priority] ?? $lead->priority }}</span></td>
                                     @endif
                                     <td>{{ $categories[$lead->category] ?? '—' }}<span class="subtext">{{ $lead->course_interest ?: ($lead->country_interest ?: $lead->city) }}</span></td>
-                                    @if($crmUser->isSuperAdmin())<td>@if($lead->assignee)<span class="owner"><span class="avatar">{{ $initials($lead->assignee->name) }}</span>{{ $lead->assignee->name }}</span>@else<span class="subtext">Unassigned</span>@endif</td>@endif @unless($crmUser->isPartner())<td>@if($lead->partner)<span class="lead-partner">{{ $lead->partner->name }}</span>@else<span class="subtext">—</span>@endif</td>@endunless
+                                    @if($crmUser->isSuperAdmin())<td>@if($lead->assignee)<span class="owner"><span class="avatar">{{ $initials($lead->assignee->name) }}</span>{{ $lead->assignee->name }}</span>@else<span class="subtext">Unassigned</span>@endif</td>@endif @unless($crmUser->isPartner())<td>{!! $partnerCell($lead) !!}</td>@endunless
                                     <td><span class="follow-date {{ $followClass }}">{{ $lead->follow_up_at ? $lead->follow_up_at->format('d M, g:i A') : 'Not scheduled' }}</span>@if($lead->follow_up_completed_at)<span class="subtext">Completed</span>@endif</td>
                                     <td>{{ $lead->updated_at->diffForHumans(null, true) }}<span class="subtext">{{ $lead->activities_count }} activities</span></td>
                                     <td><a class="row-open" href="{{ $openUrl }}" aria-label="Open {{ $lead->name }}">→</a></td>
@@ -636,6 +665,7 @@
                 <div @class(['field', 'has-error' => $leadErrors->has('status')])><label for="lead_status">Pipeline status</label><select id="lead_status" name="status" data-followup-tinted @class(['is-followup-status' => $isFollowUpStatus((string) old('status', 'new'))]) @if($leadErrors->has('status')) aria-invalid="true" aria-describedby="lead_status_error" @endif>@foreach($pipelineStatuses as $key=>$label)<option value="{{ $key }}" @class(['is-followup-status' => $isFollowUpStatus($key)]) @selected(old('status','new')===$key)>{{ $label }}</option>@endforeach</select><span class="field-help">Enrollment is completed later from the Student tab.</span>@error('status','leadCreate')<span class="field-error" id="lead_status_error">{{ $message }}</span>@enderror</div>
                 @if($crmUser->isSuperAdmin())<div @class(['field', 'has-error' => $leadErrors->has('assigned_to')])><label for="lead_assigned">Assign to counsellor</label><select id="lead_assigned" name="assigned_to" @if($leadErrors->has('assigned_to')) aria-invalid="true" aria-describedby="lead_assigned_error" @endif><option value="">Unassigned</option>@foreach($counsellors as $person)<option value="{{ $person->id }}" @selected((string)old('assigned_to') === (string)$person->id)>{{ $person->name }}</option>@endforeach</select>@error('assigned_to','leadCreate')<span class="field-error" id="lead_assigned_error">{{ $message }}</span>@enderror</div>@endif
                 @if($partners->isNotEmpty())<div @class(['field', 'has-error' => $leadErrors->has('partner_id')])><label for="lead_partner">Partner name <span class="label-note">If a partner referred this student</span></label><select id="lead_partner" name="partner_id" @if($leadErrors->has('partner_id')) aria-invalid="true" aria-describedby="lead_partner_error" @endif><option value="">No partner</option>@foreach($partners as $partner)<option value="{{ $partner->id }}" @selected((string)old('partner_id') === (string)$partner->id)>{{ $partner->name }}@unless($partner->is_active) (disabled)@endunless</option>@endforeach</select>@error('partner_id','leadCreate')<span class="field-error" id="lead_partner_error">{{ $message }}</span>@enderror</div>@endif
+                @if($partnerCodeOptions->isNotEmpty())<div @class(['field', 'has-error' => $leadErrors->has('partner_code_id')])><label for="lead_partner_code">Partner code <span class="label-note">The referral company this lead came from</span></label><select id="lead_partner_code" name="partner_code_id" @if($leadErrors->has('partner_code_id')) aria-invalid="true" aria-describedby="lead_partner_code_error" @endif><option value="">No partner code</option>@foreach($partnerCodeOptions as $code)<option value="{{ $code->id }}" @selected((string)old('partner_code_id') === (string)$code->id)>{{ $code->label() }}@unless($code->is_active) (paused)@endunless</option>@endforeach</select>@error('partner_code_id','leadCreate')<span class="field-error" id="lead_partner_code_error">{{ $message }}</span>@enderror</div>@endif
                 @php $newLeadFollowUpRequired = $isFollowUpStatus((string) old('status', 'new')); @endphp
                 <div @class(['field', 'is-followup-required' => $newLeadFollowUpRequired, 'has-error' => $leadErrors->has('follow_up_at')])><label for="lead_followup">First follow-up <span class="label-note" data-followup-note>{{ $newLeadFollowUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input id="lead_followup" type="datetime-local" name="follow_up_at" value="{{ old('follow_up_at') }}" @required($newLeadFollowUpRequired) @if($leadErrors->has('follow_up_at')) aria-invalid="true" aria-describedby="lead_followup_error" @endif>@error('follow_up_at','leadCreate')<span class="field-error" id="lead_followup_error">{{ $message }}</span>@enderror</div>
             </div></div>
@@ -820,6 +850,11 @@
                                  counsellor and a super admin set it; a partner never sees the
                                  field at all — every lead they can open already names them. --}}
                             @unless($crmUser->isPartner())<div class="field"><label>Partner name <span class="label-note">Who referred this student</span></label><select name="partner_id"><option value="">No partner</option>@foreach($partners as $partner)<option value="{{ $partner->id }}" @selected($selectedLead->partner_id===$partner->id)>{{ $partner->name }}@unless($partner->is_active) (disabled)@endunless</option>@endforeach</select></div>@endunless
+                            {{-- "Partner code": which referral link this lead arrived
+                                 through. Filled in automatically on capture — it is here
+                                 so the team can correct a wrong attribution, not because
+                                 it is usually typed in by hand. --}}
+                            @unless($crmUser->isPartner())<div class="field"><label>Partner code <span class="label-note">The referral link this lead came through</span></label><select name="partner_code_id"><option value="">No partner code</option>@foreach($partnerCodeOptions as $code)<option value="{{ $code->id }}" @selected($selectedLead->partner_code_id===$code->id)>{{ $code->label() }}@unless($code->is_active) (paused)@endunless</option>@endforeach</select></div>@endunless
                             @php $followUpRequired = ! $selectedLead->is_student && $isFollowUpStatus($selectedLead->status); @endphp
                             <div @class(['field', 'full' => ! $crmUser->isSuperAdmin(), 'is-followup-required' => $followUpRequired])><label>Next follow-up <span class="label-note" data-followup-note>{{ $followUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input type="datetime-local" name="follow_up_at" value="{{ $selectedLead->follow_up_at?->format('Y-m-d\TH:i') }}" @required($followUpRequired)></div>
                         </div>

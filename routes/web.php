@@ -235,6 +235,13 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
         // Mock-interview invite links (the "Mock interviews" tab).
         Route::post('mock-invites', [\App\Http\Controllers\Crm\CrmMockInviteController::class, 'store'])->name('mock-invites.store');
         Route::patch('mock-invites/{invite}/revoke', [\App\Http\Controllers\Crm\CrmMockInviteController::class, 'revoke'])->name('mock-invites.revoke');
+        // Partner codes (the "Partner codes" tab): the referral companies whose
+        // code travels in a public link, e.g. /profiler?partner=ACME10.
+        Route::get('partner-codes/export', [\App\Http\Controllers\Crm\CrmPartnerCodeController::class, 'export'])->name('partner-codes.export');
+        Route::post('partner-codes', [\App\Http\Controllers\Crm\CrmPartnerCodeController::class, 'store'])->name('partner-codes.store');
+        Route::put('partner-codes/{partnerCode}', [\App\Http\Controllers\Crm\CrmPartnerCodeController::class, 'update'])->name('partner-codes.update');
+        Route::patch('partner-codes/{partnerCode}/toggle', [\App\Http\Controllers\Crm\CrmPartnerCodeController::class, 'toggle'])->name('partner-codes.toggle');
+        Route::delete('partner-codes/{partnerCode}', [\App\Http\Controllers\Crm\CrmPartnerCodeController::class, 'destroy'])->name('partner-codes.destroy');
         Route::post('team', [\App\Http\Controllers\Crm\CrmUserController::class, 'store'])->name('team.store');
         Route::patch('team/{member}', [\App\Http\Controllers\Crm\CrmUserController::class, 'update'])->name('team.update');
         Route::patch('team/{member}/toggle', [\App\Http\Controllers\Crm\CrmUserController::class, 'toggle'])->name('team.toggle');

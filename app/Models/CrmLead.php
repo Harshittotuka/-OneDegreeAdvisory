@@ -18,7 +18,7 @@ class CrmLead extends Model
         'tenth_score', 'tenth_passing_year', 'twelfth_score', 'twelfth_passing_year',
         'graduation_score', 'graduation_passing_year', 'backlogs', 'intake',
         'counselling', 'shortlisting', 'english_tests', 'aptitude_tests',
-        'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'partner_id', 'created_by', 'follow_up_at',
+        'category', 'priority', 'source', 'lead_origin', 'lead_type', 'status', 'assigned_to', 'partner_id', 'partner_code_id', 'created_by', 'follow_up_at',
         'follow_up_completed_at', 'last_contacted_at', 'tags', 'profile', 'is_student',
         'student_stage', 'student_category', 'enrollment_amount', 'enrollment_date',
         'payment_reference', 'conversion_remarks',
@@ -52,6 +52,16 @@ class CrmLead extends Model
     public function partner(): BelongsTo
     {
         return $this->belongsTo(CrmUser::class, 'partner_id');
+    }
+
+    /**
+     * The referral company whose code was on the URL when this lead first came
+     * in — the "Partner code" field. Set automatically on capture and only ever
+     * corrected by the team; it never controls who can see the lead.
+     */
+    public function partnerCode(): BelongsTo
+    {
+        return $this->belongsTo(CrmPartnerCode::class, 'partner_code_id');
     }
 
     public function activities(): HasMany

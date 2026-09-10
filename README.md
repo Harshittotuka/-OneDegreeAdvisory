@@ -34,6 +34,24 @@ action in the studio.
 
 See [docs/page-builder-mcp.md](docs/page-builder-mcp.md).
 
+## Partner codes (referral tracking)
+
+`/crm?view=partner-codes` (super admin) holds the referral companies we work
+with: company name, email, custom code, phone, contact name and company link.
+The code turns the Student Profiler into that company's own link:
+
+```
+https://onedegreeadvisory.com/profiler?partner=ACME10
+```
+
+A profile submitted through such a link does three things beyond the normal
+capture: the company is emailed a referral notice (student's name, email, phone
+and headline preferences — not the internal report PDF), our own admissions
+notification names the referrer, and the CRM lead records the partner code so
+the leads list can be filtered by it. Codes are matched case-insensitively, the
+first referral keeps the credit if a student returns through another link, and an
+unknown or paused code is silently ignored — the profile is still captured.
+
 ## CMS and CRM backups
 
 Successful CMS and CRM data changes create one rolling restore point after the

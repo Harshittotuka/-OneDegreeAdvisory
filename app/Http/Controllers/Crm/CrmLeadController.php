@@ -19,7 +19,8 @@ class CrmLeadController extends Controller
 {
     /** Human field names used by the timeline story and the audit log. */
     private const FIELD_LABELS = [
-        'assigned_to' => 'Owner', 'partner_id' => 'Partner', 'follow_up_at' => 'Follow-up', 'course_interest' => 'Course',
+        'assigned_to' => 'Owner', 'partner_id' => 'Partner', 'partner_code_id' => 'Partner code',
+        'follow_up_at' => 'Follow-up', 'course_interest' => 'Course',
         'country_interest' => 'Country', 'student_stage' => 'Student stage', 'lead_type' => 'Lead type',
         'status' => 'Status', 'priority' => 'Priority', 'category' => 'Category', 'source' => 'Source',
         'city' => 'City', 'name' => 'Name', 'phone' => 'Phone', 'email' => 'Email',
@@ -99,9 +100,11 @@ class CrmLeadController extends Controller
             unset($data['assigned_to']);
         }
         // The Partner field decides which partner can see this lead at all, so a
-        // partner must never be able to move it — not even onto themselves.
+        // partner must never be able to move it — not even onto themselves. The
+        // Partner code is our own record of where the lead came from, and is not
+        // theirs to rewrite either.
         if ($user->isPartner()) {
-            unset($data['partner_id']);
+            unset($data['partner_id'], $data['partner_code_id']);
         }
 
         $phoneChanged = $data['phone'] !== ($this->normalisePhone((string) $lead->phone) ?: null);
@@ -402,6 +405,16 @@ class CrmLeadController extends Controller
                     ? $query->where(fn ($allowed) => $allowed->where('is_active', true)->orWhere('id', $lead->partner_id))
                     : $query->where('is_active', true);
             })],
+            // "Partner code": which referral company's code was on the URL when
+            // this lead arrived. Filled in automatically on capture; the team can
+            // correct it, a partner never touches it. Active codes are offered,
+            // plus one a lead already carries, so a paused code is never silently
+            // dropped by re-saving the lead that holds it.
+            'partner_code_id' => [$user->isPartner() ? 'prohibited' : 'nullable', Rule::exists('crm_partner_codes', 'id')->where(function ($query) use ($lead): void {
+                $lead?->partner_code_id
+                    ? $query->where(fn ($allowed) => $allowed->where('is_active', true)->orWhere('id', $lead->partner_code_id))
+                    : $query->where('is_active', true);
+            })],
             // An open follow-up status is a promise to talk again, so it has to carry a date.
             'follow_up_at' => ['nullable', Rule::requiredIf(
                 fn (): bool => in_array((string) $request->input('status'), CrmOptions::FOLLOW_UP_STATUSES, true)
@@ -596,7 +609,17 @@ class CrmLeadController extends Controller
 
         $labels = self::FIELD_LABELS;
 
-        $format = function (string $field, $value) use ($userNames): string {
+        // And the referral company behind a Partner code change, the same way.
+        $codeNames = [];
+        if (in_array('partner_code_id', $fields, true)) {
+            $codeIds = array_filter([$before['partner_code_id'] ?? null, $changes['partner_code_id'] ?? null]);
+            $codeNames = $codeIds === []
+                ? []
+                : \App\Models\CrmPartnerCode::query()->whereKey($codeIds)->get()
+                    ->mapWithKeys(fn ($code) => [$code->id => $code->label()])->all();
+        }
+
+        $format = function (string $field, $value) use ($userNames, $codeNames): string {
             if ($value === null || $value === '') {
                 return '';
             }
@@ -611,6 +634,7 @@ class CrmLeadController extends Controller
                 'aptitude_tests' => CrmOptions::describeTests($value, CrmOptions::APTITUDE_TESTS),
                 'assigned_to' => $userNames[$value] ?? 'counsellor #'.$value,
                 'partner_id' => $userNames[$value] ?? 'partner #'.$value,
+                'partner_code_id' => $codeNames[$value] ?? 'partner code #'.$value,
                 'follow_up_at' => \Illuminate\Support\Carbon::parse($value)->format('d M Y, g:i A'),
                 'phone' => '+91 '.$value,
                 default => (string) $value,
