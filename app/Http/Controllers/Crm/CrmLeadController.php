@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Crm;
 use App\Http\Controllers\Controller;
 use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
+use App\Models\CrmPartnerCode;
 use App\Models\CrmUser;
 use App\Services\CrmAuditLogger;
 use App\Support\CrmOptions;
@@ -463,7 +464,39 @@ class CrmLeadController extends Controller
             ? Validator::make($request->all(), $rules, $messages)->validateWithBag($errorBag)
             : $request->validate($rules, $messages);
 
-        return $this->normaliseTestRows($request, $this->defaultFollowUpStatus($data, $lead));
+        return $this->partnerCodeFromPartner($this->normaliseTestRows($request, $this->defaultFollowUpStatus($data, $lead)), $lead);
+    }
+
+    /**
+     * The Partner code follows the Partner name.
+     *
+     * Since partner accounts and codes were merged they are one company, so the
+     * lead form shows the code rather than asking for it. Deriving it here as
+     * well as in the form is the point: the form's value is a convenience for
+     * the person looking at it, and this is what actually decides. Any save that
+     * names a partner — from the drawer, the Add lead modal, or anything that
+     * posts to these endpoints later — lands the two in step.
+     *
+     * Two cases deliberately keep the code the lead already has rather than
+     * clearing it, because where a lead came from is a record and not a
+     * preference: naming a partner who has no link of their own, and clearing
+     * the Partner name on a lead that arrived through a link.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function partnerCodeFromPartner(array $data, ?CrmLead $lead): array
+    {
+        // Absent for a partner, whose own saves may touch neither field.
+        if (! array_key_exists('partner_id', $data)) {
+            return $data;
+        }
+
+        $data['partner_code_id'] = $data['partner_id']
+            ? (CrmPartnerCode::query()->where('crm_user_id', $data['partner_id'])->value('id') ?: $lead?->partner_code_id)
+            : $lead?->partner_code_id;
+
+        return $data;
     }
 
     /**

@@ -581,6 +581,71 @@ class CrmPartnerCodeTest extends TestCase
         $this->assertNull($lead->partner_id);
     }
 
+    /**
+     * The code follows the name on the server, not only in the form. The form
+     * posts what it shows, so these saves deliberately post the WRONG code (or
+     * none) to prove the browser is not what decides.
+     */
+    public function test_naming_a_partner_sets_their_code_whatever_the_form_posted(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner, $code] = $this->partnerWithCode($session);
+        $other = $this->partnerCode('Other Referrals', 'OTHER');
+
+        $lead = CrmLead::query()->create([
+            'lead_number' => 'OD-10001', 'name' => 'Referred Student', 'phone' => '9998887771',
+            'priority' => 'medium', 'status' => 'new',
+        ]);
+        $base = ['name' => 'Referred Student', 'phone' => '9998887771', 'priority' => 'medium', 'status' => 'new'];
+
+        // Naming the partner sets their code even though another was posted.
+        $this->withSession($session)->put(route('crm.leads.update', $lead), [
+            ...$base, 'partner_id' => $partner->id, 'partner_code_id' => $other->id,
+        ])->assertSessionHasNoErrors();
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+
+        // And with none posted at all.
+        $lead->update(['partner_id' => null, 'partner_code_id' => null]);
+        $this->withSession($session)->put(route('crm.leads.update', $lead), [
+            ...$base, 'partner_id' => $partner->id,
+        ])->assertSessionHasNoErrors();
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+
+        // Clearing the name keeps where the lead actually came from.
+        $this->withSession($session)->put(route('crm.leads.update', $lead), [...$base, 'partner_id' => ''])
+            ->assertSessionHasNoErrors();
+        $this->assertNull($lead->fresh()->partner_id);
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+
+        // A partner with no link of their own leaves the captured code alone.
+        $codeless = CrmUser::query()->create([
+            'name' => 'Codeless Partner', 'phone' => '9876543240', 'email' => 'codeless@mailbox.test',
+            'role' => 'partner', 'partner_access' => 'read', 'is_active' => true,
+        ]);
+        $this->withSession($session)->put(route('crm.leads.update', $lead), [...$base, 'partner_id' => $codeless->id])
+            ->assertSessionHasNoErrors();
+        $this->assertSame($codeless->id, $lead->fresh()->partner_id);
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+    }
+
+    /** A brand-new lead created with a partner named carries their code too. */
+    public function test_creating_a_lead_with_a_partner_named_carries_their_code(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner, $code] = $this->partnerWithCode($session);
+
+        $this->withSession($session)->post(route('crm.leads.store'), [
+            'name' => 'Walk In', 'phone' => '9998887779', 'priority' => 'medium', 'status' => 'new',
+            'partner_id' => $partner->id,
+        ])->assertSessionHasNoErrors();
+
+        $lead = CrmLead::query()->where('phone', '9998887779')->sole();
+        $this->assertSame($partner->id, $lead->partner_id);
+        $this->assertSame($code->id, $lead->partner_code_id);
+    }
+
     /* ─────────────────── the lead's own field ─────────────────── */
 
     /**
