@@ -33,9 +33,12 @@ class CrmPartnerRoleTest extends TestCase
         $admin = $this->admin();
         $counsellor = $this->counsellor('Asha', '9876543211');
 
+        // A partner is created in full: the login and the referral company behind
+        // it are one act on one form (see CrmPartnerCodeTest for the code half).
         $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.team.store'), [
             'name' => 'Bright Futures', 'phone' => '9876543220', 'email' => 'partner@mailbox.test',
             'role' => 'partner', 'partner_access' => 'read',
+            'company_name' => 'Bright Futures', 'code' => 'BRIGHT',
         ])->assertSessionHasNoErrors();
 
         $partner = CrmUser::query()->where('email', 'partner@mailbox.test')->firstOrFail();

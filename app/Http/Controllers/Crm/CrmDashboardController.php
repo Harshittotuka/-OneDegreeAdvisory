@@ -179,9 +179,13 @@ class CrmDashboardController extends Controller
         }
 
         // Partner codes — the referral companies whose code travels in a public
-        // link. Super admin only, like the Team screen that creates the partner
-        // accounts: a code decides which outside address gets a student's enquiry.
-        $partnerCodeQuery = CrmPartnerCode::query()->withCount('leads')->orderByDesc('is_active')->orderBy('company_name');
+        // link. Super admin only, like the Team screen that creates them: a code
+        // decides which outside address gets a student's enquiry.
+        //
+        // The account is loaded with each code because the tab shows both halves
+        // of a partner on one row — the company and the login that goes with it.
+        $partnerCodeQuery = CrmPartnerCode::query()->with('account')->withCount('leads')
+            ->orderByDesc('is_active')->orderBy('company_name');
         if (! $user->isSuperAdmin()) {
             $partnerCodeQuery->whereRaw('1 = 0');
         } elseif ($partnerCodeSearch = trim((string) $request->query('partner_code_search'))) {
@@ -189,7 +193,10 @@ class CrmDashboardController extends Controller
                 ->where('company_name', 'like', "%{$partnerCodeSearch}%")
                 ->orWhere('code', 'like', "%{$partnerCodeSearch}%")
                 ->orWhere('email', 'like', "%{$partnerCodeSearch}%")
-                ->orWhere('contact_name', 'like', "%{$partnerCodeSearch}%"));
+                ->orWhere('contact_name', 'like', "%{$partnerCodeSearch}%")
+                // A partner is looked for by the person as readily as by the
+                // company, and since the merge the tab knows both.
+                ->orWhereHas('account', fn (Builder $account) => $account->where('name', 'like', "%{$partnerCodeSearch}%")));
         }
 
         $subscriberQuery = CrmSubscriber::query()->latest('subscribed_at');
@@ -215,8 +222,13 @@ class CrmDashboardController extends Controller
                 ->orWhere('recipient_phone', 'like', "%{$inviteSearch}%"));
         }
 
+        // partnerCode comes along because the Team screen edits a partner's
+        // company and code in the same form as their account, and shows how many
+        // leads its link has brought in — counted here rather than in the view.
         $team = $user->isSuperAdmin()
-            ? CrmUser::query()->withCount('partnerLeads')->orderByDesc('is_active')->orderBy('name')->get()
+            ? CrmUser::query()
+                ->with(['partnerCode' => fn ($query) => $query->withCount('leads')])
+                ->withCount('partnerLeads')->orderByDesc('is_active')->orderBy('name')->get()
             : collect();
 
         $selectedLead = null;
@@ -326,7 +338,10 @@ class CrmDashboardController extends Controller
             return collect();
         }
 
+        // With their code, because the lead form no longer asks for one: picking
+        // the partner is what sets it, so each option has to carry it.
         return CrmUser::query()
+            ->with('partnerCode')
             ->where('role', 'partner')
             ->where(fn (Builder $offered) => $offered
                 ->where('is_active', true)

@@ -406,14 +406,27 @@ class CrmLeadController extends Controller
                     : $query->where('is_active', true);
             })],
             // "Partner code": which referral company's code was on the URL when
-            // this lead arrived. Filled in automatically on capture; the team can
-            // correct it, a partner never touches it. Active codes are offered,
-            // plus one a lead already carries, so a paused code is never silently
-            // dropped by re-saving the lead that holds it.
-            'partner_code_id' => [$user->isPartner() ? 'prohibited' : 'nullable', Rule::exists('crm_partner_codes', 'id')->where(function ($query) use ($lead): void {
-                $lead?->partner_code_id
-                    ? $query->where(fn ($allowed) => $allowed->where('is_active', true)->orWhere('id', $lead->partner_code_id))
-                    : $query->where('is_active', true);
+            // this lead arrived. Filled in automatically on capture, and since
+            // partner accounts and codes were merged it follows the Partner name
+            // above rather than being picked: the form posts it as a hidden value
+            // and a partner never touches it.
+            //
+            // Three codes are acceptable, and the last two are what stop a valid
+            // save from being refused: any active one, the one this lead already
+            // carries (so a paused code is not dropped by re-saving), and the one
+            // belonging to the partner being named (so naming a partner whose
+            // link is paused brings their code with it).
+            'partner_code_id' => [$user->isPartner() ? 'prohibited' : 'nullable', Rule::exists('crm_partner_codes', 'id')->where(function ($query) use ($lead, $request): void {
+                $namedPartner = $request->input('partner_id');
+                $query->where(function ($allowed) use ($lead, $namedPartner): void {
+                    $allowed->where('is_active', true);
+                    if ($lead?->partner_code_id) {
+                        $allowed->orWhere('id', $lead->partner_code_id);
+                    }
+                    if ($namedPartner) {
+                        $allowed->orWhere('crm_user_id', $namedPartner);
+                    }
+                });
             })],
             // An open follow-up status is a promise to talk again, so it has to carry a date.
             'follow_up_at' => ['nullable', Rule::requiredIf(

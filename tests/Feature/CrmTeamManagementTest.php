@@ -91,6 +91,8 @@ class CrmTeamManagementTest extends TestCase
             ->assertSee('Create account')
             ->assertSee('data-team-role-select', false)
             ->assertSee('data-partner-access-field', false)
+            // The company fields are in the form, waiting on the Partner role.
+            ->assertSee('data-partner-fields', false)
             ->assertSee('All accounts')
             // The grid steps aside while the form is open.
             ->assertDontSee('class="team-cards"', false);
@@ -370,15 +372,17 @@ class CrmTeamManagementTest extends TestCase
         $admin = $this->admin();
         $session = ['crm_user_id' => $admin->id];
 
+        // The partner row carries a company and a code: that role creates both
+        // halves of a partner at once, and the company fields ride with it.
         foreach ([
-            ['Asha Menon', '9876543211', 'counsellor', null],
-            ['Second Admin', '9876543219', 'super_admin', null],
-            ['Bright Futures', '9876543220', 'partner', 'read'],
-        ] as [$name, $phone, $role, $access]) {
+            ['Asha Menon', '9876543211', 'counsellor', null, []],
+            ['Second Admin', '9876543219', 'super_admin', null, []],
+            ['Bright Futures', '9876543220', 'partner', 'read', ['company_name' => 'Bright Futures', 'code' => 'BRIGHT']],
+        ] as [$name, $phone, $role, $access, $company]) {
             $this->withSession($session)->post(route('crm.team.store'), array_filter([
                 'name' => $name, 'phone' => $phone,
                 'email' => str_replace(' ', '-', strtolower($name)).'@mailbox.test',
-                'role' => $role, 'partner_access' => $access,
+                'role' => $role, 'partner_access' => $access, ...$company,
             ]))->assertSessionHasNoErrors();
         }
 

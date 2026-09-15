@@ -1,5 +1,12 @@
 {{-- Team management: a sidebar list beside a main frame with three states.
 
+     Also where a partner is created in full. A partner is two records — the
+     login here and the referral company plus tracking code on the Partner codes
+     tab — and they used to be entered on two screens, so the same company was
+     added twice under two spellings. The company fields now ride along with the
+     Partner role on this one form, and the Partner codes tab links here to add
+     one (?add=1&role=partner) instead of carrying a create form of its own.
+
      The card grid this replaces made every account a small box holding four
      separate forms — details behind a disclosure, role behind an icon, partner
      access behind its own Apply button, disable and delete behind two more —
@@ -40,6 +47,9 @@
     $chipUrl = fn (string $slug): string => request()->fullUrlWithQuery([
         'view' => 'team', 'role' => $slug === 'all' ? null : $slug, 'member' => null, 'add' => null,
     ]);
+    // The Partner codes tab links here with ?role=partner, so the form opens on
+    // the role that was asked for and its company fields are already showing.
+    $newRole = old('role', $roleFilter === 'partner' ? 'partner' : 'counsellor');
     $chips = [
         'all' => ['All', $team->count()],
         'super-admin' => ['Admins', $superAdmins->count()],
@@ -92,21 +102,19 @@
                     <header class="team-detail-head">
                         <span class="avatar is-new" aria-hidden="true">＋</span>
                         <div class="team-detail-id">
-                            <h3>Add a team member</h3>
+                            <h3>{{ $newRole === 'partner' ? 'Add a partner' : 'Add a team member' }}</h3>
                             <p><span class="team-detail-state">They sign in with the mobile number or email you enter here — no password.</span></p>
                         </div>
                     </header>
                     <form class="team-detail-form" method="post" action="{{ route('crm.team.store') }}">@csrf
                         <div class="form-grid">
-                            <div class="field"><label for="new_name">Full name</label><input id="new_name" name="name" value="{{ old('name') }}" required></div>
-                            <div class="field"><label for="new_phone">Mobile number</label><input id="new_phone" name="phone" value="{{ old('phone') }}" inputmode="tel" placeholder="98765 43210" required></div>
-                            <div class="field full"><label for="new_email">Email address</label><input id="new_email" type="email" name="email" value="{{ old('email') }}" placeholder="name@domain.com" required></div>
+                            @include('crm.partials.partner-fields', ['prefix' => 'new', 'parts' => ['identity']])
                             <div class="field full">
                                 <label for="new_role">Access level</label>
                                 <select id="new_role" name="role" data-team-role-select required>
-                                    <option value="counsellor" @selected(old('role') === 'counsellor')>Counsellor</option>
-                                    <option value="super_admin" @selected(old('role') === 'super_admin')>Super admin</option>
-                                    <option value="partner" @selected(old('role') === 'partner')>Partner</option>
+                                    <option value="counsellor" @selected($newRole === 'counsellor')>Counsellor</option>
+                                    <option value="super_admin" @selected($newRole === 'super_admin')>Super admin</option>
+                                    <option value="partner" @selected($newRole === 'partner')>Partner</option>
                                 </select>
                                 <div class="team-role-guide">
                                     <span class="is-counsellor"><b>Counsellor</b><small>Works only the leads assigned to them</small></span>
@@ -114,17 +122,14 @@
                                     <span class="is-partner"><b>Partner</b><small>Sees only the students whose Partner field names them</small></span>
                                 </div>
                             </div>
-                            {{-- Only meaningful on a partner, so it appears with the role.
-                                 The server excludes it for any other role rather than
-                                 trusting this to be right (CrmUserController::store). --}}
-                            <div class="field full" data-partner-access-field @unless(old('role') === 'partner') hidden @endunless>
-                                <label for="new_access">Partner access</label>
-                                <select id="new_access" name="partner_access">
-                                    <option value="read" @selected(old('partner_access') === 'read')>Read only — can follow their students</option>
-                                    <option value="edit" @selected(old('partner_access') === 'edit')>Read and edit — can also update their students</option>
-                                </select>
-                                <span class="field-note">Either way they can never change the Partner field, enrol a student or see the payment log.</span>
-                            </div>
+                            @include('crm.partials.partner-fields', [
+                                'prefix' => 'new',
+                                'parts' => ['access', 'company'],
+                                // Folded away until the role says partner; crm.js
+                                // opens them, and takes the required marks with it.
+                                'hidden' => $newRole !== 'partner',
+                                'companyLead' => 'The code becomes their tracking link — '.e(url('/profiler')).'?partner=CODE. Every profiler submitted through it is emailed to them as well as to us, and the lead is recorded against them. Nothing is emailed to them when you add them — the first notice they get is a real referral.',
+                            ])
                         </div>
                         <div class="team-detail-save">
                             <button class="btn btn-primary" type="submit">Create account</button>
@@ -146,8 +151,8 @@
                         @endforeach
                         <a class="team-card is-add" href="{{ $addUrl }}">
                             <span class="team-card-add-mark" aria-hidden="true">＋</span>
-                            <span class="team-card-name">Add a team member</span>
-                            <span class="team-card-contact">Counsellor, super admin or referral partner</span>
+                            <span class="team-card-name">{{ $roleFilter === 'partner' ? 'Add a partner' : 'Add a team member' }}</span>
+                            <span class="team-card-contact">{{ $roleFilter === 'partner' ? 'Their login, company and tracking link together' : 'Counsellor, super admin or referral partner' }}</span>
                         </a>
                     </div>
                     <p class="team-no-results" data-team-no-results @unless($shown->isEmpty()) hidden @endunless>No account matches this filter.</p>

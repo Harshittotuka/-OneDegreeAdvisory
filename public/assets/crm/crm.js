@@ -1148,12 +1148,33 @@ document.addEventListener('DOMContentLoaded', () => {
         // bar and are tied to it with form="…" — the rows-per-page select above
         // each list. They are not descendants, so the two selectors above miss them.
         if (input.matches('[data-crm-filter-form] select, [data-crm-filter-form] input[type="date"], [data-crm-filter-control]')) input.form?.requestSubmit();
-        // The partner read / edit choice only exists for a partner account, so the
-        // field on the create form appears with the role and is cleared away with
-        // it. The server excludes the value for any other role regardless.
+        // The read / edit choice and the referral company (name, code, website)
+        // only exist for a partner account, so they appear with the role on the
+        // create form and are cleared away with it. The server excludes their
+        // values for any other role regardless.
         if (input.matches('[data-team-role-select]')) {
-            const accessField = input.form?.querySelector('[data-partner-access-field]');
-            if (accessField) accessField.hidden = input.value !== 'partner';
+            const isPartner = input.value === 'partner';
+            input.form?.querySelectorAll('[data-partner-access-field], [data-partner-fields]')
+                .forEach((field) => { field.hidden = !isPartner; });
+            // A hidden required field blocks the submit with a message the browser
+            // cannot show anywhere, so the requirement comes and goes with the
+            // fields themselves rather than sitting in the markup.
+            input.form?.querySelectorAll('[data-partner-required]')
+                .forEach((field) => { field.required = isPartner; });
+        }
+        // The Partner code on a lead is not chosen: it belongs to the partner
+        // named beside it. Clearing the partner restores the code the lead was
+        // captured with, so correcting a name never loses where it came from.
+        if (input.matches('[data-partner-select]')) {
+            const display = input.form?.querySelector('[data-partner-code-display]');
+            const hidden = input.form?.querySelector('[data-partner-code-input]');
+            if (display && hidden) {
+                const picked = input.value ? input.selectedOptions[0]?.dataset : null;
+                const id = (picked ? picked.codeId : hidden.dataset.capturedId) || '';
+                const label = (picked ? picked.codeLabel : hidden.dataset.capturedLabel) || '';
+                hidden.value = id;
+                display.value = label || 'No partner code';
+            }
         }
         if (input.matches('[data-test-select]')) syncTestRow(input);
         if (input.matches('[data-paid-values]')) syncEnrollmentRequirements(input);

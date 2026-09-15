@@ -6,10 +6,14 @@ use App\Support\CrmOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CrmUser extends Model
 {
     protected $fillable = ['name', 'phone', 'email', 'role', 'partner_access', 'is_active', 'created_by', 'last_login_at'];
+
+    /** The fields an audit entry records a before and after for. */
+    public const TRACKED_FIELDS = ['name', 'phone', 'email', 'role', 'partner_access'];
 
     protected function casts(): array
     {
@@ -30,6 +34,48 @@ class CrmUser extends Model
     public function partnerLeads(): HasMany
     {
         return $this->hasMany(CrmLead::class, 'partner_id');
+    }
+
+    /**
+     * The company and tracking code this partner account was created with.
+     *
+     * One at most (the column is unique), and only ever on a partner. Null on an
+     * account created before the two halves were joined — the Team screen offers
+     * to fill it in on the next save.
+     */
+    public function partnerCode(): HasOne
+    {
+        return $this->hasOne(CrmPartnerCode::class, 'crm_user_id');
+    }
+
+    /**
+     * The one shape a mobile number is stored and compared in: the last ten
+     * digits. Both screens that edit a partner reach for this, so it lives on
+     * the model rather than privately in whichever controller needed it first.
+     */
+    public static function normalisePhone(string $phone): string
+    {
+        return substr((string) preg_replace('/\D+/', '', $phone), -10);
+    }
+
+    /**
+     * This account as an audit-log subject.
+     *
+     * A partner's account is written from the Team screen and from the Partner
+     * codes tab, so the subject is stated once rather than spelled out at each
+     * call and left to drift between them.
+     *
+     * @param  array<string, mixed>  $changes
+     * @return array<string, mixed>
+     */
+    public function auditSubject(array $changes = []): array
+    {
+        return [
+            'subject_type' => 'team_member',
+            'subject_id' => $this->id,
+            'subject_label' => $this->name,
+            'changes' => $changes,
+        ];
     }
 
     public function isSuperAdmin(): bool

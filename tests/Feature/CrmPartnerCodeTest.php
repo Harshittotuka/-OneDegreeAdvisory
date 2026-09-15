@@ -21,6 +21,10 @@ use Tests\TestCase;
  * here: only a super admin issues a code, a submission through /profiler?partner=
  * is credited to that company and emails them alongside us, and a code that was
  * never issued (or has been paused) changes nothing at all about the capture.
+ *
+ * A code is no longer issued on its own screen. Creating a partner on the Team
+ * screen makes the account and the code together, and the tests below that name
+ * crm.team.store are testing exactly that join.
  */
 class CrmPartnerCodeTest extends TestCase
 {
@@ -34,36 +38,277 @@ class CrmPartnerCodeTest extends TestCase
 
     /* ───────────────────────── the CRM tab ───────────────────────── */
 
-    public function test_a_super_admin_creates_a_partner_code(): void
+    public function test_creating_a_partner_creates_the_account_and_the_code_together(): void
     {
         $admin = $this->admin();
 
-        $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.partner-codes.store'), [
+        $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.team.store'), [
+            'name' => 'Rhea Nair',
+            'phone' => '+91 98765 43230',
+            'email' => 'referrals@acme-education.test',
+            'role' => 'partner',
+            'partner_access' => 'read',
             'company_name' => 'Acme Education',
             'code' => 'acme10',
-            'email' => 'referrals@acme-education.test',
-            'phone' => '+91 98765 43210',
-            'contact_name' => 'Rhea Nair',
             'company_link' => 'https://acme-education.test',
-        ])->assertSessionHasNoErrors();
+        ])->assertSessionHasNoErrors()
+            // Straight to the tab holding the link, because the link is the point.
+            ->assertRedirect(route('crm.dashboard', ['view' => 'partner-codes']));
 
+        $account = CrmUser::query()->where('email', 'referrals@acme-education.test')->sole();
         $code = CrmPartnerCode::query()->sole();
+
+        // One company, one record each side, joined.
+        $this->assertSame($account->id, $code->crm_user_id);
+        $this->assertTrue($account->isPartner());
+
         // Stored in capitals, which is what makes the link case-insensitive.
         $this->assertSame('ACME10', $code->code);
         $this->assertSame('Acme Education', $code->company_name);
-        $this->assertSame('referrals@acme-education.test', $code->email);
-        $this->assertSame('Rhea Nair', $code->contact_name);
         $this->assertSame('https://acme-education.test', $code->company_link);
         $this->assertTrue($code->is_active);
         $this->assertSame($admin->id, $code->created_by);
 
-        // The issuing is recorded in the audit log like any other admin action.
+        // The contact details are not asked for twice: referral notices go to the
+        // address the partner signs in with.
+        $this->assertSame('referrals@acme-education.test', $code->email);
+        $this->assertSame('Rhea Nair', $code->contact_name);
+        $this->assertSame('9876543230', $code->phone);
+
+        // Both halves are recorded in the audit log, like any other admin action.
+        $this->assertDatabaseHas('crm_audit_logs', ['event' => 'team_member_created', 'subject_id' => $account->id]);
         $this->assertDatabaseHas('crm_audit_logs', [
             'event' => 'partner_code_created',
             'subject_type' => 'partner_code',
             'subject_id' => $code->id,
         ]);
     }
+
+    /**
+     * The merge, from the side the person sees: a partner is created once, and
+     * both screens then show both halves of them.
+     */
+    public function test_the_tab_lists_partners_and_sends_adding_one_to_the_team_form(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+
+        $this->withSession($session)->post(route('crm.team.store'), [
+            'name' => 'Rhea Nair', 'phone' => '9876543220', 'email' => 'rhea@acme-education.test',
+            'role' => 'partner', 'partner_access' => 'edit',
+            'company_name' => 'Acme Education', 'code' => 'ACME10',
+        ])->assertSessionHasNoErrors();
+
+        // The tab carries no create form of its own — only the way to the one form.
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'partner-codes']))
+            ->assertOk()
+            ->assertSee('Add new partner')
+            ->assertSee(e(route('crm.dashboard', ['view' => 'team', 'add' => 1, 'role' => 'partner'])), false)
+            ->assertDontSee('Add partner code')
+            // And each row says who signs in for the company.
+            ->assertSee('Signs in as Rhea Nair')
+            ->assertSee('Read and edit');
+
+        // The account's own pane holds the company, the code and the link.
+        $partner = CrmUser::query()->where('role', 'partner')->sole();
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'team', 'member' => $partner->id]))
+            ->assertOk()
+            ->assertSee('Referral company')
+            ->assertSee('name="company_name"', false)
+            ->assertSee('value="ACME10"', false)
+            ->assertSee(route('profiler', ['partner' => 'ACME10']), false);
+
+        // And the Team form arrives on the partner role when the tab sent it there.
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'team', 'add' => 1, 'role' => 'partner']))
+            ->assertOk()
+            ->assertSee('Add a partner')
+            ->assertSee('data-partner-fields', false)
+            ->assertSee('value="partner" selected', false);
+    }
+
+    /**
+     * The merge, from the side that bit first: a partner has one set of fields,
+     * and both screens that edit them save the same two records. A form that
+     * showed a partner's details and wrote back only half of them was the split
+     * this feature set out to close.
+     */
+    public function test_both_partner_forms_carry_the_same_fields(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner, $code] = $this->partnerWithCode($session);
+
+        $forms = [
+            // Creating one, on the Team screen.
+            $this->withSession($session)
+                ->get(route('crm.dashboard', ['view' => 'team', 'add' => 1, 'role' => 'partner']))->assertOk(),
+            // That partner's own pane, which is where the Partner codes tab sends
+            // you to edit one.
+            $this->withSession($session)
+                ->get(route('crm.dashboard', ['view' => 'team', 'member' => $partner->id]))->assertOk(),
+        ];
+
+        // Same inputs, same labels, on all three — they come from one partial.
+        foreach ($forms as $form) {
+            foreach (['name', 'phone', 'email', 'partner_access', 'company_name', 'code', 'company_link'] as $field) {
+                $form->assertSee('name="'.$field.'"', false);
+            }
+            foreach (['Full name', 'Mobile number', 'Email address', 'Partner access', 'Referral company', 'Company name', 'Custom code', 'Company link'] as $label) {
+                $form->assertSee($label);
+            }
+        }
+    }
+
+    public function test_saving_from_the_team_screen_carries_the_company_with_it(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner] = $this->partnerWithCode($session);
+
+        $this->withSession($session)->patch(route('crm.team.update', $partner), [
+            'name' => 'Rhea N Nair', 'phone' => '9876543221', 'email' => 'hello@acme-education.test',
+            'role' => 'partner', 'partner_access' => 'read',
+            'company_name' => 'Acme Education Pvt Ltd', 'code' => 'ACME10',
+        ])->assertSessionHasNoErrors();
+
+        // The address a partner signs in with is the address their referrals go
+        // to, so moving one moves the other.
+        $code = CrmPartnerCode::query()->sole();
+        $this->assertSame('hello@acme-education.test', $code->email);
+        $this->assertSame('Rhea N Nair', $code->contact_name);
+        $this->assertSame('9876543221', $code->phone);
+        $this->assertSame('Acme Education Pvt Ltd', $code->company_name);
+    }
+
+    public function test_the_tab_sends_editing_to_the_partner_and_offers_no_form_of_its_own(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner, $code] = $this->partnerWithCode($session);
+
+        // Edit is a link to the partner, not a second form over the same fields.
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'partner-codes']))
+            ->assertOk()
+            ->assertSee(e(route('crm.dashboard', ['view' => 'team', 'role' => 'partner', 'member' => $partner->id])), false)
+            ->assertDontSee('name="company_name"', false)
+            ->assertDontSee('Editing');
+
+        // ?edit= was that form's state and means nothing now: the row is a row.
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'partner-codes', 'edit' => $code->id]))
+            ->assertOk()
+            ->assertDontSee('name="company_name"', false);
+
+        // And the tab can no longer write a partner at all.
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('crm.partner-codes.update'));
+    }
+
+
+
+    /**
+     * The Team screen carries the link's state and its controls, not just a copy
+     * box: a paused link is otherwise invisible from the screen a partner is
+     * managed on, and pausing meant leaving for another tab.
+     */
+    public function test_the_team_screen_shows_the_link_state_and_can_pause_it(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner, $code] = $this->partnerWithCode($session);
+
+        $memberUrl = route('crm.dashboard', ['view' => 'team', 'member' => $partner->id]);
+
+        $this->withSession($session)->get($memberUrl)->assertOk()
+            ->assertSee('Live')
+            ->assertSee('Pause their link')
+            ->assertSee('Remove their link')
+            ->assertSee(route('crm.partner-codes.toggle', $code), false)
+            ->assertSee(route('crm.partner-codes.destroy', $code), false);
+
+        // The list says so too, so it is visible without opening anyone.
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'team']))->assertOk()
+            ->assertSee('ACME10')
+            ->assertSee('Live')
+            ->assertDontSee('Link off');
+
+        // Pausing from here is the same endpoint the Partner codes tab posts to.
+        $this->withSession($session)->patch(route('crm.partner-codes.toggle', $code))->assertSessionHasNoErrors();
+        $this->assertFalse($code->fresh()->is_active);
+
+        $this->withSession($session)->get($memberUrl)->assertOk()
+            ->assertSee('Resume their link')
+            ->assertSee('recorded without a partner');
+
+        // And the two off-states are told apart in the list: the login still works.
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'team']))->assertOk()
+            ->assertSee('Link off')
+            ->assertSee('Active');
+
+        // Removing the link leaves the account standing.
+        $this->withSession($session)->delete(route('crm.partner-codes.destroy', $code))->assertSessionHasNoErrors();
+        $this->assertSame(0, CrmPartnerCode::query()->count());
+        $this->assertTrue($partner->fresh()->is_active);
+        $this->withSession($session)->get($memberUrl)->assertOk()->assertSee('no tracking link yet');
+    }
+
+    public function test_deleting_a_partner_account_pauses_the_link_rather_than_losing_it(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+
+        $this->withSession($session)->post(route('crm.team.store'), [
+            'name' => 'Rhea Nair', 'phone' => '9876543220', 'email' => 'rhea@acme-education.test',
+            'role' => 'partner', 'partner_access' => 'read',
+            'company_name' => 'Acme Education', 'code' => 'ACME10',
+        ])->assertSessionHasNoErrors();
+
+        $partner = CrmUser::query()->where('role', 'partner')->sole();
+        $code = CrmPartnerCode::query()->sole();
+        $lead = CrmLead::query()->create([
+            'lead_number' => 'OD-10001', 'name' => 'Referred Student', 'phone' => '9998887771',
+            'priority' => 'medium', 'status' => 'new', 'partner_code_id' => $code->id,
+        ]);
+
+        $this->withSession($session)->delete(route('crm.team.destroy', $partner))->assertSessionHasNoErrors();
+
+        // The company record outlives the login, so the lead keeps its attribution,
+        // but the link stops crediting and stops emailing a partner we have dropped.
+        $code->refresh();
+        $this->assertFalse($code->is_active);
+        $this->assertNull($code->crm_user_id);
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+        $this->assertNull(CrmPartnerCode::resolve('ACME10'));
+    }
+
+    /**
+     * A code whose account is gone keeps the leads it referred. It is listed and
+     * can be paused or removed, but there is nothing left to edit about it: the
+     * fields belonged to a partner who no longer exists.
+     */
+    public function test_an_orphaned_code_keeps_its_leads_and_can_still_be_removed(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        $code = $this->partnerCode('Legacy Referrals', 'LEGACY');
+        $lead = CrmLead::query()->create([
+            'lead_number' => 'OD-10001', 'name' => 'Referred Student', 'phone' => '9998887771',
+            'priority' => 'medium', 'status' => 'new', 'partner_code_id' => $code->id,
+        ]);
+
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'partner-codes']))
+            ->assertOk()
+            ->assertSee('LEGACY')
+            ->assertSee('No workspace account')
+            ->assertSee('1 lead')
+            ->assertSee(route('crm.partner-codes.toggle', $code), false);
+
+        $this->withSession($session)->patch(route('crm.partner-codes.toggle', $code))->assertSessionHasNoErrors();
+        $this->assertFalse($code->fresh()->is_active);
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+
+        $this->withSession($session)->delete(route('crm.partner-codes.destroy', $code))->assertSessionHasNoErrors();
+        $this->assertNull($lead->fresh()->partner_code_id);
+    }
+
 
     public function test_only_a_super_admin_reaches_the_partner_codes_tab(): void
     {
@@ -80,8 +325,11 @@ class CrmPartnerCodeTest extends TestCase
             ->get(route('crm.dashboard', ['view' => 'partner-codes']))
             ->assertForbidden();
 
-        $this->withSession(['crm_user_id' => $counsellor->id])->post(route('crm.partner-codes.store'), [
-            'company_name' => 'Sneaky Referrals', 'code' => 'SNEAK', 'email' => 'hi@sneaky.test',
+        // And cannot reach the one place a partner is created from either.
+        $this->withSession(['crm_user_id' => $counsellor->id])->post(route('crm.team.store'), [
+            'name' => 'Sneaky Contact', 'phone' => '9876543212', 'email' => 'hi@sneaky.test',
+            'role' => 'partner', 'partner_access' => 'read',
+            'company_name' => 'Sneaky Referrals', 'code' => 'SNEAK',
         ])->assertForbidden();
 
         $this->assertDatabaseCount('crm_partner_codes', 0);
@@ -105,12 +353,11 @@ class CrmPartnerCodeTest extends TestCase
             ->assertSee(route('profiler', ['partner' => 'ACME10']), false)
             ->assertSee('1 lead');
 
-        // ?edit= opens that row's fields in place, filled in.
+        // Adding one goes to the Team screen, which holds the whole partner.
         $this->withSession(['crm_user_id' => $admin->id])
-            ->get(route('crm.dashboard', ['view' => 'partner-codes', 'edit' => $code->id]))
+            ->get(route('crm.dashboard', ['view' => 'partner-codes']))
             ->assertOk()
-            ->assertSee('Editing Acme Education')
-            ->assertSee('name="company_name"', false);
+            ->assertSee(e(route('crm.dashboard', ['view' => 'team', 'add' => 1, 'role' => 'partner'])), false);
     }
 
     public function test_a_code_is_unique_however_it_is_typed(): void
@@ -118,16 +365,29 @@ class CrmPartnerCodeTest extends TestCase
         $admin = $this->admin();
         $this->partnerCode('Acme Education', 'ACME10');
 
-        $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.partner-codes.store'), [
-            'company_name' => 'Other Company', 'code' => 'acme10', 'email' => 'hi@other.test',
-        ])->assertSessionHasErrors('code');
+        $base = [
+            'name' => 'Other Contact', 'phone' => '9876543220', 'email' => 'hi@other.test',
+            'role' => 'partner', 'partner_access' => 'read', 'company_name' => 'Other Company',
+        ];
+
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->post(route('crm.team.store'), [...$base, 'code' => 'acme10'])
+            ->assertSessionHasErrors('code');
 
         // And a code has to survive being put in a URL.
-        $this->withSession(['crm_user_id' => $admin->id])->post(route('crm.partner-codes.store'), [
-            'company_name' => 'Other Company', 'code' => 'not a code!', 'email' => 'hi@other.test',
-        ])->assertSessionHasErrors('code');
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->post(route('crm.team.store'), [...$base, 'code' => 'not a code!'])
+            ->assertSessionHasErrors('code');
+
+        // A partner without one is refused outright — a partner with no link is
+        // a partner nothing can be credited to.
+        $this->withSession(['crm_user_id' => $admin->id])
+            ->post(route('crm.team.store'), $base)
+            ->assertSessionHasErrors('code');
 
         $this->assertSame(1, CrmPartnerCode::query()->count());
+        // None of the three refusals left an account behind either.
+        $this->assertDatabaseMissing('crm_users', ['email' => 'hi@other.test']);
     }
 
     public function test_pausing_a_code_keeps_the_leads_it_already_brought_in(): void
@@ -275,6 +535,49 @@ class CrmPartnerCodeTest extends TestCase
 
     /* ─────────────────── the lead's own field ─────────────────── */
 
+    /**
+     * A partner and their code are one company, so the lead form stopped asking
+     * for both. The code is shown, carries the partner's, and is never a second
+     * dropdown that could name a different company from the first.
+     */
+    public function test_the_lead_form_shows_the_code_and_does_not_offer_it_as_a_choice(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner, $code] = $this->partnerWithCode($session);
+
+        $lead = CrmLead::query()->create([
+            'lead_number' => 'OD-10001', 'name' => 'Referred Student', 'phone' => '9998887771',
+            'priority' => 'medium', 'status' => 'new', 'partner_code_id' => $code->id,
+        ]);
+
+        $this->withSession($session)->get(route('crm.dashboard', ['view' => 'leads', 'lead' => $lead->id]))
+            ->assertOk()
+            // Shown, not chosen: a readonly display plus the value it posts.
+            ->assertSee('data-partner-code-display', false)
+            ->assertSee('data-partner-code-input', false)
+            ->assertSee('Acme Education (ACME10)')
+            // And the partner options carry the code the choice sets.
+            ->assertSee('data-code-label="Acme Education (ACME10)"', false)
+            ->assertDontSee('<select name="partner_code_id"', false);
+
+        // Naming the partner and posting their code together is accepted.
+        $payload = [
+            'name' => 'Referred Student', 'phone' => '9998887771', 'priority' => 'medium', 'status' => 'new',
+            'partner_id' => $partner->id, 'partner_code_id' => $code->id,
+        ];
+        $this->withSession($session)->put(route('crm.leads.update', $lead), $payload)->assertSessionHasNoErrors();
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+        $this->assertSame($partner->id, $lead->fresh()->partner_id);
+
+        // Even once their link is paused: naming a partner brings their code with
+        // them rather than failing the save.
+        $this->withSession($session)->patch(route('crm.partner-codes.toggle', $code))->assertSessionHasNoErrors();
+        $this->withSession($session)->put(route('crm.leads.update', $lead), $payload)->assertSessionHasNoErrors();
+        $this->assertSame($code->id, $lead->fresh()->partner_code_id);
+    }
+
+
     public function test_the_team_can_correct_an_attribution_and_a_partner_cannot(): void
     {
         $admin = $this->admin();
@@ -321,6 +624,22 @@ class CrmPartnerCodeTest extends TestCase
             'name' => $name, 'phone' => $phone, 'email' => strtolower($name).'@mailbox.test',
             'role' => 'counsellor', 'is_active' => true,
         ]);
+    }
+
+    /**
+     * A partner made the way the CRM makes one: account and code in a single post.
+     *
+     * @return array{0: CrmUser, 1: CrmPartnerCode}
+     */
+    private function partnerWithCode(array $session): array
+    {
+        $this->withSession($session)->post(route('crm.team.store'), [
+            'name' => 'Rhea Nair', 'phone' => '9876543220', 'email' => 'rhea@acme-education.test',
+            'role' => 'partner', 'partner_access' => 'read',
+            'company_name' => 'Acme Education', 'code' => 'ACME10',
+        ])->assertSessionHasNoErrors();
+
+        return [CrmUser::query()->where('role', 'partner')->sole(), CrmPartnerCode::query()->sole()];
     }
 
     private function partnerCode(string $company, string $code): CrmPartnerCode

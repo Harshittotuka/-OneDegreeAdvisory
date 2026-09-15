@@ -623,21 +623,15 @@ html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
 @media(max-width:820px){.crm-invite-workspace .invite-fresh{grid-template-columns:1fr}.crm-invite-workspace .invite-create .form-grid{grid-template-columns:1fr}.crm-invite-workspace .invite-field-wide{grid-column:auto}.crm-invite-workspace .invite-create-foot{flex-direction:column;align-items:stretch}.crm-invite-filters{grid-template-columns:1fr}}
 
 /* ── Partner codes (view=partner-codes) ─────────────────────────────────────
-   The referral companies whose code travels in a public profiler link. Shares
-   the mock-invite screen's shape — a create card, a summary strip, then the
-   list — because it is the same job: make a link, hand it out, watch what it
-   brings in. */
+   The referral companies whose code travels in a public profiler link. A
+   summary strip, then the list: the create card that used to sit on top moved
+   to the Team screen, where a partner's login and their company are made in one
+   act, and "Add new partner" here is a link to it. */
 .crm-partner-code-workspace .partner-code-fresh{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,2fr) auto;align-items:center;gap:12px;margin:16px 20px 0;padding:14px 16px;border:1px solid color-mix(in srgb,#12a594 34%,var(--line,#dde2e8));border-radius:13px;background:color-mix(in srgb,#12a594 8%,var(--card,#fff))}
 .crm-partner-code-workspace .partner-code-fresh-copy strong{display:block;color:#0d7d70;font-size:.78rem}
 .crm-partner-code-workspace .partner-code-fresh-copy span{display:block;margin-top:3px;color:var(--muted,#737b8c);font-size:.63rem;font-weight:700}
 .crm-partner-code-workspace .partner-code-fresh-url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem}
-.crm-partner-code-workspace .partner-code-create{margin:16px 20px 0;padding:18px 20px;border:1px solid var(--line,#e3e5ea);border-radius:14px;background:var(--card,#fff)}
-.crm-partner-code-workspace .partner-code-create-head h3{margin:0;font-size:.9rem;color:var(--navy,#21147f)}
-.crm-partner-code-workspace .partner-code-create-head p{margin:4px 0 14px;color:var(--muted,#737b8c);font-size:.66rem;line-height:1.5}
-.crm-partner-code-workspace .partner-code-create-head code,.crm-partner-code-workspace .field-help code{padding:1px 5px;border-radius:5px;background:color-mix(in srgb,#12a594 12%,transparent);color:#0d7d70;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95em}
-.crm-partner-code-workspace .form-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-.crm-partner-code-workspace .partner-code-create-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line,#e3e5ea)}
-.crm-partner-code-workspace .partner-code-create-foot .field-help{margin-top:0;max-width:60ch}
+.crm-partner-code-workspace .field-help code,.team-partner-lead-in code{padding:1px 5px;border-radius:5px;background:color-mix(in srgb,#12a594 12%,transparent);color:#0d7d70;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95em}
 .crm-partner-code-workspace .partner-code-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 20px 0}
 .crm-partner-code-workspace .partner-code-summary>div{padding:13px 15px;border:1px solid var(--line,#e3e5ea);border-radius:12px;background:var(--card,#fff)}
 .crm-partner-code-workspace .partner-code-summary strong{display:block;font-size:1.15rem;color:var(--navy,#21147f);font-variant-numeric:tabular-nums}
@@ -654,16 +648,18 @@ html[data-crm-theme="orbit"] .crm-app .nav-icon svg{width:18px;height:18px}
 .partner-code-leads{font-weight:800;font-variant-numeric:tabular-nums}
 .partner-code-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
 .partner-code-actions .btn.is-copied{border-color:#12a594;color:#0d7d70}
-.crm-partner-code-workspace tr.is-editing>td{background:color-mix(in srgb,#12a594 5%,var(--card,#fff))}
-.crm-partner-code-workspace .partner-code-edit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-.crm-partner-code-workspace .partner-code-edit-head strong{font-size:.78rem;color:var(--navy,#21147f)}
-.crm-partner-code-workspace .partner-code-cancel{color:var(--muted,#737b8c);font-size:.65rem;font-weight:700}
-.crm-partner-code-workspace .partner-code-edit-foot{display:flex;align-items:center;gap:9px;margin-top:14px}
+/* Whether a code has a workspace login behind it. A partner created since the
+   two were merged has one; a code issued before that, or a company we only
+   track, says so plainly rather than leaving the cell to be read as an error. */
+.partner-code-account{margin-top:3px}
+.partner-code-account a{font-weight:700}
+.partner-code-account.is-none{color:var(--muted,#8a91a1);font-style:italic}
+.field-label-plain{display:block;color:var(--muted,#737b8c);font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+
 /* The leads table's Partner column carries two facts — the partner account and
    the referral company — so the company is tinted to tell them apart. */
 .lead-partner-code{display:block;color:#0d7d70;font-size:.66rem;font-weight:700}
-@media(max-width:1100px){.crm-partner-code-workspace .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:820px){.crm-partner-code-workspace .partner-code-fresh{grid-template-columns:1fr}.crm-partner-code-workspace .form-grid{grid-template-columns:1fr}.crm-partner-code-workspace .partner-code-create-foot{flex-direction:column;align-items:stretch}.crm-partner-code-workspace .partner-code-summary{grid-template-columns:1fr}.crm-partner-code-filters{grid-template-columns:1fr}}
+@media(max-width:820px){.crm-partner-code-workspace .partner-code-fresh{grid-template-columns:1fr}.crm-partner-code-workspace .partner-code-summary{grid-template-columns:1fr}.crm-partner-code-filters{grid-template-columns:1fr}.team-partner-link-row{grid-template-columns:1fr}}
 
 
 /* ── Topbar soft-refresh button (shared by Classic, Evergreen and Orbit) ───── */
@@ -896,6 +892,7 @@ body.crm-map-locked{overflow:hidden}
 .team-row-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:.76rem;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .team-row-name em{flex:0 0 auto;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--dash-ink) 9%,transparent);color:var(--dash-muted);font-size:.5rem;font-style:normal;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
 .team-row-meta{color:var(--role);font-size:.6rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-row-off.is-link{background:color-mix(in srgb,#12a594 14%,transparent);color:#0d7d70}
 .team-row-off{flex:0 0 auto;margin-left:auto;padding:2px 6px;border-radius:4px;background:color-mix(in srgb,var(--dash-ink) 8%,transparent);color:var(--dash-muted);font-size:.53rem;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
 .team-row[hidden]{display:none!important}
 .team-no-results{margin:6px 4px 0;padding:22px 12px;border:1px dashed var(--dash-line);border-radius:10px;text-align:center;color:var(--dash-muted);font-size:.68rem}
@@ -927,6 +924,12 @@ body.crm-map-locked{overflow:hidden}
 
 /* Destructive actions, kept away from the save above. */
 .team-detail-danger{margin-top:26px;border:1px solid var(--dash-line);border-radius:12px;overflow:hidden}
+/* A partner has two things that can be switched off — the login and the link —
+   so their controls are two blocks, and the link's is tinted to tell them apart
+   at a glance from the account's. */
+.team-detail-link-actions{margin-top:20px;border-color:color-mix(in srgb,#12a594 30%,var(--dash-line))}
+.team-detail-link-actions .team-danger-row{background:color-mix(in srgb,#12a594 5%,var(--dash-panel))}
+.team-partner-link-state{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .team-danger-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:var(--dash-panel)}
 .team-danger-row+.team-danger-row{border-top:1px solid var(--dash-line)}
 .team-danger-row strong{display:block;font-size:.73rem;font-weight:700}
@@ -935,6 +938,17 @@ body.crm-map-locked{overflow:hidden}
 .team-danger-row .btn{flex:0 0 auto}
 
 /* The role guide under the Add-member dropdown. */
+/* The referral company on a partner's form — the half that used to be a whole
+   separate screen. Set off from the account fields above it so the form reads
+   as two things saved together rather than one long list. */
+.team-partner-lead-in{margin-top:6px;padding-top:14px;border-top:1px solid var(--dash-line)}
+.team-partner-lead-in h4{margin:0;font-size:.74rem;color:var(--dash-ink,#21147f)}
+.team-partner-lead-in p{margin:4px 0 0;color:var(--dash-muted);font-size:.63rem;line-height:1.55}
+.team-partner-link-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:4px}
+.team-partner-link-row input{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.66rem}
+.team-partner-link .field-note{margin-top:6px}
+.team-partner-link .btn.is-copied{border-color:#12a594;color:#0d7d70}
+
 .team-role-guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:8px;margin-top:9px}
 .team-role-guide>span{min-width:0;padding:9px 11px;border:1px solid var(--dash-line);border-radius:9px;background:var(--dash-panel)}
 .team-role-guide b,.team-role-guide small{display:block}
@@ -975,6 +989,12 @@ body.crm-map-locked{overflow:hidden}
 .team-card-name{display:flex;align-items:center;gap:6px;min-width:0;margin-top:3px;font-size:.83rem;font-weight:700;letter-spacing:-.012em}
 .team-card-name em{flex:0 0 auto;padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--dash-ink) 9%,transparent);color:var(--dash-muted);font-size:.5rem;font-style:normal;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
 .team-card-contact{min-width:0;color:var(--dash-muted);font-size:.66rem;line-height:1.4;overflow-wrap:anywhere}
+/* A field whose value is decided by another field. Readonly rather than
+   disabled so it still reads out to a screen reader and still copies. */
+.crm-app input.is-derived{background:color-mix(in srgb,var(--dash-ink,#21147f) 4%,transparent);color:var(--dash-muted,#5f687c);cursor:default}
+.crm-app input.is-derived:focus{outline:none;box-shadow:none}
+.team-card-link{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.team-card-company{min-width:0;overflow:hidden;color:var(--dash-muted);font-size:.62rem;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
 .team-card-foot{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:auto;padding-top:10px;border-top:1px solid var(--dash-line)}
 .team-card-note{color:var(--role);font-size:.6rem;font-weight:700}
 .team-card-open{margin-left:auto;color:var(--dash-accent);font-size:.63rem;font-weight:750;opacity:0;transition:opacity .14s}

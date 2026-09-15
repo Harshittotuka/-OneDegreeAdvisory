@@ -1,24 +1,27 @@
 {{-- Partner codes: the referral companies whose code travels in a public link.
 
-     One screen, three parts, in the order the job is done: the create form,
-     then the summary, then the list. Each row shows the link to hand out and the
-     number of leads that came in through it, so "is this partner working?" is
-     answered where the code is managed rather than on the leads list.
+     The register of partners, not the place they are edited. A partner is one
+     thing — a login plus a company plus a code — and the Team screen holds the
+     whole of it, so Add and Edit here both go there. This screen owns what is
+     true of the link rather than the partner: pause it, resume it, remove it,
+     copy it, export the lot.
 
-     Editing happens in place — ?edit=<id> swaps that row's cells for the same
-     fields as the create form. It travels in the URL for the same reason the
-     Team screen's detail pane does: it keeps a code linkable and leaves the
-     choice of what is open out of JavaScript.
+     Each row shows the link to hand out, who signs in for it, and the number of
+     leads that came through it, so "is this partner working?" is answered where
+     the partners are listed rather than on the leads list.
+
+     An orphaned code — one whose account was deleted, or issued before accounts
+     and codes were joined — has no partner to open, so it offers no Edit. It
+     exists to keep the attribution of the leads it brought in; pause or remove
+     are the only things left to decide about it.
 
      Super admin only, enforced in CrmDashboardController::index and again in
      CrmPartnerCodeController::guard. --}}
 @php
-    $editingId = request()->integer('edit') ?: null;
-    $editing = $editingId ? $partnerCodes->firstWhere('id', $editingId) : null;
-    $listUrl = request()->fullUrlWithQuery(['view' => 'partner-codes', 'edit' => null]);
-    // Old input is only ever meant for the form that was submitted: without this
-    // a failed create would also refill the row being edited, and vice versa.
-    $creating = ! $editing;
+    // Both live on the Team screen, with the partner role already chosen so the
+    // company fields are showing when the page arrives.
+    $addUrl = route('crm.dashboard', ['view' => 'team', 'add' => 1, 'role' => 'partner']);
+    $accountUrl = fn ($account) => route('crm.dashboard', ['view' => 'team', 'role' => 'partner', 'member' => $account->id]);
 @endphp
 <section class="workspace crm-partner-code-workspace">
     <div class="workspace-head">
@@ -29,6 +32,7 @@
         <div class="workspace-head-actions">
             <span class="audit-private-label">Super admin only</span>
             <a class="btn btn-outline" href="{{ route('crm.partner-codes.export') }}" data-native-navigation>⇩ <span>Export CSV</span></a>
+            <a class="btn btn-primary" href="{{ $addUrl }}">＋ <span>Add new partner</span></a>
         </div>
     </div>
 
@@ -38,59 +42,12 @@
         <div class="partner-code-fresh">
             <div class="partner-code-fresh-copy">
                 <strong>{{ $newPartnerCode->company_name }} is set up</strong>
-                <span>Code {{ $newPartnerCode->code }} · notices go to {{ $newPartnerCode->email }}</span>
+                <span>Code {{ $newPartnerCode->code }} · notices go to {{ $newPartnerCode->email }}@if($newPartnerCode->account) · {{ $newPartnerCode->account->name }} can sign in with that address @endif</span>
             </div>
             <input class="control partner-code-fresh-url" type="text" readonly value="{{ $newPartnerCode->profilerUrl() }}" aria-label="Partner profiler link" onfocus="this.select()">
             <button class="btn btn-primary" type="button" data-copy-link="{{ $newPartnerCode->profilerUrl() }}">Copy link</button>
         </div>
     @endif
-
-    @unless($editing)
-        <form class="partner-code-create" method="post" action="{{ route('crm.partner-codes.store') }}">@csrf
-            <div class="partner-code-create-head">
-                <h3>Add a partner</h3>
-                <p>The code becomes their tracking link — <code>{{ url('/profiler') }}?partner=CODE</code>. Every profiler submitted through it is emailed to the company as well as to us, and the lead is recorded against them.</p>
-            </div>
-            <div class="form-grid">
-                <div @class(['field', 'has-error' => $creating && $errors->has('company_name')])>
-                    <label for="pc_company">Company name <span class="required">*</span></label>
-                    <input id="pc_company" name="company_name" value="{{ $creating ? old('company_name') : '' }}" maxlength="150" required>
-                    @if($creating)@error('company_name')<span class="field-error">{{ $message }}</span>@enderror @endif
-                </div>
-                <div @class(['field', 'has-error' => $creating && $errors->has('code')])>
-                    <label for="pc_code">Custom code <span class="required">*</span></label>
-                    <input id="pc_code" name="code" value="{{ $creating ? old('code') : '' }}" maxlength="40" placeholder="ACME10" autocapitalize="characters" spellcheck="false" required>
-                    <span class="field-help">Letters, numbers, hyphens and underscores. Stored in capitals and matched either way, so <code>acme10</code> and <code>ACME10</code> are one code.</span>
-                    @if($creating)@error('code')<span class="field-error">{{ $message }}</span>@enderror @endif
-                </div>
-                <div @class(['field', 'has-error' => $creating && $errors->has('email')])>
-                    <label for="pc_email">Email <span class="required">*</span></label>
-                    <input id="pc_email" name="email" type="email" value="{{ $creating ? old('email') : '' }}" maxlength="190" placeholder="referrals@company.com" required>
-                    <span class="field-help">Where every referral notice for this code is sent.</span>
-                    @if($creating)@error('email')<span class="field-error">{{ $message }}</span>@enderror @endif
-                </div>
-                <div @class(['field', 'has-error' => $creating && $errors->has('contact_name')])>
-                    <label for="pc_contact">Contact name <span class="field-optional">optional</span></label>
-                    <input id="pc_contact" name="contact_name" value="{{ $creating ? old('contact_name') : '' }}" maxlength="120">
-                    @if($creating)@error('contact_name')<span class="field-error">{{ $message }}</span>@enderror @endif
-                </div>
-                <div @class(['field', 'has-error' => $creating && $errors->has('phone')])>
-                    <label for="pc_phone">Phone number <span class="field-optional">optional</span></label>
-                    <input id="pc_phone" name="phone" value="{{ $creating ? old('phone') : '' }}" inputmode="tel" maxlength="30" placeholder="+91 98765 43210">
-                    @if($creating)@error('phone')<span class="field-error">{{ $message }}</span>@enderror @endif
-                </div>
-                <div @class(['field', 'has-error' => $creating && $errors->has('company_link')])>
-                    <label for="pc_link">Company link <span class="field-optional">optional</span></label>
-                    <input id="pc_link" name="company_link" type="url" value="{{ $creating ? old('company_link') : '' }}" maxlength="255" placeholder="https://company.com">
-                    @if($creating)@error('company_link')<span class="field-error">{{ $message }}</span>@enderror @endif
-                </div>
-            </div>
-            <div class="partner-code-create-foot">
-                <span class="field-help">Nothing is emailed to the company when you add them — the first notice they get is a real referral.</span>
-                <button class="btn btn-primary" type="submit">Add partner code</button>
-            </div>
-        </form>
-    @endunless
 
     <div class="partner-code-summary" aria-label="Partner code summary">
         <div><strong>{{ number_format($partnerCodeCount) }}</strong><span>Partner codes</span></div>
@@ -100,7 +57,7 @@
 
     <form id="crmPartnerCodeFilters" class="filters crm-partner-code-filters" method="get" action="{{ route('crm.dashboard') }}" data-crm-filter-form>
         <input type="hidden" name="view" value="partner-codes">
-        <div class="search-wrap"><input class="control" type="search" name="partner_code_search" value="{{ request('partner_code_search') }}" placeholder="Search company, code, contact or email"></div>
+        <div class="search-wrap"><input class="control" type="search" name="partner_code_search" value="{{ request('partner_code_search') }}" placeholder="Search company, code, contact, email or partner"></div>
         <button class="btn btn-outline" type="submit">Filter</button>
     </form>
 
@@ -110,56 +67,6 @@
             <thead><tr><th class="col-serial">Serial No</th><th>Company</th><th>Code &amp; link</th><th>Contact</th><th>Leads</th><th>Status</th><th>Manage</th></tr></thead>
             <tbody>
             @foreach($partnerCodes as $code)
-                @if($editing && $editing->id === $code->id)
-                    <tr class="is-editing">
-                        <td class="col-serial">{{ $partnerCodes->firstItem() + $loop->index }}</td>
-                        <td colspan="6">
-                            <form class="partner-code-edit" method="post" action="{{ route('crm.partner-codes.update', $code) }}">@csrf @method('PUT')
-                                <div class="partner-code-edit-head">
-                                    <strong>Editing {{ $code->company_name }}</strong>
-                                    <a class="partner-code-cancel" href="{{ $listUrl }}">Cancel</a>
-                                </div>
-                                <div class="form-grid">
-                                    <div @class(['field', 'has-error' => $errors->has('company_name')])>
-                                        <label for="pc_edit_company">Company name <span class="required">*</span></label>
-                                        <input id="pc_edit_company" name="company_name" value="{{ old('company_name', $code->company_name) }}" maxlength="150" required>
-                                        @error('company_name')<span class="field-error">{{ $message }}</span>@enderror
-                                    </div>
-                                    <div @class(['field', 'has-error' => $errors->has('code')])>
-                                        <label for="pc_edit_code">Custom code <span class="required">*</span></label>
-                                        <input id="pc_edit_code" name="code" value="{{ old('code', $code->code) }}" maxlength="40" autocapitalize="characters" spellcheck="false" required>
-                                        <span class="field-help">Changing this retires the old link — anything already shared with it stops being credited.</span>
-                                        @error('code')<span class="field-error">{{ $message }}</span>@enderror
-                                    </div>
-                                    <div @class(['field', 'has-error' => $errors->has('email')])>
-                                        <label for="pc_edit_email">Email <span class="required">*</span></label>
-                                        <input id="pc_edit_email" name="email" type="email" value="{{ old('email', $code->email) }}" maxlength="190" required>
-                                        @error('email')<span class="field-error">{{ $message }}</span>@enderror
-                                    </div>
-                                    <div @class(['field', 'has-error' => $errors->has('contact_name')])>
-                                        <label for="pc_edit_contact">Contact name <span class="field-optional">optional</span></label>
-                                        <input id="pc_edit_contact" name="contact_name" value="{{ old('contact_name', $code->contact_name) }}" maxlength="120">
-                                        @error('contact_name')<span class="field-error">{{ $message }}</span>@enderror
-                                    </div>
-                                    <div @class(['field', 'has-error' => $errors->has('phone')])>
-                                        <label for="pc_edit_phone">Phone number <span class="field-optional">optional</span></label>
-                                        <input id="pc_edit_phone" name="phone" value="{{ old('phone', $code->phone) }}" inputmode="tel" maxlength="30">
-                                        @error('phone')<span class="field-error">{{ $message }}</span>@enderror
-                                    </div>
-                                    <div @class(['field', 'has-error' => $errors->has('company_link')])>
-                                        <label for="pc_edit_link">Company link <span class="field-optional">optional</span></label>
-                                        <input id="pc_edit_link" name="company_link" type="url" value="{{ old('company_link', $code->company_link) }}" maxlength="255" placeholder="https://company.com">
-                                        @error('company_link')<span class="field-error">{{ $message }}</span>@enderror
-                                    </div>
-                                </div>
-                                <div class="partner-code-edit-foot">
-                                    <button class="btn btn-primary" type="submit">Save changes</button>
-                                    <a class="btn btn-outline" href="{{ $listUrl }}">Discard</a>
-                                </div>
-                            </form>
-                        </td>
-                    </tr>
-                @else
                     <tr @class(['is-paused' => ! $code->is_active])>
                         <td class="col-serial">{{ $partnerCodes->firstItem() + $loop->index }}</td>
                         <td>
@@ -177,6 +84,17 @@
                         <td>
                             <a href="mailto:{{ $code->email }}">{{ $code->email }}</a>
                             <span class="subtext">{{ collect([$code->contact_name, $code->phone])->filter()->implode(' · ') ?: 'No contact recorded' }}</span>
+                            {{-- Which half of the partner exists. A code with an account
+                                 behind it is a partner who can sign in and watch their
+                                 own students; one without is a company we only track. --}}
+                            @if($code->account)
+                                <span class="subtext partner-code-account">
+                                    <a href="{{ $accountUrl($code->account) }}">Signs in as {{ $code->account->name }}</a>
+                                    · {{ $code->account->partnerAccessLabel() }}{{ $code->account->is_active ? '' : ' · sign-in disabled' }}
+                                </span>
+                            @else
+                                <span class="subtext partner-code-account is-none">No workspace account</span>
+                            @endif
                         </td>
                         <td>
                             @if($code->leads_count)
@@ -191,19 +109,19 @@
                         </td>
                         <td><div class="partner-code-actions">
                             <button class="btn btn-outline btn-compact" type="button" data-copy-link="{{ $code->profilerUrl() }}">Copy link</button>
-                            <a class="btn btn-outline btn-compact" href="{{ request()->fullUrlWithQuery(['view' => 'partner-codes', 'edit' => $code->id]) }}">Edit</a>
+                            @if($code->account)<a class="btn btn-outline btn-compact" href="{{ $accountUrl($code->account) }}">Edit</a>@endif
                             <form method="post" action="{{ route('crm.partner-codes.toggle', $code) }}">@csrf @method('PATCH')<button class="btn btn-outline btn-compact" type="submit">{{ $code->is_active ? 'Pause' : 'Resume' }}</button></form>
                             {{-- Deleting is the one destructive action here, so it asks
                                  through the CRM's own confirm modal rather than the
-                                 browser's, and says what happens to the leads. --}}
+                                 browser's, and says what happens to the leads — and, for
+                                 a partner with a login, that the login is not touched. --}}
                             <form method="post" action="{{ route('crm.partner-codes.destroy', $code) }}"
                                   data-confirm-submit
                                   data-confirm-title="Remove {{ $code->company_name }}?"
-                                  data-confirm-body="The {{ $code->leads_count }} lead{{ $code->leads_count === 1 ? '' : 's' }} this code brought in stay in the CRM, but stop naming a partner code — and the link stops working. Pause it instead to keep the record."
+                                  data-confirm-body="The {{ $code->leads_count }} lead{{ $code->leads_count === 1 ? '' : 's' }} this code brought in stay in the CRM, but stop naming a partner code — and the link stops working.@if($code->account) {{ $code->account->name }} keeps their account and can still sign in; close it on the Team screen.@endif Pause it instead to keep the record."
                                   data-confirm-accept="Yes, remove this partner">@csrf @method('DELETE')<button class="btn btn-danger btn-compact" type="submit">Delete</button></form>
                         </div></td>
                     </tr>
-                @endif
             @endforeach
             </tbody>
         </table></div>
@@ -211,8 +129,9 @@
     @else
         <div class="empty">
             <span class="empty-icon">◈</span>
-            <h3>{{ request('partner_code_search') ? 'No partner code matches that search' : 'No partner codes yet' }}</h3>
-            <p>{{ request('partner_code_search') ? 'Try a different company name, code or email.' : 'Add a company above and share the link it gives you. Their referrals then arrive tagged, and they are emailed each one.' }}</p>
+            <h3>{{ request('partner_code_search') ? 'No partner code matches that search' : 'No partners yet' }}</h3>
+            <p>{{ request('partner_code_search') ? 'Try a different company name, code, email or partner name.' : 'Add a partner and share the link it gives you. Their referrals then arrive tagged, they are emailed each one, and they can sign in to follow the students they sent.' }}</p>
+            @unless(request('partner_code_search'))<a class="btn btn-primary" href="{{ $addUrl }}">＋ <span>Add new partner</span></a>@endunless
         </div>
     @endif
 </section>
