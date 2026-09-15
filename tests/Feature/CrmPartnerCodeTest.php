@@ -533,6 +533,54 @@ class CrmPartnerCodeTest extends TestCase
         Mail::assertSent(ProfileReportPartnerMail::class, 2);
     }
 
+    /**
+     * The bug this covers: a profiler arriving through a partner's link was
+     * credited to their code and stayed invisible to them. A partner's workspace
+     * is filtered by partner_id alone, and capture only ever set partner_code_id,
+     * so the partner logged in to an empty list holding their own referral.
+     */
+    public function test_a_referral_through_a_partners_link_is_visible_to_that_partner(): void
+    {
+        $admin = $this->admin();
+        $session = ['crm_user_id' => $admin->id];
+        [$partner, $code] = $this->partnerWithCode($session);
+
+        $this->post('/profiler', [
+            'action' => 'submit', 'degree' => 'masters', 'section' => 6,
+            'answers' => ['q_ec_level' => 'Just Participated'],
+            'contact' => ['name' => 'Referred Student', 'email' => 'referred@student.test', 'phone' => '9998887771'],
+            'partner' => 'acme10',
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $lead = CrmLead::query()->where('email', 'referred@student.test')->sole();
+        $this->assertSame($code->id, $lead->partner_code_id);
+        // Both halves: credited to the code, and named to the account behind it.
+        $this->assertSame($partner->id, $lead->partner_id);
+
+        // Which is what the partner's own workspace is filtered by.
+        $this->withSession(['crm_user_id' => $partner->id])
+            ->get(route('crm.dashboard', ['view' => 'leads']))
+            ->assertOk()
+            ->assertSee('Referred Student');
+    }
+
+    /** A code nobody signs in for still credits, and names no one. */
+    public function test_a_code_with_no_account_credits_without_naming_a_partner(): void
+    {
+        $this->partnerCode('Legacy Referrals', 'LEGACY');
+
+        $this->post('/profiler', [
+            'action' => 'submit', 'degree' => 'masters', 'section' => 6,
+            'answers' => ['q_ec_level' => 'Just Participated'],
+            'contact' => ['name' => 'Legacy Student', 'email' => 'legacy@student.test', 'phone' => '9998887772'],
+            'partner' => 'LEGACY',
+        ])->assertOk()->assertJson(['ok' => true]);
+
+        $lead = CrmLead::query()->where('email', 'legacy@student.test')->sole();
+        $this->assertNotNull($lead->partner_code_id);
+        $this->assertNull($lead->partner_id);
+    }
+
     /* ─────────────────── the lead's own field ─────────────────── */
 
     /**

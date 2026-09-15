@@ -64,6 +64,12 @@ class WebsiteLeadManager
                     'lead_type' => $this->leadType($source),
                     'status' => 'new',
                     'partner_code_id' => $partnerCode?->id,
+                    // And the account behind that code, where the partner has one.
+                    // partner_code_id is the attribution; partner_id is the only
+                    // thing a partner's own workspace is filtered by, so a lead
+                    // arriving through their link was credited to them and still
+                    // invisible to them until both were set.
+                    'partner_id' => $partnerCode?->crm_user_id,
                     'profile' => ['latest_source' => $source, 'latest_degree' => $degree],
                     ...$academic,
                 ]);
@@ -75,6 +81,9 @@ class WebsiteLeadManager
                     fn (string $field): bool => blank($lead->{$field}),
                     ARRAY_FILTER_USE_KEY,
                 );
+                // The code this lead keeps: its own if it already has one, else the
+                // one it just arrived through.
+                $creditedCode = $lead->partner_code_id ? $lead->partnerCode : $partnerCode;
                 $updates = array_filter([
                     'phone' => $lead->phone ?: ($phone ?: null),
                     'email' => $lead->email ?: ($email ?: null),
@@ -85,7 +94,13 @@ class WebsiteLeadManager
                     // different partner's link — or through none — stays credited
                     // to whoever originally sent them, and a code can never
                     // overwrite an attribution the team corrected by hand.
-                    'partner_code_id' => $lead->partner_code_id ?: $partnerCode?->id,
+                    'partner_code_id' => $creditedCode?->id,
+                    // The partner named is the one behind whichever code kept the
+                    // credit — never the incoming one, or a second submission
+                    // through someone else's link would hand the lead to a partner
+                    // the code no longer names. A Partner name the team set by hand
+                    // outranks both.
+                    'partner_id' => $lead->partner_id ?: $creditedCode?->crm_user_id,
                 ], fn ($value) => $value !== null && $value !== '');
                 if ($source !== 'newsletter') {
                     $updates['lead_type'] = $this->leadType($source);
