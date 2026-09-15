@@ -612,10 +612,16 @@ class CrmPartnerCodeTest extends TestCase
         ])->assertSessionHasNoErrors();
         $this->assertSame($code->id, $lead->fresh()->partner_code_id);
 
-        // Clearing the name keeps where the lead actually came from.
+        // Clearing the name clears the code with it: the two name one company,
+        // so a lead with no partner has no partner code either.
         $this->withSession($session)->put(route('crm.leads.update', $lead), [...$base, 'partner_id' => ''])
             ->assertSessionHasNoErrors();
         $this->assertNull($lead->fresh()->partner_id);
+        $this->assertNull($lead->fresh()->partner_code_id);
+
+        // Put it back for the last case.
+        $this->withSession($session)->put(route('crm.leads.update', $lead), [...$base, 'partner_id' => $partner->id])
+            ->assertSessionHasNoErrors();
         $this->assertSame($code->id, $lead->fresh()->partner_code_id);
 
         // A partner with no link of their own leaves the captured code alone.

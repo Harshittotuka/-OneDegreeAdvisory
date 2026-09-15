@@ -477,10 +477,12 @@ class CrmLeadController extends Controller
      * names a partner — from the drawer, the Add lead modal, or anything that
      * posts to these endpoints later — lands the two in step.
      *
-     * Two cases deliberately keep the code the lead already has rather than
-     * clearing it, because where a lead came from is a record and not a
-     * preference: naming a partner who has no link of their own, and clearing
-     * the Partner name on a lead that arrived through a link.
+     * Clearing the Partner name clears the code with it: the two name one
+     * company, so a lead with no partner has no partner code either.
+     *
+     * The one case that keeps the code is naming a partner who has no link of
+     * their own — there is nothing to replace it with, and blanking it would
+     * lose where the lead came from as a side effect of an unrelated edit.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -494,7 +496,7 @@ class CrmLeadController extends Controller
 
         $data['partner_code_id'] = $data['partner_id']
             ? (CrmPartnerCode::query()->where('crm_user_id', $data['partner_id'])->value('id') ?: $lead?->partner_code_id)
-            : $lead?->partner_code_id;
+            : null;
 
         return $data;
     }

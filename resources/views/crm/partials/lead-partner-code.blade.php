@@ -5,19 +5,17 @@
      dropdowns that could name two different companies was how a lead ended up
      credited to one partner and emailed to another.
 
-     It stays a posted value rather than something the server derives, so a lead
-     the form never touched keeps exactly the code capture gave it. crm.js swaps
-     both halves when the partner changes, and putting the partner back to "No
-     partner" restores the captured code rather than dropping it — where a lead
-     came from is a record, not a preference.
+     What it shows is a convenience for the person looking at it: the value is
+     decided on the server, in CrmLeadController::partnerCodeFromPartner, so a
+     save lands the two in step whether or not the browser kept up. crm.js moves
+     both halves as the partner is picked, and empties them when the name is
+     cleared.
 
-     Inputs: $code (the code to show now), $captured (the code the lead arrived
-     with, restored when the partner is cleared), $fieldErrors/$bag for the
-     modal's own error bag. Never $errors: that name is Blade's own, and an
-     include that reassigns it breaks every @error on the page. --}}
+     Inputs: $code (the code to show), $fieldErrors/$bag for the modal's own
+     error bag. Never $errors: that name is Blade's own, and an include that
+     reassigns it breaks every @error on the page. --}}
 @php
     $code = $code ?? null;
-    $captured = $captured ?? null;
     $bag = $bag ?? null;
     $fieldErrors = $fieldErrors ?? null;
 @endphp
@@ -27,10 +25,7 @@
         data-partner-code-display
         value="{{ $code?->label() ?: 'No partner code' }}"
         aria-describedby="lead_partner_code_note">
-    <input type="hidden" name="partner_code_id" value="{{ $code?->id }}"
-        data-partner-code-input
-        data-captured-id="{{ $captured?->id }}"
-        data-captured-label="{{ $captured?->label() }}">
+    <input type="hidden" name="partner_code_id" value="{{ $code?->id }}" data-partner-code-input>
     <span class="field-note" id="lead_partner_code_note">The referral link this lead came through.</span>
     @if($bag)
         @error('partner_code_id', $bag)<span class="field-error">{{ $message }}</span>@enderror

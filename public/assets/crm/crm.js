@@ -1163,17 +1163,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .forEach((field) => { field.required = isPartner; });
         }
         // The Partner code on a lead is not chosen: it belongs to the partner
-        // named beside it. Clearing the partner restores the code the lead was
-        // captured with, so correcting a name never loses where it came from.
+        // named beside it, and goes when that name goes. Shown as you pick;
+        // CrmLeadController::partnerCodeFromPartner is what actually decides.
         if (input.matches('[data-partner-select]')) {
             const display = input.form?.querySelector('[data-partner-code-display]');
             const hidden = input.form?.querySelector('[data-partner-code-input]');
             if (display && hidden) {
                 const picked = input.value ? input.selectedOptions[0]?.dataset : null;
-                const id = (picked ? picked.codeId : hidden.dataset.capturedId) || '';
-                const label = (picked ? picked.codeLabel : hidden.dataset.capturedLabel) || '';
-                hidden.value = id;
-                display.value = label || 'No partner code';
+                hidden.value = picked?.codeId || '';
+                display.value = picked?.codeLabel || 'No partner code';
             }
         }
         if (input.matches('[data-test-select]')) syncTestRow(input);

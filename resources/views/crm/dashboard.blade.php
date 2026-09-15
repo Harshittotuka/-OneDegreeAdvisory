@@ -670,7 +670,7 @@
                         $createdCode = $createdPartner?->partnerCode ?? $partnerCodeOptions->firstWhere('id', (int) old('partner_code_id'));
                     @endphp
                     <div @class(['field', 'has-error' => $leadErrors->has('partner_id')])><label for="lead_partner">Partner name <span class="label-note">If a partner referred this student</span></label><select id="lead_partner" name="partner_id" data-partner-select @if($leadErrors->has('partner_id')) aria-invalid="true" aria-describedby="lead_partner_error" @endif><option value="">No partner</option>@foreach($partners as $partner)<option value="{{ $partner->id }}" data-code-id="{{ $partner->partnerCode?->id }}" data-code-label="{{ $partner->partnerCode?->label() }}" @selected((string)old('partner_id') === (string)$partner->id)>{{ $partner->name }}@unless($partner->is_active) (disabled)@endunless</option>@endforeach</select>@error('partner_id','leadCreate')<span class="field-error" id="lead_partner_error">{{ $message }}</span>@enderror</div>
-                    @include('crm.partials.lead-partner-code', ['code' => $createdCode, 'captured' => null, 'fieldErrors' => $leadErrors, 'bag' => 'leadCreate'])
+                    @include('crm.partials.lead-partner-code', ['code' => $createdCode, 'fieldErrors' => $leadErrors, 'bag' => 'leadCreate'])
                 @endif
                 @php $newLeadFollowUpRequired = $isFollowUpStatus((string) old('status', 'new')); @endphp
                 <div @class(['field', 'is-followup-required' => $newLeadFollowUpRequired, 'has-error' => $leadErrors->has('follow_up_at')])><label for="lead_followup">First follow-up <span class="label-note" data-followup-note>{{ $newLeadFollowUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input id="lead_followup" type="datetime-local" name="follow_up_at" value="{{ old('follow_up_at') }}" @required($newLeadFollowUpRequired) @if($leadErrors->has('follow_up_at')) aria-invalid="true" aria-describedby="lead_followup_error" @endif>@error('follow_up_at','leadCreate')<span class="field-error" id="lead_followup_error">{{ $message }}</span>@enderror</div>
@@ -859,10 +859,9 @@
                             {{-- "Partner code": which referral link this lead arrived
                                  through. Not chosen — it belongs to the partner named
                                  above and follows that choice, because a partner and
-                                 their code are one company. Capture fills it in, and
-                                 clearing the partner puts the captured code back rather
-                                 than losing where the lead actually came from. --}}
-                            @unless($crmUser->isPartner())@include('crm.partials.lead-partner-code', ['code' => $selectedLead->partnerCode, 'captured' => $selectedLead->partnerCode])@endunless
+                                 their code are one company. Capture fills both in, and
+                                 clearing the name clears the code with it. --}}
+                            @unless($crmUser->isPartner())@include('crm.partials.lead-partner-code', ['code' => $selectedLead->partnerCode])@endunless
                             @php $followUpRequired = ! $selectedLead->is_student && $isFollowUpStatus($selectedLead->status); @endphp
                             <div @class(['field', 'full' => ! $crmUser->isSuperAdmin(), 'is-followup-required' => $followUpRequired])><label>Next follow-up <span class="label-note" data-followup-note>{{ $followUpRequired ? 'Required for this status' : 'Optional' }}</span></label><input type="datetime-local" name="follow_up_at" value="{{ $selectedLead->follow_up_at?->format('Y-m-d\TH:i') }}" @required($followUpRequired)></div>
                         </div>
