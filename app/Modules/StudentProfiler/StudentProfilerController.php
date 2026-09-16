@@ -140,29 +140,30 @@ class StudentProfilerController
         // admin panel — no scoring is performed.
         $sections = WebsiteSubmissionData::snapshot($config['sections'][$degree] ?? [], $answers);
 
-        // WebsiteLeadManager refuses a submission whose phone and email point at
-        // two different existing people, by throwing a ValidationException. That
-        // renders as the framework's {message, errors} body, which this endpoint's
-        // client does not recognise — it looks for {ok:false} — so it drew the
-        // thank-you popup over a submission that stored nothing and mailed no one.
-        // Answering in our own shape is what makes the refusal visible.
+        // A phone and an email that already belong to two different leads cannot
+        // identify one person, so WebsiteLeadManager refuses to choose between
+        // them. The profiler does not put that to the visitor: they have just
+        // filled in a long questionnaire and have no way to know which record we
+        // mean. The submission is captured as a NEW lead instead — a duplicate a
+        // counsellor can merge is a better outcome than a finished profile
+        // thrown away, and it still never writes one student's answers onto
+        // another student's record.
+        //
+        // Same fallback LegacyWebsiteLeadImporter uses, for the same reason.
+        $capture = fn (bool $forceNewLead = false): mixed => $this->leads->capture(
+            'profiler',
+            'Student Profiler',
+            $degree,
+            $sections,
+            $contact,
+            forceNewLead: $forceNewLead,
+            partnerCode: $partner,
+        );
+
         try {
-            $this->leads->capture(
-                'profiler',
-                'Student Profiler',
-                $degree,
-                $sections,
-                $contact,
-                partnerCode: $partner,
-            );
-        } catch (ValidationException $e) {
-            return response()->json([
-                'ok'      => false,
-                // Only name, email and phone have somewhere to show a message;
-                // this one is about the pair, so it hangs off the email.
-                'field'   => 'email',
-                'message' => $e->validator->errors()->first(),
-            ], 422);
+            $capture();
+        } catch (ValidationException) {
+            $capture(true);
         }
 
         // Email a profile report to the team + a thank-you to the student,

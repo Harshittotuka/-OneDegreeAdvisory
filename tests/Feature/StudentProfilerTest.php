@@ -168,37 +168,41 @@ class StudentProfilerTest extends TestCase
     }
 
     /**
-     * The bug this covers: a phone and email that point at two different
-     * existing leads make WebsiteLeadManager throw a ValidationException, which
-     * renders as the framework's {message, errors} body. The wizard only looks
-     * for {ok:false}, so it read that as a success and drew the thank-you popup
-     * over a submission that stored nothing and mailed no one.
+     * A phone and an email that already belong to two different leads cannot
+     * identify one person. The profiler does not ask the visitor to sort that
+     * out — they have just filled in a long questionnaire — so the submission is
+     * captured as a new lead rather than refused.
+     *
+     * What it must never do is write the profile onto either of the two records
+     * it could not choose between.
      */
-    public function test_a_contact_conflict_is_refused_in_the_shape_the_wizard_reads(): void
+    public function test_a_contact_conflict_captures_a_new_lead_rather_than_refusing(): void
     {
-        CrmLead::query()->create([
+        $one = CrmLead::query()->create([
             'lead_number' => 'OD-10001', 'name' => 'Person One', 'phone' => '9998887771',
             'email' => 'one@mailbox.test', 'priority' => 'medium', 'status' => 'new',
         ]);
-        CrmLead::query()->create([
+        $two = CrmLead::query()->create([
             'lead_number' => 'OD-10002', 'name' => 'Person Two', 'phone' => '9998887772',
             'email' => 'two@mailbox.test', 'priority' => 'medium', 'status' => 'new',
         ]);
 
         // One person's phone with the other's email.
-        $response = $this->postJson('/profiler', [
+        $this->postJson('/profiler', [
             'action' => 'submit', 'degree' => 'masters', 'section' => 6,
             'answers' => ['q_ec_level' => 'Just Participated'],
             'contact' => ['name' => 'Mixed Up', 'email' => 'two@mailbox.test', 'phone' => '9998887771'],
-        ])->assertStatus(422);
+        ])->assertOk()->assertJson(['ok' => true]);
 
-        // The wizard's own shape, so it renders as a refusal and not as success.
-        $response->assertJson(['ok' => false, 'field' => 'email']);
-        $this->assertStringContainsString('do not match the same existing contact', $response->json('message'));
+        // Captured, as a third record.
+        $this->assertSame(3, CrmLead::query()->count());
+        $this->assertSame(1, CrmWebsiteSubmission::query()->count());
+        $fresh = CrmLead::query()->latest('id')->first();
+        $this->assertSame('Mixed Up', $fresh->name);
 
-        // And nothing was captured for it.
-        $this->assertSame(2, CrmLead::query()->count());
-        $this->assertSame(0, CrmWebsiteSubmission::query()->count());
+        // And neither of the two it could not choose between was touched.
+        $this->assertSame('Person One', $one->fresh()->name);
+        $this->assertSame('Person Two', $two->fresh()->name);
     }
 
 }
