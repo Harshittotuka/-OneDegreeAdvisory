@@ -93,7 +93,10 @@ class StudentProfilerController
             return response()->json([
                 'ok'      => false,
                 'field'   => 'email',
-                'message' => config('site.forms.email_help'),
+                // Naming the reason: the generic "use a valid email address" read
+                // as the form being broken to anyone testing with example.com,
+                // who then retried the same address and gave up.
+                'message' => 'Placeholder addresses like example.com cannot receive your report. Please enter a real email address.',
             ], 422);
         }
 
@@ -102,31 +105,47 @@ class StudentProfilerController
         // a POST made straight to /profiler?partner=CODE works the same way.
         $partner = CrmPartnerCode::resolve($request->input('partner', $request->query('partner')));
 
+        // A submit with no valid degree used to fall straight past the capture
+        // below and still answer with the success message: the visitor was
+        // thanked, no lead was stored, no mail went out, and nothing was logged.
+        // Eight submissions were lost that way before anyone noticed, so it is
+        // refused loudly instead. The wizard posts whatever `degree` its state
+        // holds, and that state can be null after a reload or a stale tab.
+        if (! $degree) {
+            report(new \RuntimeException(
+                'Profiler submit refused: no valid degree (got '.var_export($request->input('degree'), true).').'
+            ));
+
+            return response()->json([
+                'ok'      => false,
+                'field'   => 'degree',
+                'message' => 'Please pick your study level before submitting — reload the page and start from the first step.',
+            ], 422);
+        }
+
         // Record the completed profile as a human-readable snapshot for the
         // admin panel — no scoring is performed.
-        if ($degree) {
-            $sections = WebsiteSubmissionData::snapshot($config['sections'][$degree] ?? [], $answers);
+        $sections = WebsiteSubmissionData::snapshot($config['sections'][$degree] ?? [], $answers);
 
-            $this->leads->capture(
-                'profiler',
-                'Student Profiler',
-                $degree,
-                $sections,
-                $contact,
-                partnerCode: $partner,
-            );
+        $this->leads->capture(
+            'profiler',
+            'Student Profiler',
+            $degree,
+            $sections,
+            $contact,
+            partnerCode: $partner,
+        );
 
-            // Email a profile report to the team + a thank-you to the student,
-            // and a referral notice to the partner when the link carried a code
-            // (direct SMTP, no queue). Best-effort: never blocks the response.
-            ProfileReportNotifier::notify(ProfileReportBuilder::build(
-                'profiler',
-                'Student Profiler',
-                $config['degrees'][$degree]['label'] ?? null,
-                $sections,
-                $contact
-            ), $partner);
-        }
+        // Email a profile report to the team + a thank-you to the student,
+        // and a referral notice to the partner when the link carried a code
+        // (direct SMTP, no queue). Best-effort: never blocks the response.
+        ProfileReportNotifier::notify(ProfileReportBuilder::build(
+            'profiler',
+            'Student Profiler',
+            $config['degrees'][$degree]['label'] ?? null,
+            $sections,
+            $contact
+        ), $partner);
 
         // No scoring/rating — the profile is handed to the team for a manual
         // review. We just confirm receipt.

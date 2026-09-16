@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CrmLead;
 use App\Models\CrmWebsiteSubmission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -105,14 +106,22 @@ class StudentProfilerTest extends TestCase
         $this->assertNotNull($submission->lead);
     }
 
+    /**
+     * Still records nothing, but no longer answers "ok" while doing it.
+     *
+     * The bland 200 was there so a prober could not learn which degrees are
+     * valid. It hid nothing — the wizard renders the whole list on the page —
+     * and it meant a real visitor whose degree went missing was thanked for a
+     * submission that stored nothing and emailed no one.
+     */
     public function test_submit_with_invalid_degree_records_nothing(): void
     {
-        $this->post('/profiler', [
+        $this->postJson('/profiler', [
             'action'  => 'submit',
             'degree'  => 'hacker',
             'section' => 1,
             'answers' => ['x' => 'y'],
-        ])->assertOk()->assertJson(['ok' => true]);
+        ])->assertStatus(422)->assertJson(['ok' => false, 'field' => 'degree']);
 
         $this->assertDatabaseCount('crm_website_submissions', 0);
     }
@@ -124,4 +133,38 @@ class StudentProfilerTest extends TestCase
 
         $this->assertDatabaseCount('crm_website_submissions', 0);
     }
+    /**
+     * The bug this covers: a submit carrying no valid degree fell past the
+     * capture and still answered with the success message. The visitor was
+     * thanked, no lead was stored, no mail was sent and nothing was logged —
+     * eight real submissions were lost that way on UAT before it was noticed.
+     */
+    public function test_a_submit_without_a_degree_is_refused_rather_than_thanked(): void
+    {
+        foreach ([null, '', 'not-a-degree'] as $degree) {
+            $this->postJson('/profiler', [
+                'action' => 'submit', 'degree' => $degree, 'section' => 6,
+                'answers' => ['q_ec_level' => 'Just Participated'],
+                'contact' => ['name' => 'Lost Student', 'email' => 'lost@mailbox.test', 'phone' => '9998887771'],
+            ])->assertStatus(422)->assertJson(['ok' => false, 'field' => 'degree']);
+        }
+
+        // Nothing captured, and no success message anywhere near it.
+        $this->assertSame(0, CrmLead::query()->count());
+        $this->assertSame(0, CrmWebsiteSubmission::query()->count());
+    }
+
+    /** A placeholder address is refused, and says why rather than "invalid". */
+    public function test_a_placeholder_email_is_refused_with_a_reason(): void
+    {
+        $response = $this->postJson('/profiler', [
+            'action' => 'submit', 'degree' => 'masters', 'section' => 6,
+            'answers' => ['q_ec_level' => 'Just Participated'],
+            'contact' => ['name' => 'Tester', 'email' => 'test@example.com', 'phone' => '9998887772'],
+        ])->assertStatus(422)->assertJson(['ok' => false, 'field' => 'email']);
+
+        $this->assertStringContainsString('example.com', $response->json('message'));
+        $this->assertSame(0, CrmLead::query()->count());
+    }
+
 }

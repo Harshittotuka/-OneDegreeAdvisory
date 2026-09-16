@@ -67,13 +67,15 @@ class ProfileReportMailTest extends TestCase
     {
         Mail::fake();
 
-        $this->post('/profiler', [
+        // Refused rather than thanked: a submit that mails no one must not tell
+        // the visitor it succeeded (StudentProfilerController::handle).
+        $this->postJson('/profiler', [
             'action'  => 'submit',
             'degree'  => 'hacker',
             'section' => 1,
             'answers' => ['x' => 'y'],
             'contact' => ['name' => 'X', 'email' => 'x@testmail.dev', 'phone' => '1'],
-        ])->assertOk()->assertJson(['ok' => true]);
+        ])->assertStatus(422)->assertJson(['ok' => false, 'field' => 'degree']);
 
         Mail::assertNothingSent();
     }
