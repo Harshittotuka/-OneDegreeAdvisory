@@ -90,6 +90,12 @@ class StudentProfilerController
         // The relay accepts them, retries for hours, then bounces — so they are
         // refused here: no lead is captured and no mail is sent.
         if ($contact['email'] !== '' && str_contains(mb_strtolower($contact['email']), 'example')) {
+            // Logged for the same reason the degree refusal is: a submit that
+            // stores nothing should be answerable afterwards. Without this, a
+            // refusal was indistinguishable from any other in the access log and
+            // the only way to tell them apart was to ask the visitor.
+            report(new \RuntimeException('Profiler submit refused: placeholder email ('.$contact['email'].').'));
+
             return response()->json([
                 'ok'      => false,
                 'field'   => 'email',
