@@ -74,7 +74,13 @@
         }).then(function (r) {
             // Parse the body even on 4xx, so a server rejection (e.g. a blocked
             // placeholder email) reaches the caller instead of collapsing to null.
-            return r.json().catch(function () { return null; });
+            // The transport result travels with it: a 4xx whose body is not this
+            // endpoint's own {ok:false} shape — a framework validation error,
+            // say — used to be read as a success and drew the thank-you popup
+            // over a submission that stored nothing.
+            return r.json().catch(function () { return null; }).then(function (body) {
+                return { httpOk: r.ok, body: (body && typeof body === "object") ? body : null };
+            });
         }).catch(function () { return null; });
     }
 
@@ -834,6 +840,25 @@
     }
 
     /* ===================== SUBMIT + SUCCESS POPUP ===================== */
+    // A refusal arrives either in this endpoint's own shape ({ok,field,message})
+    // or as a framework validation error ({message,errors:{field:[...]}}). Read
+    // both, so a message always reaches the visitor.
+    function errMessage(body) {
+        if (!body) return "We could not send your profile just now. Please check your connection and try again.";
+        if (body.message) return body.message;
+        var keys = body.errors ? Object.keys(body.errors) : [];
+        if (keys.length) return [].concat(body.errors[keys[0]])[0];
+        return "Please check your details and try again.";
+    }
+
+    // Only name, email and phone have a slot to show a message in; anything
+    // else (an error about the contact as a whole) hangs off the email.
+    function errField(body) {
+        var f = body && body.field;
+        return (f === "name" || f === "phone") ? f : "email";
+    }
+
+
     function submit(e) {
         var btn = e && e.currentTarget;
         if (!validateContact()) return;
@@ -841,9 +866,12 @@
         if (btn) { btn.disabled = true; btn.innerHTML = "Submitting…"; }
         save("submit").then(function (res) {
             if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
-            // An explicit server rejection must never render as a successful submit.
-            if (res && res.ok === false) {
-                var fld = setCErr(res.field || "email", res.message || "Please check your details.");
+            var body = res && res.body;
+            // Only a clean success is a success. Anything else — the request
+            // never completing, any non-2xx, or an explicit refusal — has to
+            // say so: the thank-you popup means the profile is stored.
+            if (!res || !res.httpOk || (body && body.ok === false)) {
+                var fld = setCErr(errField(body), errMessage(body));
                 if (fld) fld.scrollIntoView({ behavior: "smooth", block: "center" });
                 return;
             }

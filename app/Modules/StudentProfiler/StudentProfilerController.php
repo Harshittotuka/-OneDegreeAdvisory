@@ -10,6 +10,7 @@ use App\Support\WebsiteSubmissionData;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\View;
 
 /**
@@ -139,14 +140,30 @@ class StudentProfilerController
         // admin panel — no scoring is performed.
         $sections = WebsiteSubmissionData::snapshot($config['sections'][$degree] ?? [], $answers);
 
-        $this->leads->capture(
-            'profiler',
-            'Student Profiler',
-            $degree,
-            $sections,
-            $contact,
-            partnerCode: $partner,
-        );
+        // WebsiteLeadManager refuses a submission whose phone and email point at
+        // two different existing people, by throwing a ValidationException. That
+        // renders as the framework's {message, errors} body, which this endpoint's
+        // client does not recognise — it looks for {ok:false} — so it drew the
+        // thank-you popup over a submission that stored nothing and mailed no one.
+        // Answering in our own shape is what makes the refusal visible.
+        try {
+            $this->leads->capture(
+                'profiler',
+                'Student Profiler',
+                $degree,
+                $sections,
+                $contact,
+                partnerCode: $partner,
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'ok'      => false,
+                // Only name, email and phone have somewhere to show a message;
+                // this one is about the pair, so it hangs off the email.
+                'field'   => 'email',
+                'message' => $e->validator->errors()->first(),
+            ], 422);
+        }
 
         // Email a profile report to the team + a thank-you to the student,
         // and a referral notice to the partner when the link carried a code

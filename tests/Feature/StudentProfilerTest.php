@@ -167,4 +167,38 @@ class StudentProfilerTest extends TestCase
         $this->assertSame(0, CrmLead::query()->count());
     }
 
+    /**
+     * The bug this covers: a phone and email that point at two different
+     * existing leads make WebsiteLeadManager throw a ValidationException, which
+     * renders as the framework's {message, errors} body. The wizard only looks
+     * for {ok:false}, so it read that as a success and drew the thank-you popup
+     * over a submission that stored nothing and mailed no one.
+     */
+    public function test_a_contact_conflict_is_refused_in_the_shape_the_wizard_reads(): void
+    {
+        CrmLead::query()->create([
+            'lead_number' => 'OD-10001', 'name' => 'Person One', 'phone' => '9998887771',
+            'email' => 'one@mailbox.test', 'priority' => 'medium', 'status' => 'new',
+        ]);
+        CrmLead::query()->create([
+            'lead_number' => 'OD-10002', 'name' => 'Person Two', 'phone' => '9998887772',
+            'email' => 'two@mailbox.test', 'priority' => 'medium', 'status' => 'new',
+        ]);
+
+        // One person's phone with the other's email.
+        $response = $this->postJson('/profiler', [
+            'action' => 'submit', 'degree' => 'masters', 'section' => 6,
+            'answers' => ['q_ec_level' => 'Just Participated'],
+            'contact' => ['name' => 'Mixed Up', 'email' => 'two@mailbox.test', 'phone' => '9998887771'],
+        ])->assertStatus(422);
+
+        // The wizard's own shape, so it renders as a refusal and not as success.
+        $response->assertJson(['ok' => false, 'field' => 'email']);
+        $this->assertStringContainsString('do not match the same existing contact', $response->json('message'));
+
+        // And nothing was captured for it.
+        $this->assertSame(2, CrmLead::query()->count());
+        $this->assertSame(0, CrmWebsiteSubmission::query()->count());
+    }
+
 }
