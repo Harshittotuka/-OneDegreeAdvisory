@@ -106,11 +106,17 @@ class StudentProfilerController
         $partner = CrmPartnerCode::resolve($request->input('partner', $request->query('partner')));
 
         // A submit with no valid degree used to fall straight past the capture
-        // below and still answer with the success message: the visitor was
-        // thanked, no lead was stored, no mail went out, and nothing was logged.
-        // Eight submissions were lost that way before anyone noticed, so it is
-        // refused loudly instead. The wizard posts whatever `degree` its state
-        // holds, and that state can be null after a reload or a stale tab.
+        // below and still answer with the success message: thanked, nothing
+        // stored, no mail, nothing logged.
+        //
+        // The wizard cannot reach this state on its own — renderWizard() runs
+        // only from selectDegree(), so the submit button does not exist until a
+        // degree is chosen, and there is no history handling that could restore
+        // the review screen without one. This guards the other callers: a direct
+        // POST, an integration, a future change to the client. Answering "ok" to
+        // a request that stored nothing is the part worth refusing, whoever made
+        // it, and report() means a real occurrence shows up in the log instead of
+        // being invisible.
         if (! $degree) {
             report(new \RuntimeException(
                 'Profiler submit refused: no valid degree (got '.var_export($request->input('degree'), true).').'
