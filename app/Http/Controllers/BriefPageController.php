@@ -23,18 +23,25 @@ class BriefPageController extends Controller
 
     public function show(string $slug): View|RedirectResponse
     {
-        $page = $this->store->find($slug);
+        $requestPath = '/'.ltrim(request()->path(), '/');
+
+        // A page's public URL is whatever it stores in `path`, so resolve by
+        // that before falling back to the slug. /briefs/{slug} used to look the
+        // slug up directly, which 404'd any page pointed at a /briefs/ URL that
+        // was not its own slug -- an editor moving a page to /briefs/scholarship
+        // while its slug was scholarship-4 got a 404 they could not explain.
+        $page = $this->store->findByPath($requestPath) ?? $this->store->find($slug);
         if ($page === null) {
             abort(404);
         }
 
-        // These four URLs are hardcoded routes, so they keep answering even
+        // The four seeded URLs are hardcoded routes, so they keep answering even
         // after an editor moves the page in the Page Builder. Send visitors on
         // to the path the page now claims, or renaming one would appear to do
         // nothing. Temporary, not permanent: an editor can move a page back and
         // a cached 301 would strand the original URL.
         $path = $page['path'] ?? null;
-        if (is_string($path) && $path !== '' && $path !== '/'.ltrim(request()->path(), '/')) {
+        if (is_string($path) && $path !== '' && $path !== $requestPath) {
             return redirect()->to($path);
         }
 

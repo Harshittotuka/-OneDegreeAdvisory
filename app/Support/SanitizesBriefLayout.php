@@ -184,7 +184,7 @@ trait SanitizesBriefLayout
         }
 
         $claim = $this->routeClaiming($p);
-        if ($claim !== null && ! $this->routeServesPage($claim, $p, (string) ($page['slug'] ?? ''))) {
+        if ($claim !== null && ! $this->routeServesPage($claim, $p, $page, $store)) {
             return $current;
         }
 
@@ -216,16 +216,32 @@ trait SanitizesBriefLayout
     }
 
     /**
-     * Whether the claiming route is one that already serves this same page —
-     * the four seeded top-level routes and /briefs/{slug}. Those are the page's
-     * own URLs, so keeping one is a no-op rather than a collision.
+     * Whether the claiming route would still serve this page — the four seeded
+     * top-level routes and /briefs/{slug} are CMS routes, so landing on one is
+     * not the silent dead end that an application route would be.
      */
-    private function routeServesPage(RoutingRoute $route, string $path, string $slug): bool
+    private function routeServesPage(RoutingRoute $route, string $path, array $page, BriefPageStore $store): bool
     {
+        $slug = (string) ($page['slug'] ?? '');
         if ($slug === '' || ! str_contains((string) $route->getActionName(), 'BriefPageController')) {
             return false;
         }
 
-        return ($route->defaults['slug'] ?? null) === $slug || $path === '/briefs/'.$slug;
+        // Its own seeded top-level URL (/europe, /wednesday-briefings, ...).
+        if (($route->defaults['slug'] ?? null) === $slug) {
+            return true;
+        }
+
+        // BriefPageController::show resolves by stored path first, so any
+        // /briefs/... URL reaches this page. The exception is a segment that is
+        // another page's slug: that is the URL show() falls back to for them, so
+        // taking it would cost them their own address.
+        if (str_starts_with($path, '/briefs/')) {
+            $tail = substr($path, strlen('/briefs/'));
+
+            return $tail === $slug || $store->find($tail) === null;
+        }
+
+        return false;
     }
 }

@@ -101,6 +101,40 @@ class PageBuilderUrlPathTest extends TestCase
         $this->get('/wednesday-briefings')->assertRedirect('/wednesday-intel');
     }
 
+    public function test_a_briefs_url_that_is_not_the_pages_own_slug_still_serves_it(): void
+    {
+        // The live case: an editor whose page ended up with slug "scholarship-4"
+        // pointed it at /briefs/scholarship. /briefs/{slug} used to look the slug
+        // up directly, so the URL they had just been told was saved 404'd.
+        $store = app(BriefPageStore::class);
+        $page = $store->find('test');
+        $page['slug'] = 'scholarship-4';
+        $page['visible'] = true;
+        $store->save($page, 'test');
+
+        $this->saveWithPath('scholarship-4', '/briefs/scholarship')
+            ->assertOk()
+            ->assertJsonPath('path', '/briefs/scholarship')
+            ->assertJsonMissingPath('path_message');
+
+        $this->get('/briefs/scholarship')->assertOk();
+    }
+
+    public function test_a_briefs_url_belonging_to_another_page_is_still_refused(): void
+    {
+        // /briefs/europe is the URL show() falls back to for the europe page, so
+        // another page may not take it.
+        $this->saveWithPath('test', '/briefs/europe')
+            ->assertOk()
+            ->assertJsonPath('path', '/briefs/test')
+            ->assertJsonPath('path_message', fn ($m) => is_string($m));
+    }
+
+    public function test_an_unknown_briefs_url_is_still_a_404(): void
+    {
+        $this->get('/briefs/nothing-here')->assertNotFound();
+    }
+
     public function test_an_unmoved_seeded_page_still_serves_its_own_url(): void
     {
         $this->get('/wednesday-briefings')->assertOk();
