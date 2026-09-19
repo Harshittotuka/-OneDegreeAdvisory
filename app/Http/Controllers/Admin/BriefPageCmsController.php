@@ -147,7 +147,8 @@ class BriefPageCmsController extends Controller
 
         $page['title'] = mb_substr(trim((string) $request->input('title', $page['title'] ?? 'Untitled')), 0, 160) ?: 'Untitled';
         $page['visible'] = $request->boolean('visible');
-        $page['path'] = $this->cleanPath((string) $request->input('path', $page['path'] ?? ''), $page, $this->store);
+        $wantedPath = (string) $request->input('path', $page['path'] ?? '');
+        $page['path'] = $this->cleanPath($wantedPath, $page, $this->store);
         // Inline (freshly cropped/uploaded) images → disk, then sanitize every block.
         $layout = $this->persistInlineImages($layout, 'brief');
         $page['layout'] = $this->sanitizeLayout($layout);
@@ -157,7 +158,14 @@ class BriefPageCmsController extends Controller
 
         $this->store->save($page, $slug);
 
-        return response()->json(['ok' => true, 'message' => 'Page saved.', 'path' => $page['path']]);
+        return response()->json(array_filter([
+            'ok' => true,
+            'message' => 'Page saved.',
+            'path' => $page['path'],
+            // cleanPath keeps the old URL when the new one is unusable; say so,
+            // or the editor sees "Saved" and a URL that did not move.
+            'path_message' => $this->pathRefusedMessage($wantedPath, $page['path']),
+        ], fn ($v) => $v !== null));
     }
 
     /** Blank block for the palette: returns its rendered node + settings form. */
@@ -360,6 +368,20 @@ class BriefPageCmsController extends Controller
     }
 
     /* ───────────────────────── Sanitization ───────────────────────── */
+
+    /**
+     * Why the requested URL path was not taken, or null when it was. cleanPath
+     * normalizes before it decides, so compare against the same normal form.
+     */
+    private function pathRefusedMessage(string $wanted, string $saved): ?string
+    {
+        $wanted = preg_replace('#/+#', '/', '/'.trim(strtolower(trim($wanted)), '/'));
+        if ($wanted === $saved) {
+            return null;
+        }
+
+        return 'The page is still at '.$saved.' — that URL is already used by another page or part of the site.';
+    }
 
     /**
      * Page Builder is open to every signed-in CMS admin — the route group already

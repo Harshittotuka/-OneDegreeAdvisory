@@ -1199,7 +1199,7 @@
         document.getElementById('tb-status').textContent='✓ Saved';
         toast(d.message||'Saved');
         if(d.path){
-          if(d.path!==payload.path) toast('That URL was not available — kept '+d.path,1);
+          if(d.path_message) toast(d.path_message,1);
           document.getElementById('bp-path').value=d.path;
           document.getElementById('tb-view').href=d.path;
         }

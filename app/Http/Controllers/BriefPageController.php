@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Support\BriefPageStore;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * Renders a CMS-built "brief" page (the .odp-* design system) from the
  * BriefPageStore. The four seeded pages keep their original top-level URLs
- * (route defaults supply their slug); every other page is resolved by its
- * custom path via the fallback route (showByPath). Hidden pages stay 404 for
+ * (route defaults supply their slug) until an editor moves them, after which
+ * the original URL redirects to the new one; every other page is resolved by
+ * its custom path via the fallback route (showByPath). Hidden pages stay 404 for
  * the public but remain viewable by a logged-in super-admin, so "Save → View"
  * always works while drafting.
  */
@@ -19,11 +21,21 @@ class BriefPageController extends Controller
     {
     }
 
-    public function show(string $slug): View
+    public function show(string $slug): View|RedirectResponse
     {
         $page = $this->store->find($slug);
         if ($page === null) {
             abort(404);
+        }
+
+        // These four URLs are hardcoded routes, so they keep answering even
+        // after an editor moves the page in the Page Builder. Send visitors on
+        // to the path the page now claims, or renaming one would appear to do
+        // nothing. Temporary, not permanent: an editor can move a page back and
+        // a cached 301 would strand the original URL.
+        $path = $page['path'] ?? null;
+        if (is_string($path) && $path !== '' && $path !== '/'.ltrim(request()->path(), '/')) {
+            return redirect()->to($path);
         }
 
         return $this->render($page);

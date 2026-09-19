@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route as RoutingRoute;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 /**
@@ -154,9 +157,14 @@ trait SanitizesBriefLayout
     }
 
     /**
-     * Normalize a caller-chosen URL path. Invalid, reserved or already-taken
-     * paths fall back to the page's current path (so a bad edit can never
-     * orphan a live page).
+     * Normalize a caller-chosen URL path. Invalid, reserved, route-shadowed or
+     * already-taken paths fall back to the page's current path (so a bad edit
+     * can never orphan a live page).
+     *
+     * A CMS page is served by the fallback route, which only runs when nothing
+     * else matched, so a path an application route already answers would be
+     * stored but never reached. Those are refused here rather than saved as a
+     * URL change that silently does nothing.
      */
     protected function cleanPath(string $raw, array $page, BriefPageStore $store): string
     {
@@ -175,11 +183,49 @@ trait SanitizesBriefLayout
             }
         }
 
+        $claim = $this->routeClaiming($p);
+        if ($claim !== null && ! $this->routeServesPage($claim, $p, (string) ($page['slug'] ?? ''))) {
+            return $current;
+        }
+
         $other = $store->findByPath($p);
         if ($other !== null && ($other['slug'] ?? null) !== ($page['slug'] ?? null)) {
             return $current;
         }
 
         return $p;
+    }
+
+    /** The registered GET route that already answers $path, ignoring the fallback. */
+    private function routeClaiming(string $path): ?RoutingRoute
+    {
+        $request = Request::create($path, 'GET');
+
+        foreach (Route::getRoutes()->getRoutes() as $route) {
+            if ($route->isFallback || ! in_array('GET', $route->methods(), true)) {
+                continue;
+            }
+            // matches() without binding, so probing a path never mutates the
+            // route instances serving the request we are in.
+            if ($route->matches($request, false)) {
+                return $route;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether the claiming route is one that already serves this same page —
+     * the four seeded top-level routes and /briefs/{slug}. Those are the page's
+     * own URLs, so keeping one is a no-op rather than a collision.
+     */
+    private function routeServesPage(RoutingRoute $route, string $path, string $slug): bool
+    {
+        if ($slug === '' || ! str_contains((string) $route->getActionName(), 'BriefPageController')) {
+            return false;
+        }
+
+        return ($route->defaults['slug'] ?? null) === $slug || $path === '/briefs/'.$slug;
     }
 }

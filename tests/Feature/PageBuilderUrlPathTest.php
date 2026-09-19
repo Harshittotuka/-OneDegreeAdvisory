@@ -1,0 +1,109 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Support\BriefPageStore;
+use Tests\TestCase;
+
+/**
+ * Changing a page's URL in the Page Builder. A CMS page is served by the
+ * fallback route, so a path an application route already answers can never
+ * reach the page — those saves used to be accepted and silently do nothing.
+ */
+class PageBuilderUrlPathTest extends TestCase
+{
+    private string $storePath;
+
+    private ?string $original = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->storePath = storage_path('app/brief-pages.json');
+        $this->original = is_file($this->storePath) ? file_get_contents($this->storePath) : null;
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->original !== null) {
+            file_put_contents($this->storePath, $this->original);
+        }
+
+        parent::tearDown();
+    }
+
+    /** Save $slug through the studio endpoint with a new URL path. */
+    private function saveWithPath(string $slug, string $path)
+    {
+        $page = app(BriefPageStore::class)->find($slug);
+        $this->assertNotNull($page, "fixture page [$slug] is missing");
+
+        return $this->withSession(['cms_authenticated' => true, 'cms_super_admin' => true])
+            ->postJson(route('admin.pages.save', $slug), [
+                'title' => $page['title'] ?? 'Untitled',
+                'visible' => true,
+                'path' => $path,
+                'layout' => $page['layout'] ?? [],
+                'page_title' => $page['page_title'] ?? '',
+                'meta_description' => $page['meta_description'] ?? '',
+            ]);
+    }
+
+    public function test_a_free_url_is_saved_and_serves_the_page(): void
+    {
+        $this->saveWithPath('test', '/destination-canada')
+            ->assertOk()
+            ->assertJsonPath('path', '/destination-canada')
+            ->assertJsonMissingPath('path_message');
+
+        $this->assertSame('/destination-canada', app(BriefPageStore::class)->find('test')['path']);
+        $this->get('/destination-canada')->assertOk();
+    }
+
+    public function test_a_url_an_application_route_answers_is_refused_with_a_reason(): void
+    {
+        $this->saveWithPath('test', '/destination-canada')->assertOk();
+
+        // A live page, a route with a parameter, and a redirect route: none of
+        // these ever reach the fallback, so none may be handed to a CMS page.
+        foreach (['/statement-of-purpose', '/courses/mba', '/countries/canada', '/packages'] as $taken) {
+            $this->saveWithPath('test', $taken)
+                ->assertOk()
+                ->assertJsonPath('path', '/destination-canada')
+                ->assertJsonPath('path_message', fn ($m) => is_string($m) && str_contains($m, '/destination-canada'));
+        }
+
+        $this->assertSame('/destination-canada', app(BriefPageStore::class)->find('test')['path']);
+    }
+
+    public function test_a_page_may_be_moved_back_to_its_own_briefs_url(): void
+    {
+        $this->saveWithPath('test', '/destination-canada')->assertOk();
+
+        // /briefs/{slug} is a real route, but it is this page's own, so keeping
+        // or returning to it is not a collision.
+        $this->saveWithPath('test', '/briefs/test')
+            ->assertOk()
+            ->assertJsonPath('path', '/briefs/test');
+    }
+
+    public function test_moving_a_seeded_page_redirects_its_original_url(): void
+    {
+        $this->saveWithPath('wednesday-briefings', '/wednesday-intel')
+            ->assertOk()
+            ->assertJsonPath('path', '/wednesday-intel');
+
+        $this->get('/wednesday-intel')->assertOk();
+
+        // The original URL is a hardcoded route that keeps answering, so it has
+        // to forward rather than go on serving the page at its old address.
+        $this->get('/wednesday-briefings')->assertRedirect('/wednesday-intel');
+    }
+
+    public function test_an_unmoved_seeded_page_still_serves_its_own_url(): void
+    {
+        $this->get('/wednesday-briefings')->assertOk();
+        $this->get('/europe')->assertOk();
+    }
+}
