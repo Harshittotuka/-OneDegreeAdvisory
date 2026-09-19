@@ -135,6 +135,29 @@ class PageBuilderUrlPathTest extends TestCase
         $this->get('/briefs/nothing-here')->assertNotFound();
     }
 
+    public function test_renaming_a_pages_title_never_moves_its_url(): void
+    {
+        // The slug is assigned once at creation and save() never recomputes it,
+        // so a retitle cannot strand the URL the page is already published at.
+        $this->saveWithPath('test', '/briefs/test')->assertOk();
+
+        $page = app(BriefPageStore::class)->find('test');
+        $this->withSession(['cms_authenticated' => true, 'cms_super_admin' => true])
+            ->postJson(route('admin.pages.save', 'test'), [
+                'title' => 'A Completely Different Name',
+                'visible' => true,
+                'path' => '/briefs/test',
+                'layout' => $page['layout'] ?? [],
+                'page_title' => '', 'meta_description' => '',
+            ])->assertOk()->assertJsonPath('path', '/briefs/test');
+
+        $after = app(BriefPageStore::class)->find('test');
+        $this->assertSame('A Completely Different Name', $after['title']);
+        $this->assertSame('test', $after['slug'], 'a retitle must not change the slug');
+        $this->assertSame('/briefs/test', $after['path']);
+        $this->get('/briefs/test')->assertOk();
+    }
+
     public function test_an_unmoved_seeded_page_still_serves_its_own_url(): void
     {
         $this->get('/wednesday-briefings')->assertOk();
