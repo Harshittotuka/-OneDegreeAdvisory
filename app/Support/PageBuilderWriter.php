@@ -257,6 +257,15 @@ class PageBuilderWriter
             ]);
         }
 
+        // Same refusal the studio gives: truncating an embed block mid-tag
+        // loses everything after the cut without saying so.
+        $over = $this->oversizedCodeBlocks($layout);
+        if ($over !== []) {
+            throw ValidationException::withMessages([
+                'layout' => $this->oversizedCodeMessage($over),
+            ]);
+        }
+
         // Any data: image URLs → the public disk, then schema-sanitize every block.
         return $this->sanitizeLayout($this->persistInlineImages($layout, 'brief'));
     }

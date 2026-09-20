@@ -134,6 +134,17 @@ class BriefPageCmsController extends Controller
             return response()->json(['ok' => false, 'message' => 'Bad payload.'], 422);
         }
 
+        // Refuse before sanitizing: an oversized embed block would be cut
+        // mid-tag and stored as a success, which is how a live page ended up
+        // with popovertarget buttons whose dialogs had been trimmed away.
+        $over = $this->oversizedCodeBlocks($layout);
+        if ($over !== []) {
+            return response()->json([
+                'ok' => false,
+                'message' => $this->oversizedCodeMessage($over),
+            ], 422);
+        }
+
         // Security gate: a page containing a payment section can only be saved
         // with a valid authorization OTP — proves the editor is allowed to
         // publish a live payment gateway (see requestPaymentOtp/verifyPaymentOtp).

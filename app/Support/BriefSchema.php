@@ -18,6 +18,24 @@ namespace App\Support;
  */
 class BriefSchema
 {
+    /**
+     * Ceiling for one `code` field's raw markup, in characters.
+     *
+     * This was 120000 and was applied with a bare mb_substr, so a larger block
+     * was cut at exactly that character and the save still reported success.
+     * The cut lands mid-tag, and everything past it went with it — a trailing
+     * <script>, and any markup the top of the block points at, such as the
+     * dialogs behind a row of popovertarget buttons. A live page could
+     * therefore show its styles and its buttons intact while the elements
+     * those buttons opened did not exist anywhere in the document.
+     *
+     * Oversized blocks are refused now (see SanitizesBriefLayout), so an editor
+     * is told to split the section rather than handed a broken one. The ceiling
+     * stays finite because brief-pages.json is read and decoded in full on
+     * every request that renders a CMS page.
+     */
+    public const CODE_MAX = 500000;
+
     /** All block types, keyed by type slug. Order = the "Add block" palette order. */
     public static function types(): array
     {

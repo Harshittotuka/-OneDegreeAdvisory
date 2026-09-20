@@ -19,6 +19,56 @@ use Illuminate\Support\Str;
  */
 trait SanitizesBriefLayout
 {
+    /**
+     * Ids of blocks whose raw code exceeds CODE_MAX, with their lengths.
+     * Empty means the layout is safe to sanitize without losing anything.
+     *
+     * @return array<int, array{id: string, length: int}>
+     */
+    protected function oversizedCodeBlocks(array $rows): array
+    {
+        $over = [];
+        foreach ($rows as $row) {
+            foreach ((is_array($row) ? ($row['cols'] ?? []) : []) as $col) {
+                foreach ((is_array($col) ? ($col['blocks'] ?? []) : []) as $block) {
+                    if (! is_array($block)) {
+                        continue;
+                    }
+                    $type = (string) ($block['type'] ?? '');
+                    if (! BriefSchema::isType($type)) {
+                        continue;
+                    }
+                    $data = is_array($block['data'] ?? null) ? $block['data'] : [];
+                    foreach (BriefSchema::type($type)['fields'] ?? [] as $field) {
+                        if (($field['type'] ?? '') !== 'code') {
+                            continue;
+                        }
+                        $length = mb_strlen((string) ($data[$field['key']] ?? ''));
+                        if ($length > BriefSchema::CODE_MAX) {
+                            $over[] = ['id' => (string) ($block['id'] ?? '?'), 'length' => $length];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $over;
+    }
+
+    /** Editor-facing wording for a refused oversized save. */
+    protected function oversizedCodeMessage(array $over): string
+    {
+        $first = $over[0] ?? ['length' => 0];
+
+        return sprintf(
+            'An AI / Embed block is too large to save (%s characters; the limit is %s). '
+            .'Saving it would cut it off mid-tag and silently lose everything after that point. '
+            .'Split the section across two embed blocks and save again.',
+            number_format($first['length']),
+            number_format(BriefSchema::CODE_MAX)
+        );
+    }
+
     /** Rebuild rows → cols → blocks, keeping only schema-known blocks and fields. */
     protected function sanitizeLayout(array $rows): array
     {
@@ -123,8 +173,11 @@ trait SanitizesBriefLayout
                 ? (string) $value
                 : (string) array_key_first($field['options'] ?? ['' => '']),
             'richtext' => $this->cleanRichText((string) $value),
-            // Raw embed code (HTML/CSS/JS), stored as-is (capped).
-            'code' => mb_substr((string) $value, 0, 120000),
+            // Raw embed code (HTML/CSS/JS), stored as-is. The cap is a last
+            // resort: a save carrying more is refused up front by
+            // oversizedCodeBlocks(), because cutting a block mid-tag destroys
+            // it rather than shortening it.
+            'code' => mb_substr((string) $value, 0, BriefSchema::CODE_MAX),
             'image' => mb_substr(trim((string) $value), 0, 2000),
             'textarea' => mb_substr(trim((string) $value), 0, 6000),
             default => mb_substr(trim((string) $value), 0, 1000),
