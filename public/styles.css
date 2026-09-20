@@ -26247,12 +26247,40 @@ main :is(
   to   { opacity: 1; transform: none; }
 }
 
+/* The same entry, minus the lift — see .odp-has-embed below. */
+@keyframes page-content-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* Fresh loads only. A same-site navigation is already animated by the
    cross-document view transition, and playing both makes the content
    cross-fade and then lift again — a visible double-take. html.is-vt-nav marks
    exactly those navigations, set before first paint by the inline head script
    in layouts/app.blade.php. CMS live editors are excluded: they re-render the
-   page as you type, and each re-render would replay the animation. */
+   page as you type, and each re-render would replay the animation.
+
+   The fill is `backwards`, never `forwards`. An element whose transform is
+   being animated is the containing block for its position:fixed descendants,
+   and a forwards fill never ends — it holds the final keyframe for the life of
+   the page, so <main> would keep that role long after the 420ms is over. The
+   final keyframe is `transform: none`, which is also the base value, so
+   dropping the forwards fill is invisible: the animation still lands exactly
+   where it did, it simply stops claiming the element afterwards. */
 html:not(.is-vt-nav) body:not(.cms-editing) main {
-  animation: page-content-enter 420ms cubic-bezier(.22, .61, .36, 1) both;
+  animation: page-content-enter 420ms cubic-bezier(.22, .61, .36, 1) backwards;
+}
+
+/* Pages carrying a Page Builder "AI / Embed" block fade in without the lift.
+   `backwards` above frees position:fixed descendants once the animation is
+   over, but during the 420ms <main> is still their containing block — fine for
+   the site's own fixed UI, which is either outside <main> or re-parented to
+   <body> when it opens, and not fine for pasted markup, which is fixed from
+   the first frame. Such an overlay would be laid out against <main> and then
+   clipped away entirely by .odp-file-page's overflow-x: clip. Animating only
+   opacity creates a stacking context but never a containing block, so the
+   entry survives and the pasted section behaves as written.
+   Set by resources/views/pages/brief.blade.php. */
+html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
+  animation-name: page-content-fade;
 }

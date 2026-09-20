@@ -937,11 +937,20 @@
     p.then(function(){toast('Prompt copied — paste it into any AI');})
      .catch(function(){ try{document.execCommand('copy');toast('Prompt copied');}catch(err){toast('Select and copy manually',1);} });
   });
+  // A pasted block is kept whole. Cutting straight to <body> used to be the
+  // first move, and it silently dropped everything the section needed from
+  // <head> -- its <style>, its font <link>, its <script src> -- along with any
+  // closing <script> placed after </body>. Only the document scaffolding goes,
+  // plus the head-only tags that would otherwise show up as stray text once
+  // their <head> no longer exists.
   function cleanPastedCode(s){
     s=(s||'').trim();
     s=s.replace(/^`{3,}[a-zA-Z]*\s*\n?/,'').replace(/\n?`{3,}\s*$/,'').trim();
-    var bm=s.match(/<body[^>]*>([\s\S]*?)<\/body>/i); if(bm) s=bm[1].trim();
-    s=s.replace(/<!doctype[^>]*>/ig,'').replace(/<\/?(html|head|body)\b[^>]*>/ig,'').trim();
+    s=s.replace(/<!doctype[^>]*>/ig,'')
+       .replace(/<title[^>]*>[\s\S]*?<\/title>/ig,'')
+       .replace(/<(meta|base)\b[^>]*>/ig,'')
+       .replace(/<\/?(html|head|body)\b[^>]*>/ig,'')
+       .trim();
     return s;
   }
   function extractPaymentSpec(s){
