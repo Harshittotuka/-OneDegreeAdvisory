@@ -26136,6 +26136,18 @@ main :is(
   text-align: inherit;
 }
 
+/* …and never inside a Page Builder "AI / Embed" block. That block is pasted
+   markup rendered verbatim, with its own self-contained stylesheet — it is not
+   this site's prose, and it cannot be added to the list above because the list
+   names classes and pasted sections bring their own. Justification is at its
+   worst in a narrow column, so on a phone the effect was a hero paragraph full
+   of rivers: "Explore    verified    scholarship    opportunities". Handing the
+   paragraph back its own wrapper's alignment restores whatever the section
+   asked for, which for a centred hero is centred. */
+main .odp-embed :is(p, li) {
+  text-align: inherit;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════════
    LAPTOP BAND (2026-07-27)
    ─────────────────────────────────────────────────────────────────────────────
