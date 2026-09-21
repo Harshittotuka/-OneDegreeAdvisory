@@ -592,11 +592,21 @@
   /* ════════ inline editing of AI / embed sections ════════ */
   var INLINE_TAGS='h1,h2,h3,h4,h5,h6,p,a,span,li,button,td,th,dt,dd,figcaption,blockquote,strong,em,b,i,small,label';
   var inlineEl=null;
+  // Inline editing writes the canvas back into the block's textarea, which is
+  // the copy that gets saved. The canvas is only populated by renderBlock, and
+  // that is debounced, so between pasting into the textarea and the re-render
+  // landing the node is still empty. Writing that back replaced the paste with
+  // an empty string and the next save stored a blank block — a 254KB section
+  // was lost to one click this way. The preview never overwrites real markup
+  // with nothing; if it is empty and the textarea is not, the textarea wins.
   function syncEmbed(blockEl){
     var node=blockEl.querySelector(':scope > .st-block-node');
     var form=formFor(blockEl.dataset.id);
     var ta=form&&form.querySelector('[data-field="html"]');
-    if(node&&ta){ ta.value=node.innerHTML; dirtyMark(); }
+    if(!node||!ta) return;
+    var next=node.innerHTML;
+    if(next.trim()==='' && ta.value.trim()!==''){ return; }
+    ta.value=next; dirtyMark();
   }
   function endInlineEdit(){
     if(!inlineEl) return;
@@ -1197,6 +1207,19 @@
       path:document.getElementById('bp-path').value,
       layout:buildLayout()
     };
+    // Last line of defence against saving away a section. Nobody keeps an empty
+    // AI / Embed block on purpose, so if one is about to be stored blank it is
+    // far more likely that something dropped its markup on the way here.
+    var blank=0;
+    payload.layout.forEach(function(r){ r.cols.forEach(function(c){ c.blocks.forEach(function(b){
+      if(b.type==='embed' && !String(b.data.html||'').trim()) blank++;
+    });});});
+    if(blank && !confirm(blank===1
+        ? 'One AI / Embed block is empty and saving now would store it blank, replacing whatever it held. Save anyway?'
+        : blank+' AI / Embed blocks are empty and saving now would store them blank, replacing whatever they held. Save anyway?')){
+      document.getElementById('tb-status').textContent='';
+      return;
+    }
     document.getElementById('tb-status').textContent='Saving…';
     fetch(SAVE,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(r){return r.json().then(function(d){return {status:r.status,d:(d||{})};});})

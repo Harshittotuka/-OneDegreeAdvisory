@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Support\BriefPageStore;
-use App\Support\PageBuilderWriter;
 use App\Support\BriefSchema;
+use App\Support\PageBuilderWriter;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -117,5 +117,25 @@ class EmbedBlockSizeLimitTest extends TestCase
                 implode(' ', $e->validator->errors()->all())
             );
         }
+    }
+
+    public function test_the_studio_never_lets_an_empty_preview_wipe_a_pasted_block(): void
+    {
+        $studio = $this->withSession(['cms_authenticated' => true, 'cms_super_admin' => true])
+            ->get(route('admin.pages.studio', 'europe'))
+            ->assertOk()
+            ->getContent();
+
+        // syncEmbed writes the canvas back into the textarea that actually gets
+        // saved. renderBlock is debounced, so the canvas is empty for a moment
+        // after a paste, and writing that back blanked the block.
+        $this->assertStringContainsString(
+            "if(next.trim()==='' && ta.value.trim()!==''){ return; }",
+            $studio,
+            'syncEmbed must refuse to overwrite real markup with an empty preview.'
+        );
+
+        // And a blank embed block never goes to the server unannounced.
+        $this->assertStringContainsString('saving now would store it blank', $studio);
     }
 }
