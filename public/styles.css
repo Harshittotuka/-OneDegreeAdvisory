@@ -26653,10 +26653,20 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
      text simply unfolds in the page's own ink, size and measure, so the only
      thing that changes on tap is that there is more to read. */
   .country-prose-full {
+    /* A grid one row tall, animated 0fr -> 1fr. The obvious alternative,
+       max-height, is what was here and it closed badly: these paragraphs run
+       about 17em and the ceiling has to be set for the longest one, so at 60em
+       roughly three quarters of the travel happened while the box was still
+       taller than its own text. Nothing moved for the first 100ms, then it
+       dropped 10em in 80ms, then crawled, then sat finished for the last 60ms.
+       A grid row has no ceiling to guess at -- 1fr *is* the content's height,
+       so every millisecond of the transition is a millisecond you can see. */
+    display: grid;
+    grid-template-rows: 0fr;
     position: static;
     left: auto;
     right: auto;
-    max-height: 0;
+    max-height: none;
     margin-top: 0;
     padding: 0;
     border: 0;
@@ -26670,18 +26680,30 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
     line-height: inherit;
     transform: none;
     filter: none;
+    /* Closing. A transition declared here governs the way back to this state,
+       so open and close get their own curves. Closing is the quicker of the
+       two: a dismissal should get out of the way, and the fade now lands with
+       the collapse instead of finishing 140ms early into a still-open box. */
     transition:
-      max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 0.24s ease,
-      margin-top 0.3s ease,
-      padding-top 0.3s ease;
+      grid-template-rows 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.2s ease,
+      margin-top 0.26s ease,
+      padding-top 0.26s ease;
+  }
+
+  /* The row is short before it is tall; the text has to clip itself rather
+     than push the row open. min-height:0 because a grid item's default
+     min-height:auto would refuse to shrink below its content. */
+  .country-prose-text {
+    min-height: 0;
+    overflow: hidden;
   }
 
   /* The gold hairline is drawn along a panel's top edge. There is no panel. */
   .country-prose-full::before { display: none; }
 
   .country-prose.is-open .country-prose-full {
-    max-height: 60em;
+    grid-template-rows: 1fr;
     margin-top: 14px;
     padding-top: 14px;
     border-top: 1px solid rgba(7, 25, 34, 0.14);
@@ -26690,13 +26712,27 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
        centring transform has to be cancelled here by name -- otherwise the
        text unfolds and then rides up over the line it belongs to. */
     transform: none;
+    /* Opening, and slower than closing: this one is worth watching. */
+    transition:
+      grid-template-rows 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.28s ease,
+      margin-top 0.3s ease,
+      padding-top 0.3s ease;
   }
 
   .country-prose.is-open .country-prose-short::after { content: "close"; opacity: 0.7; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .country-prose-full { transition: opacity 0.2s ease; filter: none; }
+  /* Named down to the three-class reveal rule, not just .country-prose-full:
+     that rule declares the opening transition and would outrank a shorter
+     selector here, leaving the animation running for the people who asked for
+     no animation. */
+  .country-prose-full,
+  .country-prose:hover .country-prose-full,
+  .country-prose:focus-visible .country-prose-full,
+  .country-prose.is-open .country-prose-full { transition: opacity 0.2s ease; }
+  .country-prose-full { filter: none; }
   .country-prose-short::after { transition: none; }
 }
 

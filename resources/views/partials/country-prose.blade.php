@@ -12,8 +12,11 @@
      *   • Touch devices have no hover at all, and are about half the traffic,
      *     so script.js toggles .is-open on tap (see "country prose" there).
      *   • Keyboard users get the same via :focus-within on the tabbable <p>.
-     *   • The full text is collapsed with max-height, never display:none, so
-     *     it stays in the page for search engines and AI answers to read.
+     *   • The full text is collapsed by giving its row no height, never
+     *     display:none, so it stays in the page for search engines and AI
+     *     answers to read. That is what the inner .country-prose-text span is
+     *     for: a grid row can animate from 0fr to 1fr, which is the element's
+     *     own height, and the child clips itself while the row is short.
      *
      * A guide with no written copy has nothing to reveal and renders exactly
      * as it always did.
@@ -41,6 +44,6 @@
        role="button" aria-expanded="false"
        aria-label="{{ $short }} — show more">
         <span class="country-prose-short">{{ $short }}</span>
-        <span class="country-prose-full">{{ $written }}</span>
+        <span class="country-prose-full"><span class="country-prose-text">{{ $written }}</span></span>
     </p>
 @endif
