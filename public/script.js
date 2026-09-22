@@ -2501,3 +2501,31 @@ ready(() => {
     init();
   }
 })();
+
+/* Country guide section prose — partials/country-prose.blade.php.
+   The paragraph reveals on :hover in CSS, which touch devices never fire and
+   which is roughly half this site's traffic. Tapping toggles the same state,
+   and aria-expanded is kept in step for screen readers. */
+(() => {
+  const init = () => {
+    document.querySelectorAll("[data-country-prose]").forEach((prose) => {
+      const toggle = () => {
+        const open = prose.classList.toggle("is-open");
+        prose.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+
+      prose.addEventListener("click", toggle);
+      prose.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        toggle();
+      });
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
+})();

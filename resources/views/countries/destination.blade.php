@@ -85,7 +85,11 @@
         ->filter()
         ->all();
 
-    if ($coursesIntro !== '' && (
+    // The guard above is for the scraped text, which had no intro sentence to
+    // find. Hand-written copy always has one, so it is never suppressed.
+    $coursesWritten = trim((string) ($sectionCopy['courses']['section_body_clean'] ?? '')) !== '';
+
+    if (! $coursesWritten && $coursesIntro !== '' && (
         in_array(strtolower($coursesIntro), $coursesEcho, true)
         || str_contains(strtolower($coursesHeading), strtolower($coursesIntro))
     )) {
@@ -238,7 +242,7 @@
       <div class="section-head">
         <span class="eyebrow">{{ $text('why_eyebrow') }}</span>
         <h2>{{ $sectionCopy['why']['section_heading'] ?? '' }}</h2>
-        <p>{{ $sectionProse($sectionCopy['why'] ?? [], 180) }}</p>
+        @include('partials.country-prose', ['section' => $sectionCopy['why'] ?? [], 'limit' => 180])
       </div>
       <div class="dynamic-why-grid">
         @foreach($whyCards as $index => $card)
@@ -297,7 +301,9 @@
       <div class="section-head dynamic-courses-head">
         <span class="eyebrow">{{ $text('courses_eyebrow') }}</span>
         <h2>{{ $coursesHeading }}</h2>
-        @if($coursesIntro !== '')
+        @if($coursesWritten)
+          @include('partials.country-prose', ['section' => $sectionCopy['courses'] ?? [], 'limit' => 190])
+        @elseif($coursesIntro !== '')
           <p>{{ $coursesIntro }}</p>
         @endif
         <span class="dynamic-course-count">{{ str_pad((string) $courseCount, 2, '0', STR_PAD_LEFT) }} {{ $text('courses_eyebrow') }}</span>
@@ -360,7 +366,7 @@
       <div class="section-head">
         <span class="eyebrow">{{ $text('intakes_eyebrow') }}</span>
         <h2>{{ $sectionCopy['intakes']['section_heading'] ?? '' }}</h2>
-        <p>{{ $sectionProse($sectionCopy['intakes'] ?? [], 190) }}</p>
+        @include('partials.country-prose', ['section' => $sectionCopy['intakes'] ?? [], 'limit' => 190])
       </div>
       <div class="dynamic-intake-board">
         <article class="dynamic-intake-feature">
@@ -420,7 +426,7 @@
       <div class="section-head">
         <span class="eyebrow">{{ $text('costs_eyebrow') }}</span>
         <h2>{{ $sectionCopy['costs']['section_heading'] ?? '' }}</h2>
-        <p>{{ $sectionProse($sectionCopy['costs'] ?? [], 190) }}</p>
+        @include('partials.country-prose', ['section' => $sectionCopy['costs'] ?? [], 'limit' => 190])
       </div>
       <div class="dynamic-cost-grid">
         @foreach($costTables as $costTable)

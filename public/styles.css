@@ -26497,3 +26497,90 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
 @media (prefers-reduced-motion: reduce) {
   .country-faq-item > summary::after { transition: none; }
 }
+
+/* ── Preferred-source, "legal" variant ───────────────────────────────────────
+   The footer's bottom row (© … | Terms | Privacy | Back to top). Rendered as
+   one more link in that row rather than the promo pill used elsewhere, so it
+   inherits the row's size and colour and adds no vertical height. */
+.preferred-source--legal {
+  display: inline;
+}
+
+.preferred-source--legal .preferred-source-link {
+  display: inline;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  font: inherit;
+  color: inherit;
+}
+
+.preferred-source--legal .preferred-source-copy { display: inline; }
+.preferred-source--legal .preferred-source-copy small { display: none; }
+
+.preferred-source--legal .preferred-source-copy strong {
+  font: inherit;
+  font-weight: inherit;
+}
+
+/* Google's own button would break the row's rhythm; the deeplink is the whole
+   feature, so this variant never mounts it. */
+.preferred-source--legal .preferred-source-official { display: none; }
+
+/* ── Country guide section prose (partials/country-prose.blade.php) ──────────
+   The page keeps the short line it always showed; the full written paragraph
+   reveals on hover, on keyboard focus, or on tap. Collapsed with max-height
+   rather than display:none so the text stays in the document for search
+   engines and AI answers even while it is not on screen. */
+.country-prose {
+  position: relative;
+  cursor: pointer;
+  outline: none;
+}
+
+.country-prose-short,
+.country-prose-full {
+  display: block;
+  overflow: hidden;
+  transition: max-height 0.38s ease, opacity 0.22s ease;
+}
+
+.country-prose-short { max-height: 10em; opacity: 1; }
+.country-prose-full  { max-height: 0;    opacity: 0; }
+
+/* A quiet cue that there is more here — without it nobody knows to hover. */
+.country-prose-short::after {
+  content: " more";
+  margin-left: 6px;
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--teal);
+  white-space: nowrap;
+}
+
+.country-prose:hover .country-prose-short,
+.country-prose:focus-visible .country-prose-short,
+.country-prose.is-open .country-prose-short { max-height: 0; opacity: 0; }
+
+.country-prose:hover .country-prose-full,
+.country-prose:focus-visible .country-prose-full,
+.country-prose.is-open .country-prose-full { max-height: 44em; opacity: 1; }
+
+.country-prose:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Touch devices get no hover, so the tap target should look like one. */
+@media (hover: none) {
+  .country-prose-short::after { content: " tap to read"; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .country-prose-short,
+  .country-prose-full { transition: none; }
+}

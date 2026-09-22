@@ -14,7 +14,6 @@
         evidence, and confidence.
       </p>
       @include('partials.socials', ['variant' => 'brand'])
-      @include('partials.preferred-source', ['variant' => 'footer'])
     </div>
 
     <div>
@@ -59,6 +58,7 @@
       <a href="{{ route('terms') }}">Terms &amp; Conditions</a>
       <a href="{{ route('privacy') }}">Privacy Policy</a>
       <a href="#top">Back to top</a>
+      @include('partials.preferred-source', ['variant' => 'legal'])
     </span>
   </div>
 </footer>
