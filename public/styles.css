@@ -26548,18 +26548,23 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   left: -24px;
   right: -24px;
   padding: 22px 26px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 16px;
+  /* Dark, not light. These sections sit on near-white (the .alt gradient is
+     rgba(241,246,247,.6) over white), and white glass on a white page reads as
+     a plain white card no matter how low its alpha goes — there is nothing for
+     the eye to see through it. A dark tint at 66% lets the page blur through
+     visibly, which is the whole point of the treatment. */
   background:
-    linear-gradient(158deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.34) 56%, rgba(223, 245, 241, 0.34) 100%),
-    color-mix(in srgb, var(--paper) 60%, transparent);
-  backdrop-filter: blur(18px) saturate(145%);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
+    linear-gradient(158deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.03) 54%, rgba(7, 25, 34, 0.10) 100%),
+    color-mix(in srgb, var(--deep) 66%, transparent);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
   box-shadow:
-    0 30px 70px rgba(7, 25, 34, 0.22),
-    0 2px 10px rgba(7, 25, 34, 0.07),
-    0 1px 0 rgba(255, 255, 255, 0.85) inset;
-  color: var(--ink);
+    0 34px 80px rgba(7, 25, 34, 0.34),
+    0 2px 12px rgba(7, 25, 34, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.22) inset;
+  color: rgba(255, 255, 255, 0.92);
   font-size: 0.97rem;
   line-height: 1.72;
   text-align: left;
@@ -26609,8 +26614,8 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
    competing with whatever sits behind it. Go opaque instead. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .country-prose-full {
-    background: var(--paper);
-    border-color: var(--line);
+    background: color-mix(in srgb, var(--deep) 94%, transparent);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 }
 
