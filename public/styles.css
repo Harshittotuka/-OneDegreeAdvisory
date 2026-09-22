@@ -26680,15 +26680,31 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
     line-height: inherit;
     transform: none;
     filter: none;
+    /* Opaque throughout, and not faded in or out. Fading was the last thing
+       wrong with the close: measured on an emulated phone the text reached
+       opacity 0 at 183ms while the row was still 19px tall and did not reach
+       zero until 265ms, so the paragraph vanished and left a bare gap sitting
+       in the page, shrinking on its own. Nothing needs to fade -- the row is
+       already clipping the text away a line at a time, and that clip is the
+       animation. Two things animating the same disappearance only race. */
+    opacity: 1;
     /* Closing. A transition declared here governs the way back to this state,
-       so open and close get their own curves. Closing is the quicker of the
-       two: a dismissal should get out of the way, and the fade now lands with
-       the collapse instead of finishing 140ms early into a still-open box. */
+       so open and close get their own curves without a second selector. */
     transition:
       grid-template-rows 0.26s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.2s ease,
       margin-top 0.26s ease,
       padding-top 0.26s ease;
+  }
+
+  /* A touch browser leaves :hover on the last element tapped -- which is the
+     one being closed -- and .country-prose:hover .country-prose-full is three
+     classes deep, so it outranks everything else in this block. Left alone it
+     hands back the floating panel's centring transform, and the paragraph
+     slides up under its own lede while it shuts. */
+  .country-prose:hover .country-prose-full,
+  .country-prose:focus-visible .country-prose-full {
+    transform: none;
+    opacity: 1;
   }
 
   /* The row is short before it is tall; the text has to clip itself rather
@@ -26715,7 +26731,6 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
     /* Opening, and slower than closing: this one is worth watching. */
     transition:
       grid-template-rows 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 0.28s ease,
       margin-top 0.3s ease,
       padding-top 0.3s ease;
   }
