@@ -20,7 +20,7 @@
     $countryLabel = $page['country'] ?? $countryName;
 
     $pageTitle = ($page['seo_title'] ?? $page['page_title'] ?? '') ?: 'Study in '.$countryName.' | '.config('site.name');
-    $pageDescription = Seo::description($page['seo_description'] ?? null, $text('hero_lead') ?: 'Study in '.$countryName.' with One Degree Advisory.', 170);
+    $pageDescription = Seo::description($page['seo_description'] ?? null, $text('hero_lead') ?: 'Study in '.$countryName.' with One Degree Advisory.', 160);
     $canonical = route('country.show', $countrySlug);
     $activeNav = 'destinations';
     $mainId = 'country-main';
@@ -55,6 +55,15 @@
         return \Illuminate\Support\Str::limit($candidate, $limit);
     };
 
+    // A rewritten guide (resources/data/country-guides) supplies real prose in
+    // section_body_clean, which prints whole. Everything else still goes through
+    // $plainBody, which salvages what it can from the scraped pipe-joined text.
+    $sectionProse = function (array $section, int $limit = 190) use ($plainBody): string {
+        $written = trim((string) ($section['section_body_clean'] ?? ''));
+
+        return $written !== '' ? $written : $plainBody($section['section_body'] ?? '', $limit);
+    };
+
     $cardBody = fn (array $card, int $limit = 190): string => \Illuminate\Support\Str::limit((string) ($card['card_body_clean'] ?? $card['card_body'] ?? ''), $limit);
     $tableRows = fn (int $index): \Illuminate\Support\Collection => collect($costTables[$index]['rows'] ?? []);
     // The scraped "Top Courses" section body has no intro sentence — it is the
@@ -64,7 +73,7 @@
     // country pages. Only keep the line when it is prose that isn't already on
     // screen; no invented fallback, matching the rest of this page.
     $coursesHeading = (string) ($sectionCopy['courses']['section_heading'] ?? '');
-    $coursesIntro = $plainBody($sectionCopy['courses']['section_body'] ?? '', 190);
+    $coursesIntro = $sectionProse($sectionCopy['courses'] ?? [], 190);
     $coursesEcho = collect($studyContent['topCourses'] ?? [])
         ->flatMap(fn (array $course) => [
             $course['course_name'] ?? '',
@@ -127,6 +136,21 @@
             ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => $canonical],
         ],
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    // Questions this guide answers in its own words (resources/data/country-guides).
+    // Rendered below AND emitted as FAQPage: Google only honours the markup when
+    // the same text is on the page, and an answer written to be read by a person
+    // is the one an AI summary can quote. Guides without written copy have none,
+    // and emit nothing.
+    $faq = $studyContent['faq'] ?? [];
+    $faqJsonLd = $faq === [] ? '' : json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'FAQPage',
+        'mainEntity' => array_map(fn (array $item) => [
+            '@type' => 'Question',
+            'name' => $item['question'],
+            'acceptedAnswer' => ['@type' => 'Answer', 'text' => $item['answer']],
+        ], $faq),
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $webPageJsonLd = json_encode(array_filter([
         '@context' => 'https://schema.org',
         '@type' => 'WebPage',
@@ -148,6 +172,11 @@
   <script type="application/ld+json">
   {!! $webPageJsonLd !!}
   </script>
+  @if($faqJsonLd !== '')
+  <script type="application/ld+json">
+  {!! $faqJsonLd !!}
+  </script>
+  @endif
 @endpush
 
 @section('content')
@@ -209,7 +238,7 @@
       <div class="section-head">
         <span class="eyebrow">{{ $text('why_eyebrow') }}</span>
         <h2>{{ $sectionCopy['why']['section_heading'] ?? '' }}</h2>
-        <p>{{ $plainBody($sectionCopy['why']['section_body'] ?? '', 180) }}</p>
+        <p>{{ $sectionProse($sectionCopy['why'] ?? [], 180) }}</p>
       </div>
       <div class="dynamic-why-grid">
         @foreach($whyCards as $index => $card)
@@ -331,7 +360,7 @@
       <div class="section-head">
         <span class="eyebrow">{{ $text('intakes_eyebrow') }}</span>
         <h2>{{ $sectionCopy['intakes']['section_heading'] ?? '' }}</h2>
-        <p>{{ $plainBody($sectionCopy['intakes']['section_body'] ?? '', 190) }}</p>
+        <p>{{ $sectionProse($sectionCopy['intakes'] ?? [], 190) }}</p>
       </div>
       <div class="dynamic-intake-board">
         <article class="dynamic-intake-feature">
@@ -391,7 +420,7 @@
       <div class="section-head">
         <span class="eyebrow">{{ $text('costs_eyebrow') }}</span>
         <h2>{{ $sectionCopy['costs']['section_heading'] ?? '' }}</h2>
-        <p>{{ $plainBody($sectionCopy['costs']['section_body'] ?? '', 190) }}</p>
+        <p>{{ $sectionProse($sectionCopy['costs'] ?? [], 190) }}</p>
       </div>
       <div class="dynamic-cost-grid">
         @foreach($costTables as $costTable)
@@ -415,5 +444,28 @@
       </div>
     </div>
   </section>
+
+  @if($faq !== [])
+    {{-- The questions people actually type, answered in full on the page. The
+         same text is emitted as FAQPage in the head; keep them in step, because
+         markup describing text a reader cannot see is a structured-data
+         violation, not a shortcut. --}}
+    <section class="country-faq" aria-labelledby="country-faq-title">
+      <div class="container">
+        <div class="section-lead centered reveal">
+          <span class="eyebrow">Common questions</span>
+          <h2 id="country-faq-title">{{ $countryName }}, answered</h2>
+        </div>
+        <div class="country-faq-list">
+          @foreach($faq as $item)
+            <details class="country-faq-item"@if($loop->first) open @endif>
+              <summary><h3>{{ $item['question'] }}</h3></summary>
+              <p>{{ $item['answer'] }}</p>
+            </details>
+          @endforeach
+        </div>
+      </div>
+    </section>
+  @endif
 </main>
 @endsection

@@ -101,6 +101,13 @@
                     </a>
                   </div>
 
+                  {{-- The flags are decoration: the country's name is right
+                       beside them in .dest-meta, and the wrapper is aria-hidden,
+                       so alt="" is correct and deliberate. An SEO audit will
+                       report these as "images with no alt attribute" (AIOSEO
+                       counts an empty alt as a missing one) — do not "fix" it,
+                       or every country gets read out twice. See Part 3 of
+                       SEO-MARKETING-PLAN.md. --}}
                   <div class="nav-dropdown-grid">
                     @foreach ($destinations as $destination)
                       <a class="dest-card" href="{{ route('country.show', $destination['slug']) }}">

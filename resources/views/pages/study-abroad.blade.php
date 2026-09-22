@@ -2,7 +2,7 @@
     use App\Support\Seo;
 
     $pageTitle = 'Study Abroad Consultants | One Degree Advisory';
-    $pageDescription = 'Study abroad with One Degree Advisory — expert guidance on choosing universities, scholarships, and student visas for the USA, UK, Canada, Australia, Ireland, Germany and 15+ destinations.';
+    $pageDescription = 'Expert guidance on choosing universities, scholarships, and student visas for the USA, UK, Canada, Australia, Ireland, Germany and 15+ destinations.';
     $activeNav = 'services';
     $mainId = 'main';
     $canonical = route('study-abroad');

@@ -2435,3 +2435,69 @@ ready(() => {
     initMethodCompass();
   }
 })();
+
+/* Preferred source badge — partials/preferred-source.blade.php.
+   Google's instructions are to put publisher.js in <head> on every page. That
+   buys a third-party DNS + TLS + fetch on every single view in order to draw
+   one control that lives at the bottom of the footer, so it is fetched here
+   instead: once, the first time a badge comes within a screen of the viewport.
+   Until (and unless) Google's button actually appears, the server-rendered
+   deeplink in the pill stays in place and keeps working on its own. */
+(() => {
+  const SRC = "https://news.google.com/swg/js/v1/publisher.js";
+
+  const init = () => {
+    const badges = Array.from(document.querySelectorAll("[data-preferred-source]"));
+    if (!badges.length) return;
+
+    // Google fills the mount asynchronously and may fill it with nothing at
+    // all. Only swap once there is something in there to swap to, or a blocked
+    // script would leave the footer with a gap where the pill used to be.
+    const reveal = (badge) => {
+      const mount = badge.querySelector("[google-add-preferred-source-btn]");
+      if (!mount) return;
+
+      const settle = () => {
+        if (!mount.firstElementChild) return false;
+        badge.classList.add("has-google-button");
+        return true;
+      };
+
+      if (settle()) return;
+      const watcher = new MutationObserver(() => {
+        if (settle()) watcher.disconnect();
+      });
+      watcher.observe(mount, { childList: true });
+      // Nothing after 10s is not coming. Keep our link and stop watching.
+      window.setTimeout(() => watcher.disconnect(), 10000);
+    };
+
+    const start = () => {
+      badges.forEach(reveal);
+      if (document.querySelector('script[src="' + SRC + '"]')) return;
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = SRC;
+      document.head.appendChild(script);
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      start();
+      return;
+    }
+
+    const nearby = new IntersectionObserver((entries, observer) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      start();
+    }, { rootMargin: "100% 0px" });
+
+    badges.forEach((badge) => nearby.observe(badge));
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
+})();

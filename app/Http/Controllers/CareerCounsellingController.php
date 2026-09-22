@@ -33,8 +33,8 @@ class CareerCounsellingController extends Controller
         return view('pages.career-counselling', [
             'activeNav' => 'new-tabs',
             'bodyClass' => 'cc-page-body',
-            'pageTitle' => 'Career Counselling & Career Assessments',
-            'pageDescription' => 'Structured career counselling, psychometric career assessments and continuous career guidance for students in Class 8 to 12 and beyond — online and in person, across India.',
+            'pageTitle' => 'Career Counselling & Assessments | One Degree Advisory',
+            'pageDescription' => 'Structured career counselling, psychometric assessments and continuous guidance for students in Class 8 to 12 and beyond — online and in person, across India.',
             'cc' => $store->get(),
             'payableOptions' => $store->payableOptions(),
             // The live pay button only renders when Razorpay keys are set;

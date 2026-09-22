@@ -52,8 +52,8 @@ class ReferralController extends Controller
         return view('pages.referral-program', [
             'activeNav' => 'new-tabs',
             'bodyClass' => 'ref-page-body',
-            'pageTitle' => 'Referral Program — Refer a Student, Earn Rewards',
-            'pageDescription' => 'Refer a student to One Degree Advisory and earn a reward once they enrol. Open to students, alumni, parents, professionals and anyone with someone in their circle planning to study abroad.',
+            'pageTitle' => 'Referral Program | One Degree Advisory',
+            'pageDescription' => 'Refer a student to One Degree Advisory and earn a reward once they enrol — open to students, alumni, parents, professionals and anyone in your circle.',
             'levels' => self::LEVELS,
             'countries' => self::COUNTRIES,
             'guideSlugs' => $this->guideSlugsByFlag($guides),

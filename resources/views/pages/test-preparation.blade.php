@@ -1,6 +1,6 @@
 @php
-    $pageTitle = 'Test Preparation — ACT, SAT, IELTS, GRE, GMAT & More | One Degree Advisory';
-    $pageDescription = 'Expert-led test preparation for ACT, SAT, IELTS, PTE, TOEFL, GRE, GMAT, IMAT, UCAT, LNAT and more — study materials, mock tests, and strategic coaching to secure admissions worldwide.';
+    $pageTitle = 'IELTS, TOEFL, SAT & GRE Prep | One Degree Advisory';
+    $pageDescription = 'Expert-led coaching for IELTS, TOEFL, PTE, SAT, ACT, GRE, GMAT, UCAT and more — study materials, mock tests, and strategy built around your deadlines.';
     $activeNav = 'services';
     $mainId = 'main';
     $bodyClass = 'tp-body';

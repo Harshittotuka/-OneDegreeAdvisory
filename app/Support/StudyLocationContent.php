@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Cache;
+
 class StudyLocationContent
 {
     private const DEFAULT_PATH = 'app/leverageedu_study_locations_content.json';
@@ -23,7 +25,7 @@ class StudyLocationContent
         $costCards = $this->cleanCards($this->cardsLike($cards, 'Cost of Studying'));
         $indianStudents = $this->indianStudents($sheets['IndianStudents'] ?? [], $slug);
 
-        return [
+        $payload = [
             'page' => $page,
             'destination' => $this->destinationFromPage($page),
             'uiText' => $uiText,
@@ -43,9 +45,46 @@ class StudyLocationContent
             'indianStudents' => $indianStudents,
             'generatedAt' => $this->loadGeneratedAt(),
         ];
+
+        // Hand-written copy wins over the scraped text, for the guides that have
+        // been rewritten. Applied here rather than stored, so country-sync can
+        // never overwrite it — see CountryGuideCopy.
+        return CountryGuideCopy::apply($payload, $slug);
     }
 
+    /**
+     * The nav's country dropdown, on every page of the site.
+     *
+     * This is a couple of dozen small rows distilled from a ~630 KB file, so it
+     * is worth keeping rather than recomputing per request. Everything the
+     * result depends on is in the key — the content file, the visibility file
+     * that decides which countries show, and our own brand name, which
+     * withOurBrand() stamps into the copy — so there is no way to serve a stale
+     * list after a country sync or a visibility toggle.
+     */
     public function destinations(bool $visibleOnly = true): array
+    {
+        return Cache::remember(
+            'nav:destinations:'.md5(implode('|', [
+                self::fingerprint(storage_path(self::DEFAULT_PATH)),
+                self::fingerprint(storage_path('app/country-visibility.json')),
+                (string) config('site.name'),
+                $visibleOnly ? 'visible' : 'all',
+            ])),
+            now()->addDay(),
+            fn () => $this->computeDestinations($visibleOnly)
+        );
+    }
+
+    /** mtime+size of a file, or 'none' — enough to notice any rewrite. */
+    private static function fingerprint(string $path): string
+    {
+        clearstatcache(true, $path);
+
+        return is_file($path) ? filemtime($path).'-'.filesize($path) : 'none';
+    }
+
+    private function computeDestinations(bool $visibleOnly): array
     {
         $sheets = $this->loadSheets();
         $destinations = array_values(array_filter(
@@ -156,6 +195,20 @@ class StudyLocationContent
         return (string) preg_replace('/\s+([?.!,;:])/', '$1', $text);
     }
 
+    /**
+     * Decoded sheets, kept for the rest of the request.
+     *
+     * The scraped country file is ~630 KB; decoding it and walking every row in
+     * withOurBrand() costs ~5 ms. A country page pays that twice — once for the
+     * page itself (forSlug) and once for the nav's dropdown (destinations) —
+     * and a brief page with a destinations strip does the same. The key carries
+     * the file's mtime and size, so a fresh country sync is picked up rather
+     * than served stale.
+     *
+     * @var array<string, array>
+     */
+    private static array $sheetCache = [];
+
     private function loadSheets(): array
     {
         $path = storage_path(self::DEFAULT_PATH);
@@ -164,10 +217,18 @@ class StudyLocationContent
             return [];
         }
 
-        $payload = json_decode((string) file_get_contents($path), true);
-        $sheets = is_array($payload['sheets'] ?? null) ? $payload['sheets'] : [];
+        $key = $path.':'.filemtime($path).':'.filesize($path);
 
-        return $this->withOurBrand($sheets);
+        if (! isset(self::$sheetCache[$key])) {
+            $payload = json_decode((string) file_get_contents($path), true);
+            $sheets = is_array($payload['sheets'] ?? null) ? $payload['sheets'] : [];
+
+            // One entry only: holding several copies of a 630 KB structure to
+            // serve one request would trade the time back for memory.
+            self::$sheetCache = [$key => $this->withOurBrand($sheets)];
+        }
+
+        return self::$sheetCache[$key];
     }
 
     /**

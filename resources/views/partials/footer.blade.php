@@ -14,6 +14,7 @@
         evidence, and confidence.
       </p>
       @include('partials.socials', ['variant' => 'brand'])
+      @include('partials.preferred-source', ['variant' => 'footer'])
     </div>
 
     <div>

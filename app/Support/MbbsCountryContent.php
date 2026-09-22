@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Cache;
+
 class MbbsCountryContent
 {
     private const DEFAULT_PATH = 'app/mbbs_avglobal_content.json';
@@ -10,7 +12,84 @@ class MbbsCountryContent
     {
     }
 
+    /**
+     * The nav's MBBS dropdown, on every page. Same reasoning and the same
+     * invalidation as StudyLocationContent::destinations(): the key carries the
+     * content file and the visibility file, so a sync or a toggle is picked up.
+     */
     public function countries(bool $visibleOnly = true): array
+    {
+        return Cache::remember(
+            'nav:mbbs-countries:'.md5(implode('|', [
+                self::fingerprint(storage_path(self::DEFAULT_PATH)),
+                self::fingerprint(storage_path('app/country-visibility.json')),
+                $visibleOnly ? 'visible' : 'all',
+            ])),
+            now()->addDay(),
+            fn () => $this->computeCountries($visibleOnly)
+        );
+    }
+
+    /** mtime+size of a file, or 'none' — enough to notice any rewrite. */
+    private static function fingerprint(string $path): string
+    {
+        clearstatcache(true, $path);
+
+        return is_file($path) ? filemtime($path).'-'.filesize($path) : 'none';
+    }
+
+    /**
+     * The partner's brand, stripped from the page title only.
+     *
+     * The MBBS pages are scraped from avglobaloverseas.com, and the title came
+     * through as "MBBS in Georgia … | NMC Approved Guide | AV Global". That put
+     * another company's name in our search result, and pushed ours past the
+     * 90-character title cap so it rendered as "One Degree Adv".
+     *
+     * Deliberately the title and nothing else. The scraped body copy also names
+     * that company — "AV Global owns and manages student hostels near partner
+     * universities in Tbilisi", "an AV Global coordinator living on site" — and
+     * those are statements about who runs a hostel, not branding. Swapping the
+     * name in them would turn someone else's claim into a false claim of ours,
+     * which is worse than leaving it visible. They need an editorial decision
+     * about the real arrangement; see Part 5 of SEO-MARKETING-PLAN.md.
+     */
+    private function withoutPartnerBrandInTitle(string $title): string
+    {
+        $title = preg_replace('/\s*[|\x{2013}\x{2014}-]\s*AV\s*Global(?:\s+Overseas)?\s*/iu', '', $title) ?? $title;
+        $title = trim(preg_replace('/\s{2,}/', ' ', $title) ?? $title, " \t\n\r\0\x0B|-");
+
+        // These titles arrive as several "|"-separated claims and run past 80
+        // characters before our own name is appended, so the name was being cut
+        // off the end ("… | One Degree Adv"). Keep whole leading segments only
+        // while they still leave room for it. At least one segment always
+        // survives, even a long one — a slightly long title is recoverable, a
+        // title that does not say whose site it is is not.
+        $room = 60 - mb_strlen(' | '.config('site.name'));
+        // "|" or a spaced dash, since the source uses both ("… 2026 - Fees,
+        // Admission, Top Universities"). The spaces matter: they keep a date
+        // range like "2026-27" in one piece.
+        $segments = array_values(array_filter(
+            array_map('trim', preg_split('/\s*\|\s*|\s+[-\x{2013}\x{2014}]\s+/u', $title) ?: []),
+            fn ($s) => $s !== ''
+        ));
+
+        if ($segments === []) {
+            return $title;
+        }
+
+        $kept = array_shift($segments);
+        foreach ($segments as $segment) {
+            if (mb_strlen($kept.' | '.$segment) > $room) {
+                break;
+            }
+            $kept .= ' | '.$segment;
+        }
+
+        return $kept;
+    }
+
+    private function computeCountries(bool $visibleOnly): array
     {
         $sheets = $this->loadSheets();
         $pages = $sheets['Pages'] ?? [];
@@ -84,6 +163,10 @@ class MbbsCountryContent
 
         $page = $this->firstForSlug($sheets['Pages'] ?? [], $slug);
 
+        if (trim((string) ($page['page_title'] ?? '')) !== '') {
+            $page['page_title'] = $this->withoutPartnerBrandInTitle((string) $page['page_title']);
+        }
+
         $sections = $this->rowsForSlug($sheets['Sections'] ?? [], $slug);
         usort($sections, fn ($a, $b) => ((int) ($a['section_order'] ?? 0)) <=> ((int) ($b['section_order'] ?? 0)));
 
@@ -113,6 +196,15 @@ class MbbsCountryContent
         ];
     }
 
+    /**
+     * Decoded sheets, kept for the rest of the request — the MBBS file is
+     * ~260 KB and the nav decodes it on every page. Keyed on mtime and size so
+     * a fresh MBBS sync is picked up rather than served stale.
+     *
+     * @var array<string, array>
+     */
+    private static array $sheetCache = [];
+
     private function loadSheets(): array
     {
         $path = storage_path(self::DEFAULT_PATH);
@@ -121,9 +213,14 @@ class MbbsCountryContent
             return [];
         }
 
-        $payload = json_decode((string) file_get_contents($path), true);
+        $key = $path.':'.filemtime($path).':'.filesize($path);
 
-        return is_array($payload['sheets'] ?? null) ? $payload['sheets'] : [];
+        if (! isset(self::$sheetCache[$key])) {
+            $payload = json_decode((string) file_get_contents($path), true);
+            self::$sheetCache = [$key => is_array($payload['sheets'] ?? null) ? $payload['sheets'] : []];
+        }
+
+        return self::$sheetCache[$key];
     }
 
     private function rowsForSlug(array $rows, string $slug): array

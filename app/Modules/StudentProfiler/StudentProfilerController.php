@@ -62,8 +62,8 @@ class StudentProfilerController
                 'contact'   => (object) [],
                 'submitted' => false,
             ],
-            'pageTitle'       => 'Student Profiler',
-            'pageDescription' => 'Build your profile in minutes. Tell us your degree level, academics, test scores, preferences and aspirations — our advisors will personally review your profile and get back to you.',
+            'pageTitle'       => 'Student Profiler | One Degree Advisory',
+            'pageDescription' => 'Build your profile in minutes. Share your degree level, academics, test scores and preferences, and our advisors will personally review it and get back to you.',
             'activeNav'       => null,
             'bodyClass'       => 'sp-page',
         ]);

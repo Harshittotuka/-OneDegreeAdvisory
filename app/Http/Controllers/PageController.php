@@ -379,8 +379,8 @@ class PageController extends Controller
         return view('pages.visa', [
             'activeNav'       => 'new-tabs',
             'bodyClass'       => 'visa-page-body',
-            'pageTitle'       => 'Student Visa Guidance & Free Eligibility Check',
-            'pageDescription' => 'Expert student visa guidance — a free 60-second eligibility pre-check, refusal analysis, mock interviews, and end-to-end filing support for any destination and any university, ranked or not.',
+            'pageTitle'       => 'Student Visa Guidance | One Degree Advisory',
+            'pageDescription' => 'Expert student visa guidance — a free 60-second eligibility pre-check, refusal analysis, mock interviews, and end-to-end filing support for any destination.',
             'mainId'          => 'main',
         ]);
     }
@@ -397,8 +397,8 @@ class PageController extends Controller
         return view('pages.student-development-programme', [
             'activeNav'       => 'new-tabs',
             'bodyClass'       => 'sdp-page-body',
-            'pageTitle'       => 'Student Development Programme — Skills for Study Abroad',
-            'pageDescription' => 'Explore practical learning that can help clarify your academic interests, compare overseas university programmes and communicate a focused study-abroad direction.',
+            'pageTitle'       => 'Student Development Programme | One Degree Advisory',
+            'pageDescription' => 'Practical learning that helps you clarify your academic interests, compare overseas university programmes and communicate a focused study-abroad direction.',
             'mainId'          => 'main',
         ]);
     }
@@ -414,8 +414,8 @@ class PageController extends Controller
         return view('pages.visa-mock-interview', [
             'activeNav'       => 'new-tabs',
             'bodyClass'       => 'vmi-page-body',
-            'pageTitle'       => 'AI Visa Mock Interview — Free Practice & Feedback',
-            'pageDescription' => 'Practise your student-visa interview with an AI assessor: real embassy-style questions, video or text answers, and a detailed readiness report. Free 10-question round.',
+            'pageTitle'       => 'AI Visa Mock Interview | One Degree Advisory',
+            'pageDescription' => 'Practise your student-visa interview with an AI assessor: real embassy-style questions, video or text answers, and a readiness report. Free 10-question round.',
             'mainId'          => 'main',
             // The ten recorded questions. Extended rounds are served by
             // VisaMockInviteController::start against a counsellor's invite, so

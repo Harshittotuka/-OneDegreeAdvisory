@@ -27,7 +27,7 @@ class LoanAccoController extends Controller
         return view('loan-acco.index', [
             'activeNav'       => 'new-tabs',
             'bodyClass'       => 'la-page-body',
-            'pageTitle'       => 'Education Loan & Student Accommodation',
+            'pageTitle'       => 'Education Loan & Accommodation | One Degree Advisory',
             'pageDescription' => 'Collateral & non-collateral education loans plus verified student housing — financed and arranged by one advisory team, from application to move-in.',
         ]);
     }

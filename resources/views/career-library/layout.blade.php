@@ -42,12 +42,14 @@
     <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">
     {{-- One combined request: these were two separate render-blocking
          stylesheets for the same five families. --}}
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700;800&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700;800&family=Jost:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     {{-- Self-hosted and pinned, same as layouts/app: `lucide@latest` on unpkg
          redirects with max-age=60, so every page paid a third-party round trip
-         before its icons could render. --}}
-    <script src="{{ $assetVer('assets/vendor/lucide.min.js') }}" defer></script>
+         before its icons could render. Also as in layouts/app, what ships is
+         the generated subset with the full library as its named fallback. --}}
+    <script src="{{ $assetVer('assets/vendor/lucide-subset.min.js') }}"
+            data-lucide-fallback="{{ $assetVer('assets/vendor/lucide.min.js') }}" defer></script>
     <script src="{{ $assetVer('stripe-nav.js') }}" defer></script>
     <style>
         body { font-family: 'Inter', sans-serif; }

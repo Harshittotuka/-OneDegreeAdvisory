@@ -1,6 +1,6 @@
 @php
     $pageTitle = 'Terms & Conditions | One Degree Advisory';
-    $pageDescription = 'Read the One Degree Advisory Terms & Conditions — the terms that govern your access to and use of onedegreeadvisory.com and our educational consulting, career guidance, admissions, and related services.';
+    $pageDescription = 'The terms that govern your use of onedegreeadvisory.com and One Degree Advisory\'s educational consulting, career guidance, and admissions services.';
     $activeNav = '';
     $mainId = 'main';
 

@@ -2,7 +2,7 @@
     use App\Support\Seo;
 
     $rawSeoTitle     = trim((string) ($post['seo_title'] ?? ''));
-    $pageTitle       = $rawSeoTitle !== '' ? $rawSeoTitle : $post['title'].' | '.config('site.name').' Blog';
+    $pageTitle       = $rawSeoTitle !== '' ? $rawSeoTitle : $post['title'].' | '.config('site.name');
     $pageDescription = Seo::description($post['meta_description'] ?? null, ($post['excerpt'] ?? '') ?: Seo::blogBodyText($post['body'] ?? []));
     $activeNav       = 'blog';
     $mainId          = 'blog-main';

@@ -26296,3 +26296,204 @@ html:not(.is-vt-nav) body:not(.cms-editing) main {
 html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   animation-name: page-content-fade;
 }
+
+/* ==========================================================================
+   GOOGLE "PREFERRED SOURCE" BADGE  ·  partials/preferred-source.blade.php
+   A pill that nominates this domain in Google's source picker. The link is the
+   real control and is always in the markup; Google's own button, on the pages
+   and visits where its script manages to draw one, REPLACES it rather than
+   sitting next to it — hence .has-google-button hiding the link rather than
+   the link being hidden until proven unnecessary. Anything that stops the
+   script (blocked third parties, a signed-out visitor, an ineligible site)
+   leaves the pill exactly as rendered, which is the point.
+   ========================================================================== */
+.preferred-source {
+  margin: 16px 0 0;
+}
+
+.preferred-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 16px 8px 9px;
+  border: 1px solid rgba(11, 27, 43, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #0b1b2b;
+  font-family: "Manrope", system-ui, sans-serif;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.preferred-source-link:hover,
+.preferred-source-link:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+.preferred-source-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(11, 27, 43, 0.08);
+}
+
+.preferred-source-mark svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.preferred-source-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.24;
+}
+
+.preferred-source-copy small {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.preferred-source-copy strong {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.preferred-source-official {
+  margin: 0;
+}
+
+.preferred-source.has-google-button .preferred-source-link {
+  display: none;
+}
+
+/* ---- on the dark footer ---- */
+/* .site-footer a is display:flex with its own margin, so the pill has to
+   restate its own layout here and not just its colours. */
+.site-footer .preferred-source-link {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.site-footer .preferred-source-link:hover,
+.site-footer .preferred-source-link:focus-visible {
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+}
+
+.site-footer .preferred-source-copy small {
+  color: rgba(255, 255, 255, 0.72);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preferred-source-link {
+    transition: none;
+  }
+
+  .preferred-source-link:hover,
+  .preferred-source-link:focus-visible {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Country guide FAQ (countries/destination.blade.php)
+   The questions a rewritten guide answers in its own words. Rendered as
+   <details> so the page stays short, and marked up as FAQPage in the head —
+   the text has to be present either way, so it is real content, not a
+   disclosure widget. Only guides with written copy show this section.
+   ============================================================ */
+.country-faq {
+  padding: clamp(56px, 7vw, 96px) 0;
+  background: var(--ivory);
+}
+
+.country-faq-list {
+  max-width: 880px;
+  margin: clamp(28px, 4vw, 44px) auto 0;
+  display: grid;
+  gap: 12px;
+}
+
+.country-faq-item {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.country-faq-item > summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px clamp(18px, 3vw, 28px);
+  cursor: pointer;
+  list-style: none;
+}
+
+.country-faq-item > summary::-webkit-details-marker { display: none; }
+
+.country-faq-item > summary h3 {
+  flex: 1;
+  margin: 0;
+  font-size: clamp(1rem, 1.6vw, 1.12rem);
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* The chevron is drawn here rather than shipped as an icon: this section can
+   render before the icon script has run, and a marker that appears late reads
+   as a layout shift. */
+.country-faq-item > summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--teal);
+  border-bottom: 2px solid var(--teal);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 0.2s ease;
+}
+
+.country-faq-item[open] > summary::after {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+.country-faq-item > summary:hover h3 { color: var(--teal-dark); }
+
+.country-faq-item > summary:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+.country-faq-item > p {
+  margin: 0;
+  padding: 0 clamp(18px, 3vw, 28px) 22px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .country-faq-item > summary::after { transition: none; }
+}

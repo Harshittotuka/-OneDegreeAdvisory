@@ -1,6 +1,6 @@
 @php
     $pageTitle = 'Student Services | One Degree Advisory';
-    $pageDescription = 'Complete student support services — WorldGrad pathways, psychometric tests, profile building, internships, interview prep, accommodation, visa & ticketing, and ongoing support.';
+    $pageDescription = 'Complete student support — WorldGrad pathways, psychometric tests, profile building, internships, interview prep, accommodation, and visa & ticketing.';
     $activeNav = 'services';
     $mainId = 'main';
 

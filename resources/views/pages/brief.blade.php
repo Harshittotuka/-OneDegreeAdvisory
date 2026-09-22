@@ -2,7 +2,7 @@
     use App\Support\Seo;
 
     $pageTitle = ($page['page_title'] ?? '') ?: (($page['title'] ?? config('site.name')).' | '.config('site.name'));
-    $pageDescription = Seo::description($page['meta_description'] ?? null, Seo::layoutText($page['layout'] ?? []) ?: config('site.description'), 170);
+    $pageDescription = Seo::description($page['meta_description'] ?? null, Seo::layoutText($page['layout'] ?? []) ?: config('site.description'), 160);
     $activeNav = null;
     $mainId = 'main';
 

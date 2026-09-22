@@ -97,7 +97,7 @@ class PageBuilderWriter
             'path' => '/briefs/'.$slug,
             'title' => $title,
             'page_title' => Seo::title($data['page_title'] ?? '', $title.' | '.config('site.name'), 90),
-            'meta_description' => Seo::description($data['meta_description'] ?? '', '', 170),
+            'meta_description' => Seo::description($data['meta_description'] ?? '', '', 160),
             'visible' => false,
             'layout' => [],
         ];
@@ -143,7 +143,7 @@ class PageBuilderWriter
             $page['page_title'] = Seo::title($data['page_title'], ($page['title'] ?? '').' | '.config('site.name'), 90);
         }
         if (array_key_exists('meta_description', $data)) {
-            $page['meta_description'] = Seo::description($data['meta_description'], '', 170);
+            $page['meta_description'] = Seo::description($data['meta_description'], '', 160);
         }
         if (array_key_exists('layout', $data)) {
             $page['layout'] = $this->prepareLayout($data['layout']);

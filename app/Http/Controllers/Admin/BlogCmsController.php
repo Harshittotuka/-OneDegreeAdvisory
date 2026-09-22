@@ -286,7 +286,7 @@ class BlogCmsController extends Controller
             240
         );
         $seoTitle = Seo::title($data['seo_title'] ?? '', '', 90);
-        $metaDescription = Seo::description($data['meta_description'] ?? '', '', 170);
+        $metaDescription = Seo::description($data['meta_description'] ?? '', '', 160);
 
         $categories = array_values(array_unique(array_filter(array_map(
             fn ($c) => trim((string) $c),

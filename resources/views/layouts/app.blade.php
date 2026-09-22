@@ -15,7 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
       $metaTitle = \App\Support\Seo::title($pageTitle ?? null, config('site.name'), 90);
-      $metaDescription = \App\Support\Seo::description($pageDescription ?? null, config('site.description'), 170);
+      $metaDescription = \App\Support\Seo::description($pageDescription ?? null, config('site.description'), 160);
       $canonicalUrl = \App\Support\Seo::pageUrl($canonical ?? url()->current());
       $ogImageUrl = \App\Support\Seo::imageUrl($ogImage ?? null);
       // Declare dimensions only for the default share image (assets/Logo/og-image.png,
@@ -81,7 +81,7 @@
          It used to be requested here at five weights on every page, which only
          inflated this render-blocking stylesheet. The one place that does use
          Inter (the career library) has its own layout and its own font link. --}}
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
     <script>
       (function () {
         var root = document.documentElement;
@@ -157,8 +157,16 @@
          idle every page paid a third-party DNS + TLS + redirect round trip
          (~240ms) before any of the ~700 <i data-lucide> placeholders on the page
          could become icons. Same-origin and immutable, they now arrive with the
-         rest of the page instead of popping in after it. --}}
-    <script src="{{ $assetVer('assets/vendor/lucide.min.js') }}" defer></script>
+         rest of the page instead of popping in after it.
+
+         What ships is a subset: the ~180 icons this site names, bundled with
+         Lucide's own runtime by scripts/build-lucide-subset.mjs — 44 KB instead
+         of 404 KB. Because a CMS editor can type any Lucide name into a brief
+         block, the subset loads the full library below on its own the moment it
+         meets a name it does not carry, so an icon chosen later still renders.
+         Re-run that script after adding an icon to keep it out of the fallback. --}}
+    <script src="{{ $assetVer('assets/vendor/lucide-subset.min.js') }}"
+            data-lucide-fallback="{{ $assetVer('assets/vendor/lucide.min.js') }}" defer></script>
     <script src="{{ $assetVer('script.js') }}" defer></script>
     <script src="{{ $assetVer('stripe-nav.js') }}" defer></script>
   </head>

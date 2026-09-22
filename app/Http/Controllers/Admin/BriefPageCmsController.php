@@ -164,7 +164,7 @@ class BriefPageCmsController extends Controller
         $layout = $this->persistInlineImages($layout, 'brief');
         $page['layout'] = $this->sanitizeLayout($layout);
         $page['page_title'] = Seo::title((string) $request->input('page_title', $page['page_title'] ?? ''), '', 90);
-        $page['meta_description'] = Seo::description((string) $request->input('meta_description', $page['meta_description'] ?? ''), '', 170);
+        $page['meta_description'] = Seo::description((string) $request->input('meta_description', $page['meta_description'] ?? ''), '', 160);
         unset($page['sections']); // fully migrated to the grid layout
 
         $this->store->save($page, $slug);

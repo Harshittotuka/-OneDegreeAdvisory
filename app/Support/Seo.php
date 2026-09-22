@@ -6,6 +6,13 @@ use Illuminate\Support\Str;
 
 class Seo
 {
+    /**
+     * A title long enough to be cut was being cut mid-word, exactly as the
+     * description was. The cap itself stays where it is — Google truncates the
+     * *display* around 60 characters but still indexes the whole string, so
+     * there is no reason to throw keywords away — but where a cut does happen
+     * it should land on a word boundary and not leave a trailing separator.
+     */
     public static function title(?string $value, ?string $fallback = null, int $max = 70): string
     {
         $title = self::plainText($value);
@@ -13,9 +20,22 @@ class Seo
             $title = self::plainText($fallback);
         }
 
-        return Str::limit($title, $max, '');
+        if (mb_strwidth($title, 'UTF-8') <= $max) {
+            return $title;
+        }
+
+        $title = Str::limit($title, $max, '', preserveWords: true);
+
+        return preg_replace('/[\s,;:|\x{2013}\x{2014}-]+$/u', '', $title) ?? $title;
     }
 
+    /**
+     * 160 is the budget Google renders before it cuts the snippet itself, and
+     * the length AIOSEO's audit treats as the ceiling. Truncating on a word
+     * boundary matters as much as the number: a hard cut at $max left the long
+     * pages ending mid-word in the SERP. Trailing punctuation left dangling by
+     * the cut ("…universities,") is dropped too.
+     */
     public static function description(?string $value, ?string $fallback = null, int $max = 160): string
     {
         $description = self::plainText($value);
@@ -23,7 +43,13 @@ class Seo
             $description = self::plainText($fallback);
         }
 
-        return Str::limit($description, $max, '');
+        if (mb_strwidth($description, 'UTF-8') <= $max) {
+            return $description;
+        }
+
+        $description = Str::limit($description, $max, '', preserveWords: true);
+
+        return preg_replace('/[\s,;:\x{2013}\x{2014}-]+$/u', '', $description) ?? $description;
     }
 
     public static function plainText(mixed $value): string

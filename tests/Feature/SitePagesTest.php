@@ -381,15 +381,29 @@ class SitePagesTest extends TestCase
         // lucide@latest on unpkg answers its redirect with max-age=60, so after a
         // minute idle every page paid a third-party round trip before any of its
         // ~700 icon placeholders could render.
+        //
+        // What pages load now is the generated subset (scripts/build-lucide-subset.mjs),
+        // with the complete library named as its fallback for an icon a CMS
+        // editor picks that the subset does not carry. Both must be local files
+        // and both must be cache-busted, or a deploy leaves stale icons behind.
         $this->assertFileExists(public_path('assets/vendor/lucide.min.js'));
+        $this->assertFileExists(
+            public_path('assets/vendor/lucide-subset.min.js'),
+            'Run `npm run build:icons` — the icon subset is missing.'
+        );
 
         foreach (['/', '/about', '/global-career-library'] as $path) {
             $html = $this->get($path)->assertOk()->getContent();
             $this->assertStringNotContainsString('unpkg.com/lucide', $html, "{$path} still loads Lucide from a CDN.");
             $this->assertMatchesRegularExpression(
-                '~src="[^"]*assets/vendor/lucide\.min\.js\?v=\d+"~',
+                '~src="[^"]*assets/vendor/lucide-subset\.min\.js\?v=\d+"~',
                 $html,
-                "{$path} must load the self-hosted, cache-busted Lucide."
+                "{$path} must load the self-hosted, cache-busted Lucide subset."
+            );
+            $this->assertMatchesRegularExpression(
+                '~data-lucide-fallback="[^"]*assets/vendor/lucide\.min\.js\?v=\d+"~',
+                $html,
+                "{$path} must name the local full library as the subset's fallback."
             );
         }
     }

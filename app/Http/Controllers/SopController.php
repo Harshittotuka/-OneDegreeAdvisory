@@ -27,8 +27,8 @@ class SopController extends Controller
         return view('pages.sop', [
             'activeNav'       => 'new-tabs',
             'bodyClass'       => 'sop-page-body',
-            'pageTitle'       => 'Statement of Purpose & Admissions Writing Studio',
-            'pageDescription' => 'Human-written Statement of Purpose, visa SOPs, resumes, letters of recommendation and scholarship essays for students applying abroad — one advisor, one consistent story, from first line to final submission.',
+            'pageTitle'       => 'Statement of Purpose Writing | One Degree Advisory',
+            'pageDescription' => 'Human-written SOPs, visa statements, resumes, recommendation letters and scholarship essays for students applying abroad — one advisor, one consistent story.',
         ]);
     }
 

@@ -1,6 +1,6 @@
 ﻿@php
     $pageTitle = 'One Degree Advisory | Global Education Advisory';
-    $pageDescription = 'One Degree Advisory is a premium global education advisory helping students choose universities, strengthen profiles, apply with confidence, and prepare for arrival.';
+    $pageDescription = 'A premium global education advisory helping students choose universities, strengthen their profiles, apply with confidence, and prepare for arrival.';
     $activeNav = 'home';
     $mainId = 'main';
 @endphp

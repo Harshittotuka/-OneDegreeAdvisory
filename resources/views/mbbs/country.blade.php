@@ -21,7 +21,7 @@
     $pageTitle = $basePageTitle !== ''
         ? (str_contains($basePageTitle, config('site.name')) ? $basePageTitle : $basePageTitle.' | '.config('site.name'))
         : 'MBBS in '.$countryName.' | '.config('site.name');
-    $pageDescription = Seo::description($page['hero_text'] ?? null, 'Study MBBS in '.$countryName.' with One Degree Advisory.', 170);
+    $pageDescription = Seo::description($page['hero_text'] ?? null, 'Study MBBS in '.$countryName.' with One Degree Advisory.', 160);
     $activeNav       = 'mbbs';
     $mainId          = 'mbbs-main';
     $bodyClass       = 'page-mbbs-country';
