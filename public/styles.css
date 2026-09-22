@@ -26498,76 +26498,74 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   .country-faq-item > summary::after { transition: none; }
 }
 
-/* ── Preferred-source, "legal" variant ───────────────────────────────────────
-   The footer's bottom row (© … | Terms | Privacy | Back to top). Rendered as
-   one more link in that row rather than the promo pill used elsewhere, so it
-   inherits the row's size and colour and adds no vertical height. */
-.preferred-source--legal {
-  display: inline;
-}
-
-.preferred-source--legal .preferred-source-link {
-  display: inline;
-  padding: 0;
-  background: none;
-  border: 0;
-  box-shadow: none;
-  font: inherit;
-  color: inherit;
-}
-
-.preferred-source--legal .preferred-source-copy { display: inline; }
-.preferred-source--legal .preferred-source-copy small { display: none; }
-
-.preferred-source--legal .preferred-source-copy strong {
-  font: inherit;
-  font-weight: inherit;
-}
-
-/* Google's own button would break the row's rhythm; the deeplink is the whole
-   feature, so this variant never mounts it. */
-.preferred-source--legal .preferred-source-official { display: none; }
-
 /* ── Country guide section prose (partials/country-prose.blade.php) ──────────
-   The page keeps the short line it always showed; the full written paragraph
-   reveals on hover, on keyboard focus, or on tap. Collapsed with max-height
-   rather than display:none so the text stays in the document for search
-   engines and AI answers even while it is not on screen. */
+   The page keeps the short line it always showed. The full written paragraph
+   arrives as a panel floating over it on hover, focus or tap.
+
+   An overlay rather than an inline expand on purpose: expanding in flow pushed
+   everything below it down by a few lines each time the pointer crossed a
+   paragraph, which is exactly the jitter this was meant to avoid. Absolutely
+   positioned, it cannot move anything.
+
+   Hidden with opacity and pointer-events, never display:none, so the text stays
+   in the document for search engines and AI answers to read. */
 .country-prose {
   position: relative;
-  cursor: pointer;
+  cursor: help;
   outline: none;
 }
 
-.country-prose-short,
-.country-prose-full {
+.country-prose-short {
   display: block;
-  overflow: hidden;
-  transition: max-height 0.38s ease, opacity 0.22s ease;
 }
-
-.country-prose-short { max-height: 10em; opacity: 1; }
-.country-prose-full  { max-height: 0;    opacity: 0; }
 
 /* A quiet cue that there is more here — without it nobody knows to hover. */
 .country-prose-short::after {
-  content: " more";
-  margin-left: 6px;
-  font-size: 0.82em;
+  content: "more";
+  margin-left: 8px;
+  padding: 1px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.68em;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--teal);
   white-space: nowrap;
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
 }
 
-.country-prose:hover .country-prose-short,
-.country-prose:focus-visible .country-prose-short,
-.country-prose.is-open .country-prose-short { max-height: 0; opacity: 0; }
+.country-prose:hover .country-prose-short::after { opacity: 0; }
+
+.country-prose-full {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: -20px;
+  right: -20px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font-size: 0.97rem;
+  line-height: 1.7;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-46%) scale(0.985);
+  transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
 
 .country-prose:hover .country-prose-full,
 .country-prose:focus-visible .country-prose-full,
-.country-prose.is-open .country-prose-full { max-height: 44em; opacity: 1; }
+.country-prose.is-open .country-prose-full {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
 
 .country-prose:focus-visible {
   outline: 2px solid var(--teal);
@@ -26575,12 +26573,23 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   border-radius: 4px;
 }
 
-/* Touch devices get no hover, so the tap target should look like one. */
+/* Touch has no hover: the panel opens on tap, so it should sit under the line
+   it belongs to rather than over it, and say so. */
 @media (hover: none) {
-  .country-prose-short::after { content: " tap to read"; }
+  .country-prose-short::after { content: "tap to read"; }
+  .country-prose:hover .country-prose-short::after { opacity: 0.75; }
+
+  .country-prose-full {
+    top: calc(100% + 10px);
+    left: -12px;
+    right: -12px;
+    transform: translateY(-6px) scale(1);
+  }
+
+  .country-prose.is-open .country-prose-full { transform: translateY(0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .country-prose-short,
-  .country-prose-full { transition: none; }
+  .country-prose-full,
+  .country-prose-short::after { transition: none; }
 }

@@ -25,14 +25,25 @@
     $preferredSourceHost = trim((string) config('site.canonical_host'));
     $preferredSourceVariant = $variant ?? 'footer';
 @endphp
-@if ($preferredSourceHost !== '')
+@if ($preferredSourceHost !== '' && $preferredSourceVariant === 'legal')
+  {{-- The footer's legal row (Terms / Privacy / Back to top). Deliberately not
+       the markup below: that is a pill with a Google logo tile, and dropping it
+       into this row put a 28px white circle between the links and pushed the
+       label onto a second line. Here the control is simply one more link in the
+       row, inheriting its colour, size and hover from .footer-legal-links a.
+       No logo, and no publisher.js mount — the deeplink is the whole feature. --}}
+  <a href="https://www.google.com/preferences/source?q={{ urlencode($preferredSourceHost) }}"
+     target="_blank"
+     rel="noopener nofollow"
+     aria-label="Add {{ config('site.name') }} as a preferred source on Google">Prefer us on Google</a>
+@elseif ($preferredSourceHost !== '')
   <div class="preferred-source preferred-source--{{ $preferredSourceVariant }}" data-preferred-source>
     <a class="preferred-source-link"
        href="https://www.google.com/preferences/source?q={{ urlencode($preferredSourceHost) }}"
        target="_blank"
        rel="noopener nofollow"
        aria-label="Add {{ config('site.name') }} as a preferred source on Google">
-      <span class="preferred-source-mark" aria-hidden="true" @if ($preferredSourceVariant === 'legal') hidden @endif>
+      <span class="preferred-source-mark" aria-hidden="true">
         <svg viewBox="0 0 48 48" focusable="false">
           <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
           <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
@@ -41,15 +52,8 @@
         </svg>
       </span>
       <span class="preferred-source-copy">
-        @if ($preferredSourceVariant === 'legal')
-          {{-- Sits in the footer's legal row next to Terms / Privacy / Back to
-               top, so it reads as one more link there rather than a promo
-               tile: no logo mark, no two-line label. --}}
-          <strong>Prefer us on Google</strong>
-        @else
-          <small>Add us as a</small>
-          <strong>Preferred source on Google</strong>
-        @endif
+        <small>Add us as a</small>
+        <strong>Preferred source on Google</strong>
       </span>
     </a>
     {{-- publisher.js draws its button in here. Left visible rather than hidden
