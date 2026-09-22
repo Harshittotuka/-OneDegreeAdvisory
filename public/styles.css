@@ -26621,18 +26621,58 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
 
 /* Touch has no hover: the panel opens on tap, so it sits under the line it
    belongs to rather than over it, and says so. */
+/* Touch has no hover, and a panel that floats over the page is the wrong
+   pattern on a phone: it covers whatever you were about to read, it cannot be
+   dismissed by moving away, and the negative side insets it needs on desktop
+   push it past the container edge on a narrow screen. So on touch it stops
+   floating and simply opens in place, the way an accordion does — nothing is
+   covered, nothing can overflow sideways, and the tap that opened it is the
+   tap that closes it. */
 @media (hover: none) {
+  .country-prose { cursor: default; }
+
   .country-prose-short::after { content: "tap to read"; }
   .country-prose:hover .country-prose-short::after { opacity: 0.7; }
 
   .country-prose-full {
-    top: calc(100% + 12px);
-    left: -14px;
-    right: -14px;
-    transform: translateY(-8px) scale(1);
+    position: static;
+    left: auto;
+    right: auto;
+    max-height: 0;
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-width: 0;
+    overflow: hidden;
+    transform: none;
+    filter: none;
+    font-size: 0.95rem;
+    transition:
+      max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.24s ease,
+      margin-top 0.3s ease,
+      padding 0.3s ease;
   }
 
-  .country-prose.is-open .country-prose-full { transform: translateY(0) scale(1); }
+  /* The gold hairline is drawn on the top edge, which does not exist until the
+     panel has height — hide it while collapsed so it cannot show as a stray
+     line under the paragraph. */
+  .country-prose-full::before { opacity: 0; transition: opacity 0.2s ease; }
+
+  .country-prose.is-open .country-prose-full {
+    max-height: 60em;
+    margin-top: 14px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    border-width: 1px;
+    transform: none;
+  }
+
+  .country-prose.is-open .country-prose-full::before { opacity: 0.85; }
+
+  .country-prose.is-open .country-prose-short::after { content: "close"; opacity: 0.7; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -26645,4 +26685,20 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   .country-prose:focus-visible .country-prose-full,
   .country-prose.is-open .country-prose-full { transform: translateY(-50%) scale(1); }
   .country-prose-short::after { transition: none; }
+}
+
+/* ── Footer legal row on small screens ───────────────────────────────────────
+   The row is an inline-flex with no wrap, which was fine for three links and
+   is not fine for four: "Terms & Conditions · Privacy Policy · Back to top ·
+   Prefer us on Google" runs past 500px and a phone is 360. Let it wrap, and
+   tighten the gap so two lines is the worst case rather than four. */
+.footer-legal-links {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .footer-legal-links {
+    gap: 8px 16px;
+  }
 }

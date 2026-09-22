@@ -2503,23 +2503,54 @@ ready(() => {
 })();
 
 /* Country guide section prose — partials/country-prose.blade.php.
-   The paragraph reveals on :hover in CSS, which touch devices never fire and
-   which is roughly half this site's traffic. Tapping toggles the same state,
-   and aria-expanded is kept in step for screen readers. */
+   The panel reveals on :hover in CSS, which touch devices never fire and which
+   is roughly half this site's traffic. Tapping toggles the same state.
+
+   Three things a bare toggle would get wrong on a phone, where the panel opens
+   in place and pushes the page down:
+     • two open at once leaves the page jumping about, so opening one closes
+       the rest;
+     • there is no "move the pointer away" on touch, so a tap anywhere else
+       closes it, as does Escape;
+     • aria-expanded has to follow, or a screen reader announces the wrong
+       state. */
 (() => {
+  const SELECTOR = "[data-country-prose]";
+
+  const setOpen = (prose, open) => {
+    prose.classList.toggle("is-open", open);
+    prose.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  const closeAll = (except) => {
+    document.querySelectorAll(SELECTOR + ".is-open").forEach((other) => {
+      if (other !== except) setOpen(other, false);
+    });
+  };
+
   const init = () => {
-    document.querySelectorAll("[data-country-prose]").forEach((prose) => {
-      const toggle = () => {
-        const open = prose.classList.toggle("is-open");
-        prose.setAttribute("aria-expanded", open ? "true" : "false");
+    const items = Array.from(document.querySelectorAll(SELECTOR));
+    if (!items.length) return;
+
+    items.forEach((prose) => {
+      const toggle = (event) => {
+        event.stopPropagation();
+        const open = !prose.classList.contains("is-open");
+        closeAll(prose);
+        setOpen(prose, open);
       };
 
       prose.addEventListener("click", toggle);
       prose.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
-        toggle();
+        toggle(event);
       });
+    });
+
+    document.addEventListener("click", () => closeAll(null));
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeAll(null);
     });
   };
 
