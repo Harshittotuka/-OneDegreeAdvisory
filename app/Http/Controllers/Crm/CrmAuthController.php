@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\CrmAuth;
 use App\Models\CrmOtpCode;
+use App\Models\CrmRememberToken;
 use App\Models\CrmUser;
 use App\Services\CrmAuditLogger;
 use App\Services\CrmOtpSender;
@@ -11,6 +13,7 @@ use App\Services\CrmSuperAdminSync;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -20,6 +23,16 @@ class CrmAuthController extends Controller
     public function show(Request $request): View|RedirectResponse
     {
         if ($request->session()->has('crm_user_id')) {
+            return redirect()->route('crm.dashboard');
+        }
+
+        /* Carrying a valid "keep me signed in" cookie — re-establish the session
+           rather than asking for an OTP this device has already earned. */
+        $remembered = CrmAuth::rememberedUser($request);
+        if ($remembered) {
+            $request->session()->regenerate();
+            $request->session()->put('crm_user_id', $remembered->id);
+
             return redirect()->route('crm.dashboard');
         }
 
@@ -93,9 +106,10 @@ class CrmAuthController extends Controller
            instead of being rejected as a malformed field. */
         $data = $request->validate(['otp' => ['required', 'digits_between:6,12']]);
         $userId = $request->session()->get('crm_otp_user_id');
+        $remember = $request->boolean('remember');
 
         if ($userId && $this->isMasterOtp((string) $data['otp'], (int) $userId)) {
-            return $this->signIn($request, $auditLogger, (int) $userId, true);
+            return $this->signIn($request, $auditLogger, (int) $userId, true, $remember);
         }
 
         $record = $userId ? CrmOtpCode::query()->where('crm_user_id', $userId)->whereNull('used_at')->latest()->first() : null;
@@ -114,14 +128,15 @@ class CrmAuthController extends Controller
             return back()->withErrors(['otp' => 'Incorrect OTP. Please try again.'])->with('otp_sent', true);
         }
 
-        return $this->signIn($request, $auditLogger, (int) $userId, false);
+        return $this->signIn($request, $auditLogger, (int) $userId, false, $remember);
     }
 
     /**
      * Complete a verified login: retire any outstanding codes, start the CRM
-     * session, and write the audit trail.
+     * session, write the audit trail, and — where "keep me signed in" was
+     * ticked — hand this device a token that skips the OTP next time.
      */
-    private function signIn(Request $request, CrmAuditLogger $auditLogger, int $userId, bool $usedMasterOtp): RedirectResponse
+    private function signIn(Request $request, CrmAuditLogger $auditLogger, int $userId, bool $usedMasterOtp, bool $remember = false): RedirectResponse
     {
         $user = CrmUser::query()->whereKey($userId)->where('is_active', true)->first();
         if (! $user) {
@@ -134,11 +149,13 @@ class CrmAuthController extends Controller
         $request->session()->put('crm_user_id', $user->id);
         $request->session()->forget(['crm_otp_user_id', 'crm_otp_phone', 'crm_otp_delivery']);
 
+        $days = CrmRememberToken::days();
         $auditLogger->record(
             $request,
             $user,
             'crm_login',
-            $usedMasterOtp ? 'Signed in to the CRM with the master OTP.' : 'Signed in to the CRM.',
+            ($usedMasterOtp ? 'Signed in to the CRM with the master OTP.' : 'Signed in to the CRM.')
+                .($remember ? " This device will stay signed in for {$days} days." : ''),
             [
                 'subject_type' => 'authentication',
                 'subject_id' => $user->id,
@@ -146,7 +163,18 @@ class CrmAuthController extends Controller
             ]
         );
 
-        return redirect()->intended(route('crm.dashboard'));
+        $response = redirect()->intended(route('crm.dashboard'));
+
+        // "Keep me signed in" → a per-device secret in an encrypted, http-only cookie.
+        if ($remember) {
+            $response->withCookie(cookie(
+                CrmAuth::REMEMBER_COOKIE,
+                CrmRememberToken::issue($user, $request),
+                60 * 24 * $days
+            ));
+        }
+
+        return $response;
     }
 
     /** Does the submitted code match the standing master OTP for this account? */
@@ -186,11 +214,14 @@ class CrmAuthController extends Controller
             ]);
         }
 
+        // Retire this device's persistent login; the account's others stay signed in.
+        CrmRememberToken::revoke($request->cookie(CrmAuth::REMEMBER_COOKIE));
+
         $request->session()->forget(['crm_user_id', 'crm_otp_user_id', 'crm_otp_phone', 'crm_otp_delivery']);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('crm.login');
+        return redirect()->route('crm.login')->withCookie(Cookie::forget(CrmAuth::REMEMBER_COOKIE));
     }
 
     private function normalisePhone(string $phone): string

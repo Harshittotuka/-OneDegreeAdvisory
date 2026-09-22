@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
 use App\Models\CrmPartnerCode;
+use App\Models\CrmRememberToken;
 use App\Models\CrmUser;
 use App\Services\CrmAuditLogger;
 use App\Support\CrmOptions;
@@ -306,6 +307,12 @@ class CrmUserController extends Controller
         }
         $wasActive = $member->is_active;
         $member->update(['is_active' => ! $member->is_active]);
+
+        /* Withdrawing access has to reach the devices that ticked "keep me signed
+           in" too, or the cookie would keep letting them back in. */
+        if ($wasActive) {
+            CrmRememberToken::revokeAllFor($member);
+        }
 
         $auditLogger->record($request, $admin, 'team_member_access_changed', ($member->is_active ? 'Restored' : 'Disabled').' CRM access for '.$member->name.'.',
             $member->auditSubject(['before' => ['is_active' => $wasActive], 'after' => ['is_active' => $member->is_active]]));

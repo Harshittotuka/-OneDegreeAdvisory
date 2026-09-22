@@ -33,6 +33,12 @@ return [
             ))),
         ],
     ],
+    /* "Keep me signed in" on the CRM sign-in screen: how long a remembered
+       device skips the OTP for. Each device holds its own revocable token, so
+       signing out on one machine does not sign the others out. */
+    'remember' => [
+        'days' => (int) env('CRM_REMEMBER_DAYS', 30),
+    ],
     'sms' => [
         'driver' => env('CRM_SMS_DRIVER', 'msg91'),
         'webhook_url' => env('CRM_SMS_WEBHOOK_URL'),
