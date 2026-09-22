@@ -109,7 +109,7 @@
                              twelve so a longer master OTP can be typed in too. --}}
                         <div class="input-wrap"><input class="otp-input" id="otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" pattern="[0-9]{6,12}" placeholder="••••••" autofocus required></div>
                     </div>
-                    <label class="login-remember"><input type="checkbox" name="remember" value="1" checked> Keep me signed in on this device for {{ config('crm.remember.days') }} days</label>
+                    <label class="login-remember"><input type="checkbox" name="remember" value="1" checked> Keep me signed in for {{ config('crm.remember.days') }} days</label>
                     <button class="btn btn-navy btn-block" type="submit">Verify and sign in <span aria-hidden="true">→</span></button>
                 </form>
                 <div class="login-meta">

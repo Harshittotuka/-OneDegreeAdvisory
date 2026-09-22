@@ -161,8 +161,8 @@ button{cursor:pointer}
 .login-meta{display:flex;justify-content:space-between;align-items:center;margin-top:13px;font-size:.74rem;color:var(--n-500)}
 .login-meta a{color:var(--a-600);font-weight:600}
 .login-meta a:hover{color:var(--a-700);text-decoration:underline}
-.login-remember{display:flex;align-items:center;gap:9px;margin-top:13px;font-size:.78rem;font-weight:600;color:var(--n-500);cursor:pointer;user-select:none}
-.login-remember input[type=checkbox]{width:15px;height:15px;margin:0;padding:0;border-radius:3px;accent-color:var(--a-600);cursor:pointer;flex-shrink:0}
+.login-remember{display:flex;align-items:center;gap:8px;margin:0 0 15px;font-size:.76rem;font-weight:600;line-height:1.35;color:var(--n-500);cursor:pointer;user-select:none}
+.login-remember input[type=checkbox]{width:14px;height:14px;margin:0;padding:0;border-radius:3px;accent-color:var(--a-600);cursor:pointer;flex-shrink:0}
 .alert{padding:10px 13px;border-radius:8px;font-size:.78rem;margin-bottom:14px}
 .alert-error{background:var(--bad-bg);border:1px solid var(--bad-line);color:var(--bad)}
 .alert-info{background:var(--a-50);border:1px solid var(--a-100);color:var(--a-700)}
