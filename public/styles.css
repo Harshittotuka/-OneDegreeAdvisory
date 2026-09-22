@@ -26499,13 +26499,16 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
 }
 
 /* ── Country guide section prose (partials/country-prose.blade.php) ──────────
-   The page keeps the short line it always showed. The full written paragraph
-   arrives as a panel floating over it on hover, focus or tap.
+   The page keeps the short line it always showed; the full written paragraph
+   arrives as a frosted panel floating over it on hover, focus or tap.
 
    An overlay rather than an inline expand on purpose: expanding in flow pushed
-   everything below it down by a few lines each time the pointer crossed a
-   paragraph, which is exactly the jitter this was meant to avoid. Absolutely
-   positioned, it cannot move anything.
+   everything below down a few lines each time the pointer crossed a paragraph.
+   Absolutely positioned, it cannot move anything.
+
+   The glass matches the rest of the site (hero consult card, students-hub tab):
+   a translucent paper base, blur with a little saturation so colour behind it
+   stays alive, a white hairline and an inset highlight along the top edge.
 
    Hidden with opacity and pointer-events, never display:none, so the text stays
    in the document for search engines and AI answers to read. */
@@ -26515,48 +26518,73 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   outline: none;
 }
 
-.country-prose-short {
-  display: block;
-}
+.country-prose-short { display: block; }
 
-/* A quiet cue that there is more here — without it nobody knows to hover. */
+/* A quiet cue that there is more here — without it nobody knows to hover.
+   It fades as the panel arrives, so the two are never both on screen. */
 .country-prose-short::after {
   content: "more";
-  margin-left: 8px;
-  padding: 1px 7px;
+  margin-left: 9px;
+  padding: 2px 8px;
   border: 1px solid currentColor;
   border-radius: 999px;
-  font-size: 0.68em;
+  font-size: 0.66em;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--teal);
   white-space: nowrap;
-  opacity: 0.75;
-  transition: opacity 0.2s ease;
+  opacity: 0.7;
+  transition: opacity 0.22s ease;
 }
 
-.country-prose:hover .country-prose-short::after { opacity: 0; }
+.country-prose:hover .country-prose-short::after,
+.country-prose:focus-visible .country-prose-short::after { opacity: 0; }
 
 .country-prose-full {
   position: absolute;
   z-index: 6;
   top: 50%;
-  left: -20px;
-  right: -20px;
-  padding: 20px 22px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--paper);
-  box-shadow: var(--shadow);
+  left: -24px;
+  right: -24px;
+  padding: 22px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  background:
+    linear-gradient(158deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.34) 56%, rgba(223, 245, 241, 0.34) 100%),
+    color-mix(in srgb, var(--paper) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  box-shadow:
+    0 30px 70px rgba(7, 25, 34, 0.22),
+    0 2px 10px rgba(7, 25, 34, 0.07),
+    0 1px 0 rgba(255, 255, 255, 0.85) inset;
   color: var(--ink);
   font-size: 0.97rem;
-  line-height: 1.7;
+  line-height: 1.72;
   text-align: left;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-46%) scale(0.985);
-  transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(-46%) scale(0.97);
+  filter: blur(3px);
+  transition:
+    opacity 0.28s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease;
+}
+
+/* A hairline of the brand gold along the top edge — the same accent the hero
+   and the eyebrows use, so the panel reads as part of this site. */
+.country-prose-full::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22px;
+  right: 22px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--hero-gold-gradient);
+  opacity: 0.85;
 }
 
 .country-prose:hover .country-prose-full,
@@ -26565,6 +26593,10 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(-50%) scale(1);
+  filter: blur(0);
+  /* A beat before it appears, so sweeping the pointer across the page does not
+     flash a panel at every paragraph on the way past. */
+  transition-delay: 0.07s;
 }
 
 .country-prose:focus-visible {
@@ -26573,23 +26605,39 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   border-radius: 4px;
 }
 
-/* Touch has no hover: the panel opens on tap, so it should sit under the line
-   it belongs to rather than over it, and say so. */
+/* Where the browser cannot blur, translucency alone would leave the text
+   competing with whatever sits behind it. Go opaque instead. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .country-prose-full {
+    background: var(--paper);
+    border-color: var(--line);
+  }
+}
+
+/* Touch has no hover: the panel opens on tap, so it sits under the line it
+   belongs to rather than over it, and says so. */
 @media (hover: none) {
   .country-prose-short::after { content: "tap to read"; }
-  .country-prose:hover .country-prose-short::after { opacity: 0.75; }
+  .country-prose:hover .country-prose-short::after { opacity: 0.7; }
 
   .country-prose-full {
-    top: calc(100% + 10px);
-    left: -12px;
-    right: -12px;
-    transform: translateY(-6px) scale(1);
+    top: calc(100% + 12px);
+    left: -14px;
+    right: -14px;
+    transform: translateY(-8px) scale(1);
   }
 
   .country-prose.is-open .country-prose-full { transform: translateY(0) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .country-prose-full,
+  .country-prose-full {
+    transition: opacity 0.2s ease;
+    transform: translateY(-50%) scale(1);
+    filter: none;
+  }
+  .country-prose:hover .country-prose-full,
+  .country-prose:focus-visible .country-prose-full,
+  .country-prose.is-open .country-prose-full { transform: translateY(-50%) scale(1); }
   .country-prose-short::after { transition: none; }
 }
