@@ -62,6 +62,30 @@ const SOURCES = [
     { dir: 'storage/app', exts: ['.json'], recurse: false, patterns: [MARKUP, KEYED] },
 ];
 
+/**
+ * The patterns above assume an icon name is introduced by something that says
+ * "icon". Not all of them are: mbbs/country.blade.php picks one with a match
+ * expression whose arms are bare strings —
+ *
+ *   str_contains($h, 'food') => 'utensils',
+ *
+ * which no key-based pattern can see, and which cost that page a fallback
+ * request for five icons. So in any file that renders icons at all (it mentions
+ * data-lucide), every quoted lowercase string that happens to BE a real Lucide
+ * name is collected too. That over-collects the odd word — "home", "check" —
+ * and a few unused icons cost a few hundred bytes, where a miss costs a 91 KB
+ * fallback fetch on a page that did not need one.
+ */
+function lucideNamesInIconFile(text, isLucideName) {
+    if (! text.includes('data-lucide')) return [];
+
+    const found = [];
+    for (const match of text.matchAll(/["']([a-z][a-z0-9]*(?:-[a-z0-9]+)*)["']/g)) {
+        if (isLucideName(match[1])) found.push(match[1]);
+    }
+    return found;
+}
+
 function walk(dir, exts, recurse = true) {
     const out = [];
     let entries;
@@ -90,6 +114,9 @@ function walk(dir, exts, recurse = true) {
     return out;
 }
 
+const isLucideName = (name) =>
+    Object.prototype.hasOwnProperty.call(lucide, toPascalCase(name)) && toPascalCase(name) !== 'icons';
+
 const kebab = new Set();
 for (const source of SOURCES) {
     for (const file of walk(source.dir, source.exts, source.recurse !== false)) {
@@ -98,6 +125,7 @@ for (const source of SOURCES) {
             for (const match of text.matchAll(pattern)) kebab.add(match[1].toLowerCase());
         }
         for (const name of bareIconLists(text)) kebab.add(name.toLowerCase());
+        for (const name of lucideNamesInIconFile(text, isLucideName)) kebab.add(name);
     }
 }
 

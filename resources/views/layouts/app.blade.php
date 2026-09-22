@@ -159,9 +159,9 @@
          could become icons. Same-origin and immutable, they now arrive with the
          rest of the page instead of popping in after it.
 
-         What ships is a subset: the ~180 icons this site names, bundled with
-         Lucide's own runtime by scripts/build-lucide-subset.mjs — 44 KB instead
-         of 404 KB. Because a CMS editor can type any Lucide name into a brief
+         What ships is a subset: the icons this site names, bundled with
+         Lucide's own runtime by scripts/build-lucide-subset.mjs — 63 KB instead
+         of 404 KB (16 KB against 94 KB over the wire). Because a CMS editor can type any Lucide name into a brief
          block, the subset loads the full library below on its own the moment it
          meets a name it does not carry, so an icon chosen later still renders.
          Re-run that script after adding an icon to keep it out of the fallback. --}}
