@@ -26542,6 +26542,15 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
 .country-prose:focus-visible .country-prose-short::after { opacity: 0; }
 
 .country-prose-full {
+  /* Block, explicitly, and not by luck. This is a <span> because a <p> may
+     only hold phrasing content. position:absolute happens to blockify it --
+     but the touch branch below sets position:static, which handed it straight
+     back to inline, and an inline box ignores max-height and overflow and
+     paints its background once per line box. That one line was the whole mess
+     on phones: the collapsed paragraph still took its full height as an
+     invisible gap, and the open one came out as ragged stripes behind the
+     text instead of a card. */
+  display: block;
   position: absolute;
   z-index: 6;
   top: 50%;
@@ -26610,6 +26619,13 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   border-radius: 4px;
 }
 
+/* A window with a pointer can still be narrow -- a half-screen laptop, a
+   tablet with a trackpad. The negative insets bleed the panel past the card
+   it belongs to at those widths, so pull them back in. */
+@media (max-width: 900px) {
+  .country-prose-full { left: 0; right: 0; }
+}
+
 /* Where the browser cannot blur, translucency alone would leave the text
    competing with whatever sits behind it. Go opaque instead. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -26619,72 +26635,79 @@ html:not(.is-vt-nav) body.odp-has-embed:not(.cms-editing) main {
   }
 }
 
-/* Touch has no hover: the panel opens on tap, so it sits under the line it
-   belongs to rather than over it, and says so. */
-/* Touch has no hover, and a panel that floats over the page is the wrong
-   pattern on a phone: it covers whatever you were about to read, it cannot be
-   dismissed by moving away, and the negative side insets it needs on desktop
-   push it past the container edge on a narrow screen. So on touch it stops
-   floating and simply opens in place, the way an accordion does — nothing is
-   covered, nothing can overflow sideways, and the tap that opened it is the
-   tap that closes it. */
+/* Touch has no hover, and a floating panel is the wrong pattern on a phone
+   anyway: it covers what you were about to read, there is no "move away" to
+   dismiss it, and the negative side insets it needs on desktop push it past
+   the container edge on a narrow screen. On touch it stops floating and opens
+   in place, the way an accordion does. */
 @media (hover: none) {
   .country-prose { cursor: default; }
 
   .country-prose-short::after { content: "tap to read"; }
   .country-prose:hover .country-prose-short::after { opacity: 0.7; }
 
+  /* No glass here, deliberately. A dark frosted card is a desktop flourish;
+     on a phone it fought the page it sat in -- white type stranded on a pale
+     background wherever the card did not reach, a second font size against
+     the paragraph above it, and a panel wider than its own container. The
+     text simply unfolds in the page's own ink, size and measure, so the only
+     thing that changes on tap is that there is more to read. */
   .country-prose-full {
     position: static;
     left: auto;
     right: auto;
     max-height: 0;
     margin-top: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 18px;
-    padding-right: 18px;
-    border-width: 0;
+    padding: 0;
+    border: 0;
     overflow: hidden;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
     transform: none;
     filter: none;
-    font-size: 0.95rem;
     transition:
       max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
       opacity 0.24s ease,
       margin-top 0.3s ease,
-      padding 0.3s ease;
+      padding-top 0.3s ease;
   }
 
-  /* The gold hairline is drawn on the top edge, which does not exist until the
-     panel has height — hide it while collapsed so it cannot show as a stray
-     line under the paragraph. */
-  .country-prose-full::before { opacity: 0; transition: opacity 0.2s ease; }
+  /* The gold hairline is drawn along a panel's top edge. There is no panel. */
+  .country-prose-full::before { display: none; }
 
   .country-prose.is-open .country-prose-full {
     max-height: 60em;
     margin-top: 14px;
-    padding-top: 18px;
-    padding-bottom: 18px;
-    border-width: 1px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(7, 25, 34, 0.14);
+    /* The reveal rule further up is three classes deep and outranks the
+       single-class rule above whatever the source order, so the panel's
+       centring transform has to be cancelled here by name -- otherwise the
+       text unfolds and then rides up over the line it belongs to. */
     transform: none;
   }
-
-  .country-prose.is-open .country-prose-full::before { opacity: 0.85; }
 
   .country-prose.is-open .country-prose-short::after { content: "close"; opacity: 0.7; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .country-prose-full {
-    transition: opacity 0.2s ease;
-    transform: translateY(-50%) scale(1);
-    filter: none;
-  }
+  .country-prose-full { transition: opacity 0.2s ease; filter: none; }
+  .country-prose-short::after { transition: none; }
+}
+
+/* Only the floating panel is centred on its own line. The touch branch is in
+   normal flow, and shifting it up by half its height would drag it back over
+   the paragraph it belongs to -- so this transform stays with the panel. */
+@media (prefers-reduced-motion: reduce) and (hover: hover) {
+  .country-prose-full,
   .country-prose:hover .country-prose-full,
   .country-prose:focus-visible .country-prose-full,
   .country-prose.is-open .country-prose-full { transform: translateY(-50%) scale(1); }
-  .country-prose-short::after { transition: none; }
 }
 
 /* ── Footer legal row on small screens ───────────────────────────────────────
