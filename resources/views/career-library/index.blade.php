@@ -58,28 +58,32 @@
      #app-container on load, so until now the only thing a search engine could
      read on this page was the chrome: 232 words and not one link to a career.
      This list is the same curated data the grid above renders, as plain server
-     HTML, and it is the page's whole internal link graph. --}}
-<section class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-4 relative z-10" aria-labelledby="cl-all-careers">
-    <h2 id="cl-all-careers" class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Browse all {{ $careerCount }} careers</h2>
-    <p class="text-slate-600 mb-8 max-w-3xl">
-        Every career in the library, with a full report on salary ranges, eligibility,
-        study routes, day-to-day work and demand outlook for {{ $settings['report_year'] ?? date('Y') }}.
-    </p>
+     HTML, and it is the page's whole internal link graph.
 
-    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
-        @foreach ($careers as $career)
-            <li class="border-b border-slate-200/70">
-                @if ($detailPages)
-                    <a href="{{ $careerUrl($career) }}"
-                       class="block py-2.5 text-slate-700 hover:text-indigo-700 transition-colors">
-                        {{ $career['title'] }} <span class="text-slate-400">career</span>
-                    </a>
-                @else
-                    <span class="block py-2.5 text-slate-700">{{ $career['title'] }}</span>
-                @endif
-            </li>
-        @endforeach
-    </ul>
+     It is a <details> because 139 rows is 2,500px on a desktop and 6,500px on a
+     phone -- seventeen screens of links bolted to the bottom of the page. A
+     closed <details> costs one line until someone wants it, and its contents
+     stay in the DOM, so every link is still there to be crawled and followed. --}}
+<section class="cl-index" aria-labelledby="cl-all-careers">
+    <details class="cl-index__box">
+        <summary class="cl-index__summary">
+            <h2 id="cl-all-careers" class="cl-index__title">Browse all {{ $careerCount }} careers</h2>
+            <span class="cl-index__sub">Salary ranges, eligibility, study routes, day-to-day work and demand outlook for {{ $settings['report_year'] ?? date('Y') }}.</span>
+            <span class="cl-index__cue" aria-hidden="true"></span>
+        </summary>
+
+        <ul class="cl-index__list">
+            @foreach ($careers as $career)
+                <li>
+                    @if ($detailPages)
+                        <a href="{{ $careerUrl($career) }}">{{ $career['title'] }}</a>
+                    @else
+                        <span>{{ $career['title'] }}</span>
+                    @endif
+                </li>
+            @endforeach
+        </ul>
+    </details>
 </section>
 @endsection
 

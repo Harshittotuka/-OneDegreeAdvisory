@@ -109,6 +109,31 @@
             max-width: none;
         }
 
+        /* The browsable career index (index.blade's after-app section).
+           Written out rather than assembled from utilities because this page's
+           Tailwind is a prebuilt output.css -- a class that is not already in
+           that build simply does nothing.
+
+           text-align is set explicitly on the rows for a reason: styles.css
+           carries `main p, main li { text-align: justify }` for the site's
+           prose, this section is inside <main>, and justified single-line links
+           came out stretched edge to edge with holes punched through them. */
+        .cl-index { width: 100%; max-width: 72rem; margin: 0 auto; padding: 0 1rem 4rem; position: relative; z-index: 10; }
+        .cl-index__box { border: 1px solid #e2e8f0; border-radius: 16px; background: rgba(255,255,255,.72); overflow: hidden; }
+        .cl-index__summary { cursor: pointer; list-style: none; padding: 1.15rem 1.35rem; display: block; position: relative; padding-right: 3.25rem; }
+        .cl-index__summary::-webkit-details-marker { display: none; }
+        .cl-index__title { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; text-align: left; line-height: 1.3; }
+        .cl-index__sub { display: block; margin-top: .3rem; font-size: .9rem; color: #475569; text-align: left; }
+        .cl-index__cue { position: absolute; right: 1.35rem; top: 50%; width: 10px; height: 10px; margin-top: -7px;
+            border-right: 2px solid #64748b; border-bottom: 2px solid #64748b; transform: rotate(45deg); transition: transform .2s ease; }
+        .cl-index__box[open] .cl-index__cue { transform: rotate(-135deg); margin-top: -3px; }
+        .cl-index__list { list-style: none; margin: 0; padding: 0 1.35rem 1.35rem; display: grid; grid-template-columns: 1fr; column-gap: 1.75rem; }
+        .cl-index__list li { border-top: 1px solid #eef2f6; text-align: left; }
+        .cl-index__list a, .cl-index__list span { display: block; padding: .62rem 0; color: #334155; text-decoration: none; text-align: left; font-size: .95rem; }
+        .cl-index__list a:hover { color: #4338ca; }
+        @media (min-width: 640px) { .cl-index__list { grid-template-columns: repeat(2, 1fr); } .cl-index { padding: 0 1.5rem 4rem; } }
+        @media (min-width: 1024px) { .cl-index__list { grid-template-columns: repeat(3, 1fr); } .cl-index { padding: 0 2rem 4rem; } }
+
         .glass-panel {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
