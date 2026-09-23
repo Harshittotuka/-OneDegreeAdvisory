@@ -1,9 +1,90 @@
 @extends('career-library.layout')
 
-@section('title', 'Trending Career')
+@php
+    use App\Support\CareerLibraryStore;
+
+    // The detail URL this page links a career to, matching the shape
+    // CareerLibraryController::ensure() hands the search form so a crawled link
+    // and a searched one land on the same page.
+    $detailPages = (bool) ($settings['detail_pages_enabled'] ?? false);
+    $careerUrl = fn (array $c): string => url(
+        '/global-career-library/in/'.str_replace(' ', '-', $c['title']).'/en-IN'
+    );
+    $careerCount = count($careers);
+
+    // Encoded in PHP for the same reason as the layout's: '@context' in Blade
+    // markup is parsed as a directive.
+    $clPageJsonLd = json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'CollectionPage',
+        'name' => 'Global Career Library',
+        'url' => url()->current(),
+        'description' => 'Career reports covering salary, eligibility, study routes and demand outlook.',
+        'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => url('/')],
+        'breadcrumb' => [
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Global Career Library', 'item' => url()->current()],
+            ],
+        ],
+        'mainEntity' => [
+            '@type' => 'ItemList',
+            'numberOfItems' => $careerCount,
+            'itemListElement' => array_map(
+                fn (array $c, int $i): array => array_filter([
+                    '@type' => 'ListItem',
+                    'position' => $i + 1,
+                    'name' => $c['title'],
+                    'url' => $detailPages ? $careerUrl($c) : null,
+                ]),
+                array_values($careers),
+                array_keys(array_values($careers))
+            ),
+        ],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+@endphp
+
+@section('title', 'Global Career Library | '.config('site.name'))
+@section('meta_description', \App\Support\Seo::description('Explore '.$careerCount.' career paths — salary ranges, eligibility, study routes and demand outlook for Indian students, from established professions to new-age and AI roles.'))
+@section('meta_keywords', 'career library, career options after 12th, new age careers, AI careers, career paths India, salary and eligibility')
 
 @section('app')
 {{-- Content injected via JS (search form + trending grid), exactly like the source page. --}}
+@endsection
+
+@section('after-app')
+{{-- The crawlable index. Everything above this point is written by JS into
+     #app-container on load, so until now the only thing a search engine could
+     read on this page was the chrome: 232 words and not one link to a career.
+     This list is the same curated data the grid above renders, as plain server
+     HTML, and it is the page's whole internal link graph. --}}
+<section class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-4 relative z-10" aria-labelledby="cl-all-careers">
+    <h2 id="cl-all-careers" class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Browse all {{ $careerCount }} careers</h2>
+    <p class="text-slate-600 mb-8 max-w-3xl">
+        Every career in the library, with a full report on salary ranges, eligibility,
+        study routes, day-to-day work and demand outlook for {{ $settings['report_year'] ?? date('Y') }}.
+    </p>
+
+    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+        @foreach ($careers as $career)
+            <li class="border-b border-slate-200/70">
+                @if ($detailPages)
+                    <a href="{{ $careerUrl($career) }}"
+                       class="block py-2.5 text-slate-700 hover:text-indigo-700 transition-colors">
+                        {{ $career['title'] }} <span class="text-slate-400">career</span>
+                    </a>
+                @else
+                    <span class="block py-2.5 text-slate-700">{{ $career['title'] }}</span>
+                @endif
+            </li>
+        @endforeach
+    </ul>
+</section>
+@endsection
+
+@section('schema')
+<script type="application/ld+json">{!! $clPageJsonLd !!}</script>
 @endsection
 
 @section('overlays')
@@ -721,9 +802,11 @@
             });
         }
 
-        $(".scrollToTop").off('click').on('click', function(){
-            document.getElementById("app-container").scrollIntoView({
-                behavior: "smooth"
+        document.querySelectorAll(".scrollToTop").forEach(function (el) {
+            if (el.dataset.clBound) return;
+            el.dataset.clBound = "1";
+            el.addEventListener("click", function () {
+                document.getElementById("app-container").scrollIntoView({ behavior: "smooth" });
             });
         });
 
@@ -734,10 +817,14 @@
             renderTrendingChunk();
         }
 
-        $("#country-input").off('focus').on('focus', function(){
-            $(this).val('');
-            showCountryDropdown();
-        });
+        var countryInput = document.getElementById("country-input");
+        if (countryInput && !countryInput.dataset.clBound) {
+            countryInput.dataset.clBound = "1";
+            countryInput.addEventListener("focus", function () {
+                this.value = "";
+                showCountryDropdown();
+            });
+        }
     }
 
     function renderTrendingChunk() {

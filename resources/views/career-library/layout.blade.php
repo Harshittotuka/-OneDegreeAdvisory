@@ -7,12 +7,30 @@
     // header renders exactly as it does site-wide.
     $topbarVariant = app(\App\Support\NoticeBarStore::class)->get()['variant'] ?? 'left-socials';
 
-    // Cache-bust local CSS/JS by mtime — same helper as the main layout, so a
-    // deployed nav stylesheet/script change is never served stale here.
-    $assetVer = function (string $file) {
-        $path = public_path($file);
-        return is_file($path) ? asset($file).'?v='.filemtime($path) : asset($file);
-    };
+    // Cache-bust local CSS/JS — the site's own helper, not a local copy of half
+    // of it. The copy that used to live here appended the mtime and stopped
+    // there, so it never did the .min swap that Asset::preferMinified does, and
+    // this page alone was served the 620 KB styles.css while every other page
+    // got the 448 KB build. Same call as layouts/app now.
+    $assetVer = fn (string $file) => \App\Support\Asset::v($file);
+
+    // Encoded here, not inline below: Blade reads a bare '@context' or '@type'
+    // in markup as a directive. Same approach as layouts/app.blade.php.
+    $clOrgJsonLd = json_encode([
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => config('site.name'),
+            'url' => url('/'),
+        ],
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'EducationalOrganization',
+            'name' => config('site.name'),
+            'url' => url('/'),
+            'logo' => asset('assets/Logo/og-image.png'),
+        ],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 @endphp
 <!DOCTYPE html>
 <html lang="en" data-color-theme="cream" class="topbar-{{ $topbarVariant }}">
@@ -32,7 +50,9 @@
     <title>@yield('title', 'Trending Career')</title>
     <meta name="description" content="@yield('meta_description', 'An intelligent career library tool that generates comprehensive career paths, work nature insights, and curated resources for any profession.')">
     <meta name="keywords" content="@yield('meta_keywords', 'career, guidance, ai, roadmap, jobs, profession, education')">
-    <link rel="icon" type="image/png" href="{{ asset('assets/Logo/favicon.png') }}" />
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/Logo/mark.svg') }}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/Logo/favicon-32.png') }}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/Logo/apple-touch-icon.png') }}" />
     {{-- Page body is Tailwind; the shared navbar needs the site stylesheets.
          Load Tailwind first so the site nav CSS (loaded after) wins for the
          header, while Tailwind utilities (class selectors) still beat the
@@ -40,10 +60,27 @@
     <link href="{{ asset('career-library/output.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ $assetVer('styles.css') }}">
     <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">
+    {{-- The other 40%% of what used to be one stylesheet. Every rule in here
+         matched nothing at first render on any of the site's pages, so it can
+         arrive after the first paint without changing it -- which is the whole
+         point: it is 238 KB the browser no longer has to fetch and parse before
+         it may draw anything. media="print" is the trick that makes it
+         non-blocking; the onload hands it back to the real media list once it
+         has landed. --}}
+    <link rel="stylesheet" href="{{ $assetVer('styles-deferred.css') }}" media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="{{ $assetVer('styles-deferred.css') }}"></noscript>
     {{-- One combined request: these were two separate render-blocking
-         stylesheets for the same five families. --}}
+         stylesheets for the same five families. The preconnects let the DNS,
+         TCP and TLS for both font hosts happen while the HTML is still being
+         parsed instead of after the stylesheet is discovered. --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700;800&family=Jost:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {{-- jQuery used to load here: 88 KB, render-blocking, from a third-party
+         CDN, on every page of this section. The detail page never called it at
+         all, and the landing page called it three times -- one click handler,
+         one focus handler and a .val(''). Those are now plain DOM calls in
+         index.blade, so nothing is left to load. --}}
     {{-- Self-hosted and pinned, same as layouts/app: `lucide@latest` on unpkg
          redirects with max-age=60, so every page paid a third-party round trip
          before its icons could render. Also as in layouts/app, what ships is
@@ -164,10 +201,28 @@
         }
     </style>
 
+    {{-- og:description and the Twitter card were both absent, so a shared link
+         to any page in this section rendered as a bare title over an image with
+         no supporting text. They read the same @section the meta description
+         does, so a page sets its copy once. --}}
     <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="{{ config('site.name') }}">
+    <meta property="og:locale" content="en_IN">
     <meta property="og:title" content="@yield('title', 'Trending Career')">
+    <meta property="og:description" content="@yield('meta_description', 'An intelligent career library tool that generates comprehensive career paths, work nature insights, and curated resources for any profession.')">
     <meta property="og:type" content="website">
     <meta property="og:image" content="{{ asset('assets/Logo/og-image.png') }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', 'Trending Career')">
+    <meta name="twitter:description" content="@yield('meta_description', 'An intelligent career library tool that generates comprehensive career paths, work nature insights, and curated resources for any profession.')">
+    <meta name="twitter:image" content="{{ asset('assets/Logo/og-image.png') }}">
+
+    {{-- Structured data. Every other page on the site carries at least the
+         organisation graph; this section carried none, which is why it was the
+         only page in the sitemap with no structured data at all. A page can add
+         its own on top through the 'schema' section. --}}
+    <script type="application/ld+json">{!! $clOrgJsonLd !!}</script>
+    @yield('schema')
 
     @if (\App\Support\Seo::isCanonicalHost())
         <link rel="canonical" href="{{ url()->current() }}">
@@ -202,6 +257,14 @@
         <div id="app-container" class="w-full relative z-10">
             @yield('app')
         </div>
+
+        {{-- Anything a crawler must be able to read goes here, not above.
+             index.blade's own script does appContainer.innerHTML = html on
+             load, so every byte inside #app-container is replaced before the
+             page settles -- which is why this section was reaching Google as a
+             couple of hundred words with no links in it. This block sits
+             outside that assignment and survives. --}}
+        @yield('after-app')
 
     </main>
 

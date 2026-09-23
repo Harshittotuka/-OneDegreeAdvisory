@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Support\BlogContent;
 use App\Support\BriefPageStore;
+use App\Support\CountryGuideCopy;
 use App\Support\MbbsCountryContent;
 use App\Support\Seo;
 use App\Support\StudyLocationContent;
@@ -71,20 +72,41 @@ class SeoController extends Controller
             $this->addUrl($urls, url($page['path']), '0.70', 'monthly');
         }
 
+        // Country pages last changed when the partner sync last finished --
+        // except the ones rewritten by hand, which carry their own date and are
+        // newer than any sync.
+        $countrySynced = $this->syncFinishedAt('country-sync-status.json');
+
         foreach ($studyLocations->destinations() as $destination) {
             if (empty($destination['slug'])) {
                 continue;
             }
 
-            $this->addUrl($urls, route('country.show', $destination['slug']), '0.68', 'monthly');
+            $written = CountryGuideCopy::forSlug($destination['slug'])['updated'] ?? null;
+
+            $this->addUrl(
+                $urls,
+                route('country.show', $destination['slug']),
+                '0.68',
+                'monthly',
+                $this->date($written ?? $countrySynced)
+            );
         }
+
+        $mbbsSynced = $this->syncFinishedAt('mbbs-country-sync-status.json');
 
         foreach ($mbbsCountries->countries() as $country) {
             if (empty($country['slug'])) {
                 continue;
             }
 
-            $this->addUrl($urls, route('mbbs.country', $country['slug']), '0.68', 'monthly');
+            $this->addUrl(
+                $urls,
+                route('mbbs.country', $country['slug']),
+                '0.68',
+                'monthly',
+                $this->date($mbbsSynced)
+            );
         }
 
         ksort($urls);
@@ -135,6 +157,29 @@ class SeoController extends Controller
             'changefreq' => $changefreq,
             'priority' => $priority,
         ]);
+    }
+
+    /**
+     * When a partner sync last finished writing the content behind a set of
+     * pages, or null if it has never run.
+     *
+     * This is a real answer to "when did this page last change", which is the
+     * only kind Google pays attention to. Pages with no honest date -- the
+     * static routes, and the brief pages, whose store keeps block versions but
+     * no timestamps -- get no lastmod at all rather than a guess. A sitemap
+     * that claims everything changed today is one Google learns to ignore.
+     */
+    private function syncFinishedAt(string $file): ?string
+    {
+        $path = storage_path('app/'.$file);
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        $status = json_decode((string) file_get_contents($path), true);
+
+        return is_array($status) ? ($status['finished_at'] ?? null) : null;
     }
 
     private function date(mixed $value): ?string

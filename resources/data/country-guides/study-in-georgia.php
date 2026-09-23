@@ -14,6 +14,12 @@
  */
 
 return [
+    // The day this copy was written, as a literal. Not a file mtime:
+    // git does not restore mtimes, so a checkout would re-date every
+    // guide to the deploy and the sitemap would start claiming they
+    // all changed today. Bump it by hand when the copy changes.
+    'updated' => '2026-09-21',
+
     'seo_title' => 'Study in Georgia for Indian Students | One Degree Advisory',
 
     'seo_description' => 'Georgian public universities charge from about $2,500 a year, and the medical route is NMC-recognised. An honest read on whether it suits you.',

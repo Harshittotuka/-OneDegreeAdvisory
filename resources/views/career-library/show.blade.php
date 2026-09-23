@@ -52,10 +52,64 @@
         ['key' => 'newAgeOptions', 'title' => 'New Age Career Options', 'icon' => 'zap', 'options' => $data['newAgeOptions'], 'color' => 'bg-amber-500', 'iconColor' => 'text-amber-600'],
         ['key' => 'aiRelatedOptions', 'title' => 'AI Related Career Options', 'icon' => 'cpu', 'options' => $data['aiRelatedOptions'], 'color' => 'bg-cyan-500', 'iconColor' => 'text-cyan-600'],
     ];
+
+    // Structured data for the report. Encoded here because Blade reads a bare
+    // '@context' in markup as a directive. The breadcrumb is what gives the
+    // report a path back to the library in search results; the FAQ block is
+    // emitted only when the report actually carries questions, so the markup
+    // and the schema can never disagree.
+    $clFaqs = collect($data['faqs'] ?? [])
+        ->map(fn ($f) => ['q' => trim((string) ($f['question'] ?? $f['q'] ?? '')), 'a' => trim((string) ($f['answer'] ?? $f['a'] ?? ''))])
+        ->filter(fn ($f) => $f['q'] !== '' && $f['a'] !== '')
+        ->values();
+
+    $clGraph = [[
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Global Career Library', 'item' => route('career-library.index')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $careerName.' career', 'item' => url()->current()],
+        ],
+    ], array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebPage',
+        'name' => $seo['title'] !== '' ? $seo['title'] : $careerName.' career',
+        'url' => url()->current(),
+        'description' => $seo['description'] !== '' ? $seo['description'] : null,
+        'inLanguage' => 'en',
+        'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => url('/')],
+        'about' => ['@type' => 'Occupation', 'name' => $careerName],
+        'publisher' => ['@type' => 'EducationalOrganization', 'name' => config('site.name'), 'url' => url('/')],
+    ])];
+
+    if ($clFaqs->isNotEmpty()) {
+        $clGraph[] = [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => $clFaqs->map(fn ($f) => [
+                '@type' => 'Question',
+                'name' => $f['q'],
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
+            ])->all(),
+        ];
+    }
+
+    $clJsonLd = json_encode($clGraph, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 @endphp
 
-@section('title', $seo['title'] !== '' ? $seo['title'] : $careerName.' Career — Trending Career')
-@section('meta_description', $seo['description'] !== '' ? $seo['description'] : 'Explore the '.$careerName.' career path: salary, eligibility, pathways and outlook.')
+@section('title', \App\Support\Seo::title(
+    $seo['title'],
+    $careerName.' career | '.config('site.name')
+))
+
+@section('schema')
+<script type="application/ld+json">{!! $clJsonLd !!}</script>
+@endsection
+@section('meta_description', \App\Support\Seo::description(
+    $seo['description'],
+    'Explore the '.$careerName.' career path: salary, eligibility, pathways and outlook.'
+))
 @section('meta_keywords', ! empty($seo['keywords']) ? implode(',', $seo['keywords']) : 'career, guidance, roadmap, jobs, profession, education')
 
 @section('app')

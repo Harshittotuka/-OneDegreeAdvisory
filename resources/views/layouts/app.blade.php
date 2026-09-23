@@ -48,8 +48,12 @@
     <link rel="alternate" hreflang="x-default" href="{{ $canonicalUrl }}">
 
     <link rel="icon" type="image/svg+xml" href="{{ asset('assets/Logo/mark.svg') }}">
-    <link rel="icon" type="image/png" href="{{ asset('assets/Logo/favicon.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('assets/Logo/favicon.png') }}">
+    {{-- Both of these used to point at favicon.png: one 512x512 PNG, 27 KB,
+         fetched on every page for a 32px browser tab. It is still the file
+         PaymentController hands the gateway, so it stays where it is -- these
+         two just stop asking for it. 806 bytes and 6.6 KB respectively. --}}
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/Logo/favicon-32.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/Logo/apple-touch-icon.png') }}">
 
     <meta property="og:type" content="{{ $ogType ?? 'website' }}">
     <meta property="og:locale" content="en_IN">
@@ -152,6 +156,15 @@
     @endphp
     <link rel="stylesheet" href="{{ $assetVer('styles.css') }}">
     <link rel="stylesheet" href="{{ $assetVer('stripe-nav.css') }}">
+    {{-- The other 40%% of what used to be one stylesheet. Every rule in here
+         matched nothing at first render on any of the site's pages, so it can
+         arrive after the first paint without changing it -- which is the whole
+         point: it is 238 KB the browser no longer has to fetch and parse before
+         it may draw anything. media="print" is the trick that makes it
+         non-blocking; the onload hands it back to the real media list once it
+         has landed. --}}
+    <link rel="stylesheet" href="{{ $assetVer('styles-deferred.css') }}" media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="{{ $assetVer('styles-deferred.css') }}"></noscript>
     {{-- Lucide is self-hosted and pinned. It was loaded from unpkg as
          `lucide@latest`, whose redirect carries max-age=60 — so after a minute
          idle every page paid a third-party DNS + TLS + redirect round trip

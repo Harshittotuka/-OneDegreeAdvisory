@@ -323,7 +323,7 @@
 
   /* ---------- Final report ---------- */
   #vmi-page .report-head{margin-bottom:14px;}
-  #vmi-page .report-head h1{font-family:var(--font-head);font-size:42px;color:var(--navy-deep);line-height:1.05;}
+  #vmi-page .report-head h2{font-family:var(--font-head);font-size:42px;color:var(--navy-deep);line-height:1.05;margin:0;}
   #vmi-page .report-head p{color:var(--muted);font-size:15px;margin-top:6px;}
   #vmi-page .badge-wrap{display:flex;align-items:center;gap:30px;flex-wrap:wrap;padding:8px 0;}
   #vmi-page .badge-wrap .score-ring{margin:0;flex-shrink:0;}
@@ -752,7 +752,7 @@
 
   #vmi-page #screen-report{max-width:1080px;margin:0 auto;}
   #vmi-page .report-head{text-align:center;margin:18px auto 28px;}
-  #vmi-page .report-head h1{font-family:var(--font-head);font-size:clamp(38px,5vw,56px);font-weight:700;letter-spacing:-.01em;color:var(--navy-deep);}
+  #vmi-page .report-head h2{font-family:var(--font-head);font-size:clamp(38px,5vw,56px);font-weight:700;letter-spacing:-.01em;color:var(--navy-deep);margin:0;}
   #vmi-page #screen-report>.card,#vmi-page #screen-report .two-col>.card{margin-bottom:16px;}
   #vmi-page #screen-report .card h3{font-size:11px;letter-spacing:.11em;color:#565d74;}
   #vmi-page .score-chip{border-color:#e4e7ef;border-radius:14px;background:#f7f8fc;}
@@ -1636,7 +1636,11 @@
       {{-- ===================== SCREEN 3: FINAL REPORT ===================== --}}
       <div id="screen-report" class="hidden">
         <div class="report-head" data-reveal>
-          <h1>Your Visa Readiness Report</h1>
+          {{-- h2, not h1. This is screen 3 of a flow that lives in one
+               document, so its heading shares the page with the hero's h1 and
+               the page was shipping two. The hero is the page; this is a
+               section of it. Styled to look exactly as it did. --}}
+          <h2>Your Visa Readiness Report</h2>
           <p id="report-sub">Based on your mock interview performance.</p>
         </div>
 

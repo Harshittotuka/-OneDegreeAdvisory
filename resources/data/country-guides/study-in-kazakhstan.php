@@ -14,6 +14,12 @@
  */
 
 return [
+    // The day this copy was written, as a literal. Not a file mtime:
+    // git does not restore mtimes, so a checkout would re-date every
+    // guide to the deploy and the sitemap would start claiming they
+    // all changed today. Bump it by hand when the copy changes.
+    'updated' => '2026-09-21',
+
     'seo_title' => 'Study in Kazakhstan | One Degree Advisory',
 
     'seo_description' => 'Kazakh public universities charge from about $1,500 a year, with NMC-recognised medical and Bologna-compatible STEM degrees. See if it fits.',
