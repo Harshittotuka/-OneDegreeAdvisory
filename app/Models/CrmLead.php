@@ -75,6 +75,18 @@ class CrmLead extends Model
         return $this->hasOne(CrmLeadActivity::class)->latestOfMany();
     }
 
+    /** The student journey planner, once one has been opened for this enrolled student. */
+    public function journeyPlan(): HasOne
+    {
+        return $this->hasOne(CrmJourneyPlan::class, 'crm_lead_id');
+    }
+
+    /** The student's own sign-in to that planner, created when the counsellor starts it. */
+    public function studentAccount(): HasOne
+    {
+        return $this->hasOne(CrmStudentAccount::class, 'crm_lead_id');
+    }
+
     public function websiteSubmissions(): HasMany
     {
         return $this->hasMany(CrmWebsiteSubmission::class)->latest('submitted_at');

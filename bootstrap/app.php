@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'cms.auth' => CmsAuth::class,
             'crm.auth' => CrmAuth::class,
+            'student.auth' => \App\Http\Middleware\StudentAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

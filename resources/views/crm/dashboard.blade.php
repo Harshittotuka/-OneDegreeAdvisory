@@ -745,6 +745,7 @@
         'converted' => ['symbol' => '◇', 'group' => 'milestones', 'label' => 'Student enrolled'],
         'enrollment_reverted' => ['symbol' => '↩', 'group' => 'milestones', 'label' => 'Enrollment reverted'],
         'student_stage' => ['symbol' => '→', 'group' => 'milestones', 'label' => 'Journey advanced'],
+        'journey_student' => ['symbol' => '✓', 'group' => 'milestones', 'label' => 'Student updated their planner'],
     ];
     $journeyKeys = ['doc_pending', 'doc_complete', 'app_submitted', 'offer_received', 'deposit_paid', 'visa_in_process', 'visa_filed', 'visa_granted', 'alumni'];
     $stageGuidance = [
@@ -966,6 +967,36 @@
                     <section class="student-metrics">
                         <div><span>Student type</span><strong>{{ $studentCategories[$selectedLead->student_category] ?? 'Not set' }}</strong></div><div><span>Enrollment date</span><strong>{{ $selectedLead->enrollment_date?->format('d M Y') ?? 'Not set' }}</strong></div>{{-- The figure is in-house, like the payment log. --}}@unless($crmUser->isPartner())<div><span>Enrollment value</span><strong>{{ $selectedLead->enrollment_amount ? '₹'.number_format($selectedLead->enrollment_amount) : 'Not set' }}</strong></div>@endunless
                     </section>
+
+                    {{-- The journey planner: ODA's activity-level planner for this student,
+                         on its own page. Starting it also creates the student's login. --}}
+                    @php
+                        $journeyPlan = $selectedLead->journeyPlan;
+                        $studentAccount = $selectedLead->studentAccount;
+                        $plannerRollup = $journeyPlan ? \App\Support\JourneyPlanner::rollup(array_merge(
+                            array_values($journeyPlan->coreState()),
+                            ...$journeyPlan->applications->map(fn ($a) => array_values($a->activityState()))->all()
+                        )) : null;
+                    @endphp
+                    @if($journeyPlan || ! $crmUser->isPartner())
+                        <div class="drawer-card section-card">
+                            <div class="section-heading"><span class="section-icon">◈</span><div><h3>Journey planner</h3><p>
+                                @if($plannerRollup)
+                                    {{ $plannerRollup['percent'] }}% complete · {{ $plannerRollup['completed'] }} of {{ $plannerRollup['included'] - $plannerRollup['not_applicable'] }} tasks done · {{ $journeyPlan->applications->count() }} {{ Str::plural('university', $journeyPlan->applications->count()) }}
+                                    @if($studentAccount)
+                                        <br>Student login {{ $studentAccount->email }} · {{ ! $studentAccount->is_active ? 'switched off' : ($studentAccount->last_login_at ? 'last signed in '.$studentAccount->last_login_at->diffForHumans() : 'not signed in yet') }}
+                                    @endif
+                                @else
+                                    Every task from first consultation to departure, with a checklist per university. Starting it creates the student's own login ({{ $selectedLead->email ?: 'add their email on the Details tab first' }}) with a temporary password you share with them.
+                                @endif
+                            </p></div></div>
+                            @if($journeyPlan)
+                                <a class="btn btn-primary" href="{{ route('crm.journey.show', $selectedLead) }}" target="_blank" rel="noopener"><span>Open journey planner</span><b aria-hidden="true">→</b></a>
+                            @else
+                                <form method="post" action="{{ route('crm.journey.start', $selectedLead) }}" target="_blank">@csrf<button class="btn btn-primary" type="submit" @disabled(! $selectedLead->email)><span>Start journey planner</span><b aria-hidden="true">→</b></button></form>
+                            @endif
+                        </div>
+                    @endif
 
                     @if($crmUser->isPartner())
                         <div class="drawer-card section-card">

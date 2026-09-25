@@ -133,6 +133,16 @@ class CrmDashboardController extends Controller
             'crm_logout' => 'CRM logout',
             'mock_invite_created' => 'Mock interview link issued',
             'mock_invite_revoked' => 'Mock interview link revoked',
+            'journey_university_added' => 'Journey planner: university added',
+            'journey_university_removed' => 'Journey planner: university removed',
+            'journey_login_created' => 'Journey planner started, student login created',
+            'journey_password_reset' => 'Student password reset',
+            'journey_task_added' => 'Journey planner: task added',
+            'journey_stage_added' => 'Journey planner: stage added',
+            'journey_stage_removed' => 'Journey planner: stage removed',
+            'journey_task_removed' => 'Journey planner: task removed',
+            'journey_login_enabled' => 'Student login switched on',
+            'journey_login_disabled' => 'Student login switched off',
         ];
         $auditLogs = null;
         if ($view === 'audit') {
@@ -234,7 +244,7 @@ class CrmDashboardController extends Controller
         $selectedLead = null;
         if ($request->filled('lead')) {
             $selectedLead = CrmLead::query()->visibleTo($user)
-                ->with(['assignee', 'partner', 'partnerCode', 'activities.user', 'websiteSubmissions'])->find($request->integer('lead'));
+                ->with(['assignee', 'partner', 'partnerCode', 'activities.user', 'websiteSubmissions', 'journeyPlan.applications', 'studentAccount'])->find($request->integer('lead'));
         }
 
         return view('crm.dashboard', [
