@@ -242,6 +242,7 @@ class CrmDashboardController extends Controller
                     'late' => $rows->filter(fn ($r) => $r['overdue'] > 0)->count(),
                     'essays' => (int) $rows->sum(fn ($r) => $r['plan']->essays_waiting),
                     'neverSignedIn' => $rows->filter(fn ($r) => ! $r['plan']->lead->studentAccount?->last_login_at)->count(),
+                    'complete' => $rows->filter(fn ($r) => $r['all']['percent'] === 100)->count(),
                 ];
 
                 if ($search = mb_strtolower(trim((string) $request->query('journey_search')))) {
