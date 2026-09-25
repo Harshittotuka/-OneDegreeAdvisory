@@ -56,7 +56,7 @@ class CrmDashboardController extends Controller
         // payment log are all in-house tools.
         $allowedViews = $user->isPartner()
             ? ['dashboard', 'leads', 'students']
-            : ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'shortlisting', 'mock-invites'];
+            : ['dashboard', 'leads', 'enrollments', 'followups', 'students', 'journeys', 'shortlisting', 'mock-invites'];
         if ($user->isSuperAdmin()) {
             $allowedViews = [...$allowedViews, 'subscriptions', 'audit', 'spam', 'team', 'partner-codes'];
         }
@@ -217,6 +217,61 @@ class CrmDashboardController extends Controller
             $subscriberQuery->whereRaw('1 = 0');
         }
 
+        // Journey planners: every enrolled student whose planner has started. A
+        // counsellor sees their own students (the leads assigned to them); a
+        // super admin sees everyone. Partners have no such page.
+        $journeyPlans = null;
+        $journeyStats = null;
+        $journeyCount = 0;
+        if (! $user->isPartner()) {
+            $journeyQuery = \App\Models\CrmJourneyPlan::query()
+                ->whereHas('lead', fn (Builder $lead) => $lead->visibleTo($user)->where('is_student', true));
+            $journeyCount = (clone $journeyQuery)->count();
+
+            if ($view === 'journeys') {
+                $rows = $journeyQuery
+                    ->with(['lead.assignee', 'lead.studentAccount', 'applications'])
+                    ->withCount(['documents as essays_waiting' => fn (Builder $d) => $d->where('kind', 'essay')->where('status', 'Submitted')])
+                    ->get()
+                    ->map(fn ($plan) => ['plan' => $plan] + \App\Support\JourneyPlanner::summary($plan));
+
+                // The tiles count everyone this person can see, before any filter.
+                $journeyStats = [
+                    'total' => $rows->count(),
+                    'average' => $rows->count() ? (int) round($rows->avg(fn ($r) => $r['all']['percent'])) : 0,
+                    'late' => $rows->filter(fn ($r) => $r['overdue'] > 0)->count(),
+                    'essays' => (int) $rows->sum(fn ($r) => $r['plan']->essays_waiting),
+                    'neverSignedIn' => $rows->filter(fn ($r) => ! $r['plan']->lead->studentAccount?->last_login_at)->count(),
+                ];
+
+                if ($search = mb_strtolower(trim((string) $request->query('journey_search')))) {
+                    $rows = $rows->filter(fn ($r) => str_contains(mb_strtolower($r['plan']->lead->name.' '.$r['plan']->lead->lead_number.' '.$r['plan']->lead->email), $search));
+                }
+                if ($user->isSuperAdmin() && ($counsellor = $request->integer('journey_counsellor'))) {
+                    $rows = $rows->filter(fn ($r) => (int) $r['plan']->lead->assigned_to === $counsellor);
+                }
+                $rows = match ($request->query('journey_show')) {
+                    'attention' => $rows->filter(fn ($r) => $r['overdue'] > 0 || $r['plan']->essays_waiting > 0),
+                    'not_signed_in' => $rows->filter(fn ($r) => ! $r['plan']->lead->studentAccount?->last_login_at),
+                    'complete' => $rows->filter(fn ($r) => $r['all']['percent'] === 100),
+                    default => $rows,
+                };
+                $rows = match ($request->query('journey_sort')) {
+                    'progress_asc' => $rows->sortBy(fn ($r) => $r['all']['percent']),
+                    'progress_desc' => $rows->sortByDesc(fn ($r) => $r['all']['percent']),
+                    'name' => $rows->sortBy(fn ($r) => mb_strtolower($r['plan']->lead->name)),
+                    'late' => $rows->sortByDesc(fn ($r) => $r['overdue']),
+                    default => $rows->sortByDesc(fn ($r) => $r['plan']->updated_at),
+                };
+
+                $page = max(1, $request->integer('journey_page', 1));
+                $journeyPlans = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $rows->values()->forPage($page, $perPage), $rows->count(), $perPage, $page,
+                    ['path' => $request->url(), 'pageName' => 'journey_page', 'query' => $request->except('journey_page')],
+                );
+            }
+        }
+
         // Mock-interview invite links. A counsellor sees the links they issued;
         // a super admin sees every link.
         $mockInviteQuery = CrmMockInterviewInvite::query()->with(['creator', 'attempts'])->latest();
@@ -308,6 +363,12 @@ class CrmDashboardController extends Controller
                 : collect(),
             'mockInvites' => $mockInviteQuery->paginate($perPage, ['*'], 'invite_page')->withQueryString(),
             'mockInviteCount' => $mockInviteCount,
+            'journeyPlans' => $journeyPlans,
+            'journeyStats' => $journeyStats,
+            'journeyCount' => $journeyCount,
+            'journeyCounsellors' => $user->isSuperAdmin() && $view === 'journeys'
+                ? CrmUser::query()->where('role', 'counsellor')->orderBy('name')->get(['id', 'name'])
+                : collect(),
             'mockInviteCounts' => MockInterviewQuestions::INVITE_COUNTS,
             'mockQuestionTotal' => MockInterviewQuestions::total(),
             'spamAttempts' => $spamQuery->paginate($perPage, ['*'], 'spam_page')->withQueryString(),

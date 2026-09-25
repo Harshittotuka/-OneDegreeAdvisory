@@ -342,6 +342,67 @@ class JourneyPlanner
         ];
     }
 
+    /**
+     * One plan at a glance, for the CRM's Journey planners page: progress
+     * (overall, core journey, universities), the stage the student is in,
+     * what is late and the next date. Uses the same rules as the planner.
+     *
+     * @return array<string, mixed>
+     */
+    public static function summary(\App\Models\CrmJourneyPlan $plan): array
+    {
+        $core = $plan->coreState();
+        $coreDefs = $plan->coreDefinitions();
+        $appDefs = self::applicationDefinitions();
+        $today = now()->toDateString();
+
+        $appRows = [];
+        $open = [];
+        foreach ($core as $key => $a) {
+            $open[] = ['a' => $a, 'name' => $coreDefs[$key]['name'] ?? 'Task', 'where' => 'Core journey'];
+        }
+        foreach ($plan->applications as $app) {
+            foreach ($app->activityState() as $key => $a) {
+                $appRows[] = $a;
+                $open[] = ['a' => $a, 'name' => $appDefs[$key]['name'] ?? 'Task', 'where' => $app->university];
+            }
+        }
+
+        $stageIndex = null;
+        $phases = self::phasesFor($plan);
+        foreach ($phases as $i => $p) {
+            $r = self::rollup(array_map(fn ($d) => $core[$d['key']] ?? ['inc' => false, 'status' => 'Not Started'], $p['activities']));
+            if ($r['included'] - $r['not_applicable'] > 0 && $r['completed'] < $r['included'] - $r['not_applicable']) {
+                $stageIndex = $i;
+                break;
+            }
+        }
+
+        $overdue = 0;
+        $next = null;
+        foreach ($open as $o) {
+            $a = $o['a'];
+            if (! $a['inc'] || in_array($a['status'], ['Completed', 'Not Applicable'], true) || ! $a['target']) {
+                continue;
+            }
+            if ($a['target'] < $today) {
+                $overdue++;
+            } elseif ($next === null || $a['target'] < $next['date']) {
+                $next = ['date' => $a['target'], 'name' => $o['name'], 'where' => $o['where']];
+            }
+        }
+
+        return [
+            'all' => self::rollup(array_merge(array_values($core), $appRows)),
+            'core' => self::rollup($core),
+            'apps' => self::rollup($appRows),
+            'universities' => $plan->applications->count(),
+            'stage' => $stageIndex === null ? null : ['number' => $stageIndex + 1, 'of' => count($phases), 'name' => $phases[$stageIndex]['name']],
+            'overdue' => $overdue,
+            'next' => $next,
+        ];
+    }
+
     /** Whether the student may change this activity from their portal: the owner has to name the Student. */
     public static function studentOwns(string $owner): bool
     {

@@ -759,4 +759,70 @@ class JourneyPlannerTest extends TestCase
         $lead->studentAccount()->first()->forceFill(['is_active' => false])->save();
         $this->post(route('student.login.attempt'), ['email' => $lead->email, 'password' => $new])->assertSessionHasErrors('email');
     }
+
+
+    /* ------------------------------------------------------------ the CRM's Journey planners page */
+
+    public function test_counsellors_see_only_their_own_students_and_admins_see_everyone(): void
+    {
+        $meera = $this->user();
+        $ravi = $this->user();
+        $admin = $this->user('super_admin');
+        $mine = $this->student($meera, ['name' => 'Ananya Mine']);
+        $theirs = $this->student($ravi, ['name' => 'Rohan Theirs']);
+        $notStarted = $this->student($meera, ['name' => 'Kavya Notstarted']);
+        $this->start($meera, $mine);
+        $this->start($ravi, $theirs);
+
+        $this->as($meera)->get(route('crm.dashboard', ['view' => 'journeys']))->assertOk()
+            ->assertSee('Journey planners')->assertSee('Ananya Mine')->assertDontSee('Rohan Theirs')->assertDontSee('Kavya Notstarted');
+
+        $this->flushSession();
+        $this->as($admin)->get(route('crm.dashboard', ['view' => 'journeys']))->assertOk()
+            ->assertSee('Ananya Mine')->assertSee('Rohan Theirs')->assertDontSee('Kavya Notstarted');
+        $this->as($admin)->get(route('crm.dashboard', ['view' => 'journeys', 'journey_counsellor' => $ravi->id]))->assertOk()
+            ->assertSee('Rohan Theirs')->assertDontSee('Ananya Mine');
+    }
+
+    public function test_partners_do_not_get_the_journey_planners_page(): void
+    {
+        $counsellor = $this->user();
+        $partner = $this->user('partner', ['partner_access' => 'edit']);
+        $lead = $this->student($counsellor, ['name' => 'Partner Student', 'partner_id' => $partner->id]);
+        $this->start($counsellor, $lead);
+
+        $this->flushSession();
+        $this->as($partner)->get(route('crm.dashboard', ['view' => 'journeys']))->assertOk()
+            ->assertDontSee('Journey planners')->assertDontSee('view=journeys', false);
+    }
+
+    public function test_the_page_shows_progress_and_what_needs_attention(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor, ['name' => 'Progress Student']);
+        $quiet = $this->student($counsellor, ['name' => 'Quiet Student']);
+        $this->start($counsellor, $lead);
+        $this->start($counsellor, $quiet);
+
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'initial-consultation', 'status' => 'Completed'])->assertOk();
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'academic-review', 'target' => now()->subDays(3)->toDateString()])->assertOk();
+        $this->signedInStudent($lead)->postJson(route('student.documents.store'), ['kind' => 'essay', 'category' => 'Statement of Purpose', 'title' => 'SOP']);
+        $essay = \App\Models\CrmJourneyDocument::query()->latest('id')->first();
+        $this->patchJson(route('student.documents.update', $essay->id), ['body' => 'My statement.', 'submit' => true])->assertOk();
+
+        $summary = JourneyPlanner::summary($lead->journeyPlan()->first());
+        $this->assertSame(1, $summary['core']['completed']);
+        $this->assertSame(1, $summary['overdue']);
+        $this->assertSame('Discovery & Profile Assessment', $summary['stage']['name']);
+
+        $this->flushSession();
+        $this->as($counsellor)->get(route('crm.dashboard', ['view' => 'journeys']))->assertOk()
+            ->assertSee('1 late')->assertSee('1 essay to review')->assertSee($summary['all']['percent'].'%');
+
+        // "Needs attention" keeps the late student and drops the quiet one; search finds by name.
+        $this->as($counsellor)->get(route('crm.dashboard', ['view' => 'journeys', 'journey_show' => 'attention']))->assertOk()
+            ->assertSee('Progress Student')->assertDontSee('Quiet Student');
+        $this->as($counsellor)->get(route('crm.dashboard', ['view' => 'journeys', 'journey_search' => 'quiet']))->assertOk()
+            ->assertSee('Quiet Student')->assertDontSee('Progress Student');
+    }
 }
