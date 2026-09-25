@@ -567,6 +567,11 @@
             '<div><dt>Email</dt><dd><code>' + esc(L.email) + '</code></dd></div>' +
             '<div><dt>Password</dt><dd>' + (L.mustChange ? 'Temporary. They haven\'t chosen their own yet.' : 'Chosen by the student.') + '</dd></div>' +
             '<div><dt>Last signed in</dt><dd>' + (L.lastLoginAt ? esc(when(L.lastLoginAt)) : 'Not yet') + '</dd></div></dl>' +
+            '<div class="jp-adminpw"><div><span class="lbl">Admin password</span><p>Always signs in to ' + esc(P.student.firstName) + '\'s portal, whatever their own password is. For the team only: don\'t share it with the student.</p></div>' +
+            '<code class="pw" id="jp-adminpw">' + (UI.showAdmin ? esc(L.adminPassword) : '••••••••••••••') + '</code>' +
+            '<button class="jp-btn ghost sm" data-act="toggle-admin-pw">' + (UI.showAdmin ? 'Hide' : 'Show') + '</button>' +
+            '<button class="jp-btn ghost sm" data-act="copy-admin-pw">Copy</button>' +
+            '<button class="jp-btn ghost sm' + (UI.armed === 'admin-pw' ? ' armed' : '') + '" data-act="new-admin-pw">' + (UI.armed === 'admin-pw' ? 'Click again: the old one stops working' : 'New admin password') + '</button></div>' +
             '<div class="jp-actions left">' +
             '<button class="jp-btn' + (armedReset ? ' armed' : '') + '" data-act="reset-password">' + (armedReset ? 'Click again: the current password stops working' : 'Reset password') + '</button>' +
             '<button class="jp-btn ' + (L.active ? 'danger' : 'ghost') + (armedOff ? ' armed' : '') + '" data-act="toggle-login">' + (L.active ? (armedOff ? 'Click again to switch off' : 'Switch off login') : 'Switch login back on') + '</button>' +
@@ -692,6 +697,7 @@
             ['Core journey', 'Seven one-time phases, from Discovery to Pre-Departure, completed once per student however many universities they apply to.'],
             ['University blocks', 'One per university or programme. Switch on Interview and Portfolio only where required, and visa steps once a seat is confirmed.'],
             ['Pre-filled guidance', 'Activity, description, owner and document checklist are ODA\'s standard content. Change the owner only when a case differs.'],
+            ['Admin password', 'Every student login has an admin password on the Student login page. It always signs in to that student\'s portal, even after they change their own password. Each use is noted on the lead timeline.'],
             ['The student\'s login', 'Created when the planner is started. The student sees what is switched on and updates the tasks they own; each update lands on the lead timeline.'],
             ['Documents & essays', 'Everything the student uploads or writes is under Documents. Open an essay to approve it or send it back with feedback; uploads and essays sent for review land on the lead timeline.'],
             ['Progress', '% complete = Completed ÷ (Included − Not Applicable), the same rule as the planner workbook.']
@@ -756,7 +762,7 @@
     document.addEventListener('click', function (e) {
         var el = e.target.closest('[data-act]'); if (!el) return;
         var act = el.dataset.act;
-        if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage'].indexOf(act) < 0) { UI.armed = null; }
+        if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage', 'new-admin-pw'].indexOf(act) < 0) { UI.armed = null; }
         var appId = el.dataset.app ? parseInt(el.dataset.app, 10) : null;
 
         switch (act) {
@@ -965,6 +971,15 @@
                 return;
             }
             case 'dismiss-creds': UI.credentials = null; render(); return;
+            case 'toggle-admin-pw': UI.showAdmin = !UI.showAdmin; render(); return;
+            case 'copy-admin-pw': copyText(P.login.adminPassword, 'Admin password copied'); return;
+            case 'new-admin-pw':
+                if (UI.armed !== 'admin-pw') { UI.armed = 'admin-pw'; render(); return; }
+                UI.armed = null;
+                api('POST', P.endpoints.adminPassword).then(function (res) {
+                    P.login.adminPassword = res.adminPassword; UI.showAdmin = true; render(); toast('New admin password ready');
+                }, function (err) { render(); toast(err.message, true); });
+                return;
             case 'toggle-inc': {
                 var ai = actFor(el.dataset.scope, appId, el.dataset.key);
                 if (ai) saveActivity(el.dataset.scope, appId, el.dataset.key, { inc: !ai.inc }, ai.inc ? 'Excluded from the plan' : 'Included in the plan');

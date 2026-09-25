@@ -323,6 +323,7 @@ class JourneyPlanner
                 'mustChange' => $account->must_change_password,
                 'lastLoginAt' => $account->last_login_at?->toIso8601String(),
                 'loginUrl' => route('student.login'),
+                'adminPassword' => $account->adminPassword(),
             ] : null,
             'credentials' => $mode === 'counsellor' ? $credentials : null,
             'account' => $mode === 'student' && $account ? ['email' => $account->email] : null,

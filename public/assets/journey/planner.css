@@ -564,6 +564,13 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
 .jp-task-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.82rem; }
 .jp-task-tools .muted { flex: 1; min-width: 180px; }
 
+/* ---------- admin password (counsellor) ---------- */
+.jp-adminpw { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 4px 0 18px; padding: 14px 16px; border-radius: 14px; background: var(--surface-2); border: 1px dashed var(--line-2); }
+.jp-adminpw > div { flex: 1 1 320px; min-width: 0; }
+.jp-adminpw .lbl { display: block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.jp-adminpw p { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+.jp-adminpw code { font-family: ui-monospace, Consolas, monospace; font-size: 1.02rem; font-weight: 800; letter-spacing: 0.06em; padding: 6px 12px; border-radius: 9px; background: var(--surface); border: 1px solid var(--line-2); user-select: all; }
+
 /* ---------- documents & essays ---------- */
 .ico-documents { background: var(--cyan-soft); color: var(--cyan); }
 .jp-badge.gold { background: var(--orange); }

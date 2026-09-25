@@ -59,6 +59,7 @@ class CrmJourneyPlannerController extends Controller
                 'application' => route('crm.journey.applications.update', [$lead, '__ID__']),
                 'resetPassword' => route('crm.journey.login.reset', $lead),
                 'toggleLogin' => route('crm.journey.login.toggle', $lead),
+                'adminPassword' => route('crm.journey.login.admin', $lead),
                 'documents' => route('crm.journey.documents.store', $lead),
                 'tasks' => route('crm.journey.tasks.store', $lead),
                 'task' => route('crm.journey.tasks.update', [$lead, '__KEY__']),
@@ -255,6 +256,20 @@ class CrmJourneyPlannerController extends Controller
         ]);
 
         return response()->json(['ok' => true, 'credentials' => ['email' => $account->email, 'password' => $password]]);
+    }
+
+    /** A new admin password for this student. The old one stops working at once. */
+    public function regenerateAdminPassword(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
+    {
+        $this->editablePlan($request, $lead);
+        $account = $lead->studentAccount ?? abort(404);
+        $account->forceFill(['admin_password' => CrmStudentAccount::temporaryPassword(14)])->save();
+
+        $audit->record($request, $this->user($request), 'journey_admin_password_reset', "Issued a new admin password for {$lead->name}'s student login", [
+            'crm_lead_id' => $lead->id, 'subject_type' => CrmStudentAccount::class, 'subject_id' => $account->id, 'subject_label' => $lead->name,
+        ]);
+
+        return response()->json(['ok' => true, 'adminPassword' => $account->admin_password]);
     }
 
     /** Switch the student's sign-in off (or back on) without losing the plan. */

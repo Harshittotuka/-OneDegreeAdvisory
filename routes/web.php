@@ -259,6 +259,7 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::post('start', 'start')->name('start');
             Route::post('login/password', 'resetPassword')->name('login.reset');
             Route::patch('login', 'toggleLogin')->name('login.toggle');
+            Route::post('login/admin-password', 'regenerateAdminPassword')->name('login.admin');
             Route::post('stages', 'storeStage')->name('stages.store');
             Route::patch('stages/{stage}', 'updateStage')->where('stage', 's-[a-z0-9]{10}')->name('stages.update');
             Route::delete('stages/{stage}', 'destroyStage')->where('stage', 's-[a-z0-9]{10}')->name('stages.destroy');

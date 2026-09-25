@@ -137,6 +137,7 @@ class CrmDashboardController extends Controller
             'journey_university_removed' => 'Journey planner: university removed',
             'journey_login_created' => 'Journey planner started, student login created',
             'journey_password_reset' => 'Student password reset',
+            'journey_admin_password_reset' => 'Student admin password reset',
             'journey_task_added' => 'Journey planner: task added',
             'journey_stage_added' => 'Journey planner: stage added',
             'journey_stage_removed' => 'Journey planner: stage removed',

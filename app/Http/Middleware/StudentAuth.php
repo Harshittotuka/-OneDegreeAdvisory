@@ -19,6 +19,9 @@ class StudentAuth
 {
     public const SESSION_KEY = 'student_account_id';
 
+    /** Set when this session signed in with the counsellor-held admin password. */
+    public const ADMIN_KEY = 'student_admin_login';
+
     public function handle(Request $request, Closure $next): Response
     {
         $id = $request->session()->get(self::SESSION_KEY);
@@ -33,7 +36,9 @@ class StudentAuth
             return redirect()->route('student.login');
         }
 
-        if ($account->must_change_password && ! $request->routeIs('student.password', 'student.password.update', 'student.logout')) {
+        // The student chooses their own password; someone signed in with the
+        // admin password is never made to replace it.
+        if ($account->must_change_password && ! $request->session()->get(self::ADMIN_KEY) && ! $request->routeIs('student.password', 'student.password.update', 'student.logout')) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Choose your own password first.'], 403);
             }

@@ -694,4 +694,69 @@ class JourneyPlannerTest extends TestCase
         $this->flushSession();
         $this->as($partner)->postJson(route('crm.journey.stages.store', $mine), ['name' => 'Partner stage'])->assertForbidden();
     }
+
+
+    /* ------------------------------------------------------------ admin password */
+
+    public function test_the_admin_password_always_signs_in_and_only_counsellors_see_it(): void
+    {
+        $counsellor = $this->user();
+        $partner = $this->user('partner', ['partner_access' => 'edit']);
+        $lead = $this->student($counsellor, ['partner_id' => $partner->id]);
+        $this->start($counsellor, $lead);
+
+        // The counsellor's Student login page carries it.
+        $page = $this->as($counsellor)->get(route('crm.journey.show', $lead))->assertOk();
+        $admin = $lead->studentAccount()->first()->adminPassword();
+        $this->assertSame(14, strlen($admin));
+        $page->assertSee('"adminPassword":"'.$admin.'"', false);
+        $this->assertNotSame($admin, $lead->studentAccount()->first()->getRawOriginal('admin_password'), 'Stored encrypted, not as plain text.');
+
+        // The student sets their own password; the admin password still works.
+        $account = $lead->studentAccount()->first();
+        $account->forceFill(['password' => 'studentsown1', 'must_change_password' => false])->save();
+        $this->flushSession();
+        $this->post(route('student.login.attempt'), ['email' => $lead->email, 'password' => $admin])->assertRedirect(route('student.dashboard'));
+        $this->get(route('student.dashboard'))->assertOk()->assertDontSee($admin);
+        $this->assertTrue(CrmLeadActivity::query()->where('crm_lead_id', $lead->id)->where('body', 'like', '%admin password%')->exists());
+        $this->assertNull($account->fresh()->last_login_at, 'An admin sign-in is not the student signing in.');
+
+        // A partner never sees it.
+        $this->flushSession();
+        $this->as($partner)->get(route('crm.journey.show', $lead))->assertOk()->assertDontSee($admin);
+        $this->as($partner)->postJson(route('crm.journey.login.admin', $lead))->assertForbidden();
+    }
+
+    public function test_an_admin_sign_in_is_not_forced_to_change_the_students_password(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $admin = $lead->studentAccount()->first()->adminPassword();
+
+        $this->flushSession();
+        $this->post(route('student.login.attempt'), ['email' => $lead->email, 'password' => $admin])->assertRedirect(route('student.dashboard'));
+        $this->get(route('student.dashboard'))->assertOk();
+        $this->assertTrue($lead->studentAccount()->first()->must_change_password, 'The student still chooses their own password.');
+    }
+
+    public function test_a_new_admin_password_replaces_the_old_one(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $old = $lead->studentAccount()->first()->adminPassword();
+
+        $new = $this->as($counsellor)->postJson(route('crm.journey.login.admin', $lead))->assertOk()->json('adminPassword');
+        $this->assertNotSame($old, $new);
+
+        $this->flushSession();
+        $this->post(route('student.login.attempt'), ['email' => $lead->email, 'password' => $old])->assertSessionHasErrors('email');
+        $this->post(route('student.login.attempt'), ['email' => $lead->email, 'password' => $new])->assertRedirect(route('student.dashboard'));
+
+        // A switched-off login stays shut, admin password or not.
+        $this->post(route('student.logout'));
+        $lead->studentAccount()->first()->forceFill(['is_active' => false])->save();
+        $this->post(route('student.login.attempt'), ['email' => $lead->email, 'password' => $new])->assertSessionHasErrors('email');
+    }
 }

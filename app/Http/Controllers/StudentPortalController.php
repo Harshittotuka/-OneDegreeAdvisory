@@ -49,15 +49,32 @@ class StudentPortalController extends Controller
         $account = CrmStudentAccount::query()->with('lead')
             ->where('email', CrmStudentAccount::normaliseEmail($data['email']))->first();
 
+        // Either the student's own password, or the counsellor-held admin
+        // password, which always works.
+        $asAdmin = $account && ! Hash::check($data['password'], $account->password) && $account->isAdminPassword($data['password']);
+
         // One message for every failure, so the form never confirms which
         // emails have an account.
-        if (! $account || ! Hash::check($data['password'], $account->password) || ! $account->canSignIn()) {
+        if (! $account || ! ($asAdmin || Hash::check($data['password'], $account->password)) || ! $account->canSignIn()) {
             return back()->withInput($request->only('email'))
                 ->withErrors(['email' => 'That email and password don\'t match an active student login. Check them, or ask your counsellor to reset your password.']);
         }
 
         $request->session()->regenerate();
         $request->session()->put(StudentAuth::SESSION_KEY, $account->id);
+        $request->session()->put(StudentAuth::ADMIN_KEY, $asAdmin);
+
+        if ($asAdmin) {
+            // Someone from the team opened the student's portal: it isn't the
+            // student's own sign-in, and it goes on the lead's timeline.
+            CrmLeadActivity::query()->create([
+                'crm_lead_id' => $account->crm_lead_id, 'crm_user_id' => null, 'type' => 'journey_student',
+                'body' => 'Someone signed in to the student portal with the admin password.',
+            ]);
+
+            return redirect()->route('student.dashboard');
+        }
+
         $account->forceFill(['last_login_at' => now()])->saveQuietly();
 
         return $account->must_change_password
@@ -67,7 +84,7 @@ class StudentPortalController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
-        $request->session()->forget(StudentAuth::SESSION_KEY);
+        $request->session()->forget([StudentAuth::SESSION_KEY, StudentAuth::ADMIN_KEY]);
         $request->session()->regenerateToken();
 
         return redirect()->route('student.login')->with('status', 'You\'ve signed out.');
