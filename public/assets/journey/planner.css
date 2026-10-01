@@ -932,3 +932,9 @@ body.jp-mode-student .jp-block-h { background: linear-gradient(135deg, var(--pur
     .jp-field-row { flex-wrap: wrap; }
     .jp-field-row input { flex: 1 1 100%; }
 }
+
+/* The counsellor's Google connection, above the meetings list. */
+.jp-google { margin-top: 8px; font-size: 0.82rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.jp-google.ok { color: var(--green-ink); }
+.jp-google.bad, .jp-google-bad { color: var(--pink-ink); font-weight: 600; }
+.jp-dialog .jp-hint .jp-btn { margin: 0 4px; vertical-align: middle; }

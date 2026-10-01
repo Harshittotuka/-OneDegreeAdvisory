@@ -4,15 +4,36 @@ use App\Mail\CareerApplicationMail;
 use App\Mail\CareerThankYouMail;
 use App\Mail\ContactEnquiryMail;
 use App\Mail\ContactThankYouMail;
+use App\Services\GoogleCalendar;
 use App\Support\CmsCrmBackupManager;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Validator;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+/*
+ * Keep every counsellor's Google connection in use, so Google never drops one
+ * for sitting idle, and catch a refused one early enough to ask the
+ * counsellor to reconnect before their next meeting rather than during it.
+ */
+Artisan::command('google:keep-alive {--all : Renew every connection, however recently it was used}', function (GoogleCalendar $google) {
+    if (! $google->configured()) {
+        $this->warn('Google is not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).');
+
+        return 0;
+    }
+    $out = $google->keepAlive($this->option('all') ? null : 20);
+    $this->info("Renewed {$out['renewed']}, needs reconnecting {$out['lost']}, failed {$out['failed']}, unused rooms cleared {$out['rooms']}.");
+
+    return $out['failed'] > 0 ? 1 : 0;
+})->purpose('Renew Google connections and clear unused Meet rooms');
+
+Schedule::command('google:keep-alive')->dailyAt('03:15')->withoutOverlapping();
 
 Artisan::command('backup:run {--reason=manual}', function (CmsCrmBackupManager $backups) {
     try {

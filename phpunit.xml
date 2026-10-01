@@ -50,6 +50,10 @@
         <env name="REFERRAL_FORM_MAILER" value="array"/>
         <env name="PAYMENT_SECTION_OTP_MAILER" value="array"/>
         <env name="CRM_MAILER" value="array"/>
+        <!-- No real Google client in tests: a test that needs one sets it. -->
+        <env name="GOOGLE_CLIENT_ID" value=""/>
+        <env name="GOOGLE_CLIENT_SECRET" value=""/>
+        <env name="GOOGLE_REDIRECT_URI" value=""/>
         <env name="MAIL_HOST" value="127.0.0.1"/>
         <env name="MAIL_USERNAME" value=""/>
         <env name="MAIL_PASSWORD" value=""/>

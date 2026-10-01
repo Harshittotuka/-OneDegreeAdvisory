@@ -48,6 +48,12 @@ class CrmUser extends Model
         return $this->hasOne(CrmPartnerCode::class, 'crm_user_id');
     }
 
+    /** The Google account this person connected for Meet rooms, if any. */
+    public function googleAccount(): HasOne
+    {
+        return $this->hasOne(CrmGoogleAccount::class, 'crm_user_id');
+    }
+
     /**
      * The one shape a mobile number is stored and compared in: the last ten
      * digits. Both screens that edit a partner reach for this, so it lives on

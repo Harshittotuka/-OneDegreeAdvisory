@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
 use App\Mail\JourneyMeetingMail;
+use App\Models\CrmGoogleAccount;
 use App\Models\CrmJourneyApplication;
 use App\Models\CrmJourneyDocument;
 use App\Models\CrmJourneyPlan;
@@ -11,6 +12,8 @@ use App\Models\CrmLead;
 use App\Models\CrmStudentAccount;
 use App\Models\CrmUser;
 use App\Services\CrmAuditLogger;
+use App\Services\GoogleCalendar;
+use App\Services\GoogleCalendarException;
 use App\Support\JourneyDocuments;
 use App\Support\JourneyPlanner;
 use Illuminate\Contracts\View\View;
@@ -55,33 +58,44 @@ class CrmJourneyPlannerController extends Controller
         $mode = $user->isPartner() ? 'partner' : 'counsellor';
         $back = route('crm.dashboard', ['view' => 'students', 'lead' => $lead->id]);
 
+        $payload = JourneyPlanner::payload($plan, $mode, $mode === 'counsellor' ? [
+            'details' => route('crm.journey.details', $lead),
+            'activity' => route('crm.journey.activity', $lead),
+            'applications' => route('crm.journey.applications.store', $lead),
+            'application' => route('crm.journey.applications.update', [$lead, '__ID__']),
+            'resetPassword' => route('crm.journey.login.reset', $lead),
+            'toggleLogin' => route('crm.journey.login.toggle', $lead),
+            'adminPassword' => route('crm.journey.login.admin', $lead),
+            'documents' => route('crm.journey.documents.store', $lead),
+            'tasks' => route('crm.journey.tasks.store', $lead),
+            'task' => route('crm.journey.tasks.update', [$lead, '__KEY__']),
+            'stages' => route('crm.journey.stages.store', $lead),
+            'stage' => route('crm.journey.stages.update', [$lead, '__KEY__']),
+            'document' => route('crm.journey.documents.update', [$lead, '__ID__']),
+            'documentEdits' => route('crm.journey.documents.edits.store', [$lead, '__ID__']),
+            'team' => route('crm.journey.team.store', $lead),
+            'member' => route('crm.journey.team.update', [$lead, '__KEY__']),
+            'deadlines' => route('crm.journey.deadlines.store', $lead),
+            'deadline' => route('crm.journey.deadlines.update', [$lead, '__KEY__']),
+            'meetings' => route('crm.journey.meetings.store', $lead),
+            'meeting' => route('crm.journey.meetings.update', [$lead, '__KEY__']),
+            'meetingNotify' => route('crm.journey.meetings.notify', [$lead, '__KEY__']),
+            'meetRoom' => route('crm.journey.meet-room.store', $lead),
+            'meetRoomRelease' => route('crm.journey.meet-room.release', $lead),
+            'pulse' => route('crm.journey.pulse', $lead),
+            'back' => $back,
+        ] : ['pulse' => route('crm.journey.pulse', $lead), 'back' => $back], $mode === 'counsellor' ? session('journey_credentials') : null);
+
+        if ($mode === 'counsellor') {
+            // The counsellor's own Google connection, for real Meet rooms.
+            $google = app(GoogleCalendar::class);
+            $payload['google'] = CrmGoogleController::status($user, $google) + ['notice' => session('google_status')];
+            $google->keepAliveSoon($user);
+        }
+
         return view('journey.planner', [
             'title' => $lead->name.' — Journey planner',
-            'payload' => JourneyPlanner::payload($plan, $mode, $mode === 'counsellor' ? [
-                'details' => route('crm.journey.details', $lead),
-                'activity' => route('crm.journey.activity', $lead),
-                'applications' => route('crm.journey.applications.store', $lead),
-                'application' => route('crm.journey.applications.update', [$lead, '__ID__']),
-                'resetPassword' => route('crm.journey.login.reset', $lead),
-                'toggleLogin' => route('crm.journey.login.toggle', $lead),
-                'adminPassword' => route('crm.journey.login.admin', $lead),
-                'documents' => route('crm.journey.documents.store', $lead),
-                'tasks' => route('crm.journey.tasks.store', $lead),
-                'task' => route('crm.journey.tasks.update', [$lead, '__KEY__']),
-                'stages' => route('crm.journey.stages.store', $lead),
-                'stage' => route('crm.journey.stages.update', [$lead, '__KEY__']),
-                'document' => route('crm.journey.documents.update', [$lead, '__ID__']),
-                'documentEdits' => route('crm.journey.documents.edits.store', [$lead, '__ID__']),
-                'team' => route('crm.journey.team.store', $lead),
-                'member' => route('crm.journey.team.update', [$lead, '__KEY__']),
-                'deadlines' => route('crm.journey.deadlines.store', $lead),
-                'deadline' => route('crm.journey.deadlines.update', [$lead, '__KEY__']),
-                'meetings' => route('crm.journey.meetings.store', $lead),
-                'meeting' => route('crm.journey.meetings.update', [$lead, '__KEY__']),
-                'meetingNotify' => route('crm.journey.meetings.notify', [$lead, '__KEY__']),
-                'pulse' => route('crm.journey.pulse', $lead),
-                'back' => $back,
-            ] : ['pulse' => route('crm.journey.pulse', $lead), 'back' => $back], $mode === 'counsellor' ? session('journey_credentials') : null),
+            'payload' => $payload,
         ]);
     }
 
@@ -713,17 +727,67 @@ class CrmJourneyPlannerController extends Controller
     }
 
     /**
-     * Book a meeting on this plan. The planner can't create a Google Meet room
-     * itself — that belongs to the counsellor's own Google account — so the
-     * page sends them to Google Calendar with the details filled in, and the
-     * join link it hands back is stored here where the student will find it.
+     * A real Google Meet room for the meeting dialog, made in the
+     * counsellor's own Google account the moment Google Meet is chosen, so
+     * the link is there to copy before anything is saved. Until a meeting is
+     * saved with it, the room is held on the account, and it is cleared away
+     * later if the dialog was closed instead.
      */
-    public function storeMeeting(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
+    public function storeMeetRoom(Request $request, CrmLead $lead, GoogleCalendar $google): JsonResponse
+    {
+        $this->editablePlan($request, $lead);
+        $data = $request->validate([
+            'title' => ['sometimes', 'nullable', 'string', 'max:150'],
+            'date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+            'time' => ['sometimes', 'nullable', 'date_format:H:i'],
+            'minutes' => ['sometimes', 'nullable', 'integer', 'min:5', 'max:480'],
+        ]);
+        $user = $this->user($request);
+        $account = $google->configured() ? $this->workingGoogle($user) : null;
+        if (! $account) {
+            return response()->json(['message' => 'Connect your Google account first.'], 422);
+        }
+
+        try {
+            $room = $google->createRoom($account, $data, $lead->name);
+        } catch (GoogleCalendarException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+        $google->rememberRoom($account, $room);
+
+        return response()->json(['ok' => true, 'room' => $room['event'], 'link' => $room['link']]);
+    }
+
+    /** The meeting dialog was closed without saving: give its room back. */
+    public function releaseMeetRoom(Request $request, CrmLead $lead, GoogleCalendar $google): JsonResponse
+    {
+        $this->editablePlan($request, $lead);
+        $data = $request->validate(['room' => ['required', 'string', 'max:200', 'regex:/^[A-Za-z0-9_-]+$/']]);
+        $account = $this->user($request)->googleAccount;
+        $room = $account ? $google->claimRoom($account, $data['room']) : null;
+        if ($room && $account->works()) {
+            if (! $google->deleteRoom($account, $room['event'])) {
+                // Left for the keep-alive sweep, which tries again.
+                $google->rememberRoom($account, $room);
+            }
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Book a meeting on this plan. A Google Meet meeting gets a real room in
+     * the booking counsellor's own Google account when they have connected
+     * one — the room the dialog already made, or one made now. Without a
+     * connection, a pasted link is stored as it is.
+     */
+    public function storeMeeting(Request $request, CrmLead $lead, CrmAuditLogger $audit, GoogleCalendar $google): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
         $data = $request->validate($this->meetingRules(), [], ['title' => 'meeting', 'who' => 'attendees']);
+        [$room, $warning] = $this->settleRoom($request, $lead, $google, $data, null);
 
-        $meeting = $this->withList($plan, 'meetings', function (array &$list) use ($data): array {
+        $meeting = $this->withList($plan, 'meetings', function (array &$list) use ($data, $room): array {
             if (count($list) >= self::MAX_MEETINGS) {
                 throw ValidationException::withMessages(['title' => 'This plan already holds '.self::MAX_MEETINGS.' meetings, the most it can hold.']);
             }
@@ -741,6 +805,7 @@ class CrmJourneyPlannerController extends Controller
                 'notes' => trim((string) ($data['notes'] ?? '')),
                 'done' => false,
                 'sentAt' => null,
+                'google' => $room,
             ];
             $list[] = $meeting;
 
@@ -753,21 +818,26 @@ class CrmJourneyPlannerController extends Controller
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $meeting['title'],
         ]);
 
-        return $this->meetingResponse($plan, ['meeting' => $meeting, 'sent' => $sent]);
+        unset($meeting['google']);
+
+        return $this->meetingResponse($plan, ['meeting' => $meeting, 'sent' => $sent, 'warning' => $warning]);
     }
 
-    public function updateMeeting(Request $request, CrmLead $lead, string $meeting): JsonResponse
+    public function updateMeeting(Request $request, CrmLead $lead, string $meeting, GoogleCalendar $google): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
         $data = $request->validate(array_merge($this->meetingRules(partial: true), [
             'done' => ['sometimes', 'boolean'],
         ]), [], ['title' => 'meeting', 'who' => 'attendees']);
+        $current = collect($plan->meetings ?? [])->first(fn ($m) => is_array($m) && ($m['key'] ?? null) === $meeting) ?? abort(404);
+        [$room, $warning] = $this->settleRoom($request, $lead, $google, $data, $current);
 
-        $found = $this->withList($plan, 'meetings', function (array &$list) use ($data, $meeting): bool {
+        $found = $this->withList($plan, 'meetings', function (array &$list) use ($data, $meeting, $room): bool {
             foreach ($list as &$m) {
                 if (($m['key'] ?? null) !== $meeting) {
                     continue;
                 }
+                $m['google'] = $room;
                 foreach (['title', 'date', 'time', 'mode', 'who', 'phone', 'link', 'notes'] as $f) {
                     if (array_key_exists($f, $data)) {
                         $m[$f] = trim((string) $data[$f]);
@@ -792,7 +862,7 @@ class CrmJourneyPlannerController extends Controller
 
         $sent = ($data['notify'] ?? false) ? $this->sendMeeting($plan, $lead, $meeting, true) : 0;
 
-        return $this->meetingResponse($plan, ['sent' => $sent]);
+        return $this->meetingResponse($plan, ['sent' => $sent, 'warning' => $warning]);
     }
 
     /**
@@ -811,7 +881,7 @@ class CrmJourneyPlannerController extends Controller
         return $this->meetingResponse($plan, ['sent' => $sent]);
     }
 
-    public function destroyMeeting(Request $request, CrmLead $lead, string $meeting, CrmAuditLogger $audit): JsonResponse
+    public function destroyMeeting(Request $request, CrmLead $lead, string $meeting, CrmAuditLogger $audit, GoogleCalendar $google): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
 
@@ -822,6 +892,8 @@ class CrmJourneyPlannerController extends Controller
             return $match;
         });
         abort_if($gone === null, 404);
+        // A cancelled meeting's room comes off the counsellor's calendar too.
+        $this->dropRoom($google, $gone['google'] ?? null);
 
         $audit->record($request, $this->user($request), 'journey_meeting_removed', "Cancelled “{$gone['title']}” with {$lead->name}", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $gone['title'],
@@ -874,7 +946,117 @@ class CrmJourneyPlannerController extends Controller
             'link' => ['sometimes', 'nullable', 'url:https', 'max:300'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'notify' => ['sometimes', 'boolean'],
+            // The Google room the dialog made for this meeting, if it did.
+            'room' => ['sometimes', 'nullable', 'string', 'max:200', 'regex:/^[A-Za-z0-9_-]+$/'],
         ];
+    }
+
+    /**
+     * Decide which Google room, if any, a meeting carries after this save, and
+     * make Google match. Runs before the meeting is written and outside its
+     * lock, because it waits on Google. Google being down never stops a
+     * meeting being saved: the meeting saves, and the warning says why it has
+     * no room.
+     *
+     * @param  array<string, mixed>  $data  validated input; its link is filled in when a room is used
+     * @param  array<string, mixed>|null  $current  the stored meeting, when editing
+     * @return array{0: array{event: string, user: int}|null, 1: string|null}
+     */
+    private function settleRoom(Request $request, CrmLead $lead, GoogleCalendar $google, array &$data, ?array $current): array
+    {
+        $user = $this->user($request);
+        $existing = is_array($current['google'] ?? null) && ! empty($current['google']['event']) ? $current['google'] : null;
+        $mode = (string) ($data['mode'] ?? $current['mode'] ?? '');
+        $link = array_key_exists('link', $data) ? trim((string) $data['link']) : (string) ($current['link'] ?? '');
+        $isMeet = $mode === 'Google Meet';
+        $changed = array_intersect_key($data, array_flip(['title', 'date', 'time', 'minutes', 'notes']));
+        $details = array_merge((array) $current, $changed);
+        $asksForLink = $current === null || array_key_exists('link', $data);
+        $offered = (string) ($data['room'] ?? '');
+        $account = $google->configured() ? $this->workingGoogle($user) : null;
+
+        // A room the dialog made: keep it if the meeting still uses its link.
+        if ($offered !== '' && $account && ($claimed = $google->claimRoom($account, $offered))) {
+            if ($isMeet && ! $existing && ($link === '' || $link === $claimed['link'])) {
+                $data['link'] = $claimed['link'];
+
+                return [
+                    ['event' => $claimed['event'], 'user' => $user->id],
+                    $this->tryGoogle(fn () => $google->updateRoom($account, $claimed['event'], $details, $lead->name)),
+                ];
+            }
+            $google->deleteRoom($account, $claimed['event']);
+        }
+
+        if ($existing) {
+            // No longer a Meet call, or a different link pasted over it: the
+            // room has nothing left to do.
+            if (! $isMeet || $link !== (string) ($current['link'] ?? '')) {
+                $this->dropRoom($google, $existing);
+                $existing = null;
+            } else {
+                $owner = $changed !== [] ? $this->googleOf((int) ($existing['user'] ?? 0)) : null;
+
+                return [$existing, $owner ? $this->tryGoogle(fn () => $google->updateRoom($owner, (string) $existing['event'], $details, $lead->name)) : null];
+            }
+        }
+
+        // A Meet call left without a link: make its room now, when the
+        // counsellor is connected. A plain "mark done" never gets here, as it
+        // sends no link.
+        if ($isMeet && $link === '' && $asksForLink && $account) {
+            try {
+                $made = $google->createRoom($account, $details, $lead->name);
+                $data['link'] = $made['link'];
+
+                return [['event' => $made['event'], 'user' => $user->id], null];
+            } catch (GoogleCalendarException $e) {
+                return [null, 'Saved without a Meet room. '.$e->getMessage()];
+            }
+        }
+        if ($isMeet && $link === '' && $asksForLink && $google->configured() && $user->googleAccount) {
+            return [null, 'Saved without a Meet room: your Google connection needs renewing.'];
+        }
+
+        return [null, null];
+    }
+
+    /** Run a Google call that must not stop the save. Returns the warning, if any. */
+    private function tryGoogle(\Closure $call): ?string
+    {
+        try {
+            $call();
+
+            return null;
+        } catch (GoogleCalendarException $e) {
+            return 'The meeting is saved, but Google Calendar was not updated. '.$e->getMessage();
+        }
+    }
+
+    /** Take a meeting's room off the calendar it was made in. Best effort. */
+    private function dropRoom(GoogleCalendar $google, mixed $room): void
+    {
+        if (! is_array($room) || empty($room['event']) || ! $google->configured()) {
+            return;
+        }
+        $owner = $this->googleOf((int) ($room['user'] ?? 0));
+        if ($owner && ! $google->deleteRoom($owner, (string) $room['event'])) {
+            Log::info('Could not remove a Meet room', ['event' => $room['event'], 'user' => $room['user'] ?? null]);
+        }
+    }
+
+    private function workingGoogle(CrmUser $user): ?CrmGoogleAccount
+    {
+        $account = $user->googleAccount;
+
+        return $account && $account->works() ? $account : null;
+    }
+
+    private function googleOf(int $userId): ?CrmGoogleAccount
+    {
+        $account = $userId > 0 ? CrmGoogleAccount::query()->where('crm_user_id', $userId)->first() : null;
+
+        return $account && $account->works() ? $account : null;
     }
 
     /**
@@ -910,7 +1092,6 @@ class CrmJourneyPlannerController extends Controller
         return response()->json(['ok' => true, 'deadlines' => $plan->fresh()->deadlineRows()]);
     }
 
-    /** @param  array<string, mixed>  $extra */
     /**
      * Mail one meeting's joining details to everyone listed on it and stamp
      * when that happened. A mail that bounces off a bad address must not lose
@@ -953,9 +1134,10 @@ class CrmJourneyPlannerController extends Controller
         return $sent;
     }
 
+    /** @param  array<string, mixed>  $extra */
     private function meetingResponse(CrmJourneyPlan $plan, array $extra = []): JsonResponse
     {
-        return response()->json(['ok' => true, 'meetings' => $plan->fresh()->meetingRows()] + $extra);
+        return response()->json(['ok' => true, 'meetings' => $plan->fresh()->meetingRows()] + array_filter($extra, fn ($v) => $v !== null));
     }
 
     /**

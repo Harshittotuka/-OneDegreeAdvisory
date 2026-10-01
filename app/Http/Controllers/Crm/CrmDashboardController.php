@@ -39,6 +39,8 @@ class CrmDashboardController extends Controller
     {
         /** @var CrmUser $user */
         $user = $request->attributes->get('crm_user');
+        // Keeps a connected Google account in use on a server with no cron.
+        app(\App\Services\GoogleCalendar::class)->keepAliveSoon($user);
         $base = CrmLead::query()->visibleTo($user);
         $now = now();
         $todayStart = $now->copy()->startOfDay();

@@ -277,6 +277,10 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::post('deadlines', 'storeDeadline')->name('deadlines.store');
             Route::patch('deadlines/{deadline}', 'updateDeadline')->where('deadline', 'd-[a-z0-9]{10}')->name('deadlines.update');
             Route::delete('deadlines/{deadline}', 'destroyDeadline')->where('deadline', 'd-[a-z0-9]{10}')->name('deadlines.destroy');
+            // A real Google Meet room for the meeting dialog, made in the
+            // counsellor's own Google account; and given back if unused.
+            Route::post('meet-room', 'storeMeetRoom')->middleware('throttle:20,1')->name('meet-room.store');
+            Route::delete('meet-room', 'releaseMeetRoom')->name('meet-room.release');
             Route::post('meetings', 'storeMeeting')->name('meetings.store');
             Route::patch('meetings/{meeting}', 'updateMeeting')->where('meeting', 'm-[a-z0-9]{10}')->name('meetings.update');
             Route::post('meetings/{meeting}/notify', 'notifyMeeting')->where('meeting', 'm-[a-z0-9]{10}')->middleware('throttle:20,1')->name('meetings.notify');
@@ -287,6 +291,11 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::post('documents/{document}/edits', 'storeDocumentEdit')->whereNumber('document')->middleware('throttle:60,1')->name('documents.edits.store');
             Route::get('documents/{document}/file', 'downloadDocument')->whereNumber('document')->name('documents.file');
         });
+        // A counsellor's own Google account, connected once, so Google Meet
+        // meetings on the planner get a real room.
+        Route::get('google/connect', [\App\Http\Controllers\Crm\CrmGoogleController::class, 'connect'])->middleware('throttle:10,1')->name('google.connect');
+        Route::get('google/callback', [\App\Http\Controllers\Crm\CrmGoogleController::class, 'callback'])->middleware('throttle:10,1')->name('google.callback');
+        Route::post('google/disconnect', [\App\Http\Controllers\Crm\CrmGoogleController::class, 'disconnect'])->name('google.disconnect');
         // Report-production tool (moved from the admin CMS). The GET page is the
         // dashboard "shortlisting" view; this endpoint does the merge + download.
         Route::post('pdf-shortlisting', [\App\Http\Controllers\Crm\CrmPdfShortlistingController::class, 'generate'])

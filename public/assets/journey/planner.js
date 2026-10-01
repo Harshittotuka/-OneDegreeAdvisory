@@ -24,7 +24,9 @@
         owner: 'all', status: 'all', showExcluded: true, dl: 'open', armed: null, busy: false, menu: false,
         credentials: P.credentials || null,
         docTab: 'all', essayId: null, essayDirty: false, openDoc: null, refreshing: false,
-        cal: { y: null, m: null, sel: null }
+        cal: { y: null, m: null, sel: null },
+        // The Google room made for the open meeting dialog, until it is saved.
+        room: null, roomBusy: false, dialogSeq: 0
     };
     P.documents = P.documents || [];
     P.team = P.team || []; P.deadlines = P.deadlines || []; P.meetings = P.meetings || [];
@@ -271,12 +273,6 @@
     }
     function pad2(n) { return String(n).padStart(2, '0'); }
     /*
-     * A join code for a video meeting, in Google's own three-four-three shape.
-     * It is generated here, not by Google — the planner has no account to make
-     * a room with — so it is offered as a starting point the counsellor can
-     * paste a real link over.
-     */
-    /*
      * How a meeting happens decides what it needs to be reached on. A join
      * link belongs to a video call and nothing else; a number belongs to a
      * phone call, and to meeting in person, where someone always ends up
@@ -286,6 +282,11 @@
     function wantsPhone(mode) { return mode === 'Phone call' || mode === 'In person'; }
     function phoneLabel(mode) { return mode === 'In person' ? 'Contact number' : 'Phone number'; }
 
+    /*
+     * A join code in Google's three-four-three shape, made here rather than by
+     * Google. Only used where the CRM has no Google set up at all; with Google
+     * set up, a counsellor's own account makes a real room instead.
+     */
     function meetLink() {
         var alphabet = 'abcdefghijkmnopqrstuvwxyz';
         function pick(n) {
@@ -296,20 +297,71 @@
         return 'https://meet.google.com/' + pick(3) + '-' + pick(4) + '-' + pick(3);
     }
     /*
-     * A Google Meet room belongs to the counsellor's own Google account, so the
-     * planner can't mint one. It sends them to Google Calendar with everything
-     * filled in; Google adds the Meet link, and they paste it back onto the
-     * meeting so the student has one place to find it.
+     * The counsellor's own Google account, connected once, makes the real
+     * Meet rooms. Three states matter: not set up on this CRM (fall back to a
+     * made-up link), not connected yet, and connected but refused by Google.
      */
-    function gcalUrl(m) {
-        var t = (m.time || '09:00').split(':');
-        var start = new Date(m.date + 'T00:00:00');
-        start.setHours(parseInt(t[0], 10) || 9, parseInt(t[1], 10) || 0, 0, 0);
-        var end = new Date(start.getTime() + (m.minutes || 45) * 60000);
-        function stamp(d) { return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + pad2(d.getMinutes()) + '00'; }
-        var details = [m.notes, m.who ? 'Who: ' + m.who : '', m.link ? 'Join: ' + m.link : ''].filter(Boolean).join('\n');
-        return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(m.title) +
-            '&dates=' + stamp(start) + '/' + stamp(end) + (details ? '&details=' + encodeURIComponent(details) : '');
+    function G() { return P.google || { configured: false, connected: false, works: false }; }
+    function googleReady() { var g = G(); return !!(g.configured && g.connected && g.works); }
+    function connectUrl() {
+        return G().connect + '?back=' + encodeURIComponent(location.pathname + location.search + '#calendar');
+    }
+    function roomHint(mt) {
+        var g = G();
+        if (!g.configured) return 'Made for this meeting. Paste a different link over it if you already have one.';
+        if (googleReady()) {
+            return (mt && mt.link && !mt.room ? 'A link pasted by hand. Clear it to have a real room made in ' : 'A real Google Meet room in ') + esc(g.email) +
+                '\'s Google Calendar. Google invites nobody — only the email below goes out.';
+        }
+        if (g.connected) return '<span class="jp-google-bad">' + esc(g.problem || 'Google stopped accepting your connection.') + '</span> <a class="jp-btn sm" href="' + esc(connectUrl()) + '">Reconnect Google</a>';
+        return 'Connect your Google account once and every Google Meet meeting gets a real room by itself. <a class="jp-btn sm" href="' + esc(connectUrl()) + '">Connect Google</a> Or paste a link here.';
+    }
+    function setRoomHint(html) { var h = document.getElementById('mt-link-hint'); if (h) h.innerHTML = html; }
+    /*
+     * Ask the counsellor's Google account for a room as soon as Google Meet is
+     * the choice and the link box is empty, so there is a real link to copy
+     * before anything is saved. A dialog closed in the meantime gives it back.
+     */
+    function makeRoom() {
+        var box = document.getElementById('mt-link');
+        if (!googleReady() || UI.roomBusy || UI.room || !box || box.value.trim()) return;
+        var seq = UI.dialogSeq;
+        UI.roomBusy = true;
+        box.disabled = true; box.placeholder = 'Making a Google Meet room…';
+        setRoomHint('Making a room in ' + esc(G().email) + '\'s Google Calendar…');
+        api('POST', P.endpoints.meetRoom, {
+            title: val('mt-title') || null, date: val('mt-date') || null, time: val('mt-time') || null,
+            minutes: parseInt(val('mt-mins'), 10) || null
+        }).then(function (res) {
+            UI.room = { event: res.room, link: res.link };
+            var b = document.getElementById('mt-link');
+            if (seq !== UI.dialogSeq || !b) { releaseRoom(); return; }
+            b.disabled = false; b.placeholder = 'https://meet.google.com/…';
+            if (!b.value.trim()) b.value = res.link;
+            setRoomHint(roomHint(null));
+        }, function (err) {
+            var b = document.getElementById('mt-link');
+            if (seq !== UI.dialogSeq || !b) return;
+            b.disabled = false; b.placeholder = 'https://meet.google.com/…';
+            setRoomHint('<span class="jp-google-bad">' + esc(err.message) + '</span> Paste a link instead, or save and a room is tried again.');
+        }).then(function () { UI.roomBusy = false; });
+    }
+    function releaseRoom() {
+        var room = UI.room;
+        UI.room = null;
+        if (room && P.endpoints.meetRoomRelease) api('DELETE', P.endpoints.meetRoomRelease, { room: room.event }).catch(function () {});
+    }
+    function googleLine() {
+        var g = G();
+        if (!isC() || !g.configured) return '';
+        if (googleReady()) {
+            return '<p class="jp-google ok">Google Meet rooms are made in ' + esc(g.email) + '\'s Google Calendar. ' +
+                '<button class="jp-btn ghost sm' + (UI.armed === 'google-off' ? ' armed' : '') + '" data-act="google-disconnect">' + (UI.armed === 'google-off' ? 'Click again to disconnect' : 'Disconnect') + '</button></p>';
+        }
+        if (g.connected) {
+            return '<p class="jp-google bad">' + esc(g.problem || 'Google stopped accepting your connection.') + ' <a class="jp-btn sm" href="' + esc(connectUrl()) + '">Reconnect Google</a></p>';
+        }
+        return '<p class="jp-google">Connect your Google account and every Google Meet meeting gets a real room by itself. <a class="jp-btn sm" href="' + esc(connectUrl()) + '">Connect Google</a></p>';
     }
     function calBox(iso, over) {
         var dt = new Date(iso + 'T00:00:00');
@@ -889,7 +941,7 @@
             (past.length ? '<div class="jp-meet-past">Past</div>' + past.map(meetingRow).join('') : '');
         return '<section class="jp-card flush" id="jp-meetings"><div class="jp-card-h pad"><div><h2>Meetings</h2><p>' +
             (upcoming.length ? plural(upcoming.length, 'meeting', 'meetings') + ' coming up.' : 'Calls and meetings on this plan.') +
-            (isC() ? ' Everyone listed on a meeting is emailed its joining details.' : '') + '</p></div>' + add + '</div>' + body + '</section>';
+            (isC() ? ' Everyone listed on a meeting is emailed its joining details.' : '') + '</p>' + googleLine() + '</div>' + add + '</div>' + body + '</section>';
     }
 
     function meetingRow(m) {
@@ -1157,7 +1209,7 @@
             ['The student\'s login', 'Created when the planner is started. The student sees what is switched on and updates the tasks they own; each update lands on the lead timeline.'],
             ['Documents & essays', 'Everything the student uploads or writes is under Documents. Open an essay to approve it or send it back with feedback; uploads and essays sent for review land on the lead timeline.'],
             ['University requirements', 'The top of each university block records what it asks for — tests, documents, entry requirements and the date it closes. The closing date also shows in Deadlines and on the Calendar.'],
-            ['Deadlines and meetings', 'Deadlines holds the universities\' dates and ODA\'s own separately. Calendar shows everything as a month. A Google Meet room is made in Google Calendar — use the button on a meeting, then paste the join link back with Edit.'],
+            ['Deadlines and meetings', 'Deadlines holds the universities\' dates and ODA\'s own separately. Calendar shows everything as a month. Connect your Google account once (on the Calendar page, above Meetings) and every Google Meet meeting gets a real room in your own Google Calendar, with nobody invited by Google — the planner emails the link itself. The connection renews itself; if Google ever ends it, the Calendar page says so and offers Reconnect.'],
             ['The team on a file', 'Name the counsellor, specialist, supervisor, content writer and anyone external. Type a designation of your own and it joins the dropdown for this student.'],
             ['Document edits', 'Every document keeps its own history and a version number. The planner records drafts, reviews and approvals itself; use “Log an edit” for a change made outside it. The student sees the history.'],
             ['Progress', 'Counted, never a percentage: Completed against Included minus Not Applicable. Dates do the rest of the work.']
@@ -1177,7 +1229,7 @@
      * which lands them where they need to be anyway.
      */
     function adoptPayload(fresh) {
-        ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'meetings', 'login', 'docTemplate'].forEach(function (k) {
+        ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'meetings', 'login', 'docTemplate', 'google'].forEach(function (k) {
             if (fresh[k] !== undefined) P[k] = fresh[k];
         });
         if (fresh.pulse) { P.pulse = fresh.pulse; LIVE.seen = fresh.pulse; LIVE.pending = false; }
@@ -1316,7 +1368,11 @@
         document.getElementById('jp-modal').innerHTML = '<div class="jp-backdrop" data-act="close-modal"><div class="jp-dialog' + (cls ? ' ' + cls : '') + '" role="dialog" aria-modal="true">' + html + '</div></div>';
         var f = document.querySelector('.jp-dialog input, .jp-dialog select'); if (f) setTimeout(function () { f.focus(); }, 20);
     }
-    function closeModal() { document.getElementById('jp-modal').innerHTML = ''; }
+    function closeModal() {
+        document.getElementById('jp-modal').innerHTML = '';
+        UI.dialogSeq++;
+        if (UI.room) releaseRoom();
+    }
     function val(id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; }
     function area(id) { var e = document.getElementById(id); return e ? e.value : ''; }
     function modalError(msg) { var e = document.querySelector('.jp-dialog .err'); if (e) e.textContent = msg; }
@@ -1361,7 +1417,7 @@
         var el = e.target.closest('[data-act]'); if (!el) return;
         var act = el.dataset.act;
         if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage',
-            'new-admin-pw', 'rm-deadline', 'rm-meeting', 'rm-member', 'refresh'].indexOf(act) < 0) { UI.armed = null; }
+            'new-admin-pw', 'rm-deadline', 'rm-meeting', 'rm-member', 'refresh', 'google-disconnect'].indexOf(act) < 0) { UI.armed = null; }
         var appId = el.dataset.app ? parseInt(el.dataset.app, 10) : null;
 
         switch (act) {
@@ -1585,6 +1641,10 @@
                 var mt = act === 'edit-meeting' ? findMeeting(el.dataset.k) : null;
                 var mtMode = mt ? mt.mode : T.meetingModes[0];
                 var mtMails = mt && mt.emails ? mt.emails.join(', ') : '';
+                // A made-up link only where the CRM has no Google set up.
+                var mtLink = mt && mt.link ? mt.link : (mtMode === 'Google Meet' && !G().configured ? meetLink() : '');
+                if (UI.room) releaseRoom();
+                UI.dialogSeq++;
                 modal('<h3>' + (mt ? 'Edit meeting' : 'Schedule a meeting') + '</h3>' +
                     '<p class="sub">Everyone you list is emailed the joining details when you save.</p>' +
                     '<label for="mt-title">What is it about?</label><input id="mt-title" maxlength="150" value="' + esc(mt ? mt.title : '') + '" placeholder="e.g. Shortlist review with parents">' +
@@ -1595,9 +1655,9 @@
 
                     '<div id="mt-link-wrap"' + (wantsLink(mtMode) ? '' : ' hidden') + '>' +
                     '<label for="mt-link">Join link</label>' +
-                    '<div class="jp-field-row"><input id="mt-link" maxlength="300" value="' + esc(mt && mt.link ? mt.link : (mtMode === 'Google Meet' ? meetLink() : '')) + '" placeholder="https://meet.google.com/…">' +
+                    '<div class="jp-field-row"><input id="mt-link" maxlength="300" value="' + esc(mtLink) + '" placeholder="https://meet.google.com/…">' +
                     '<button type="button" class="jp-btn ghost sm" data-act="copy-meet-link">Copy</button></div>' +
-                    '<p class="jp-hint">Made for this meeting. Paste a different link over it if you already have one.</p></div>' +
+                    '<p class="jp-hint" id="mt-link-hint">' + roomHint(mt) + '</p></div>' +
 
                     '<div id="mt-phone-wrap"' + (wantsPhone(mtMode) ? '' : ' hidden') + '>' +
                     '<label for="mt-phone" id="mt-phone-label">' + phoneLabel(mtMode) + '</label>' +
@@ -1610,6 +1670,15 @@
                     '<label class="jp-check"><input type="checkbox" id="mt-notify" checked> Email them the joining details when I save</label>' +
                     '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
                     '<button class="jp-btn" data-act="save-meeting"' + (mt ? ' data-k="' + esc(mt.key) + '"' : '') + '>' + (mt ? 'Save' : 'Schedule it') + '</button></div>', 'wide');
+                if (wantsLink(mtMode)) makeRoom();
+                return;
+            }
+            case 'google-disconnect': {
+                if (UI.armed !== 'google-off') { UI.armed = 'google-off'; render(); return; }
+                UI.armed = null;
+                api('POST', G().disconnect).then(function (res) {
+                    P.google = res.google; render(); toast('Google disconnected. Rooms already made keep working.');
+                }, function (err) { render(); toast(err.message, true); });
                 return;
             }
             case 'copy-meet-link': {
@@ -1622,6 +1691,7 @@
                 var mTitle = val('mt-title'), mDate = val('mt-date'), mLink = val('mt-link');
                 if (!mTitle) { modalError('Say what the meeting is about.'); return; }
                 if (!mDate) { modalError('Choose a date.'); return; }
+                if (UI.roomBusy) { modalError('Still making the Google Meet room — a moment.'); return; }
                 if (mLink && mLink.indexOf('https://') !== 0) { modalError('A join link has to start with https://.'); return; }
                 var mKey = el.dataset.k;
                 var mMails = splitList(val('mt-emails'));
@@ -1634,11 +1704,14 @@
                     phone: wantsPhone(mMode) ? val('mt-phone') : '',
                     link: wantsLink(mMode) ? (mLink || null) : null,
                     notes: (document.getElementById('mt-notes') || {}).value || '',
-                    notify: checked('mt-notify') && mMails.length > 0
+                    notify: checked('mt-notify') && mMails.length > 0,
+                    room: UI.room ? UI.room.event : null
                 };
                 UI.busy = true; el.disabled = true;
                 api(mKey ? 'PATCH' : 'POST', mKey ? keyUrl(P.endpoints.meeting, mKey) : P.endpoints.meetings, mBody).then(function (res) {
+                    UI.room = null; // the server has it now, used or given back
                     P.meetings = res.meetings; closeModal(); render();
+                    if (res.warning) { toast(res.warning, true); return; }
                     toast((mKey ? 'Meeting saved' : 'Meeting scheduled') + (res.sent ? ' · details emailed to ' + plural(res.sent, 'person', 'people') : ''));
                 }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 return;
@@ -1948,7 +2021,10 @@
             if (linkWrap) linkWrap.hidden = !wantsLink(el.value);
             if (phoneWrap) phoneWrap.hidden = !wantsPhone(el.value);
             if (phoneLbl) phoneLbl.textContent = phoneLabel(el.value);
-            if (wantsLink(el.value) && linkBox && !linkBox.value.trim()) linkBox.value = meetLink();
+            if (wantsLink(el.value) && linkBox && !linkBox.value.trim()) {
+                if (googleReady()) makeRoom();
+                else if (!G().configured) linkBox.value = meetLink();
+            }
             return;
         }
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }
@@ -1993,4 +2069,5 @@
     fromHash();
     render();
     startLive();
+    if (P.google && P.google.notice) toast(P.google.notice.text, !P.google.notice.ok);
 })();

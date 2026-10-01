@@ -251,6 +251,8 @@ class CrmJourneyPlan extends Model
                 'notes' => (string) ($m['notes'] ?? ''),
                 'done' => (bool) ($m['done'] ?? false),
                 'sentAt' => is_string($m['sentAt'] ?? null) ? $m['sentAt'] : null,
+                // A real Meet room made in a counsellor's Google account.
+                'room' => is_array($m['google'] ?? null) && ! empty($m['google']['event']),
             ];
         }
         usort($out, fn (array $a, array $b) => [$a['date'], $a['time']] <=> [$b['date'], $b['time']]);
