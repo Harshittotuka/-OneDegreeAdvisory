@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
+use App\Mail\JourneyMeetingMail;
 use App\Models\CrmJourneyApplication;
 use App\Models\CrmJourneyDocument;
 use App\Models\CrmJourneyPlan;
@@ -17,6 +18,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -75,6 +78,7 @@ class CrmJourneyPlannerController extends Controller
                 'deadline' => route('crm.journey.deadlines.update', [$lead, '__KEY__']),
                 'meetings' => route('crm.journey.meetings.store', $lead),
                 'meeting' => route('crm.journey.meetings.update', [$lead, '__KEY__']),
+                'meetingNotify' => route('crm.journey.meetings.notify', [$lead, '__KEY__']),
                 'back' => $back,
             ] : ['back' => $back], $mode === 'counsellor' ? session('journey_credentials') : null),
         ]);
@@ -716,20 +720,25 @@ class CrmJourneyPlannerController extends Controller
                 'minutes' => (int) ($data['minutes'] ?? 45),
                 'mode' => $data['mode'],
                 'who' => trim((string) ($data['who'] ?? '')),
+                'emails' => CrmJourneyPlan::emailList($data['emails'] ?? null),
+                'phone' => trim((string) ($data['phone'] ?? '')),
                 'link' => trim((string) ($data['link'] ?? '')),
                 'notes' => trim((string) ($data['notes'] ?? '')),
                 'done' => false,
+                'sentAt' => null,
             ];
             $list[] = $meeting;
 
             return $meeting;
         });
 
+        $sent = ($data['notify'] ?? true) ? $this->sendMeeting($plan, $lead, $meeting['key'], false) : 0;
+
         $audit->record($request, $this->user($request), 'journey_meeting_added', "Booked “{$meeting['title']}” with {$lead->name} for {$meeting['date']}", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $meeting['title'],
         ]);
 
-        return $this->meetingResponse($plan, ['meeting' => $meeting]);
+        return $this->meetingResponse($plan, ['meeting' => $meeting, 'sent' => $sent]);
     }
 
     public function updateMeeting(Request $request, CrmLead $lead, string $meeting): JsonResponse
@@ -744,10 +753,13 @@ class CrmJourneyPlannerController extends Controller
                 if (($m['key'] ?? null) !== $meeting) {
                     continue;
                 }
-                foreach (['title', 'date', 'time', 'mode', 'who', 'link', 'notes'] as $f) {
+                foreach (['title', 'date', 'time', 'mode', 'who', 'phone', 'link', 'notes'] as $f) {
                     if (array_key_exists($f, $data)) {
                         $m[$f] = trim((string) $data[$f]);
                     }
+                }
+                if (array_key_exists('emails', $data)) {
+                    $m['emails'] = CrmJourneyPlan::emailList($data['emails']);
                 }
                 if (array_key_exists('minutes', $data)) {
                     $m['minutes'] = (int) $data['minutes'];
@@ -763,7 +775,25 @@ class CrmJourneyPlannerController extends Controller
         });
         abort_unless($found, 404);
 
-        return $this->meetingResponse($plan);
+        $sent = ($data['notify'] ?? false) ? $this->sendMeeting($plan, $lead, $meeting, true) : 0;
+
+        return $this->meetingResponse($plan, ['sent' => $sent]);
+    }
+
+    /**
+     * Send the joining details to the people listed on a meeting. Not a
+     * calendar invitation — just the when, the who and the way in, so nobody
+     * has to go hunting for the link.
+     */
+    public function notifyMeeting(Request $request, CrmLead $lead, string $meeting): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $row = collect($plan->meetingRows())->firstWhere('key', $meeting) ?? abort(404);
+        abort_if($row['emails'] === [], 422);
+
+        $sent = $this->sendMeeting($plan, $lead, $meeting, true);
+
+        return $this->meetingResponse($plan, ['sent' => $sent]);
     }
 
     public function destroyMeeting(Request $request, CrmLead $lead, string $meeting, CrmAuditLogger $audit): JsonResponse
@@ -823,8 +853,12 @@ class CrmJourneyPlannerController extends Controller
             'minutes' => ['sometimes', 'nullable', 'integer', 'min:5', 'max:480'],
             'mode' => [$required, Rule::in(JourneyPlanner::MEETING_MODES)],
             'who' => ['sometimes', 'nullable', 'string', 'max:190'],
+            'emails' => ['sometimes', 'nullable', 'array', 'max:20'],
+            'emails.*' => ['email', 'max:190'],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:40'],
             'link' => ['sometimes', 'nullable', 'url:https', 'max:300'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'notify' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -862,6 +896,48 @@ class CrmJourneyPlannerController extends Controller
     }
 
     /** @param  array<string, mixed>  $extra */
+    /**
+     * Mail one meeting's joining details to everyone listed on it and stamp
+     * when that happened. A mail that bounces off a bad address must not lose
+     * the meeting, so a failure is logged and the count reflects what left.
+     */
+    private function sendMeeting(CrmJourneyPlan $plan, CrmLead $lead, string $key, bool $isUpdate): int
+    {
+        if (! config('crm.email.enabled')) {
+            return 0;
+        }
+        $meeting = collect($plan->fresh()->meetingRows())->firstWhere('key', $key);
+        if (! $meeting || $meeting['emails'] === []) {
+            return 0;
+        }
+
+        $mailer = (string) config('crm.email.mailer');
+        $mail = new JourneyMeetingMail($meeting, $lead->name, $lead->assignee?->name, $isUpdate);
+        $sent = 0;
+        foreach ($meeting['emails'] as $address) {
+            try {
+                Mail::mailer($mailer)->to($address)->send($mail);
+                $sent++;
+            } catch (\Throwable $e) {
+                Log::warning('Journey meeting mail failed', [
+                    'plan' => $plan->id, 'meeting' => $key, 'to' => $address, 'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($sent > 0) {
+            $this->withList($plan, 'meetings', function (array &$list) use ($key): void {
+                foreach ($list as &$m) {
+                    if (($m['key'] ?? null) === $key) {
+                        $m['sentAt'] = now()->toIso8601String();
+                    }
+                }
+            });
+        }
+
+        return $sent;
+    }
+
     private function meetingResponse(CrmJourneyPlan $plan, array $extra = []): JsonResponse
     {
         return response()->json(['ok' => true, 'meetings' => $plan->fresh()->meetingRows()] + $extra);

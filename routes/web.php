@@ -277,6 +277,7 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::delete('deadlines/{deadline}', 'destroyDeadline')->where('deadline', 'd-[a-z0-9]{10}')->name('deadlines.destroy');
             Route::post('meetings', 'storeMeeting')->name('meetings.store');
             Route::patch('meetings/{meeting}', 'updateMeeting')->where('meeting', 'm-[a-z0-9]{10}')->name('meetings.update');
+            Route::post('meetings/{meeting}/notify', 'notifyMeeting')->where('meeting', 'm-[a-z0-9]{10}')->middleware('throttle:20,1')->name('meetings.notify');
             Route::delete('meetings/{meeting}', 'destroyMeeting')->where('meeting', 'm-[a-z0-9]{10}')->name('meetings.destroy');
             Route::post('documents', 'storeDocument')->middleware('throttle:30,1')->name('documents.store');
             Route::patch('documents/{document}', 'updateDocument')->whereNumber('document')->name('documents.update');

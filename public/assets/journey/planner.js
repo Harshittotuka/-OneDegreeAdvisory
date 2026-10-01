@@ -52,6 +52,13 @@
         return { cls: 'wait', label: 'In ' + Math.round(days / 30) + ' months' };
     }
     function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+    /* A field holding several things is stored as one string and read back as
+       a list, so "Transcripts, essays, 2 LORs" reads as three items rather
+       than one run-on line. Commas, semicolons and new lines all separate. */
+    function splitList(value) {
+        return String(value == null ? '' : value).split(/[,;\n]+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    }
+    function tagList(list) { return list.map(function (t) { return '<span class="jp-tag">' + esc(t) + '</span>'; }).join(''); }
     /* Progress is counted, never given as a percentage: the planner reports
        how many steps are done out of how many apply, and leans on dates for
        the rest. The bars stay as a picture of the same two numbers. */
@@ -587,29 +594,25 @@
      */
     function requirementsCard(a) {
         var days = daysUntil(a.deadline), d = a.deadline ? due(days) : null;
+        var tests = splitList(a.tests), docs = splitList(a.docs);
         var head = '<div class="jp-reqs-h"><h4>What this university asks for</h4>' +
-            (d ? '<span class="pill ' + d.cls + '">Closes ' + esc(fmt(a.deadline, { day: 'numeric', month: 'short', year: 'numeric' })) + ' · ' + d.label + '</span>' : '') + '</div>';
-        if (!isC()) {
-            var items = [
-                ['Tests', a.tests], ['Documents', a.docs],
-                ['Application closes', a.deadline ? fmt(a.deadline) : ''], ['Entry requirements', a.requirements]
-            ].filter(function (x) { return x[1]; });
-            return '<div class="jp-reqs">' + head +
-                (items.length ? '<dl class="jp-reqs-read">' + items.map(function (x) { return '<div><dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>'
-                    : '<p class="muted">Your counsellor hasn\'t written this university\'s requirements down yet.</p>') + '</div>';
-        }
-        function field(name, label, value, placeholder, type) {
-            return '<div><label for="rq-' + name + '-' + a.id + '">' + label + '</label>' +
-                (type === 'area'
-                    ? '<textarea id="rq-' + name + '-' + a.id + '" maxlength="2000" rows="3" data-uf="' + name + '" data-u="' + a.id + '" placeholder="' + placeholder + '">' + esc(value) + '</textarea>'
-                    : '<input id="rq-' + name + '-' + a.id + '" type="' + (type || 'text') + '" maxlength="300" data-uf="' + name + '" data-u="' + a.id + '" value="' + esc(value) + '" placeholder="' + placeholder + '">') + '</div>';
-        }
-        return '<div class="jp-reqs">' + head + '<div class="jp-reqs-grid">' +
-            field('tests_required', 'Tests required', a.tests, 'e.g. IELTS 7.0, SAT 1400') +
-            field('deadline', 'Application closes', a.deadline || '', '', 'date') +
-            field('documents_required', 'Documents required', a.docs, 'e.g. Transcripts, SOP, 2 LORs, CV') +
-            field('requirements', 'Entry requirements and anything else', a.requirements, 'Grades, prerequisites, portfolio rules, interview format…', 'area') +
-            '</div><p class="jp-hint">Saved as you leave each box. The closing date also shows in Deadlines and on the Calendar.</p></div>';
+            (d ? '<span class="pill ' + d.cls + '">Closes ' + esc(fmt(a.deadline, { day: 'numeric', month: 'short', year: 'numeric' })) + ' · ' + d.label + '</span>' : '') +
+            (isC() ? '<button class="jp-btn ghost sm" data-act="edit-reqs" data-u="' + a.id + '">' + ICO.pen + ' Edit</button>' : '') + '</div>';
+
+        var rows = '';
+        if (tests.length) rows += reqRow('Tests', tagList(tests));
+        if (docs.length) rows += reqRow('Documents', tagList(docs));
+        if (!d && a.deadline) rows += reqRow('Closes', '<span class="jp-tag">' + esc(fmt(a.deadline)) + '</span>');
+        if (a.requirements) rows += reqRow('Entry requirements', '<p class="jp-reqs-text">' + esc(a.requirements) + '</p>');
+
+        return '<div class="jp-reqs">' + head +
+            (rows || '<p class="muted">' + (isC()
+                ? 'Nothing written down yet. Choose Edit to record the tests, the documents and the closing date.'
+                : 'Your counsellor hasn\'t written this university\'s requirements down yet.') + '</p>') + '</div>';
+    }
+
+    function reqRow(label, body) {
+        return '<div class="jp-reqs-row"><span class="lbl">' + esc(label) + '</span><div class="val">' + body + '</div></div>';
     }
 
     /* ---- deadlines ---- */
@@ -664,14 +667,51 @@
     function calendarEvents() {
         var out = [];
         P.meetings.forEach(function (m) {
-            out.push({ date: m.date, type: 'meeting', label: m.title, sub: [m.time, m.mode, m.who].filter(Boolean).join(' · ') });
+            out.push({
+                date: m.date, type: 'meeting', label: m.title, done: m.done, key: m.key, link: m.link,
+                sub: [m.time, m.mode, m.who].filter(Boolean).join(' · '),
+            });
         });
-        uniDeadlines().forEach(function (d) { out.push({ date: d.date, type: 'uni', label: d.what, sub: d.who }); });
-        ourDeadlines().forEach(function (d) { out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree' }); });
+        uniDeadlines().forEach(function (d) {
+            out.push({ date: d.date, type: 'uni', label: d.what, sub: d.who, key: d.key, appId: d.appId });
+        });
+        ourDeadlines().forEach(function (d) {
+            out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree', key: d.key });
+        });
         openItems().forEach(function (i) {
-            if (i.a.target) out.push({ date: i.a.target, type: 'task', label: i.name, sub: i.where + (isStudent() ? '' : ' · ' + i.a.owner) });
+            if (!i.a.target) return;
+            out.push({
+                date: i.a.target, type: 'task', label: i.name, done: closed(i.a.status),
+                sub: i.where + (isStudent() ? '' : ' · ' + i.a.owner),
+                scope: i.scope, appId: i.appId, itemKey: i.key,
+            });
         });
         return out;
+    }
+
+    /*
+     * What colour a tile entry takes. Not the kind of thing it is — that is
+     * the dot in front of it — but where it stands: done, late, today, this
+     * week, or further off. One glance at the month says what is slipping.
+     */
+    function eventStatus(e) {
+        if (e.done) return 'done';
+        var d = daysUntil(e.date);
+        if (d == null) return 'later';
+        if (d < 0) return 'late';
+        if (d === 0) return 'today';
+        if (d <= 7) return 'soon';
+        return 'later';
+    }
+    var STATUS_NAME = { done: 'Done', late: 'Late', today: 'Today', soon: 'This week', later: 'Later' };
+
+    /** The data-act attributes that open whatever a calendar entry stands for. */
+    function eventAction(e) {
+        if (e.type === 'meeting') return ' data-act="cal-open-meeting" data-k="' + esc(e.key) + '"';
+        if (e.type === 'task') return ' data-act="jump-item" data-scope="' + e.scope + '" data-app="' + (e.appId || '') + '" data-key="' + esc(e.itemKey) + '"';
+        if (e.type === 'uni' && e.appId) return ' data-act="open-uni" data-u="' + e.appId + '"';
+        if (isC()) return ' data-act="edit-deadline" data-k="' + esc(e.key) + '"';
+        return '';
     }
 
     function renderCalendar() {
@@ -692,25 +732,38 @@
             else if (nth > daysInMonth) { cm = m + 1; cd = nth - daysInMonth; other = true; if (cm > 11) { cm = 0; cy++; } }
             var iso = cy + '-' + pad2(cm + 1) + '-' + pad2(cd);
             var list = byDay[iso] || [];
-            cells += '<button class="jp-day' + (other ? ' other' : '') + (iso === P.today ? ' today' : '') + (iso === UI.cal.sel ? ' sel' : '') + '" data-act="cal-day" data-d="' + iso + '">' +
+            // The day is the click target; each entry inside it is its own,
+            // so clicking an entry opens that thing and clicking the space
+            // around it opens the day.
+            cells += '<div class="jp-day' + (other ? ' other' : '') + (iso === P.today ? ' today' : '') + (iso === UI.cal.sel ? ' sel' : '') + '"' +
+                ' data-act="cal-day" data-d="' + iso + '" role="button" tabindex="0"' +
+                ' aria-label="' + esc(fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' })) + ', ' + plural(list.length, 'entry', 'entries') + '">' +
                 '<span class="dn num">' + cd + '</span>' +
-                list.slice(0, 3).map(function (e) { return '<span class="ev ' + e.type + '">' + esc(e.label) + '</span>'; }).join('') +
-                (list.length > 3 ? '<span class="more num">+' + (list.length - 3) + ' more</span>' : '') + '</button>';
+                list.slice(0, 3).map(function (e) {
+                    return '<button class="ev st-' + eventStatus(e) + '"' + eventAction(e) + ' title="' + esc(e.label + (e.sub ? ' — ' + e.sub : '')) + '">' +
+                        '<i class="dot ' + e.type + '"></i>' + esc(e.label) + '</button>';
+                }).join('') +
+                (list.length > 3 ? '<span class="more num">+' + (list.length - 3) + ' more</span>' : '') + '</div>';
         }
 
         var picked = UI.cal.sel ? (byDay[UI.cal.sel] || []) : null;
         var detail = UI.cal.sel
-            ? '<div class="jp-day-detail"><h3>' + esc(fmt(UI.cal.sel, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</h3>' +
-                (picked.length ? picked.map(function (e) {
-                    return '<div class="jp-day-row"><i class="dot ' + e.type + '"></i><div><b>' + esc(e.label) + '</b><small>' + esc(EVENT_NAME[e.type] + (e.sub ? ' · ' + e.sub : '')) + '</small></div></div>';
-                }).join('') : '<p class="muted">Nothing on this day.</p>') + '</div>'
-            : '';
+            ? '<div class="jp-day-detail"><div class="jp-day-detail-h"><h3>' + esc(fmt(UI.cal.sel, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</h3>' +
+                (isC() ? '<button class="jp-btn sm" data-act="add-meeting" data-d="' + UI.cal.sel + '">' + ICO.plus + ' Meeting on this day</button>' +
+                    '<button class="jp-btn ghost sm" data-act="add-deadline" data-v="own" data-d="' + UI.cal.sel + '">' + ICO.plus + ' Deadline</button>' : '') + '</div>' +
+                (picked.length ? picked.map(dayRow).join('') : '<p class="muted">Nothing on this day.' + (isC() ? ' Add a meeting or a deadline above.' : '') + '</p>') + '</div>'
+            : '<p class="jp-day-hint muted">Choose a day to see what is on it' + (isC() ? ', or to add a meeting to it' : '') + '.</p>';
 
-        var legend = '<div class="jp-legend">' + ['meeting', 'uni', 'own', 'task'].map(function (k) {
-            return '<span><i class="dot ' + k + '"></i>' + EVENT_NAME[k] + '</span>';
-        }).join('') + '</div>';
+        var legend = '<div class="jp-legend"><span class="lbl">Colour</span>' +
+            ['late', 'today', 'soon', 'later', 'done'].map(function (k) {
+                return '<span><i class="chip st-' + k + '"></i>' + STATUS_NAME[k] + '</span>';
+            }).join('') + '</div>' +
+            '<div class="jp-legend"><span class="lbl">Kind</span>' +
+            ['meeting', 'uni', 'own', 'task'].map(function (k) {
+                return '<span><i class="dot ' + k + '"></i>' + EVENT_NAME[k] + '</span>';
+            }).join('') + '</div>';
 
-        var month = '<section class="jp-card"><div class="jp-card-h"><div><h2>' + MONTHS[m] + ' ' + y + '</h2><p>Meetings, deadlines and task dates together.</p></div>' +
+        var month = '<section class="jp-card"><div class="jp-card-h"><div><h2>' + MONTHS[m] + ' ' + y + '</h2><p>Meetings, deadlines and task dates together. Choose an entry to open it.</p></div>' +
             '<div class="jp-monthnav"><button class="jp-btn ghost sm" data-act="cal-step" data-v="-1">Previous</button>' +
             '<button class="jp-btn ghost sm" data-act="cal-today">Today</button>' +
             '<button class="jp-btn ghost sm" data-act="cal-step" data-v="1">Next</button></div></div>' +
@@ -719,28 +772,57 @@
         return month + renderMeetings();
     }
 
+    /** One entry in the chosen day's panel, with whatever can be done to it. */
+    function dayRow(e) {
+        var meeting = e.type === 'meeting' ? findMeeting(e.key) : null;
+        var acts = '';
+        if (meeting) {
+            if (meeting.link && !meeting.done) acts += '<a class="jp-btn sm" href="' + esc(meeting.link) + '" target="_blank" rel="noopener">Join</a>';
+            if (isC()) {
+                acts += '<button class="jp-btn ghost sm" data-act="edit-meeting" data-k="' + esc(meeting.key) + '">Edit</button>' +
+                    '<button class="jp-btn ghost sm" data-act="meeting-done" data-k="' + esc(meeting.key) + '">' + (meeting.done ? 'Reopen' : 'Mark done') + '</button>';
+            }
+        } else {
+            var open = eventAction(e);
+            if (open) acts += '<button class="jp-btn ghost sm"' + open + '>Open</button>';
+        }
+        return '<div class="jp-day-row st-' + eventStatus(e) + '"><i class="dot ' + e.type + '"></i>' +
+            '<div><b>' + esc(e.label) + '</b><small>' + esc(EVENT_NAME[e.type] + (e.sub ? ' · ' + e.sub : '')) + '</small></div>' +
+            '<span class="pill ' + (eventStatus(e) === 'late' ? 'danger' : eventStatus(e) === 'done' ? 'good' : eventStatus(e) === 'later' ? 'wait' : 'amber') + '">' + STATUS_NAME[eventStatus(e)] + '</span>' +
+            (acts ? '<span class="a">' + acts + '</span>' : '<span class="a"></span>') + '</div>';
+    }
+
     function renderMeetings() {
         var upcoming = P.meetings.filter(function (m) { return !m.done; });
         var past = P.meetings.filter(function (m) { return m.done; }).reverse();
         var add = isC() ? '<button class="jp-btn" data-act="add-meeting">' + ICO.plus + ' Schedule a meeting</button>' : '';
         var body = (upcoming.length ? upcoming.map(meetingRow).join('') : '<div class="jp-empty"><b>Nothing scheduled</b>' + (isC() ? 'Book the next call with this student.' : 'Your counsellor books calls here.') + '</div>') +
             (past.length ? '<div class="jp-meet-past">Past</div>' + past.map(meetingRow).join('') : '');
-        return '<section class="jp-card flush"><div class="jp-card-h pad"><div><h2>Meetings</h2><p>' +
+        return '<section class="jp-card flush" id="jp-meetings"><div class="jp-card-h pad"><div><h2>Meetings</h2><p>' +
             (upcoming.length ? plural(upcoming.length, 'meeting', 'meetings') + ' coming up.' : 'Calls and meetings on this plan.') +
-            (isC() ? ' A Google Meet room is made in Google Calendar; paste its join link onto the meeting.' : '') + '</p></div>' + add + '</div>' + body + '</section>';
+            (isC() ? ' Everyone listed on a meeting is emailed its joining details.' : '') + '</p></div>' + add + '</div>' + body + '</section>';
     }
 
     function meetingRow(m) {
         var days = daysUntil(m.date), armed = UI.armed === 'rm-meeting-' + m.key;
         var late = !m.done && days != null && days < 0;
         var when = m.done ? 'Done' : (days === 0 ? 'Today' : late ? Math.abs(days) + (Math.abs(days) === 1 ? ' day ago' : ' days ago') : 'In ' + plural(days, 'day', 'days'));
+        var how = m.mode === 'Phone call' && m.phone
+            ? '<a class="jp-meet-join" href="tel:' + esc(m.phone.replace(/[^0-9+]/g, '')) + '">' + esc(m.phone) + '</a>'
+            : (m.link ? '<a class="jp-meet-join" href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link.replace(/^https:\/\//, '')) + '</a>'
+                : (isC() ? '<span class="jp-meet-nolink">No link yet</span>' : ''));
+        var invited = m.emails && m.emails.length
+            ? '<span class="jp-meet-sent' + (m.sentAt ? ' ok' : '') + '">' + (m.sentAt ? 'Link sent ' + esc(when2(m.sentAt)) : 'Not sent yet') + ' · ' + plural(m.emails.length, 'address', 'addresses') + '</span>'
+            : (isC() ? '<span class="jp-meet-sent">Nobody to email</span>' : '');
+
         return '<div class="jp-meet' + (m.done ? ' done' : '') + '">' + calBox(m.date, late) +
             '<div class="w"><span class="t">' + esc(m.title) + '</span><span class="s">' + esc([m.time, m.minutes + ' min', m.mode, m.who].filter(Boolean).join(' · ')) + '</span>' +
+            (how || invited ? '<span class="meta">' + how + invited + '</span>' : '') +
             (m.notes ? '<span class="notes">' + esc(m.notes) + '</span>' : '') + '</div>' +
             '<span class="pill ' + (m.done ? 'good' : late ? 'danger' : days <= 3 ? 'amber' : 'wait') + '">' + when + '</span>' +
             '<span class="a">' +
             (m.link && !m.done ? '<a class="jp-btn sm" href="' + esc(m.link) + '" target="_blank" rel="noopener">Join</a>' : '') +
-            (isC() ? '<a class="jp-btn ghost sm" href="' + esc(gcalUrl(m)) + '" target="_blank" rel="noopener">Google Calendar</a>' +
+            (isC() ? (m.emails && m.emails.length ? '<button class="jp-btn ghost sm" data-act="send-meeting" data-k="' + esc(m.key) + '">' + (m.sentAt ? 'Send again' : 'Send the link') + '</button>' : '') +
                 '<button class="jp-btn ghost sm" data-act="edit-meeting" data-k="' + esc(m.key) + '">Edit</button>' +
                 '<button class="jp-btn ghost sm" data-act="meeting-done" data-k="' + esc(m.key) + '">' + (m.done ? 'Reopen' : 'Mark done') + '</button>' +
                 '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-meeting" data-k="' + esc(m.key) + '">' + (armed ? 'Click again' : 'Cancel') + '</button>' : '') +
@@ -775,7 +857,10 @@
         var add = isC() ? '<button class="jp-btn" data-act="add-member">' + ICO.plus + ' Add someone</button>' : '';
         var cards = P.team.map(function (mb) {
             var armed = UI.armed === 'rm-member-' + mb.key;
-            return '<div class="jp-member' + (mb.external ? ' ext' : '') + '"><span class="rl">' + esc(mb.role) + '</span>' +
+            return '<div class="jp-member' + (mb.external ? ' ext' : '') + '">' +
+                (isC()
+                    ? '<select class="jp-role-select" data-mf="role" data-k="' + esc(mb.key) + '" aria-label="Designation for ' + esc(mb.name) + '">' + roleOptions(mb.role) + '</select>'
+                    : '<span class="rl">' + esc(mb.role) + '</span>') +
                 '<span class="nm">' + esc(mb.name) + '</span>' +
                 (mb.contact ? '<span class="ct">' + esc(mb.contact) + '</span>' : '') +
                 (mb.external ? '<span class="ex">External</span>' : '') +
@@ -783,7 +868,7 @@
                     '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-member" data-k="' + esc(mb.key) + '">' + (armed ? 'Click again' : 'Remove') + '</button></span>' : '') + '</div>';
         }).join('');
         return '<section class="jp-card"><div class="jp-card-h"><div><h2>' + (isStudent() ? 'Your team' : 'Team on this file') + '</h2><p>' +
-            (isStudent() ? 'The people working on your journey with you.' : 'Counsellor, specialist or mentor, supervisor, content writer, external experts — and any designation of your own.') +
+            (isStudent() ? 'The people working on your journey with you.' : 'Counsellor, specialist or mentor, supervisor, content writer, external experts. Change a designation from the dropdown on the card, or pick “+ Add a designation” to make a new one.') +
             '</p></div>' + add + '</div>' +
             (cards ? '<div class="jp-team">' + cards + '</div>'
                 : '<div class="jp-empty"><b>Nobody named yet</b>' + (isC() ? 'Add the people working on this student.' : 'Your counsellor names the team here.') + '</div>') + '</section>';
@@ -1009,6 +1094,7 @@
     }
     function closeModal() { document.getElementById('jp-modal').innerHTML = ''; }
     function val(id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; }
+    function area(id) { var e = document.getElementById(id); return e ? e.value : ''; }
     function modalError(msg) { var e = document.querySelector('.jp-dialog .err'); if (e) e.textContent = msg; }
     function uniForm(a) {
         a = a || { university: '', country: '', program: '', fit: '' };
@@ -1023,6 +1109,17 @@
     function findMeeting(key) { return P.meetings.find(function (m) { return m.key === key; }); }
     function findMember(key) { return P.team.find(function (m) { return m.key === key; }); }
     function keyUrl(template, key) { return template.replace('__KEY__', key); }
+    /*
+     * The designation dropdown. One control, not two: ODA's list plus the ones
+     * this plan has added, and a last entry for typing a new one. Wherever it
+     * appears the current designation is the visible value.
+     */
+    function roleOptions(selected) {
+        return (T.teamRoles || []).map(function (r) {
+            return '<option' + (r === selected ? ' selected' : '') + '>' + esc(r) + '</option>';
+        }).join('') + '<option value="__new">+ Add a designation…</option>';
+    }
+
     function options(list, selected) {
         return list.map(function (o) { return '<option' + (o === selected ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
     }
@@ -1188,6 +1285,34 @@
         if (!isC()) return; /* everything below is the counsellor's */
 
         switch (act) {
+            case 'edit-reqs': {
+                var ra = P.apps.find(function (x) { return x.id === parseInt(el.dataset.u, 10); });
+                if (!ra) return;
+                modal('<h3>What ' + esc(ra.university) + ' asks for</h3>' +
+                    '<p class="sub">One per line, or separated by commas. They are shown as separate items on the university, not as one long line.</p>' +
+                    '<label for="rq-tests">Tests required</label><textarea id="rq-tests" rows="3" maxlength="190" placeholder="IELTS 7.0&#10;SAT 1400">' + esc(splitList(ra.tests).join('\n')) + '</textarea>' +
+                    '<label for="rq-docs">Documents required</label><textarea id="rq-docs" rows="4" maxlength="300" placeholder="Transcripts&#10;Essays&#10;2 LORs&#10;CV">' + esc(splitList(ra.docs).join('\n')) + '</textarea>' +
+                    '<label for="rq-deadline">Application closes</label><input id="rq-deadline" type="date" value="' + esc(ra.deadline || '') + '">' +
+                    '<label for="rq-notes">Entry requirements and anything else</label><textarea id="rq-notes" rows="4" maxlength="2000" placeholder="Grades, prerequisites, portfolio rules, interview format…">' + esc(ra.requirements || '') + '</textarea>' +
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
+                    '<button class="jp-btn" data-act="save-reqs" data-u="' + ra.id + '">Save</button></div>');
+                return;
+            }
+            case 'save-reqs': {
+                if (UI.busy) return;
+                var rqId = parseInt(el.dataset.u, 10);
+                var rqBody = {
+                    tests_required: splitList(area('rq-tests')).join(', '),
+                    documents_required: splitList(area('rq-docs')).join(', '),
+                    requirements: area('rq-notes').trim(),
+                    deadline: val('rq-deadline') || null
+                };
+                UI.busy = true; el.disabled = true;
+                api('PATCH', appUrl(rqId), rqBody).then(function (res) {
+                    replaceApp(res.application); closeModal(); render(); toast('Saved');
+                }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
             case 'add-deadline': case 'edit-deadline': {
                 var dl = act === 'edit-deadline' ? findDeadline(el.dataset.k) : null;
                 var dlKind = dl ? dl.kind : el.dataset.v;
@@ -1196,7 +1321,7 @@
                         : 'A date ODA set for itself, usually ahead of the university\'s own.') + '</p>' +
                     '<label for="dl-what">What is it for?</label><input id="dl-what" maxlength="150" value="' + esc(dl ? dl.what : '') + '" placeholder="' + (dlKind === 'uni' ? 'e.g. Early round closes' : 'e.g. SOP first draft from the student') + '">' +
                     '<div class="two"><div><label for="dl-who">Who</label><input id="dl-who" maxlength="120" value="' + esc(dl ? dl.who : '') + '" placeholder="' + (dlKind === 'uni' ? 'University' : 'Who owns it') + '"></div>' +
-                    '<div><label for="dl-date">Date</label><input id="dl-date" type="date" value="' + esc(dl ? dl.date : '') + '"></div></div>' +
+                    '<div><label for="dl-date">Date</label><input id="dl-date" type="date" value="' + esc(dl ? dl.date : (el.dataset.d || '')) + '"></div></div>' +
                     '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
                     '<button class="jp-btn" data-act="save-deadline" data-v="' + dlKind + '"' + (dl ? ' data-k="' + esc(dl.key) + '"' : '') + '>' + (dl ? 'Save' : 'Add date') + '</button></div>');
                 return;
@@ -1225,18 +1350,47 @@
             }
             case 'add-meeting': case 'edit-meeting': {
                 var mt = act === 'edit-meeting' ? findMeeting(el.dataset.k) : null;
+                var mtMode = mt ? mt.mode : T.meetingModes[0];
+                var mtMails = mt && mt.emails ? mt.emails.join(', ') : '';
                 modal('<h3>' + (mt ? 'Edit meeting' : 'Schedule a meeting') + '</h3>' +
-                    '<p class="sub">Google Meet rooms are made in Google Calendar. Save this, open it in Google Calendar from the list, then paste the join link back in here.</p>' +
+                    '<p class="sub">Everyone you list is emailed the joining details when you save.</p>' +
                     '<label for="mt-title">What is it about?</label><input id="mt-title" maxlength="150" value="' + esc(mt ? mt.title : '') + '" placeholder="e.g. Shortlist review with parents">' +
-                    '<div class="two"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : '') + '"></div>' +
+                    '<div class="two"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : (el.dataset.d || '')) + '"></div>' +
                     '<div><label for="mt-time">Time</label><input id="mt-time" type="time" value="' + esc(mt ? mt.time : '16:00') + '"></div></div>' +
-                    '<div class="two"><div><label for="mt-mode">How</label><select id="mt-mode">' + options(T.meetingModes, mt ? mt.mode : T.meetingModes[0]) + '</select></div>' +
+                    '<div class="two"><div><label for="mt-mode">How</label><select id="mt-mode">' + options(T.meetingModes, mtMode) + '</select></div>' +
                     '<div><label for="mt-mins">Minutes</label><input id="mt-mins" type="number" min="5" max="480" step="5" value="' + (mt ? mt.minutes : 45) + '"></div></div>' +
+
+                    '<div id="mt-link-wrap"' + (mtMode === 'Phone call' ? ' hidden' : '') + '>' +
+                    '<label for="mt-link">Join link</label><input id="mt-link" maxlength="300" value="' + esc(mt ? mt.link : '') + '" placeholder="https://meet.google.com/…">' +
+                    '<div class="jp-inline-acts"><button type="button" class="jp-btn ghost sm" data-act="new-meet-room">Create a Meet room</button>' +
+                    '<button type="button" class="jp-btn ghost sm" data-act="paste-link">Paste it back</button></div>' +
+                    '<p class="jp-hint">“Create a Meet room” opens Google and makes a real room on the spot. Copy the address it lands on and choose “Paste it back”.</p></div>' +
+
+                    '<div id="mt-phone-wrap"' + (mtMode === 'Phone call' ? '' : ' hidden') + '>' +
+                    '<label for="mt-phone">Phone number</label><input id="mt-phone" type="tel" maxlength="40" value="' + esc(mt ? mt.phone : '') + '" placeholder="e.g. +91 98290 00000"></div>' +
+
                     '<label for="mt-who">Who is coming</label><input id="mt-who" maxlength="190" value="' + esc(mt ? mt.who : '') + '" placeholder="e.g. ' + esc(P.student.firstName) + ', parents, you">' +
-                    '<label for="mt-link">Join link <span style="font-weight:500">(optional)</span></label><input id="mt-link" maxlength="300" value="' + esc(mt ? mt.link : '') + '" placeholder="https://meet.google.com/…">' +
+                    '<label for="mt-emails">Email the details to</label><input id="mt-emails" maxlength="600" value="' + esc(mtMails) + '" placeholder="aarav@example.com, parent@example.com">' +
+                    '<p class="jp-hint">Separate addresses with commas. Leave it empty to send nothing.</p>' +
                     '<label for="mt-notes">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="mt-notes" maxlength="1000" rows="3" placeholder="Where to meet, what to bring, what was agreed…">' + esc(mt ? mt.notes : '') + '</textarea>' +
+                    '<label class="jp-check"><input type="checkbox" id="mt-notify" checked> Email them the joining details when I save</label>' +
                     '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
                     '<button class="jp-btn" data-act="save-meeting"' + (mt ? ' data-k="' + esc(mt.key) + '"' : '') + '>' + (mt ? 'Save' : 'Schedule it') + '</button></div>');
+                return;
+            }
+            case 'new-meet-room':
+                // Google makes the room; a signed-in counsellor lands straight on it.
+                window.open('https://meet.google.com/new', '_blank', 'noopener');
+                toast('Copy the meet.google.com address Google lands on, then choose “Paste it back”.');
+                return;
+            case 'paste-link': {
+                var into = document.getElementById('mt-link');
+                if (!into || !navigator.clipboard || !navigator.clipboard.readText) { modalError('Paste the link into the box yourself — this browser won\'t hand it over.'); return; }
+                navigator.clipboard.readText().then(function (text) {
+                    var link = String(text || '').trim();
+                    if (link.indexOf('https://') !== 0) { modalError('What is on the clipboard is not an https link.'); return; }
+                    into.value = link; modalError('');
+                }, function () { modalError('Couldn\'t read the clipboard. Paste it into the box yourself.'); });
                 return;
             }
             case 'save-meeting': {
@@ -1246,15 +1400,42 @@
                 if (!mDate) { modalError('Choose a date.'); return; }
                 if (mLink && mLink.indexOf('https://') !== 0) { modalError('A join link has to start with https://.'); return; }
                 var mKey = el.dataset.k;
+                var mMails = splitList(val('mt-emails'));
+                var mBad = mMails.filter(function (e) { return !/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(e); });
+                if (mBad.length) { modalError('This does not look like an email address: ' + mBad[0]); return; }
                 var mBody = {
                     title: mTitle, date: mDate, time: val('mt-time') || null, minutes: parseInt(val('mt-mins'), 10) || 45,
-                    mode: val('mt-mode'), who: val('mt-who'), link: mLink || null,
-                    notes: (document.getElementById('mt-notes') || {}).value || ''
+                    mode: val('mt-mode'), who: val('mt-who'), emails: mMails,
+                    phone: val('mt-mode') === 'Phone call' ? val('mt-phone') : '',
+                    link: val('mt-mode') === 'Phone call' ? null : (mLink || null),
+                    notes: (document.getElementById('mt-notes') || {}).value || '',
+                    notify: checked('mt-notify') && mMails.length > 0
                 };
                 UI.busy = true; el.disabled = true;
                 api(mKey ? 'PATCH' : 'POST', mKey ? keyUrl(P.endpoints.meeting, mKey) : P.endpoints.meetings, mBody).then(function (res) {
-                    P.meetings = res.meetings; closeModal(); render(); toast(mKey ? 'Meeting saved' : 'Meeting scheduled');
+                    P.meetings = res.meetings; closeModal(); render();
+                    toast((mKey ? 'Meeting saved' : 'Meeting scheduled') + (res.sent ? ' · details emailed to ' + plural(res.sent, 'person', 'people') : ''));
                 }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
+            case 'send-meeting': {
+                var sm = findMeeting(el.dataset.k);
+                if (!sm) return;
+                el.disabled = true;
+                api('POST', keyUrl(P.endpoints.meetingNotify, sm.key)).then(function (res) {
+                    P.meetings = res.meetings; render();
+                    toast(res.sent ? 'Sent to ' + plural(res.sent, 'person', 'people') : 'Nothing went out — check the addresses.', !res.sent);
+                }, function (err) { render(); toast(err.message, true); });
+                return;
+            }
+            case 'cal-open-meeting': {
+                // A meeting opened from the month: the day it sits on is
+                // selected, and the meetings list below is scrolled to.
+                var cm = findMeeting(el.dataset.k);
+                if (!cm) return;
+                UI.cal.sel = cm.date;
+                render();
+                scrollToEl('jp-meetings');
                 return;
             }
             case 'meeting-done': {
@@ -1278,8 +1459,9 @@
                 var mb = act === 'edit-member' ? findMember(el.dataset.k) : null;
                 modal('<h3>' + (mb ? 'Edit this person' : 'Add someone to the file') + '</h3>' +
                     '<p class="sub">' + esc(P.student.firstName) + ' sees the name and the designation, not the contact details.</p>' +
-                    '<label for="mb-role">Designation</label><select id="mb-role">' + options(T.teamRoles, mb ? mb.role : T.teamRoles[0]) + '</select>' +
-                    '<label for="mb-newrole">Or add a designation of your own</label><input id="mb-newrole" maxlength="60" placeholder="e.g. Portfolio reviewer">' +
+                    '<label for="mb-role">Designation</label><select id="mb-role">' + roleOptions(mb ? mb.role : (T.teamRoles[0] || '')) + '</select>' +
+                    '<div id="mb-newrole-wrap" hidden><label for="mb-newrole">Name the new designation</label>' +
+                    '<input id="mb-newrole" maxlength="60" placeholder="e.g. Portfolio reviewer"></div>' +
                     '<label for="mb-name">Name</label><input id="mb-name" maxlength="120" value="' + esc(mb ? mb.name : '') + '" placeholder="e.g. Priya Sharma">' +
                     '<label for="mb-contact">Email or note <span style="font-weight:500">(optional)</span></label><input id="mb-contact" maxlength="190" value="' + esc(mb ? mb.contact : '') + '" placeholder="e.g. priya@onedegreeadvisory.com">' +
                     '<label class="jp-check"><input type="checkbox" id="mb-ext"' + (mb && mb.external ? ' checked' : '') + '> Outside ODA (an alum, a partner, a guest expert)</label>' +
@@ -1292,10 +1474,22 @@
                 var mbName = val('mb-name');
                 if (!mbName) { modalError('Give the person a name.'); return; }
                 var mbKey = el.dataset.k;
-                var mbBody = { role: val('mb-newrole') || val('mb-role'), name: mbName, contact: val('mb-contact'), external: checked('mb-ext') };
+                var mbRole = val('mb-role') === '__new' ? val('mb-newrole') : val('mb-role');
+                if (!mbRole) { modalError('Name the new designation, or pick one from the list.'); return; }
+                var mbBody = { role: mbRole, name: mbName, contact: val('mb-contact'), external: checked('mb-ext') };
                 UI.busy = true; el.disabled = true;
                 api(mbKey ? 'PATCH' : 'POST', mbKey ? keyUrl(P.endpoints.member, mbKey) : P.endpoints.team, mbBody).then(function (res) {
                     P.team = res.team; T.teamRoles = res.roles; closeModal(); render(); toast(mbKey ? 'Saved' : mbName + ' added');
+                }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
+            case 'save-role': {
+                if (UI.busy) return;
+                var nrName = val('nr-name');
+                if (!nrName) { modalError('Give the designation a name.'); return; }
+                UI.busy = true; el.disabled = true;
+                api('PATCH', keyUrl(P.endpoints.member, el.dataset.k), { role: nrName }).then(function (res) {
+                    P.team = res.team; T.teamRoles = res.roles; closeModal(); render(); toast('“' + nrName + '” added');
                 }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 return;
             }
@@ -1495,6 +1689,39 @@
 
     document.addEventListener('change', function (e) {
         var el = e.target;
+        // The designation dropdown on a member card saves as soon as it changes;
+        // choosing the last entry asks for the new designation first.
+        if (el.dataset.mf === 'role' && isC()) {
+            var mKey = el.dataset.k, member = findMember(mKey);
+            if (el.value === '__new') {
+                el.value = member ? member.role : '';
+                modal('<h3>Add a designation</h3><p class="sub">It joins the list for this student from now on.</p>' +
+                    '<label for="nr-name">Designation</label><input id="nr-name" maxlength="60" placeholder="e.g. Portfolio reviewer">' +
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
+                    '<button class="jp-btn" data-act="save-role" data-k="' + esc(mKey) + '">Add it</button></div>');
+                return;
+            }
+            api('PATCH', keyUrl(P.endpoints.member, mKey), { role: el.value }).then(function (res) {
+                P.team = res.team; T.teamRoles = res.roles; render(); toast('Designation changed');
+            }, function (err) { render(); toast(err.message, true); });
+            return;
+        }
+        // In the add/edit dialog the same last entry reveals a box to type in.
+        if (el.id === 'mb-role') {
+            var wrap = document.getElementById('mb-newrole-wrap');
+            if (wrap) {
+                wrap.hidden = el.value !== '__new';
+                if (el.value === '__new') { var box = document.getElementById('mb-newrole'); if (box) box.focus(); }
+            }
+            return;
+        }
+        // How a meeting happens decides which of the two fields is asked for.
+        if (el.id === 'mt-mode') {
+            var linkWrap = document.getElementById('mt-link-wrap'), phoneWrap = document.getElementById('mt-phone-wrap');
+            if (linkWrap) linkWrap.hidden = el.value === 'Phone call';
+            if (phoneWrap) phoneWrap.hidden = el.value !== 'Phone call';
+            return;
+        }
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }
         if (el.id === 'f-status') { UI.status = el.value; render(); return; }
         if (el.id === 'f-excl') { UI.showExcluded = el.checked; render(); return; }
@@ -1525,7 +1752,12 @@
     window.addEventListener('beforeunload', function (e) { if (UI.essayId && UI.essayDirty) { e.preventDefault(); e.returnValue = ''; } });
 
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeModal(); if (UI.menu) { UI.menu = false; render(); } }
+        if (e.key === 'Escape') { closeModal(); if (UI.menu) { UI.menu = false; render(); } return; }
+        // A calendar day is a div so the entries inside it can be their own
+        // buttons; give it back the keyboard a button would have had.
+        if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('jp-day')) {
+            e.preventDefault(); e.target.click();
+        }
     });
 
     fromHash();

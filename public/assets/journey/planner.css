@@ -804,3 +804,71 @@ body.jp-mode-student .jp-block-h { background: linear-gradient(135deg, var(--pur
     .jp-day .more { font-size: 0.56rem; }
     .jp-doc-history { padding: 4px 16px 16px; }
 }
+
+/* ---------- requirements, read as separate items ----------
+   What a university asks for is stored as one string but read as a list, so
+   "Transcripts, essays, 2 LORs" shows as three things rather than one line. */
+.jp-reqs-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px 16px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.jp-reqs-row:last-child { border-bottom: none; padding-bottom: 0; }
+.jp-reqs-row .lbl { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-top: 4px; }
+.jp-reqs-row .val { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.jp-tag {
+    display: inline-flex; align-items: center; font-size: 0.8rem; font-weight: 700; padding: 4px 11px;
+    border-radius: 8px; background: var(--surface); border: 1px solid var(--line-2); color: var(--ink-2);
+}
+.jp-reqs-text { font-size: 0.88rem; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; }
+.jp-reqs-h .jp-btn { margin-left: auto; }
+.jp-inline-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.jp-dialog .jp-hint { font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+
+/* ---------- the designation dropdown on a member card ---------- */
+.jp-role-select {
+    width: 100%; border: 1px solid var(--line-2); background: var(--surface); border-radius: 9px;
+    padding: 5px 8px; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--blue-ink); margin-bottom: 4px;
+}
+.jp-role-select:hover { border-color: var(--blue); }
+.jp-member.ext .jp-role-select { color: var(--orange-ink); }
+
+/* ---------- calendar entries coloured by where they stand ----------
+   The dot in front says what kind of thing it is; the colour says whether it
+   is done, late, today, this week or further off. */
+.jp-day .ev {
+    display: flex; align-items: center; gap: 5px; width: 100%; text-align: left; border: 1px solid transparent;
+    font-size: 0.66rem; line-height: 1.35; font-weight: 700; border-radius: 5px; padding: 2px 5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.jp-day .ev .dot { width: 6px; height: 6px; border-radius: 2px; flex: none; }
+.jp-day .ev:hover { border-color: currentColor; }
+.ev.st-late, .jp-legend i.chip.st-late { background: var(--pink-soft); color: var(--pink-ink); }
+.ev.st-today, .jp-legend i.chip.st-today { background: var(--gold-soft); color: var(--gold-ink); }
+.ev.st-soon, .jp-legend i.chip.st-soon { background: var(--orange-soft); color: var(--orange-ink); }
+.ev.st-later, .jp-legend i.chip.st-later { background: var(--blue-soft); color: var(--blue-ink); }
+.ev.st-done, .jp-legend i.chip.st-done { background: var(--green-soft); color: var(--green-ink); }
+.ev.st-done { text-decoration: line-through; opacity: 0.75; }
+.jp-legend i.chip { width: 16px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.jp-legend .lbl { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--line-2); }
+.jp-legend + .jp-legend { margin-top: -4px; }
+
+.jp-day { cursor: pointer; }
+.jp-day:focus-visible { outline: 3px solid rgba(67, 97, 238, 0.35); outline-offset: -2px; }
+.jp-day-hint { font-size: 0.84rem; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line-2); }
+.jp-day-detail-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.jp-day-detail-h h3 { flex: 1; min-width: 180px; margin: 0; }
+.jp-day-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) 92px auto; gap: 11px; align-items: center; }
+.jp-day-row .a { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.jp-day-row.st-done b { text-decoration: line-through; color: var(--muted); }
+
+/* ---------- a meeting's joining details ---------- */
+.jp-meet .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 5px; }
+.jp-meet-join { font-size: 0.8rem; font-weight: 700; color: var(--blue-ink); overflow-wrap: anywhere; }
+.jp-meet-nolink { font-size: 0.78rem; font-weight: 700; color: var(--orange-ink); }
+.jp-meet-sent { font-size: 0.76rem; font-weight: 700; color: var(--muted); }
+.jp-meet-sent.ok { color: var(--green-ink); }
+
+@media (max-width: 900px) {
+    .jp-reqs-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .jp-reqs-row .lbl { padding-top: 0; }
+    .jp-day-row { grid-template-columns: 14px minmax(0, 1fr) auto; }
+    .jp-day-row .a { grid-column: 2 / -1; justify-content: flex-start; }
+}

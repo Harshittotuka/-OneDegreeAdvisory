@@ -210,7 +210,11 @@ class CrmJourneyPlan extends Model
     /**
      * Meetings and calls booked on this plan, earliest first.
      *
-     * @return list<array{key: string, title: string, date: string, time: string, minutes: int, mode: string, who: string, link: string, notes: string, done: bool}>
+     * `emails` are the people the join link is sent to; `phone` is the number
+     * for a call. `sentAt` is when the link last went out, so the page can say
+     * so rather than making the counsellor guess.
+     *
+     * @return list<array{key: string, title: string, date: string, time: string, minutes: int, mode: string, who: string, emails: list<string>, phone: string, link: string, notes: string, done: bool, sentAt: ?string}>
      */
     public function meetingRows(): array
     {
@@ -227,14 +231,34 @@ class CrmJourneyPlan extends Model
                 'minutes' => max(5, min(480, (int) ($m['minutes'] ?? 45))),
                 'mode' => in_array($m['mode'] ?? null, JourneyPlanner::MEETING_MODES, true) ? $m['mode'] : JourneyPlanner::MEETING_MODES[0],
                 'who' => (string) ($m['who'] ?? ''),
+                'emails' => self::emailList($m['emails'] ?? null),
+                'phone' => (string) ($m['phone'] ?? ''),
                 'link' => (string) ($m['link'] ?? ''),
                 'notes' => (string) ($m['notes'] ?? ''),
                 'done' => (bool) ($m['done'] ?? false),
+                'sentAt' => is_string($m['sentAt'] ?? null) ? $m['sentAt'] : null,
             ];
         }
         usort($out, fn (array $a, array $b) => [$a['date'], $a['time']] <=> [$b['date'], $b['time']]);
 
         return $out;
+    }
+
+    /**
+     * Addresses a meeting link goes to. Stored as a list, but a string of
+     * comma-separated addresses is read too, so a row saved by hand still
+     * comes back usable.
+     *
+     * @return list<string>
+     */
+    public static function emailList(mixed $value): array
+    {
+        $parts = is_array($value) ? $value : preg_split('/[,;\s]+/', (string) $value);
+
+        return array_values(array_unique(array_filter(
+            array_map(fn ($e) => mb_strtolower(trim((string) $e)), $parts ?: []),
+            fn (string $e) => $e !== '' && filter_var($e, FILTER_VALIDATE_EMAIL) !== false,
+        )));
     }
 
     /** ODA's standard core tasks plus this plan's own. @return array<string, array<string, mixed>> */

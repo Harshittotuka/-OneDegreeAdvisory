@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Middleware\StudentAuth;
+use App\Mail\JourneyMeetingMail;
 use App\Models\CrmJourneyApplication;
 use App\Models\CrmJourneyDocument;
 use App\Models\CrmJourneyPlan;
@@ -14,6 +15,7 @@ use App\Support\JourneyPlanner;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -1100,5 +1102,125 @@ class JourneyPlannerTest extends TestCase
             ->assertJsonPath('document.edits.0.byName', 'You');
 
         $this->postJson(route('student.documents.edits.store', $theirs), ['note' => 'Not mine to change'])->assertForbidden();
+    }
+
+    /* ------------------------------------------------------------ meetings: who is told, and how */
+
+    public function test_the_joining_details_go_to_everyone_listed_and_nothing_else(): void
+    {
+        Mail::fake();
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $meetings = $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Career pathway discussion', 'date' => '2026-10-03', 'time' => '16:00', 'minutes' => 45,
+            'mode' => 'Google Meet', 'who' => 'Ananya, Priya', 'link' => 'https://meet.google.com/qxr-mbvd-kzt',
+            'emails' => ['ananya@example.test', 'Parent@Example.test'],
+        ])->assertOk()->assertJsonPath('sent', 2)->json('meetings');
+
+        $this->assertSame(['ananya@example.test', 'parent@example.test'], $meetings[0]['emails'], 'Addresses are stored lowercased and de-duplicated.');
+        $this->assertNotNull($meetings[0]['sentAt'], 'The row records when the details went out.');
+
+        Mail::assertSent(JourneyMeetingMail::class, 2);
+        Mail::assertSent(JourneyMeetingMail::class, fn (JourneyMeetingMail $m) => $m->hasTo('ananya@example.test'));
+        Mail::assertSent(JourneyMeetingMail::class, fn (JourneyMeetingMail $m) => $m->hasTo('parent@example.test'));
+
+        // What goes out carries the link and the when — and is not a calendar
+        // invitation: no .ics rides along for anyone to accept.
+        $mail = new JourneyMeetingMail($meetings[0], $lead->name, $counsellor->name);
+        $html = $mail->render();
+        $this->assertStringContainsString('https://meet.google.com/qxr-mbvd-kzt', $html);
+        $this->assertStringContainsString('Join the meeting', $html);
+        $this->assertStringContainsString('Sat 3 Oct 2026, 4:00 pm', $html);
+        $this->assertSame([], $mail->attachments, 'Nothing rides along: no .ics for anyone to accept.');
+        $this->assertStringNotContainsStringIgnoringCase('BEGIN:VCALENDAR', $html);
+    }
+
+    public function test_a_meeting_with_nobody_listed_emails_nobody(): void
+    {
+        Mail::fake();
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $key = $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Internal review', 'date' => '2026-10-05', 'mode' => 'In person',
+        ])->assertOk()->assertJsonPath('sent', 0)->json('meeting.key');
+
+        Mail::assertNothingSent();
+        $this->assertNull($this->planOf($lead)->meetingRows()[0]['sentAt']);
+
+        // Sending on demand needs somebody to send to.
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.notify', [$lead, $key]))->assertStatus(422);
+    }
+
+    public function test_the_counsellor_can_send_the_link_again_after_changing_a_meeting(): void
+    {
+        Mail::fake();
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $key = $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Shortlist review', 'date' => '2026-10-18', 'mode' => 'Google Meet',
+            'emails' => ['aarav@example.test'], 'notify' => false,
+        ])->assertOk()->assertJsonPath('sent', 0)->json('meeting.key');
+        Mail::assertNothingSent();
+
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.notify', [$lead, $key]))->assertOk()->assertJsonPath('sent', 1);
+        Mail::assertSent(JourneyMeetingMail::class, fn (JourneyMeetingMail $m) => $m->isUpdate === true);
+
+        // Moving the meeting and ticking "tell them" sends the new details.
+        $this->as($counsellor)->patchJson(route('crm.journey.meetings.update', [$lead, $key]), [
+            'date' => '2026-10-20', 'notify' => true,
+        ])->assertOk()->assertJsonPath('sent', 1);
+        Mail::assertSent(JourneyMeetingMail::class, 2);
+    }
+
+    public function test_a_phone_meeting_keeps_a_number_and_a_video_meeting_keeps_a_link(): void
+    {
+        Mail::fake();
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $rows = $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Quick catch-up', 'date' => '2026-10-07', 'mode' => 'Phone call',
+            'phone' => '+91 98290 00000', 'emails' => ['aarav@example.test'],
+        ])->assertOk()->json('meetings');
+
+        $this->assertSame('+91 98290 00000', $rows[0]['phone']);
+        $this->assertSame('', $rows[0]['link']);
+        Mail::assertSent(JourneyMeetingMail::class, fn (JourneyMeetingMail $m) => $m->meeting['phone'] === '+91 98290 00000');
+
+        // The student finds the number on their own planner.
+        $this->assertSame('+91 98290 00000', JourneyPlanner::payload($this->planOf($lead), 'student')['meetings'][0]['phone']);
+
+        // A bad address is refused before anything is stored.
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'x', 'date' => '2026-10-08', 'mode' => 'Phone call', 'emails' => ['not-an-address'],
+        ])->assertStatus(422)->assertJsonValidationErrors('emails.0');
+    }
+
+    public function test_meeting_invitations_are_the_teams_alone(): void
+    {
+        Mail::fake();
+        $counsellor = $this->user();
+        $partner = $this->user('partner');
+        $lead = $this->student($counsellor, ['partner_id' => $partner->id]);
+        $this->start($counsellor, $lead);
+        $key = $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Review', 'date' => '2026-10-09', 'mode' => 'In person', 'emails' => ['aarav@example.test'],
+        ])->json('meeting.key');
+
+        $this->as($partner)->postJson(route('crm.journey.meetings.notify', [$lead, $key]))->assertForbidden();
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.notify', [$lead, 'm-0000000000']))->assertNotFound();
+    }
+
+    /** The plan behind a lead, freshly read. */
+    private function planOf(CrmLead $lead): CrmJourneyPlan
+    {
+        return CrmJourneyPlan::query()->where('crm_lead_id', $lead->id)->firstOrFail();
     }
 }
