@@ -154,6 +154,19 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
 .jp-topbar-title h1 { font-size: 1.6rem; font-weight: 700; }
 .jp-topbar-title p { font-size: 0.88rem; color: var(--muted); }
 .jp-topbar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+/* Refresh sits top right of the bar, in every view and for every reader. */
+.jp-refresh {
+    width: 42px; height: 42px; flex: none; display: grid; place-items: center;
+    border: 1px solid var(--line-2); background: var(--surface); border-radius: 12px;
+    color: var(--ink-2); box-shadow: var(--shadow-sm);
+}
+.jp-refresh:hover { border-color: var(--blue); color: var(--blue-ink); background: var(--blue-soft); }
+.jp-refresh svg { width: 19px; height: 19px; }
+.jp-refresh.spin { color: var(--blue-ink); border-color: var(--blue); cursor: progress; }
+.jp-refresh.spin svg { animation: jp-spin 0.9s linear infinite; }
+.jp-refresh.armed { border-color: var(--orange); background: var(--orange-soft); color: var(--orange-ink); }
+@keyframes jp-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .jp-refresh.spin svg { animation: none; opacity: 0.6; } }
 .jp-user { display: flex; align-items: center; gap: 10px; padding: 5px 16px 5px 5px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-sm); }
 .jp-user b { display: block; font-size: 0.85rem; line-height: 1.2; }
 .jp-user small { display: block; font-size: 0.72rem; color: var(--muted); }

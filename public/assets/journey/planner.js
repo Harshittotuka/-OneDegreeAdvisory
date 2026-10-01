@@ -23,7 +23,7 @@
         view: 'dashboard', openPhases: {}, openRows: {}, appId: P.apps[0] ? P.apps[0].id : null,
         owner: 'all', status: 'all', showExcluded: true, dl: 'open', armed: null, busy: false, menu: false,
         credentials: P.credentials || null,
-        docTab: 'all', essayId: null, essayDirty: false, openDoc: null,
+        docTab: 'all', essayId: null, essayDirty: false, openDoc: null, refreshing: false,
         cal: { y: null, m: null, sel: null }
     };
     P.documents = P.documents || [];
@@ -132,6 +132,7 @@
         upload: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 13V4M6.3 7.6L10 3.9l3.7 3.7M4 13.5v2.7h12v-2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         spark: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 14l4-4 3 3 7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 6H17v4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         alarm: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="11" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M10 8v3.2l2 1.3M3.5 4.5l2-1.8M16.5 4.5l-2-1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+        refresh: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.8 3.2v3.3h-3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         out: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M8 4H5a1.5 1.5 0 0 0-1.5 1.5v9A1.5 1.5 0 0 0 5 16h3M12 6.5L15.5 10 12 13.5M15.3 10H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     };
 
@@ -396,7 +397,10 @@
             : '<span class="jp-user"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor || 'C')) + '</span><span><b>' + (MODE === 'partner' ? 'Partner view' : esc(s.counsellor || 'Counsellor')) + '</b><small>' + (MODE === 'partner' ? 'Read only' : 'Counsellor view') + '</small></span></span>';
         return '<header class="jp-topbar"><button class="jp-menu" data-act="menu" aria-label="Open menu">' + ICO.menu + '</button>' +
             '<div class="jp-topbar-title"><span class="jp-crumb">' + (isStudent() ? 'My plan' : esc(s.name) + (s.leadNumber ? ' · ' + esc(s.leadNumber) : '')) + '</span><h1>' + label(v) + '</h1><p>' + esc(sub) + '</p></div>' +
-            '<div class="jp-topbar-actions">' + right + '</div></header>';
+            '<div class="jp-topbar-actions">' +
+            '<button class="jp-refresh' + (UI.refreshing ? ' spin' : '') + (UI.armed === 'refresh' ? ' armed' : '') + '" data-act="refresh"' +
+            ' aria-label="Refresh this plan" title="' + (UI.armed === 'refresh' ? 'Click again — you have unsaved changes' : 'Refresh this plan') + '">' + ICO.refresh + '</button>' +
+            right + '</div></header>';
     }
 
     /* ---- dashboard ---- */
@@ -1161,6 +1165,56 @@
         return '<div class="jp-guide">' + g.map(function (x) { return '<div><h4>' + esc(x[0]) + '</h4><p>' + esc(x[1]) + '</p></div>'; }).join('') + '</div>';
     }
 
+    /* ------------------------------------------------------------ refreshing */
+    /*
+     * The page is drawn from the payload the server embedded, so it shows what
+     * was true when it loaded. Refreshing fetches the page again and takes the
+     * new payload out of it, rather than reloading the browser: the view, the
+     * stages left open and where the reader had scrolled all survive.
+     *
+     * Anything that can't be read that way — a session that has since expired,
+     * a login page coming back instead — falls through to a plain reload,
+     * which lands them where they need to be anyway.
+     */
+    function adoptPayload(fresh) {
+        ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'meetings', 'login', 'docTemplate'].forEach(function (k) {
+            if (fresh[k] !== undefined) P[k] = fresh[k];
+        });
+        T = P.template = fresh.template;
+
+        CORE_DEFS = {}; PHASE_OF = {}; APP_DEFS = {};
+        T.phases.forEach(function (ph) { ph.activities.forEach(function (a) { CORE_DEFS[a.key] = a; PHASE_OF[a.key] = ph; }); });
+        T.appGroups.forEach(function (g) { g.activities.forEach(function (a) { APP_DEFS[a.key] = a; }); });
+        refreshPeople();
+
+        // Keep pointing at things that still exist.
+        if (!P.apps.some(function (a) { return a.id === UI.appId; })) UI.appId = P.apps[0] ? P.apps[0].id : null;
+        if (UI.essayId && !findDoc(UI.essayId)) { UI.essayId = null; UI.essayDirty = false; UI.draft = null; }
+        if (UI.openDoc && !findDoc(UI.openDoc)) UI.openDoc = null;
+    }
+
+    function refreshPlanner() {
+        if (UI.refreshing) return;
+        UI.refreshing = true;
+        render();
+        fetch(location.pathname + location.search, {
+            credentials: 'same-origin', cache: 'no-store',
+            headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (res) {
+            if (!res.ok) throw new Error('refused');
+            return res.text();
+        }).then(function (html) {
+            var node = new DOMParser().parseFromString(html, 'text/html').getElementById('jp-payload');
+            if (!node) throw new Error('not the planner');
+            adoptPayload(JSON.parse(node.textContent));
+            UI.refreshing = false;
+            render();
+            toast('Up to date');
+        }).catch(function () {
+            location.reload();
+        });
+    }
+
     /* ------------------------------------------------------------ saving */
     function saveActivity(scope, appId, key, changes, okMsg) {
         var a = actFor(scope, appId, key);
@@ -1240,11 +1294,17 @@
         var el = e.target.closest('[data-act]'); if (!el) return;
         var act = el.dataset.act;
         if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage',
-            'new-admin-pw', 'rm-deadline', 'rm-meeting', 'rm-member'].indexOf(act) < 0) { UI.armed = null; }
+            'new-admin-pw', 'rm-deadline', 'rm-meeting', 'rm-member', 'refresh'].indexOf(act) < 0) { UI.armed = null; }
         var appId = el.dataset.app ? parseInt(el.dataset.app, 10) : null;
 
         switch (act) {
             case 'menu': UI.menu = !UI.menu; render(); return;
+            case 'refresh':
+                // An essay being written is the one thing a refresh would lose.
+                if (UI.essayId && UI.essayDirty && UI.armed !== 'refresh') { UI.armed = 'refresh'; render(); return; }
+                UI.armed = null;
+                refreshPlanner();
+                return;
             case 'close-menu': UI.menu = false; render(); return;
             case 'close-modal': if (e.target === el) closeModal(); return;
             case 'cancel': closeModal(); return;
