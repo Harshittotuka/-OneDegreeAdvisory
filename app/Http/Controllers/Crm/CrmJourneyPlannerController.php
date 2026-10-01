@@ -79,8 +79,9 @@ class CrmJourneyPlannerController extends Controller
                 'meetings' => route('crm.journey.meetings.store', $lead),
                 'meeting' => route('crm.journey.meetings.update', [$lead, '__KEY__']),
                 'meetingNotify' => route('crm.journey.meetings.notify', [$lead, '__KEY__']),
+                'pulse' => route('crm.journey.pulse', $lead),
                 'back' => $back,
-            ] : ['back' => $back], $mode === 'counsellor' ? session('journey_credentials') : null),
+            ] : ['pulse' => route('crm.journey.pulse', $lead), 'back' => $back], $mode === 'counsellor' ? session('journey_credentials') : null),
         ]);
     }
 
@@ -126,6 +127,20 @@ class CrmJourneyPlannerController extends Controller
         }
 
         return $redirect;
+    }
+
+    /**
+     * Has anything on this plan moved? Answers with a fingerprint and nothing
+     * else: the page polls this every few seconds and only fetches the plan
+     * itself when the answer changes. A partner may ask as well — they read
+     * the same plan, they just cannot change it.
+     */
+    public function pulse(Request $request, CrmLead $lead): JsonResponse
+    {
+        $this->guardView($lead, $this->user($request));
+        $plan = $lead->journeyPlan ?? abort(404);
+
+        return response()->json(['v' => JourneyPlanner::fingerprint($plan)]);
     }
 
     public function updateDetails(Request $request, CrmLead $lead): JsonResponse

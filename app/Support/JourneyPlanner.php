@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\CrmJourneyPlan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -396,6 +397,11 @@ class JourneyPlanner
                 'essayStatuses' => JourneyDocuments::ESSAY_STATUSES,
                 'limits' => JourneyDocuments::limits(),
             ],
+            // Where the plan stands now, and how often to ask whether that
+            // has changed. The page starts from this, so a change made a
+            // second after it loaded is still noticed.
+            'pulse' => self::fingerprint($plan),
+            'pollSeconds' => (int) config('journey.live.poll_seconds'),
             'csrf' => csrf_token(),
             'endpoints' => $endpoints,
         ];
@@ -460,6 +466,33 @@ class JourneyPlanner
             'overdue' => $overdue,
             'next' => $next,
         ];
+    }
+
+    /**
+     * A short stand-in for "the state of this plan", so the page can ask
+     * whether anything has moved without being sent the plan to find out.
+     *
+     * It covers everything the planner draws: the plan row itself (which
+     * carries the core journey, the added tasks and stages, the team, the
+     * deadlines and the meetings), the universities, the documents, and the
+     * edits recorded against them. Counts go in beside the timestamps so that
+     * something being deleted changes the answer too.
+     */
+    public static function fingerprint(CrmJourneyPlan $plan): string
+    {
+        $apps = DB::table('crm_journey_applications')
+            ->where('plan_id', $plan->id)->selectRaw('COUNT(*) as c, MAX(updated_at) as m')->first();
+        $docs = DB::table('crm_journey_documents')
+            ->where('plan_id', $plan->id)->selectRaw('COUNT(*) as c, MAX(updated_at) as m')->first();
+        $edits = DB::table('crm_journey_document_edits as e')
+            ->join('crm_journey_documents as d', 'd.id', '=', 'e.document_id')
+            ->where('d.plan_id', $plan->id)->selectRaw('COUNT(*) as c, MAX(e.updated_at) as m')->first();
+
+        return substr(md5(implode('|', [
+            $plan->id,
+            $plan->updated_at?->getTimestamp(),
+            $apps->c, $apps->m, $docs->c, $docs->m, $edits->c, $edits->m,
+        ])), 0, 16);
     }
 
     /** Whether a stored value is a plain Y-m-d date. */

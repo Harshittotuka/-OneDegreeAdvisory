@@ -1180,6 +1180,7 @@
         ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'meetings', 'login', 'docTemplate'].forEach(function (k) {
             if (fresh[k] !== undefined) P[k] = fresh[k];
         });
+        if (fresh.pulse) { P.pulse = fresh.pulse; LIVE.seen = fresh.pulse; LIVE.pending = false; }
         T = P.template = fresh.template;
 
         CORE_DEFS = {}; PHASE_OF = {}; APP_DEFS = {};
@@ -1193,7 +1194,7 @@
         if (UI.openDoc && !findDoc(UI.openDoc)) UI.openDoc = null;
     }
 
-    function refreshPlanner() {
+    function refreshPlanner(quiet) {
         if (UI.refreshing) return;
         UI.refreshing = true;
         render();
@@ -1209,11 +1210,77 @@
             adoptPayload(JSON.parse(node.textContent));
             UI.refreshing = false;
             render();
-            toast('Up to date');
+            toast(quiet ? 'Updated' : 'Up to date');
         }).catch(function () {
             location.reload();
         });
     }
+
+    /*
+     * Live updates. Every few seconds the page asks the server one small
+     * question — has anything on this plan moved? — and only fetches the plan
+     * when the answer changes. Three things hold it back, because a planner
+     * redrawing itself under someone's hands is worse than being a few
+     * seconds behind:
+     *
+     *   - the tab is in the background, where nobody is reading it
+     *   - a dialog is open, or the caret is in a field
+     *   - an essay has unsaved changes
+     *
+     * A change noticed while they are busy is remembered and applied the
+     * moment they are not. Repeated failures stop the polling rather than
+     * hammering a server that is plainly unwell; the refresh button still
+     * works, and it starts the polling again.
+     */
+    var LIVE = { seen: null, timer: null, fails: 0, pending: false };
+
+    function liveEvery() { return Math.max(0, parseInt(P.pollSeconds, 10) || 0) * 1000; }
+
+    function startLive() {
+        stopLive();
+        if (!P.endpoints.pulse || !liveEvery()) return;
+        LIVE.seen = LIVE.seen || P.pulse || null;
+        LIVE.fails = 0;
+        LIVE.timer = setInterval(tick, liveEvery());
+    }
+    function stopLive() { if (LIVE.timer) { clearInterval(LIVE.timer); LIVE.timer = null; } }
+
+    /** Is the reader in the middle of something a redraw would interrupt? */
+    function midEdit() {
+        if ((document.getElementById('jp-modal') || {}).innerHTML) return true;
+        if (UI.essayId && UI.essayDirty) return true;
+        var el = document.activeElement;
+        return !!(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+    }
+
+    function tick() {
+        if (document.hidden || UI.refreshing || UI.busy) return;
+        if (LIVE.pending) { if (!midEdit()) refreshPlanner(true); return; }
+
+        fetch(P.endpoints.pulse, {
+            credentials: 'same-origin', cache: 'no-store',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (res) {
+            if (!res.ok) throw new Error('refused');
+            return res.json();
+        }).then(function (json) {
+            LIVE.fails = 0;
+            if (!json || !json.v) return;
+            if (LIVE.seen === null) { LIVE.seen = json.v; return; }
+            if (json.v === LIVE.seen) return;
+            LIVE.seen = json.v;
+            if (midEdit()) { LIVE.pending = true; return; }
+            refreshPlanner(true);
+        }).catch(function () {
+            LIVE.fails++;
+            if (LIVE.fails >= 5) stopLive();
+        });
+    }
+
+    // Coming back to the tab is the moment it most wants to be current.
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && LIVE.timer) tick();
+    });
 
     /* ------------------------------------------------------------ saving */
     function saveActivity(scope, appId, key, changes, okMsg) {
@@ -1304,6 +1371,7 @@
                 if (UI.essayId && UI.essayDirty && UI.armed !== 'refresh') { UI.armed = 'refresh'; render(); return; }
                 UI.armed = null;
                 refreshPlanner();
+                if (!LIVE.timer) startLive();
                 return;
             case 'close-menu': UI.menu = false; render(); return;
             case 'close-modal': if (e.target === el) closeModal(); return;
@@ -1924,4 +1992,5 @@
     refreshPeople();
     fromHash();
     render();
+    startLive();
 })();

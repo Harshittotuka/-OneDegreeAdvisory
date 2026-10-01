@@ -16,6 +16,22 @@
 */
 
 return [
+    /*
+    |----------------------------------------------------------------------
+    | Live updates
+    |----------------------------------------------------------------------
+    |
+    | The planner asks the server every few seconds whether anything on the
+    | plan has moved. That question is deliberately cheap — it answers with a
+    | fingerprint, not the plan — and the page only fetches the real payload
+    | when the fingerprint changes. Set poll_seconds to 0 to switch the whole
+    | thing off and leave the refresh button to do the work.
+    |
+    */
+    'live' => [
+        'poll_seconds' => 5,
+    ],
+
     'documents' => [
         'disk' => 'local',
         'directory' => 'journey',

@@ -1330,4 +1330,88 @@ class JourneyPlannerTest extends TestCase
         $this->assertSame($owner, $this->planOf($lead)->coreState()['gap-analysis']['owner']);
         $this->assertNotContains($owner, $this->planOf($lead)->ownerValues());
     }
+
+    /* ------------------------------------------------------------ live updates */
+
+    public function test_the_pulse_changes_only_when_something_on_the_plan_does(): void
+    {
+        Storage::fake('local');
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $pulse = fn () => $this->as($counsellor)->getJson(route('crm.journey.pulse', $lead))->assertOk()->json('v');
+
+        $first = $pulse();
+        $this->assertNotEmpty($first);
+        $this->assertSame($first, $pulse(), 'Asking twice with nothing happening gives the same answer.');
+
+        // Each kind of change the planner draws moves it.
+        $moves = [
+            'an activity' => fn () => $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'gap-analysis', 'status' => 'In Progress']),
+            'a university' => fn () => $this->as($counsellor)->postJson(route('crm.journey.applications.store', $lead), ['university' => 'Bocconi']),
+            'a team member' => fn () => $this->as($counsellor)->postJson(route('crm.journey.team.store', $lead), ['role' => 'Counsellor', 'name' => 'Priya']),
+            'a deadline' => fn () => $this->as($counsellor)->postJson(route('crm.journey.deadlines.store', $lead), ['kind' => 'own', 'what' => 'Draft due', 'date' => '2026-11-01']),
+            'a meeting' => fn () => $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), ['title' => 'Call', 'date' => '2026-11-02', 'mode' => 'In person']),
+            'a document' => fn () => $this->as($counsellor)->postJson(route('crm.journey.documents.store', $lead), ['kind' => 'essay', 'category' => 'Personal statement']),
+        ];
+        $previous = $first;
+        foreach ($moves as $what => $move) {
+            $this->travel(1)->seconds();
+            $move();
+            $now = $pulse();
+            $this->assertNotSame($previous, $now, "Adding {$what} should move the pulse.");
+            $previous = $now;
+        }
+
+        // An edit logged against a document moves it too, though the document
+        // row itself does not change.
+        $document = CrmJourneyDocument::query()->latest('id')->firstOrFail();
+        $this->travel(1)->seconds();
+        $this->as($counsellor)->postJson(route('crm.journey.documents.edits.store', [$lead, $document->id]), ['note' => 'Tidied the opening']);
+        $this->assertNotSame($previous, $pulse(), 'An edit recorded by hand should move the pulse.');
+        $previous = $pulse();
+
+        // And so does something being removed, which no timestamp would show.
+        $this->travel(1)->seconds();
+        $this->as($counsellor)->deleteJson(route('crm.journey.documents.destroy', [$lead, $document->id]))->assertOk();
+        $this->assertNotSame($previous, $pulse(), 'Removing a document should move the pulse.');
+    }
+
+    public function test_the_page_carries_the_pulse_it_started_from(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $plan = $this->planOf($lead);
+
+        $payload = JourneyPlanner::payload($plan, 'counsellor');
+        $this->assertSame(JourneyPlanner::fingerprint($plan), $payload['pulse']);
+        $this->assertSame(config('journey.live.poll_seconds'), $payload['pollSeconds']);
+
+        // A student polls their own plan; a partner may read one too.
+        $this->signedInStudent($lead)->getJson(route('student.pulse'))->assertOk()->assertJsonStructure(['v']);
+    }
+
+    public function test_the_pulse_is_only_for_people_who_can_see_the_plan(): void
+    {
+        $counsellor = $this->user();
+        $other = $this->user();
+        $partner = $this->user('partner');
+        $lead = $this->student($counsellor, ['partner_id' => $partner->id]);
+        $this->start($counsellor, $lead);
+
+        $this->as($partner)->getJson(route('crm.journey.pulse', $lead))->assertOk()->assertJsonStructure(['v']);
+        $this->as($other)->getJson(route('crm.journey.pulse', $lead))->assertForbidden();
+
+        // A student only ever polls their own.
+        $mine = $this->student($counsellor);
+        $this->start($counsellor, $mine);
+        $theirs = $this->planOf($lead);
+        $this->signedInStudent($mine);
+        $this->assertNotSame(
+            JourneyPlanner::fingerprint($theirs),
+            $this->getJson(route('student.pulse'))->assertOk()->json('v'),
+        );
+    }
 }

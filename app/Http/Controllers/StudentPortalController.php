@@ -129,10 +129,17 @@ class StudentPortalController extends Controller
                 'documents' => route('student.documents.store'),
                 'document' => route('student.documents.update', ['document' => '__ID__']),
                 'documentEdits' => route('student.documents.edits.store', ['document' => '__ID__']),
+                'pulse' => route('student.pulse'),
                 'password' => route('student.password'),
                 'logout' => route('student.logout'),
             ]),
         ]);
+    }
+
+    /** Has anything on my plan moved? See the counsellor's side for the why. */
+    public function pulse(Request $request): JsonResponse
+    {
+        return response()->json(['v' => JourneyPlanner::fingerprint($this->plan($request))]);
     }
 
     public function updateActivity(Request $request): JsonResponse
