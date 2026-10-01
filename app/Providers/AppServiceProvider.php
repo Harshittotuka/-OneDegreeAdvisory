@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\StudentAuth;
 use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
 use App\Models\CrmMockInterviewAttempt;
@@ -39,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerCmsCrmBackupObservers();
         $this->registerRealEmailRule();
         $this->registerPageMcpRateLimiter();
+        $this->registerJourneyPulseRateLimiter();
 
         if ($this->app->runningInConsole() && config('backup.enabled')) {
             $this->app->terminating(fn () => $this->app->make(CmsCrmBackupManager::class)->flush());
@@ -107,6 +109,28 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('page-mcp', fn (Request $request) => Limit::perMinute(
             (int) config('page_api.mcp.rate_limit', 120)
         )->by((string) $request->ip()));
+    }
+
+    /**
+     * Throttle for the journey planner's live-update poll.
+     *
+     * Keyed by whoever the session belongs to, not by IP. The CRM and the
+     * student portal both sign in through the session rather than a Laravel
+     * guard, so the framework's default would fall back to the IP address —
+     * and an office of counsellors behind one connection would throttle
+     * itself off its own live updates. The limit is per person, generous
+     * enough for several planners open at once and no more.
+     */
+    private function registerJourneyPulseRateLimiter(): void
+    {
+        RateLimiter::for('journey-pulse', function (Request $request) {
+            $session = $request->hasSession() ? $request->session() : null;
+            $who = $session?->get('crm_user_id')
+                ?? $session?->get(StudentAuth::SESSION_KEY)
+                ?? $request->ip();
+
+            return Limit::perMinute(120)->by('journey-pulse:'.$who);
+        });
     }
 
     /**

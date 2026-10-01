@@ -177,7 +177,7 @@ Route::prefix('student')->name('student.')->controller(\App\Http\Controllers\Stu
         Route::post('logout', 'logout')->name('logout');
         Route::get('password', 'showPassword')->name('password');
         Route::post('password', 'updatePassword')->middleware('throttle:10,10')->name('password.update');
-        Route::get('pulse', 'pulse')->middleware('throttle:120,1')->name('pulse');
+        Route::get('pulse', 'pulse')->middleware('throttle:journey-pulse')->name('pulse');
         Route::patch('activity', 'updateActivity')->middleware('throttle:60,1')->name('activity');
         Route::post('documents', 'storeDocument')->middleware('throttle:30,1')->name('documents.store');
         Route::patch('documents/{document}', 'updateDocument')->whereNumber('document')->middleware('throttle:60,1')->name('documents.update');
@@ -254,7 +254,7 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
         Route::prefix('students/{lead}/planner')->name('journey.')->controller(\App\Http\Controllers\Crm\CrmJourneyPlannerController::class)->group(function (): void {
             Route::get('/', 'show')->name('show');
             Route::patch('/', 'updateDetails')->name('details');
-            Route::get('pulse', 'pulse')->middleware('throttle:120,1')->name('pulse');
+            Route::get('pulse', 'pulse')->middleware('throttle:journey-pulse')->name('pulse');
             Route::patch('activity', 'updateActivity')->name('activity');
             Route::post('universities', 'storeApplication')->name('applications.store');
             Route::patch('universities/{application}', 'updateApplication')->name('applications.update');

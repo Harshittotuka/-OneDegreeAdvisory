@@ -1414,4 +1414,38 @@ class JourneyPlannerTest extends TestCase
             $this->getJson(route('student.pulse'))->assertOk()->json('v'),
         );
     }
+
+    public function test_an_office_on_one_connection_does_not_throttle_itself_off_live_updates(): void
+    {
+        // Ten counsellors behind one office IP, each polling every five
+        // seconds: twelve requests a minute each. Keyed by IP, that is 120 a
+        // minute from one address, and they would throttle themselves off.
+        $plans = [];
+        for ($i = 0; $i < 10; $i++) {
+            $counsellor = $this->user();
+            $lead = $this->student($counsellor);
+            $this->start($counsellor, $lead);
+            $plans[] = [$counsellor, $lead];
+        }
+
+        foreach ($plans as [$counsellor, $lead]) {
+            for ($poll = 0; $poll < 12; $poll++) {
+                $this->as($counsellor)
+                    ->withServerVariables(['REMOTE_ADDR' => '203.0.113.7'])
+                    ->getJson(route('crm.journey.pulse', $lead))
+                    ->assertOk();
+            }
+        }
+
+        // One session polling without pause is still stopped.
+        [$counsellor, $lead] = $plans[0];
+        $refused = false;
+        for ($poll = 0; $poll < 300; $poll++) {
+            if ($this->as($counsellor)->getJson(route('crm.journey.pulse', $lead))->getStatusCode() === 429) {
+                $refused = true;
+                break;
+            }
+        }
+        $this->assertTrue($refused, 'One session polling without pause should eventually be refused.');
+    }
 }
