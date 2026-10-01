@@ -23,9 +23,11 @@
         view: 'dashboard', openPhases: {}, openRows: {}, appId: P.apps[0] ? P.apps[0].id : null,
         owner: 'all', status: 'all', showExcluded: true, dl: 'open', armed: null, busy: false, menu: false,
         credentials: P.credentials || null,
-        docTab: 'all', essayId: null, essayDirty: false
+        docTab: 'all', essayId: null, essayDirty: false, openDoc: null,
+        cal: { y: null, m: null, sel: null }
     };
     P.documents = P.documents || [];
+    P.team = P.team || []; P.deadlines = P.deadlines || []; P.meetings = P.meetings || [];
     var DT = P.docTemplate || { fileCategories: [], essayCategories: [], essayStatuses: [], limits: { maxKb: 10240, extensions: [] } };
 
     /* ------------------------------------------------------------ helpers */
@@ -50,6 +52,12 @@
         return { cls: 'wait', label: 'In ' + Math.round(days / 30) + ' months' };
     }
     function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+    /* Progress is counted, never given as a percentage: the planner reports
+       how many steps are done out of how many apply, and leans on dates for
+       the rest. The bars stay as a picture of the same two numbers. */
+    function tally(r) { return r.den ? r.done + ' of ' + r.den : 'Nothing switched on'; }
+    function shortTally(r) { return r.den ? r.done + '/' + r.den : '—'; }
+    function barWidth(r) { return (r.den > 0 ? Math.round(r.done / r.den * 100) : 0) + '%'; }
     function initials(name) { return String(name || '?').trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase(); }
 
     var ICO = {
@@ -131,23 +139,34 @@
             else if (a.status === 'Not Applicable') r.na++;
             else r.ns++;
         });
-        var den = r.inc - r.na; r.den = den; r.pct = den > 0 ? Math.round(r.done / den * 100) : 0;
+        r.den = r.inc - r.na;
         return r;
     }
     function sum(rs) {
         var t = { inc: 0, done: 0, prog: 0, ns: 0, na: 0 };
         rs.forEach(function (r) { t.inc += r.inc; t.done += r.done; t.prog += r.prog; t.ns += r.ns; t.na += r.na; });
-        t.den = t.inc - t.na; t.pct = t.den > 0 ? Math.round(t.done / t.den * 100) : 0; return t;
+        t.den = t.inc - t.na; return t;
     }
     function phaseActs(p) { return p.activities.map(function (a) { return P.core[a.key]; }); }
+    function phaseIncluded(p) { return phaseActs(p).filter(function (a) { return a.inc; }).length; }
+    /*
+     * The stages this reader actually sees. A counsellor sees all of them,
+     * including the ones switched off; everyone else sees only the stages that
+     * have something switched on for this student. Every number on the page —
+     * the stage badge, "Stage 3 of 5", the route — counts along THIS list, so
+     * what a student reads is always 1, 2, 3… in order, never 1, 5, 6, 7.
+     */
+    function phases() { return isC() ? T.phases : T.phases.filter(phaseIncluded); }
     function appActs(ap) { return Object.keys(ap.acts).map(function (k) { return ap.acts[k]; }); }
+    /** Index into phases() of the stage being worked on now, or -1 when all are done. */
     function currentPhase() {
-        for (var i = 0; i < T.phases.length; i++) { var r = roll(phaseActs(T.phases[i])); if (r.den > 0 && r.done < r.den) return i; }
+        var list = phases();
+        for (var i = 0; i < list.length; i++) { var r = roll(phaseActs(list[i])); if (r.den > 0 && r.done < r.den) return i; }
         return -1;
     }
     function openItems() {
         var out = [];
-        T.phases.forEach(function (p, pi) {
+        phases().forEach(function (p, pi) {
             p.activities.forEach(function (d) {
                 var a = P.core[d.key];
                 if (a.inc && !closed(a.status)) out.push({ scope: 'core', appId: null, key: d.key, name: d.name, where: 'Stage ' + (pi + 1) + ' · ' + p.short, a: a });
@@ -166,7 +185,7 @@
         if (!a && !b) return 0; if (!a) return 1; if (!b) return -1; return a < b ? -1 : a > b ? 1 : 0;
     }
     function overall() {
-        return sum(T.phases.map(function (p) { return roll(phaseActs(p)); }).concat(P.apps.map(function (a) { return roll(appActs(a)); })));
+        return sum(phases().map(function (p) { return roll(phaseActs(p)); }).concat(P.apps.map(function (a) { return roll(appActs(a)); })));
     }
     function lateItems() {
         return openItems().filter(function (i) { var d = daysUntil(i.a.target); return d != null && d < 0 && (!isStudent() || studentOwns(i.a.owner)); });
@@ -178,14 +197,55 @@
     }
     function rowKey(scope, appId, key) { return scope + ':' + (appId || '') + ':' + key; }
 
+    /*
+     * Dates on this plan come from four places and the Deadlines list and the
+     * Calendar both read all four: the universities' own closing dates, the
+     * dates ODA set itself, the target date on each open task, and meetings.
+     * A university's closing date is kept on its block, so it is read from
+     * there rather than typed twice.
+     */
+    function byDateKey(a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }
+    function uniDeadlines() {
+        return P.deadlines.filter(function (d) { return d.kind === 'uni'; })
+            .concat(P.apps.filter(function (a) { return a.deadline; }).map(function (a) {
+                return { key: 'app-' + a.id, kind: 'uni', what: 'Application closes', who: a.university, date: a.deadline, appId: a.id };
+            })).sort(byDateKey);
+    }
+    function ourDeadlines() { return P.deadlines.filter(function (d) { return d.kind === 'own'; }).slice().sort(byDateKey); }
+    function soonMeetings() {
+        return P.meetings.filter(function (m) { var d = daysUntil(m.date); return !m.done && d != null && d >= 0 && d <= 7; });
+    }
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    /*
+     * A Google Meet room belongs to the counsellor's own Google account, so the
+     * planner can't mint one. It sends them to Google Calendar with everything
+     * filled in; Google adds the Meet link, and they paste it back onto the
+     * meeting so the student has one place to find it.
+     */
+    function gcalUrl(m) {
+        var t = (m.time || '09:00').split(':');
+        var start = new Date(m.date + 'T00:00:00');
+        start.setHours(parseInt(t[0], 10) || 9, parseInt(t[1], 10) || 0, 0, 0);
+        var end = new Date(start.getTime() + (m.minutes || 45) * 60000);
+        function stamp(d) { return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + pad2(d.getMinutes()) + '00'; }
+        var details = [m.notes, m.who ? 'Who: ' + m.who : '', m.link ? 'Join: ' + m.link : ''].filter(Boolean).join('\n');
+        return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(m.title) +
+            '&dates=' + stamp(start) + '/' + stamp(end) + (details ? '&details=' + encodeURIComponent(details) : '');
+    }
+    function calBox(iso, over) {
+        var dt = new Date(iso + 'T00:00:00');
+        return '<span class="jp-cal' + (over ? ' over' : '') + '" aria-hidden="true"><span>' + dt.toLocaleDateString('en-GB', { month: 'short' }) + '</span><b class="num">' + dt.getDate() + '</b></span>';
+    }
+
     /* ------------------------------------------------------------ views */
     var VIEWS = [
         { key: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
         { key: 'journey', icon: 'journey', label: function () { return isStudent() ? 'My journey' : 'Core journey'; } },
         { key: 'universities', icon: 'uni', label: 'Universities' },
         { key: 'documents', icon: 'doc', label: function () { return isStudent() ? 'My documents' : 'Documents'; } },
-        { key: 'deadlines', icon: 'calendar', label: 'Deadlines' },
-        { key: 'owners', icon: 'people', label: 'Who\'s on it' },
+        { key: 'deadlines', icon: 'alarm', label: 'Deadlines' },
+        { key: 'calendar', icon: 'calendar', label: 'Calendar' },
+        { key: 'owners', icon: 'people', label: function () { return isStudent() ? 'My team' : 'Team'; } },
         { key: 'login', icon: 'key', label: 'Student login', only: 'counsellor' },
         { key: 'help', icon: 'help', label: 'Help' }
     ];
@@ -205,7 +265,8 @@
         var v = views().find(function (x) { return x.key === UI.view; });
         var body = {
             dashboard: renderDashboard, journey: renderJourney, universities: renderUnis,
-            deadlines: renderDeadlines, owners: renderOwners, login: renderLogin, help: renderGuide, documents: renderDocuments
+            deadlines: renderDeadlines, calendar: renderCalendar, owners: renderOwners,
+            login: renderLogin, help: renderGuide, documents: renderDocuments
         }[UI.view]();
         document.getElementById('planner').innerHTML =
             '<div class="jp-app' + (UI.menu ? ' menu-open' : '') + '">' + renderSidebar() +
@@ -222,6 +283,7 @@
             return '<a class="jp-nav-link' + (UI.view === v.key ? ' active' : '') + '" href="#' + v.key + '"' + (UI.view === v.key ? ' aria-current="page"' : '') + '>' +
                 '<span class="jp-nav-ico ico-' + v.key + '">' + ICO[v.icon] + '</span><span>' + label(v) + '</span>' +
                 (v.key === 'deadlines' && late ? '<b class="jp-badge num">' + late + '</b>' : '') +
+                (v.key === 'calendar' && soonMeetings().length ? '<b class="jp-badge gold num" title="Meetings in the next seven days">' + soonMeetings().length + '</b>' : '') +
                 (v.key === 'documents' && docAttention() ? '<b class="jp-badge gold num" title="' + (isStudent() ? 'Essays with feedback to act on' : 'Essays waiting for your review') + '">' + docAttention() + '</b>' : '') +
                 (v.key === 'login' && P.login && !P.login.active ? '<b class="jp-badge num">off</b>' : '') + '</a>';
         }).join('');
@@ -232,7 +294,7 @@
         return '<aside class="jp-side" aria-label="Planner navigation">' +
             '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span></div>' +
             '<div class="jp-who"><div class="jp-who-top"><span class="jp-avatar">' + esc(initials(s.name)) + '</span><div><b>' + esc(s.name) + '</b><small>' + esc([s.level, s.intake].filter(Boolean).join(' · ') || 'Plan details not set') + '</small></div></div>' +
-            '<div class="jp-who-bar"><span>Overall progress</span><b class="num">' + overall().pct + '%</b></div><div class="jp-bar side"><i style="width:' + overall().pct + '%"></i></div></div>' +
+            '<div class="jp-who-bar"><span>Steps done</span><b class="num">' + tally(overall()) + '</b></div><div class="jp-bar side"><i style="width:' + barWidth(overall()) + '"></i></div></div>' +
             '<div class="jp-nav-label">' + (isStudent() ? 'My plan' : 'Planner') + '</div><nav class="jp-nav">' + nav + '</nav>' +
             '<div class="jp-side-foot">' + (s.counsellor ? '<div class="jp-counsellor"><small>' + (isStudent() ? 'Your counsellor' : 'Counsellor') + '</small><b>' + esc(s.counsellor) + '</b></div>' : '') + foot + '</div>' +
             '</aside>';
@@ -242,11 +304,12 @@
         var s = P.student;
         var sub = {
             dashboard: isStudent() ? 'Hi ' + s.firstName + ', here\'s where your journey stands today.' : 'Where ' + s.firstName + '\'s journey stands today.',
-            journey: (T.phases.length === 7 ? 'Seven stages' : T.phases.length + ' stages') + ', done once, however many universities you apply to.',
+            journey: plural(phases().length, 'stage', 'stages') + ', done once, however many universities you apply to.',
             universities: 'One checklist per university, from requirements to visa.',
-            deadlines: 'Every open task with a target date.',
+            deadlines: 'University dates, our own dates, and every open task that has one.',
+            calendar: 'Every date on this plan in one month view, and every meeting booked.',
             documents: isStudent() ? 'Upload your documents and write your essays. Your counsellor sees everything here.' : 'Everything ' + s.firstName + ' has uploaded or written, and what you have added.',
-            owners: 'Open tasks by who does them.',
+            owners: isStudent() ? 'Who is working on your journey with you.' : 'Who is on this file, and what each side has open.',
             login: 'How ' + s.firstName + ' signs in to their own planner.',
             help: 'How this planner works.'
         }[v.key];
@@ -260,13 +323,14 @@
 
     /* ---- dashboard ---- */
     function renderDashboard() {
-        var pr = T.phases.map(function (p) { return roll(phaseActs(p)); });
+        var PH = phases();
+        var pr = PH.map(function (p) { return roll(phaseActs(p)); });
         var core = sum(pr), apps = sum(P.apps.map(function (a) { return roll(appActs(a)); })), all = sum([core, apps]);
         var cur = currentPhase();
         var items = openItems();
         var late = lateItems();
         var upcoming = items.filter(function (i) { var d = daysUntil(i.a.target); return d != null && d >= 0; }).sort(byDate);
-        var C = 2 * Math.PI * 42, off = C * (1 - all.pct / 100);
+        var C = 2 * Math.PI * 42, off = C * (1 - (all.den ? all.done / all.den : 0));
 
         var creds = isC() && UI.credentials ? credentialsCard(UI.credentials, true) : '';
         if (isC() && !P.login) creds += '<div class="jp-alert">This plan has no student login yet. It\'s created when the planner is started from the CRM.</div>';
@@ -284,32 +348,32 @@
             : (nextUp ? '<button class="jp-hero-next" data-act="jump-item" data-scope="' + nextUp.scope + '" data-app="' + (nextUp.appId || '') + '" data-key="' + esc(nextUp.key) + '"><small>Next up · ' + esc(fmt(nextUp.a.target, { day: 'numeric', month: 'short' })) + '</small><b>' + esc(nextUp.name) + '</b></button>' : '');
         var hero = '<section class="jp-hero"><div class="jp-hero-main">' +
             '<span class="jp-hero-kicker">' + (isStudent() ? greet : 'Journey planner') + '</span>' +
-            '<h2>' + (isStudent() ? esc(s.firstName) + ', you\'re ' + all.pct + '% of the way there' : esc(s.name) + ' is ' + all.pct + '% of the way there') + '</h2>' +
-            '<p>' + (cur >= 0 ? 'Stage ' + (cur + 1) + ' of ' + T.phases.length + ' · ' + esc(T.phases[cur].name) + (late.length ? ' · ' + plural(late.length, 'task is', 'tasks are') + ' late' : ' · everything is on time') : 'Every stage of the journey is complete.') + '</p>' +
+            '<h2>' + (isStudent() ? esc(s.firstName) + ', you have ' + tally(all) + ' steps done' : esc(s.name) + ' has ' + tally(all) + ' steps done') + '</h2>' +
+            '<p>' + (cur >= 0 ? 'Stage ' + (cur + 1) + ' of ' + PH.length + ' · ' + esc(PH[cur].name) + (late.length ? ' · ' + plural(late.length, 'task is', 'tasks are') + ' late' : ' · everything is on time') : 'Every stage of the journey is complete.') + '</p>' +
             '<div class="jp-chips">' + chips + '</div>' + actions + '</div>' +
-            '<div class="jp-hero-ring"><svg viewBox="0 0 100 100" role="img" aria-label="' + all.pct + '% complete"><circle class="trk" cx="50" cy="50" r="42" fill="none" stroke-width="9"/><circle class="val" cx="50" cy="50" r="42" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"/></svg>' +
-            '<div><b class="num">' + all.pct + '%</b><small>' + all.done + ' of ' + all.den + ' done</small></div></div></section>';
+            '<div class="jp-hero-ring"><svg viewBox="0 0 100 100" role="img" aria-label="' + tally(all) + ' steps done"><circle class="trk" cx="50" cy="50" r="42" fill="none" stroke-width="9"/><circle class="val" cx="50" cy="50" r="42" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"/></svg>' +
+            '<div><b class="num">' + all.done + '</b><small>of ' + all.den + ' done</small></div></div></section>';
 
         var kpis = '<div class="jp-kpis">' +
-            kpi('journey', isStudent() ? 'My journey' : 'Core journey', core.pct + '%', core.done + ' of ' + core.den + ' tasks done', '', core.pct) +
-            kpi('uni', 'University applications', apps.pct + '%', P.apps.length ? plural(P.apps.length, 'university', 'universities') + ' · ' + apps.done + ' of ' + apps.den + ' done' : 'No universities yet', '', apps.pct) +
+            kpi('journey', isStudent() ? 'My journey' : 'Core journey', shortTally(core), plural(core.den, 'task applies', 'tasks apply'), '', barWidth(core)) +
+            kpi('uni', 'University applications', shortTally(apps), P.apps.length ? plural(P.apps.length, 'university', 'universities') : 'No universities yet', '', barWidth(apps)) +
             kpi('alarm', isStudent() ? 'Running late' : 'Overdue', String(late.length), late.length ? late.sort(byDate)[0].name : 'Nothing late', late.length ? 'alert' : 'good') +
             kpi('calendar', 'Next date', nextUp ? fmt(nextUp.a.target, { day: 'numeric', month: 'short' }) : '—', nextUp ? nextUp.name : 'Nothing scheduled', 'sun') +
             '</div>';
 
-        var reach = cur >= 0 ? cur : T.phases.length - 1;
-        var nStages = T.phases.length;
+        var reach = cur >= 0 ? cur : PH.length - 1;
+        var nStages = PH.length;
         var fill = nStages > 1 ? (reach / (nStages - 1)) * (100 - 100 / nStages) : 0;
-        var route = T.phases.map(function (p, i) {
+        var route = PH.map(function (p, i) {
             var r = pr[i], complete = r.den > 0 && r.done === r.den;
             var cls = complete ? 'done' : (i === cur ? 'now' : '');
-            return '<li class="' + cls + '"><button data-act="jump-phase" data-p="' + p.key + '" aria-label="' + esc(p.name) + ', ' + r.pct + '% done">' +
+            return '<li class="' + cls + '"><button data-act="jump-phase" data-p="' + p.key + '" aria-label="Stage ' + (i + 1) + ', ' + esc(p.name) + ', ' + tally(r) + ' done">' +
                 (i === cur ? '<span class="here">You are here</span>' : '') +
                 '<span class="stop">' + (complete ? ICO.check : (i === cur ? ICO.plane : (i + 1))) + '</span>' +
-                '<span class="name">' + esc(p.short) + '</span><span class="pct num">' + (r.den ? r.done + '/' + r.den : '—') + '</span></button></li>';
+                '<span class="name">' + esc(p.short) + '</span><span class="pct num">' + shortTally(r) + '</span></button></li>';
         }).join('');
         var progress = '<section class="jp-card jp-progress-card"><div class="jp-card-h"><div><h2>Journey progress</h2><p>' +
-            (T.phases.length === 7 ? 'Seven stages' : T.phases.length + ' stages') + ', done once. Choose one to see its tasks.</p></div><a class="jp-link" href="#journey">Open journey</a></div>' +
+            plural(nStages, 'stage', 'stages') + ', done once. Choose one to see its tasks.</p></div><a class="jp-link" href="#journey">Open journey</a></div>' +
             '<ol class="jp-route" style="--n:' + nStages + '; --fill:' + fill.toFixed(2) + '%">' + route + '</ol></section>';
 
         var pool = isStudent() ? items.filter(function (i) { return studentOwns(i.a.owner); }) : items;
@@ -332,15 +396,15 @@
             (P.apps.length ? '<div class="jp-uni-mini">' + P.apps.map(function (a) {
                 var r = roll(appActs(a));
                 return '<button class="jp-uni-row" data-act="open-uni" data-u="' + a.id + '"><span class="w"><span class="t">' + esc(a.university) + '</span><span class="s">' + esc([a.country, a.program].filter(Boolean).join(' · ')) + '</span></span>' +
-                    '<span class="fit ' + (a.fit || 'unset') + '">' + esc(T.fits[a.fit] || '—') + '</span><span class="jp-progress num"><span class="jp-bar"><i style="width:' + r.pct + '%"></i></span>' + r.pct + '%</span></button>';
+                    '<span class="fit ' + (a.fit || 'unset') + '">' + esc(T.fits[a.fit] || '—') + '</span><span class="jp-progress num"><span class="jp-bar"><i style="width:' + barWidth(r) + '"></i></span>' + shortTally(r) + '</span></button>';
             }).join('') + '</div>' : (isC() ? '<div class="jp-empty"><button class="jp-btn sm" data-act="add-uni">' + ICO.plus + ' Add university</button></div>' : '<div class="jp-empty">Your counsellor adds universities once your shortlist is agreed.</div>')) + '</section>';
 
         return creds + hero + kpis + progress + '<div class="jp-grid-2">' + nextCard + dlCard + '</div>' + uniCard + (isStudent() ? '' : phaseTable(pr, core));
     }
 
-    function kpi(icon, k, v, s, cls, pct) {
+    function kpi(icon, k, v, s, cls, width) {
         return '<div class="jp-kpi ' + (cls || '') + '"><div class="jp-kpi-h"><span class="jp-kpi-ico">' + ICO[icon] + '</span><span class="k">' + esc(k) + '</span></div><div class="v num">' + esc(v) + '</div><div class="s">' + esc(s) + '</div>' +
-            (pct != null ? '<div class="jp-bar thin"><i style="width:' + pct + '%"></i></div>' : '') + '</div>';
+            (width != null ? '<div class="jp-bar thin"><i style="width:' + width + '"></i></div>' : '') + '</div>';
     }
 
     function taskRow(i) {
@@ -352,14 +416,14 @@
     }
 
     function cnt(n) { return '<td class="r num' + (n ? '' : ' zero') + '">' + n + '</td>'; }
-    function pctCell(p) { return '<div class="jp-pct"><div class="jp-bar"><i style="width:' + p + '%"></i></div><b class="num">' + p + '%</b></div>'; }
+    function doneCell(r) { return '<div class="jp-pct"><div class="jp-bar"><i style="width:' + barWidth(r) + '"></i></div><b class="num">' + shortTally(r) + '</b></div>'; }
     function phaseTable(pr, core) {
-        var rows = T.phases.map(function (p, i) {
+        var rows = phases().map(function (p, i) {
             var r = pr[i];
-            return '<tr class="click" data-act="jump-phase" data-p="' + p.key + '"><td>' + (i + 1) + '. ' + esc(p.name) + '</td>' + cnt(r.inc) + cnt(r.done) + cnt(r.prog) + cnt(r.ns) + cnt(r.na) + '<td>' + pctCell(r.pct) + '</td></tr>';
+            return '<tr class="click" data-act="jump-phase" data-p="' + p.key + '"><td>' + (i + 1) + '. ' + esc(p.name) + '</td>' + cnt(r.inc) + cnt(r.done) + cnt(r.prog) + cnt(r.ns) + cnt(r.na) + '<td>' + doneCell(r) + '</td></tr>';
         }).join('');
-        return '<section class="jp-card flush"><div class="jp-card-h pad"><div><h2>Progress by phase</h2><p>Only switched-on activities count. % complete = Completed ÷ (Included − Not Applicable).</p></div></div><div class="jp-table-wrap"><table class="jp-table"><thead><tr><th>Phase</th><th class="r">Included</th><th class="r">Completed</th><th class="r">In progress / Submitted</th><th class="r">Not started</th><th class="r">Not applicable</th><th>% complete</th></tr></thead><tbody>' +
-            rows + '<tr class="total"><td>Total</td>' + cnt(core.inc) + cnt(core.done) + cnt(core.prog) + cnt(core.ns) + cnt(core.na) + '<td>' + pctCell(core.pct) + '</td></tr></tbody></table></div></section>';
+        return '<section class="jp-card flush"><div class="jp-card-h pad"><div><h2>Progress by stage</h2><p>Only switched-on activities count. Done counts Completed against Included minus Not Applicable.</p></div></div><div class="jp-table-wrap"><table class="jp-table"><thead><tr><th>Stage</th><th class="r">Included</th><th class="r">Completed</th><th class="r">In progress / Submitted</th><th class="r">Not started</th><th class="r">Not applicable</th><th>Done</th></tr></thead><tbody>' +
+            rows + '<tr class="total"><td>Total</td>' + cnt(core.inc) + cnt(core.done) + cnt(core.prog) + cnt(core.ns) + cnt(core.na) + '<td>' + doneCell(core) + '</td></tr></tbody></table></div></section>';
     }
 
     function rowHead() {
@@ -430,12 +494,11 @@
             (isC() ? '<label><input type="checkbox" id="f-excl"' + (UI.showExcluded ? ' checked' : '') + '> Show excluded</label>' : '') +
             '<span class="sp"></span>' + (isC() ? '<button class="jp-btn sm" data-act="add-stage">' + ICO.plus + ' Add a stage</button>' : '') + '<button class="jp-btn ghost sm" data-act="expand-all">Open all</button><button class="jp-btn ghost sm" data-act="collapse-all">Close all</button></div>';
 
-        var panels = T.phases.map(function (p, i) {
+        var panels = phases().map(function (p, i) {
             var r = roll(phaseActs(p));
             var open = UI.openPhases[p.key] != null ? UI.openPhases[p.key] : i === cur;
             var complete = r.den > 0 && r.done === r.den;
-            var inc = phaseActs(p).filter(function (a) { return a.inc; }).length;
-            if (!isC() && inc === 0) return '';
+            var inc = phaseIncluded(p);
             var body = '';
             if (open) {
                 body = p.activities.map(function (d) { return actRow('core', null, d, P.core[d.key], p.timeline, true); }).join('') ||
@@ -454,7 +517,7 @@
                 '<button class="jp-phase-h" data-act="toggle-phase" data-p="' + p.key + '" aria-expanded="' + open + '">' +
                 '<span class="jp-phase-no">' + (complete ? ICO.check : (i + 1)) + '</span>' +
                 '<span><span class="ttl">' + esc(p.name) + (p.custom && isC() ? ' <span class="jp-added">Added</span>' : '') + '</span><span class="tl">' + esc(p.timeline) + (isC() ? ' · ' + inc + ' of ' + p.activities.length + ' included' : ' · ' + plural(inc, 'task', 'tasks')) + '</span></span>' +
-                '<span class="jp-progress num"><span class="jp-bar"><i style="width:' + r.pct + '%"></i></span>' + r.pct + '%</span>' + ICO.chev +
+                '<span class="jp-progress num"><span class="jp-bar"><i style="width:' + barWidth(r) + '"></i></span>' + tally(r) + '</span>' + ICO.chev +
                 '</button>' + body + '</div>';
         }).join('');
 
@@ -471,7 +534,7 @@
             return '<button class="jp-ticket' + (ap && a.id === ap.id ? ' on' : '') + '" data-act="pick-uni" data-u="' + a.id + '">' +
                 '<span class="top"><span class="code">' + esc(a.country || 'Country not set') + '</span><span class="fit ' + (a.fit || 'unset') + '">' + esc(T.fits[a.fit] || 'Fit not set') + '</span></span>' +
                 '<h3>' + esc(a.university) + '</h3><span class="prog">' + esc(a.program || 'Programme not set') + '</span>' +
-                '<span class="foot num"><span class="jp-bar"><i style="width:' + r.pct + '%"></i></span>' + r.pct + '%' + (a.offerType ? ' · ' + esc(a.offerType) : '') + '</span></button>';
+                '<span class="foot num"><span class="jp-bar"><i style="width:' + barWidth(r) + '"></i></span>' + shortTally(r) + (a.deadline ? ' · closes ' + esc(fmt(a.deadline, { day: 'numeric', month: 'short' })) : (a.offerType ? ' · ' + esc(a.offerType) : '')) + '</span></button>';
         }).join('') + (isC() ? '<button class="jp-ticket add" data-act="add-uni">' + ICO.plus.replace('<svg', '<svg width="16" height="16"') + ' Add university</button>' : '');
 
         if (!P.apps.length) {
@@ -480,13 +543,13 @@
         var summary = '';
         if (!isStudent()) {
             var rs = P.apps.map(function (a) { return roll(appActs(a)); }), tot = sum(rs);
-            summary = '<details class="jp-details-toggle"><summary>Applications summary</summary><div class="jp-table-wrap jp-card flush"><table class="jp-table"><thead><tr><th>University</th><th>Country</th><th>Program / course</th><th>Fit</th><th class="r">Included</th><th class="r">Completed</th><th class="r">In progress / Submitted</th><th class="r">Not started</th><th class="r">N/A</th><th>% complete</th></tr></thead><tbody>' +
+            summary = '<details class="jp-details-toggle"><summary>Applications summary</summary><div class="jp-table-wrap jp-card flush"><table class="jp-table"><thead><tr><th>University</th><th>Country</th><th>Program / course</th><th>Fit</th><th class="r">Included</th><th class="r">Completed</th><th class="r">In progress / Submitted</th><th class="r">Not started</th><th class="r">N/A</th><th>Done</th></tr></thead><tbody>' +
                 P.apps.map(function (a, i) {
                     var r = rs[i];
                     return '<tr class="click" data-act="pick-uni" data-u="' + a.id + '"><td><b>' + esc(a.university) + '</b></td><td>' + esc(a.country) + '</td><td>' + esc(a.program) + '</td><td><span class="fit ' + (a.fit || 'unset') + '">' + esc(T.fits[a.fit] || '—') + '</span></td>' +
-                        cnt(r.inc) + cnt(r.done) + cnt(r.prog) + cnt(r.ns) + cnt(r.na) + '<td>' + pctCell(r.pct) + '</td></tr>';
+                        cnt(r.inc) + cnt(r.done) + cnt(r.prog) + cnt(r.ns) + cnt(r.na) + '<td>' + doneCell(r) + '</td></tr>';
                 }).join('') +
-                '<tr class="total"><td colspan="4">Total</td>' + cnt(tot.inc) + cnt(tot.done) + cnt(tot.prog) + cnt(tot.ns) + cnt(tot.na) + '<td>' + pctCell(tot.pct) + '</td></tr></tbody></table></div></details>';
+                '<tr class="total"><td colspan="4">Total</td>' + cnt(tot.inc) + cnt(tot.done) + cnt(tot.prog) + cnt(tot.ns) + cnt(tot.na) + '<td>' + doneCell(tot) + '</td></tr></tbody></table></div></details>';
         }
         return '<div class="jp-tickets">' + tickets + '</div>' + summary + (ap ? renderBlock(ap) : '');
     }
@@ -510,9 +573,43 @@
               (a.offerType ? '<span><span class="lbl">Offer</span><span class="pill ' + (a.offerType === 'Rejected' ? 'danger' : a.offerType === 'Waitlist' ? 'amber' : 'good') + '">' + esc(a.offerType) + '</span></span>' : '');
         return '<div class="jp-block" id="jp-block"><div class="jp-block-h"><div><span class="jp-eyebrow">' + esc(a.country || '') + '</span><h3>' + esc(a.university) + '</h3><div class="where">' + esc(a.program || 'Programme not set') + '</div>' +
             '<div class="jp-block-meta">' + meta + '</div></div>' +
-            '<div class="jp-block-side"><div class="jp-big num">' + r.pct + '%<small>' + r.done + ' of ' + r.den + ' done</small></div>' +
+            '<div class="jp-block-side"><div class="jp-big num">' + r.done + '<small>of ' + r.den + ' done</small></div>' +
             (isC() ? '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-uni" data-u="' + a.id + '">' + (armed ? 'Click again to remove' : 'Remove') + '</button>' : '') + '</div></div>' +
-            banner + '<div class="jp-acts' + (isC() ? '' : ' ro') + '">' + rowHead() + groups + '</div></div>';
+            banner + requirementsCard(a) + '<div class="jp-acts' + (isC() ? '' : ' ro') + '">' + rowHead() + groups + '</div></div>';
+    }
+
+    /*
+     * What this university actually asks for, kept at the top of its block:
+     * the tests, the documents, anything else worth writing down, and the date
+     * the application closes. The checklist below works through it; this is the
+     * brief it works from. The counsellor types straight into it; everyone else
+     * reads it. The closing date also shows up in Deadlines and the Calendar.
+     */
+    function requirementsCard(a) {
+        var days = daysUntil(a.deadline), d = a.deadline ? due(days) : null;
+        var head = '<div class="jp-reqs-h"><h4>What this university asks for</h4>' +
+            (d ? '<span class="pill ' + d.cls + '">Closes ' + esc(fmt(a.deadline, { day: 'numeric', month: 'short', year: 'numeric' })) + ' · ' + d.label + '</span>' : '') + '</div>';
+        if (!isC()) {
+            var items = [
+                ['Tests', a.tests], ['Documents', a.docs],
+                ['Application closes', a.deadline ? fmt(a.deadline) : ''], ['Entry requirements', a.requirements]
+            ].filter(function (x) { return x[1]; });
+            return '<div class="jp-reqs">' + head +
+                (items.length ? '<dl class="jp-reqs-read">' + items.map(function (x) { return '<div><dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>'
+                    : '<p class="muted">Your counsellor hasn\'t written this university\'s requirements down yet.</p>') + '</div>';
+        }
+        function field(name, label, value, placeholder, type) {
+            return '<div><label for="rq-' + name + '-' + a.id + '">' + label + '</label>' +
+                (type === 'area'
+                    ? '<textarea id="rq-' + name + '-' + a.id + '" maxlength="2000" rows="3" data-uf="' + name + '" data-u="' + a.id + '" placeholder="' + placeholder + '">' + esc(value) + '</textarea>'
+                    : '<input id="rq-' + name + '-' + a.id + '" type="' + (type || 'text') + '" maxlength="300" data-uf="' + name + '" data-u="' + a.id + '" value="' + esc(value) + '" placeholder="' + placeholder + '">') + '</div>';
+        }
+        return '<div class="jp-reqs">' + head + '<div class="jp-reqs-grid">' +
+            field('tests_required', 'Tests required', a.tests, 'e.g. IELTS 7.0, SAT 1400') +
+            field('deadline', 'Application closes', a.deadline || '', '', 'date') +
+            field('documents_required', 'Documents required', a.docs, 'e.g. Transcripts, SOP, 2 LORs, CV') +
+            field('requirements', 'Entry requirements and anything else', a.requirements, 'Grades, prerequisites, portfolio rules, interview format…', 'area') +
+            '</div><p class="jp-hint">Saved as you leave each box. The closing date also shows in Deadlines and on the Calendar.</p></div>';
     }
 
     /* ---- deadlines ---- */
@@ -521,17 +618,136 @@
         var list = dated.filter(function (i) { var d = daysUntil(i.a.target); return UI.dl === 'late' ? d < 0 : UI.dl === '30' ? d <= 30 : true; });
         var undated = all.length - dated.length;
         var rows = list.map(function (i) {
-            var d = due(daysUntil(i.a.target)), dt = new Date(i.a.target + 'T00:00:00');
-            return '<div class="jp-dl' + (d.cls === 'danger' ? ' over' : '') + '"><div class="jp-cal" aria-hidden="true"><span>' + dt.toLocaleDateString('en-GB', { month: 'short' }) + '</span><b class="num">' + dt.getDate() + '</b></div>' +
+            var d = due(daysUntil(i.a.target));
+            return '<div class="jp-dl' + (d.cls === 'danger' ? ' over' : '') + '">' + calBox(i.a.target, d.cls === 'danger') +
                 '<button class="w" data-act="jump-item" data-scope="' + i.scope + '" data-app="' + (i.appId || '') + '" data-key="' + esc(i.key) + '"><span class="t">' + esc(i.name) + '</span><span class="s">' + esc(i.where) + ' · ' + fmt(i.a.target) + '</span></button>' +
                 '<span class="o"><span class="jp-owner-chip' + (isStudent() && studentOwns(i.a.owner) ? ' mine' : '') + '">' + esc(isStudent() && studentOwns(i.a.owner) ? i.a.owner.replace('Student', 'You') : i.a.owner) + '</span></span><span class="pill ' + d.cls + '">' + d.label + '</span></div>';
         }).join('');
-        return '<div class="jp-tools"><div class="jp-seg" role="group" aria-label="Show">' + [['late', 'Late'], ['30', 'Next 30 days'], ['open', 'All']].map(function (x) { return '<button class="' + (UI.dl === x[0] ? 'on' : '') + '" data-act="dl" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+
+        var taskCard = '<section class="jp-card flush"><div class="jp-card-h pad"><div><h2>Task dates</h2><p>Every open task that has a target date on it.</p></div></div>' +
+            '<div class="jp-tools inset"><div class="jp-seg" role="group" aria-label="Show">' + [['late', 'Late'], ['30', 'Next 30 days'], ['open', 'All']].map(function (x) { return '<button class="' + (UI.dl === x[0] ? 'on' : '') + '" data-act="dl" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
             '<span class="sp"></span><span class="jp-owner">' + (undated ? plural(undated, 'open task has', 'open tasks have') + ' no date yet' : '') + '</span></div>' +
-            '<div class="jp-card flush">' + (rows || '<div class="jp-empty"><b>' + (UI.dl === 'late' ? 'Nothing is late' : 'Nothing in this range') + '</b>' + (UI.dl === 'late' ? 'Every dated task is on time.' : 'No open tasks have a date in this range.') + '</div>') + '</div>';
+            (rows || '<div class="jp-empty"><b>' + (UI.dl === 'late' ? 'Nothing is late' : 'Nothing in this range') + '</b>' + (UI.dl === 'late' ? 'Every dated task is on time.' : 'No open tasks have a date in this range.') + '</div>') + '</section>';
+
+        return dateCard('University deadlines', 'The dates the universities set: when each application closes, and anything else they have told us.', uniDeadlines(), 'uni') +
+            dateCard('Our deadlines', isStudent() ? 'Dates One Degree set for your plan, so nothing is left to the last week.' : 'Dates ODA set itself, ahead of the universities\' own.', ourDeadlines(), 'own') +
+            taskCard;
     }
 
-    /* ---- who's on it ---- */
+    /** One of the two deadline lists: the universities' dates, or ODA's own. */
+    function dateCard(title, blurb, rows, kind) {
+        var add = isC() ? '<button class="jp-btn ghost sm" data-act="add-deadline" data-v="' + kind + '">' + ICO.plus + ' Add a date</button>' : '';
+        var body = rows.map(function (d) {
+            var days = daysUntil(d.date), p = due(days), armed = UI.armed === 'rm-dl-' + d.key;
+            var fromUni = d.key.indexOf('app-') === 0;
+            var acts = fromUni
+                ? '<button class="jp-link" data-act="open-uni" data-u="' + d.appId + '">Open</button>'
+                : (isC() ? '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-deadline" data-k="' + esc(d.key) + '">' + (armed ? 'Click again' : 'Remove') + '</button>' : '');
+            return '<div class="jp-dl with-act' + (p.cls === 'danger' ? ' over' : '') + '">' + calBox(d.date, p.cls === 'danger') +
+                '<div class="w">' + (isC() && !fromUni
+                    ? '<button class="t as-link" data-act="edit-deadline" data-k="' + esc(d.key) + '">' + esc(d.what) + '</button>'
+                    : '<span class="t">' + esc(d.what) + '</span>') +
+                '<span class="s">' + esc(d.who || (kind === 'uni' ? 'University' : 'One Degree')) + ' · ' + fmt(d.date) + '</span></div>' +
+                '<span class="o"><span class="jp-owner-chip">' + (kind === 'uni' ? 'University' : 'Ours') + '</span></span>' +
+                '<span class="pill ' + p.cls + '">' + p.label + '</span><span class="a">' + acts + '</span></div>';
+        }).join('');
+        return '<section class="jp-card flush"><div class="jp-card-h pad"><div><h2>' + esc(title) + '</h2><p>' + esc(blurb) + '</p></div>' + add + '</div>' +
+            (body || '<div class="jp-empty"><b>No dates yet</b>' + (isC() ? 'Add the ones this student has to hit.' : 'Your counsellor adds these as they are confirmed.') + '</div>') + '</section>';
+    }
+
+    /* ---- calendar and meetings ---- */
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    var EVENT_NAME = { meeting: 'Meeting', uni: 'University deadline', own: 'Our deadline', task: 'Task date' };
+
+    /** Everything on the plan that has a date, as calendar entries. */
+    function calendarEvents() {
+        var out = [];
+        P.meetings.forEach(function (m) {
+            out.push({ date: m.date, type: 'meeting', label: m.title, sub: [m.time, m.mode, m.who].filter(Boolean).join(' · ') });
+        });
+        uniDeadlines().forEach(function (d) { out.push({ date: d.date, type: 'uni', label: d.what, sub: d.who }); });
+        ourDeadlines().forEach(function (d) { out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree' }); });
+        openItems().forEach(function (i) {
+            if (i.a.target) out.push({ date: i.a.target, type: 'task', label: i.name, sub: i.where + (isStudent() ? '' : ' · ' + i.a.owner) });
+        });
+        return out;
+    }
+
+    function renderCalendar() {
+        var now = new Date(P.today + 'T00:00:00');
+        if (UI.cal.y == null) { UI.cal.y = now.getFullYear(); UI.cal.m = now.getMonth(); }
+        var y = UI.cal.y, m = UI.cal.m;
+
+        var byDay = {};
+        calendarEvents().forEach(function (e) { if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
+
+        var offset = (new Date(y, m, 1).getDay() + 6) % 7;      // weeks start on Monday
+        var daysInMonth = new Date(y, m + 1, 0).getDate();
+        var prevDays = new Date(y, m, 0).getDate();
+        var cells = '';
+        for (var n = 0; n < 42; n++) {
+            var nth = n - offset + 1, cy = y, cm = m, cd = nth, other = false;
+            if (nth < 1) { cm = m - 1; cd = prevDays + nth; other = true; if (cm < 0) { cm = 11; cy--; } }
+            else if (nth > daysInMonth) { cm = m + 1; cd = nth - daysInMonth; other = true; if (cm > 11) { cm = 0; cy++; } }
+            var iso = cy + '-' + pad2(cm + 1) + '-' + pad2(cd);
+            var list = byDay[iso] || [];
+            cells += '<button class="jp-day' + (other ? ' other' : '') + (iso === P.today ? ' today' : '') + (iso === UI.cal.sel ? ' sel' : '') + '" data-act="cal-day" data-d="' + iso + '">' +
+                '<span class="dn num">' + cd + '</span>' +
+                list.slice(0, 3).map(function (e) { return '<span class="ev ' + e.type + '">' + esc(e.label) + '</span>'; }).join('') +
+                (list.length > 3 ? '<span class="more num">+' + (list.length - 3) + ' more</span>' : '') + '</button>';
+        }
+
+        var picked = UI.cal.sel ? (byDay[UI.cal.sel] || []) : null;
+        var detail = UI.cal.sel
+            ? '<div class="jp-day-detail"><h3>' + esc(fmt(UI.cal.sel, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</h3>' +
+                (picked.length ? picked.map(function (e) {
+                    return '<div class="jp-day-row"><i class="dot ' + e.type + '"></i><div><b>' + esc(e.label) + '</b><small>' + esc(EVENT_NAME[e.type] + (e.sub ? ' · ' + e.sub : '')) + '</small></div></div>';
+                }).join('') : '<p class="muted">Nothing on this day.</p>') + '</div>'
+            : '';
+
+        var legend = '<div class="jp-legend">' + ['meeting', 'uni', 'own', 'task'].map(function (k) {
+            return '<span><i class="dot ' + k + '"></i>' + EVENT_NAME[k] + '</span>';
+        }).join('') + '</div>';
+
+        var month = '<section class="jp-card"><div class="jp-card-h"><div><h2>' + MONTHS[m] + ' ' + y + '</h2><p>Meetings, deadlines and task dates together.</p></div>' +
+            '<div class="jp-monthnav"><button class="jp-btn ghost sm" data-act="cal-step" data-v="-1">Previous</button>' +
+            '<button class="jp-btn ghost sm" data-act="cal-today">Today</button>' +
+            '<button class="jp-btn ghost sm" data-act="cal-step" data-v="1">Next</button></div></div>' +
+            legend + '<div class="jp-month">' + DOW.map(function (d) { return '<span class="dow">' + d + '</span>'; }).join('') + cells + '</div>' + detail + '</section>';
+
+        return month + renderMeetings();
+    }
+
+    function renderMeetings() {
+        var upcoming = P.meetings.filter(function (m) { return !m.done; });
+        var past = P.meetings.filter(function (m) { return m.done; }).reverse();
+        var add = isC() ? '<button class="jp-btn" data-act="add-meeting">' + ICO.plus + ' Schedule a meeting</button>' : '';
+        var body = (upcoming.length ? upcoming.map(meetingRow).join('') : '<div class="jp-empty"><b>Nothing scheduled</b>' + (isC() ? 'Book the next call with this student.' : 'Your counsellor books calls here.') + '</div>') +
+            (past.length ? '<div class="jp-meet-past">Past</div>' + past.map(meetingRow).join('') : '');
+        return '<section class="jp-card flush"><div class="jp-card-h pad"><div><h2>Meetings</h2><p>' +
+            (upcoming.length ? plural(upcoming.length, 'meeting', 'meetings') + ' coming up.' : 'Calls and meetings on this plan.') +
+            (isC() ? ' A Google Meet room is made in Google Calendar; paste its join link onto the meeting.' : '') + '</p></div>' + add + '</div>' + body + '</section>';
+    }
+
+    function meetingRow(m) {
+        var days = daysUntil(m.date), armed = UI.armed === 'rm-meeting-' + m.key;
+        var late = !m.done && days != null && days < 0;
+        var when = m.done ? 'Done' : (days === 0 ? 'Today' : late ? Math.abs(days) + (Math.abs(days) === 1 ? ' day ago' : ' days ago') : 'In ' + plural(days, 'day', 'days'));
+        return '<div class="jp-meet' + (m.done ? ' done' : '') + '">' + calBox(m.date, late) +
+            '<div class="w"><span class="t">' + esc(m.title) + '</span><span class="s">' + esc([m.time, m.minutes + ' min', m.mode, m.who].filter(Boolean).join(' · ')) + '</span>' +
+            (m.notes ? '<span class="notes">' + esc(m.notes) + '</span>' : '') + '</div>' +
+            '<span class="pill ' + (m.done ? 'good' : late ? 'danger' : days <= 3 ? 'amber' : 'wait') + '">' + when + '</span>' +
+            '<span class="a">' +
+            (m.link && !m.done ? '<a class="jp-btn sm" href="' + esc(m.link) + '" target="_blank" rel="noopener">Join</a>' : '') +
+            (isC() ? '<a class="jp-btn ghost sm" href="' + esc(gcalUrl(m)) + '" target="_blank" rel="noopener">Google Calendar</a>' +
+                '<button class="jp-btn ghost sm" data-act="edit-meeting" data-k="' + esc(m.key) + '">Edit</button>' +
+                '<button class="jp-btn ghost sm" data-act="meeting-done" data-k="' + esc(m.key) + '">' + (m.done ? 'Reopen' : 'Mark done') + '</button>' +
+                '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-meeting" data-k="' + esc(m.key) + '">' + (armed ? 'Click again' : 'Cancel') + '</button>' : '') +
+            '</span></div>';
+    }
+
+    /* ---- the team, and who owes what ---- */
     function renderOwners() {
         var items = openItems().sort(byDate);
         var parties = [
@@ -539,13 +755,38 @@
             ['Counsellor', function (o) { return o.indexOf('Counsellor') >= 0; }, 'counsellor'],
             ['University / bank', function (o) { return o === 'University' || o.indexOf('Bank') === 0; }, 'other']
         ];
-        return '<p class="jp-intro">A shared task (for example Student &amp; Counsellor) shows for each of them.</p><div class="jp-owners">' +
+        var owners = '<section class="jp-card"><div class="jp-card-h"><div><h2>Open tasks by side</h2><p>A shared task (for example Student &amp; Counsellor) shows for each of them.</p></div></div><div class="jp-owners">' +
             parties.map(function (p) {
                 var mine = items.filter(function (i) { return p[1](i.a.owner); });
                 return '<div class="jp-own jp-own-' + p[2] + '"><h3><span class="jp-own-name"><i></i>' + p[0] + '</span><span class="num">' + mine.length + '</span></h3><div class="sub">' + (mine.length === 1 ? 'open task' : 'open tasks') + (mine.length > 6 ? ' · next 6 shown' : '') + '</div>' +
                     (mine.length ? '<ul>' + mine.slice(0, 6).map(function (i) { var d = daysUntil(i.a.target); return '<li><div>' + esc(i.name) + '<small>' + esc(i.where) + '</small></div><span class="when num' + (d != null && d < 0 ? ' over' : '') + '">' + (i.a.target ? fmt(i.a.target, { day: 'numeric', month: 'short' }) : 'No date') + '</span></li>'; }).join('') + '</ul>'
-                        : '<p style="font-size:.85rem;color:var(--muted)">Nothing open.</p>') + '</div>';
-            }).join('') + '</div>';
+                        : '<p class="muted" style="font-size:.85rem">Nothing open.</p>') + '</div>';
+            }).join('') + '</div></section>';
+        return renderTeam() + owners;
+    }
+
+    /*
+     * Who is on this student's file. The designations are ODA's standard list
+     * plus any the counsellor types in; a new one is kept on the plan, so it is
+     * there in the dropdown the next time. A student sees the names and the
+     * roles — the contact details are the team's own and stay in the CRM.
+     */
+    function renderTeam() {
+        var add = isC() ? '<button class="jp-btn" data-act="add-member">' + ICO.plus + ' Add someone</button>' : '';
+        var cards = P.team.map(function (mb) {
+            var armed = UI.armed === 'rm-member-' + mb.key;
+            return '<div class="jp-member' + (mb.external ? ' ext' : '') + '"><span class="rl">' + esc(mb.role) + '</span>' +
+                '<span class="nm">' + esc(mb.name) + '</span>' +
+                (mb.contact ? '<span class="ct">' + esc(mb.contact) + '</span>' : '') +
+                (mb.external ? '<span class="ex">External</span>' : '') +
+                (isC() ? '<span class="a"><button class="jp-link" data-act="edit-member" data-k="' + esc(mb.key) + '">Edit</button>' +
+                    '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-member" data-k="' + esc(mb.key) + '">' + (armed ? 'Click again' : 'Remove') + '</button></span>' : '') + '</div>';
+        }).join('');
+        return '<section class="jp-card"><div class="jp-card-h"><div><h2>' + (isStudent() ? 'Your team' : 'Team on this file') + '</h2><p>' +
+            (isStudent() ? 'The people working on your journey with you.' : 'Counsellor, specialist or mentor, supervisor, content writer, external experts — and any designation of your own.') +
+            '</p></div>' + add + '</div>' +
+            (cards ? '<div class="jp-team">' + cards + '</div>'
+                : '<div class="jp-empty"><b>Nobody named yet</b>' + (isC() ? 'Add the people working on this student.' : 'Your counsellor names the team here.') + '</div>') + '</section>';
     }
 
     /* ---- student login (counsellor) ---- */
@@ -585,6 +826,23 @@
     function docAttention() {
         return P.documents.filter(function (d) { return d.kind === 'essay' && (isStudent() ? d.status === 'Needs changes' : isC() && d.status === 'Submitted'); }).length;
     }
+    /*
+     * A document's edit history. The planner writes an entry itself whenever a
+     * document moves — a draft saved, an essay sent for review, feedback given
+     * — and either side can add one by hand for a change made outside it. The
+     * version number moves only when the content does, so "version 3" means
+     * the same thing to the student and the counsellor.
+     */
+    function editLog(d) {
+        var rows = (d.edits || []).map(function (e) {
+            return '<li><span class="v num">v' + e.version + '</span><div><b>' + esc(e.note) + '</b><small>' + esc(e.byName) + ' · ' + esc(when(e.at)) + '</small></div></li>';
+        }).join('');
+        return '<div class="jp-doc-history"><div class="jp-doc-history-h"><b>Edits on this document</b>' +
+            '<span class="muted">Version ' + (d.version || 1) + ' · ' + plural((d.edits || []).length, 'edit', 'edits') + '</span>' +
+            (d.canEdit ? '<button class="jp-btn ghost sm" data-act="log-edit" data-id="' + d.id + '">Log an edit</button>' : '') + '</div>' +
+            (rows ? '<ol class="jp-edits">' + rows + '</ol>' : '<p class="muted">Nothing recorded yet.</p>') + '</div>';
+    }
+
     function essayPill(st) { return { 'Draft': 'wait', 'Submitted': 'amber', 'Needs changes': 'danger', 'Approved': 'good' }[st] || 'wait'; }
     function essayLabel(st) { return st === 'Submitted' ? (isStudent() ? 'Sent for review' : 'Waiting for review') : st; }
     function kb(n) { if (!n && n !== 0) return ''; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
@@ -617,7 +875,7 @@
                     : 'Essays ' + esc(P.student.firstName) + ' has written. Open one to read it, then approve it or send it back with feedback.') + '</p></div></div>' +
                 (essays.length ? '<div class="jp-essays">' + essays.map(function (d) {
                     return '<button class="jp-essay" data-act="open-essay" data-id="' + d.id + '"><span class="top"><span class="cat">' + esc(d.category) + '</span><span class="pill ' + essayPill(d.status) + '">' + esc(essayLabel(d.status)) + '</span></span>' +
-                        '<h3>' + esc(d.title) + '</h3><span class="meta">' + (d.university ? esc(d.university) + ' · ' : '') + plural(d.words || 0, 'word', 'words') + ' · updated ' + esc(when2(d.updatedAt)) + '</span>' +
+                        '<h3>' + esc(d.title) + '</h3><span class="meta">' + (d.university ? esc(d.university) + ' · ' : '') + plural(d.words || 0, 'word', 'words') + ' · v' + (d.version || 1) + ' · ' + plural((d.edits || []).length, 'edit', 'edits') + '</span>' +
                         (d.feedback ? '<span class="fb"><b>Feedback:</b> ' + esc(d.feedback.length > 110 ? d.feedback.slice(0, 110) + '…' : d.feedback) + '</span>' : '') + '</button>';
                 }).join('') + '</div>' : '<div class="jp-empty"><b>No essays yet</b>' + (canAdd ? 'Choose "Write an essay" to start one.' : 'Nothing has been written yet.') + '</div>') + '</section>';
         }
@@ -628,14 +886,16 @@
                 (isStudent() ? 'Transcripts, score reports, passport, financial papers and anything else your applications need. PDF, Word or JPG/PNG, up to ' + Math.round(DT.limits.maxKb / 1024) + ' MB each.'
                     : 'Documents stored on this plan, by the student and by the team.') + '</p></div></div>' +
                 (files.length ? '<div class="jp-files">' + files.map(function (d) {
-                    var armed = UI.armed === 'rm-doc-' + d.id;
-                    return '<div class="jp-file"><span class="jp-file-ico k-' + fileKind(d) + '">' + ICO.doc + '<small>' + fileKind(d).toUpperCase() + '</small></span>' +
-                        '<div class="w"><span class="t">' + esc(d.title) + '</span><span class="s">' + esc(d.fileName || '') + ' · ' + esc(kb(d.size)) + '</span></div>' +
+                    var armed = UI.armed === 'rm-doc-' + d.id, open = UI.openDoc === d.id;
+                    return '<div class="jp-file-wrap' + (open ? ' open' : '') + '"><div class="jp-file"><span class="jp-file-ico k-' + fileKind(d) + '">' + ICO.doc + '<small>' + fileKind(d).toUpperCase() + '</small></span>' +
+                        '<div class="w"><span class="t">' + esc(d.title) + '</span><span class="s">' + esc(d.fileName || '') + ' · ' + esc(kb(d.size)) + ' · v' + (d.version || 1) + '</span></div>' +
                         '<span class="jp-owner-chip">' + esc(d.category) + '</span>' +
                         '<span class="u">' + (d.university ? esc(d.university) : '<span class="muted">All universities</span>') + '</span>' +
                         '<span class="by"><b>' + esc(d.byName) + '</b><small>' + esc(when2(d.createdAt)) + '</small></span>' +
-                        '<span class="acts"><a class="jp-btn ghost sm" href="' + esc(d.url) + '">Download</a>' +
-                        (d.canDelete ? '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-doc" data-id="' + d.id + '">' + (armed ? 'Click again' : 'Remove') + '</button>' : '') + '</span></div>';
+                        '<span class="acts"><button class="jp-btn ghost sm" data-act="doc-history" data-id="' + d.id + '">' + (open ? 'Hide edits' : plural((d.edits || []).length, 'edit', 'edits')) + '</button>' +
+                        '<a class="jp-btn ghost sm" href="' + esc(d.url) + '">Download</a>' +
+                        (d.canDelete ? '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-doc" data-id="' + d.id + '">' + (armed ? 'Click again' : 'Remove') + '</button>' : '') + '</span></div>' +
+                        (open ? editLog(d) : '') + '</div>';
                 }).join('') + '</div>' : '<div class="jp-empty"><b>No files yet</b>' + (canAdd ? 'Choose "Upload a file" to add one.' : 'Nothing has been uploaded yet.') + '</div>') + '</section>';
         }
         return tools + essayHtml + fileHtml;
@@ -666,7 +926,8 @@
             '<textarea id="es-feedback" maxlength="5000" placeholder="What works, what to change…">' + esc(d.feedback || '') + '</textarea>' +
             '<div class="jp-actions left"><button class="jp-btn danger" data-act="essay-review" data-v="Needs changes">Send back for changes</button><button class="jp-btn" data-act="essay-review" data-v="Approved">Approve essay</button></div></section>' : '';
         var info = isStudent() && d.status === 'Submitted' ? '<div class="jp-alert">Sent to your counsellor for review. You can still keep improving it while you wait.</div>' : '';
-        return head + '<section class="jp-card">' + meta + feedback + info + editor + (actions ? '<div class="jp-actions left">' + actions + '</div>' : '') + '</section>' + review;
+        return head + '<section class="jp-card">' + meta + feedback + info + editor + (actions ? '<div class="jp-actions left">' + actions + '</div>' : '') + '</section>' + review +
+            '<section class="jp-card">' + editLog(saved) + '</section>';
     }
 
     function essayValues() {
@@ -689,6 +950,9 @@
             ['Ticking things off', 'You can update the tasks that are yours. When one is done, tick it and your counsellor is told.'],
             ['Dates and notes', 'Your counsellor sets the target dates and leaves notes on tasks. Open any task to see what to prepare.'],
             ['Late tasks', 'Anything past its date turns red. If a date no longer works, talk to your counsellor and they\'ll move it.'],
+            ['Deadlines and the Calendar', 'Deadlines keeps the universities\' dates and One Degree\'s own side by side, and your task dates below them. Calendar shows the same dates as a month, with every meeting booked.'],
+            ['Your team', 'Everyone working on your journey, and what each side has open. Meetings show a Join button when there is a link.'],
+            ['Edits on a document', 'Open any document to see every change made to it and which version it is on, so you always know whether you are reading the latest one.'],
             ['Documents & essays', 'Upload your documents and write your SOP and essays under My documents. Send an essay for review and your counsellor\'s feedback appears on it.'],
             ['Your password', 'Change it any time from the menu. If you forget it, ask your counsellor to reset it.']
         ] : [
@@ -700,7 +964,11 @@
             ['Admin password', 'Every student login has an admin password on the Student login page. It always signs in to that student\'s portal, even after they change their own password. Each use is noted on the lead timeline.'],
             ['The student\'s login', 'Created when the planner is started. The student sees what is switched on and updates the tasks they own; each update lands on the lead timeline.'],
             ['Documents & essays', 'Everything the student uploads or writes is under Documents. Open an essay to approve it or send it back with feedback; uploads and essays sent for review land on the lead timeline.'],
-            ['Progress', '% complete = Completed ÷ (Included − Not Applicable), the same rule as the planner workbook.']
+            ['University requirements', 'The top of each university block records what it asks for — tests, documents, entry requirements and the date it closes. The closing date also shows in Deadlines and on the Calendar.'],
+            ['Deadlines and meetings', 'Deadlines holds the universities\' dates and ODA\'s own separately. Calendar shows everything as a month. A Google Meet room is made in Google Calendar — use the button on a meeting, then paste the join link back with Edit.'],
+            ['The team on a file', 'Name the counsellor, specialist, supervisor, content writer and anyone external. Type a designation of your own and it joins the dropdown for this student.'],
+            ['Document edits', 'Every document keeps its own history and a version number. The planner records drafts, reviews and approvals itself; use “Log an edit” for a change made outside it. The student sees the history.'],
+            ['Progress', 'Counted, never a percentage: Completed against Included minus Not Applicable. Dates do the rest of the work.']
         ];
         return '<div class="jp-guide">' + g.map(function (x) { return '<div><h4>' + esc(x[0]) + '</h4><p>' + esc(x[1]) + '</p></div>'; }).join('') + '</div>';
     }
@@ -750,6 +1018,15 @@
             '<label for="u-prog">Programme / course</label><input id="u-prog" maxlength="190" value="' + esc(a.program) + '" placeholder="e.g. Master of Data Science"><p class="err" role="alert"></p>';
     }
 
+    function checked(id) { var e = document.getElementById(id); return !!(e && e.checked); }
+    function findDeadline(key) { return P.deadlines.find(function (d) { return d.key === key; }); }
+    function findMeeting(key) { return P.meetings.find(function (m) { return m.key === key; }); }
+    function findMember(key) { return P.team.find(function (m) { return m.key === key; }); }
+    function keyUrl(template, key) { return template.replace('__KEY__', key); }
+    function options(list, selected) {
+        return list.map(function (o) { return '<option' + (o === selected ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+    }
+
     function goTo(view) {
         UI.menu = false;
         if (location.hash !== '#' + view) { location.hash = view; } else { fromHash(); render(); }
@@ -757,12 +1034,13 @@
     function scrollToEl(id) { setTimeout(function () { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60); }
 
     /* ------------------------------------------------------------ events */
-    window.addEventListener('hashchange', function () { fromHash(); UI.menu = false; UI.armed = null; if (UI.view !== 'documents') { UI.essayId = null; UI.essayDirty = false; UI.draft = null; } render(); window.scrollTo(0, 0); });
+    window.addEventListener('hashchange', function () { fromHash(); UI.menu = false; UI.armed = null; if (UI.view !== 'documents') { UI.essayId = null; UI.essayDirty = false; UI.draft = null; UI.openDoc = null; } render(); window.scrollTo(0, 0); });
 
     document.addEventListener('click', function (e) {
         var el = e.target.closest('[data-act]'); if (!el) return;
         var act = el.dataset.act;
-        if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage', 'new-admin-pw'].indexOf(act) < 0) { UI.armed = null; }
+        if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage',
+            'new-admin-pw', 'rm-deadline', 'rm-meeting', 'rm-member'].indexOf(act) < 0) { UI.armed = null; }
         var appId = el.dataset.app ? parseInt(el.dataset.app, 10) : null;
 
         switch (act) {
@@ -792,6 +1070,21 @@
                 return;
             }
             case 'dl': UI.dl = el.dataset.v; render(); return;
+            case 'cal-step': {
+                UI.cal.m += parseInt(el.dataset.v, 10);
+                if (UI.cal.m > 11) { UI.cal.m = 0; UI.cal.y++; }
+                if (UI.cal.m < 0) { UI.cal.m = 11; UI.cal.y--; }
+                render(); return;
+            }
+            case 'cal-today': {
+                var t0 = new Date(P.today + 'T00:00:00');
+                UI.cal.y = t0.getFullYear(); UI.cal.m = t0.getMonth(); UI.cal.sel = P.today; render(); return;
+            }
+            case 'cal-day': UI.cal.sel = UI.cal.sel === el.dataset.d ? null : el.dataset.d; render(); return;
+            case 'doc-history': {
+                var hid = parseInt(el.dataset.id, 10);
+                UI.openDoc = UI.openDoc === hid ? null : hid; render(); return;
+            }
             case 'doc-tab': UI.docTab = el.dataset.v; render(); return;
             case 'open-essay': UI.essayId = parseInt(el.dataset.id, 10); UI.essayDirty = false; UI.draft = null; render(); window.scrollTo(0, 0); return;
             case 'essay-back':
@@ -808,6 +1101,28 @@
 
         if (isC() || isStudent()) {
             switch (act) {
+                case 'log-edit': {
+                    var ld = findDoc(parseInt(el.dataset.id, 10));
+                    if (!ld) return;
+                    modal('<h3>Log an edit</h3><p class="sub">For a change you made to “' + esc(ld.title) + '” outside the planner. ' +
+                        (isStudent() ? 'Your counsellor sees this.' : 'The student sees this.') + '</p>' +
+                        '<label for="le-note">What changed?</label><input id="le-note" maxlength="290" placeholder="e.g. Rewrote the opening and tightened paragraph 3">' +
+                        '<label class="jp-check"><input type="checkbox" id="le-ver" checked> This is a new version (now v' + ((ld.version || 1) + 1) + ')</label>' +
+                        '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
+                        '<button class="jp-btn" data-act="save-log-edit" data-id="' + ld.id + '">Log it</button></div>');
+                    return;
+                }
+                case 'save-log-edit': {
+                    if (UI.busy) return;
+                    var note = val('le-note');
+                    if (!note) { modalError('Say what changed.'); return; }
+                    UI.busy = true; el.disabled = true;
+                    api('POST', P.endpoints.documentEdits.replace('__ID__', el.dataset.id), { note: note, new_version: checked('le-ver') })
+                        .then(function (res) {
+                            replaceDoc(res.document); UI.openDoc = res.document.id; closeModal(); render(); toast('Edit logged');
+                        }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                    return;
+                }
                 case 'essay-save': saveEssay({}, 'Draft saved'); return;
                 case 'essay-submit': saveEssay({ submit: true }, 'Sent to your counsellor for review'); return;
                 case 'essay-review': {
@@ -873,6 +1188,126 @@
         if (!isC()) return; /* everything below is the counsellor's */
 
         switch (act) {
+            case 'add-deadline': case 'edit-deadline': {
+                var dl = act === 'edit-deadline' ? findDeadline(el.dataset.k) : null;
+                var dlKind = dl ? dl.kind : el.dataset.v;
+                modal('<h3>' + (dl ? 'Edit this date' : dlKind === 'uni' ? 'Add a university date' : 'Add one of our dates') + '</h3>' +
+                    '<p class="sub">' + (dlKind === 'uni' ? 'A date a university set. An application closing date is better recorded on the university itself, where the checklist can see it.'
+                        : 'A date ODA set for itself, usually ahead of the university\'s own.') + '</p>' +
+                    '<label for="dl-what">What is it for?</label><input id="dl-what" maxlength="150" value="' + esc(dl ? dl.what : '') + '" placeholder="' + (dlKind === 'uni' ? 'e.g. Early round closes' : 'e.g. SOP first draft from the student') + '">' +
+                    '<div class="two"><div><label for="dl-who">Who</label><input id="dl-who" maxlength="120" value="' + esc(dl ? dl.who : '') + '" placeholder="' + (dlKind === 'uni' ? 'University' : 'Who owns it') + '"></div>' +
+                    '<div><label for="dl-date">Date</label><input id="dl-date" type="date" value="' + esc(dl ? dl.date : '') + '"></div></div>' +
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
+                    '<button class="jp-btn" data-act="save-deadline" data-v="' + dlKind + '"' + (dl ? ' data-k="' + esc(dl.key) + '"' : '') + '>' + (dl ? 'Save' : 'Add date') + '</button></div>');
+                return;
+            }
+            case 'save-deadline': {
+                if (UI.busy) return;
+                var dWhat = val('dl-what'), dDate = val('dl-date');
+                if (!dWhat) { modalError('Say what the date is for.'); return; }
+                if (!dDate) { modalError('Choose a date.'); return; }
+                var dKey = el.dataset.k;
+                UI.busy = true; el.disabled = true;
+                api(dKey ? 'PATCH' : 'POST', dKey ? keyUrl(P.endpoints.deadline, dKey) : P.endpoints.deadlines,
+                    { kind: el.dataset.v, what: dWhat, who: val('dl-who'), date: dDate }).then(function (res) {
+                        P.deadlines = res.deadlines; closeModal(); render(); toast(dKey ? 'Date saved' : 'Date added');
+                    }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
+            case 'rm-deadline': {
+                var rdk = el.dataset.k;
+                if (UI.armed !== 'rm-dl-' + rdk) { UI.armed = 'rm-dl-' + rdk; render(); return; }
+                UI.armed = null;
+                api('DELETE', keyUrl(P.endpoints.deadline, rdk)).then(function (res) {
+                    P.deadlines = res.deadlines; render(); toast('Date removed');
+                }, function (err) { render(); toast(err.message, true); });
+                return;
+            }
+            case 'add-meeting': case 'edit-meeting': {
+                var mt = act === 'edit-meeting' ? findMeeting(el.dataset.k) : null;
+                modal('<h3>' + (mt ? 'Edit meeting' : 'Schedule a meeting') + '</h3>' +
+                    '<p class="sub">Google Meet rooms are made in Google Calendar. Save this, open it in Google Calendar from the list, then paste the join link back in here.</p>' +
+                    '<label for="mt-title">What is it about?</label><input id="mt-title" maxlength="150" value="' + esc(mt ? mt.title : '') + '" placeholder="e.g. Shortlist review with parents">' +
+                    '<div class="two"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : '') + '"></div>' +
+                    '<div><label for="mt-time">Time</label><input id="mt-time" type="time" value="' + esc(mt ? mt.time : '16:00') + '"></div></div>' +
+                    '<div class="two"><div><label for="mt-mode">How</label><select id="mt-mode">' + options(T.meetingModes, mt ? mt.mode : T.meetingModes[0]) + '</select></div>' +
+                    '<div><label for="mt-mins">Minutes</label><input id="mt-mins" type="number" min="5" max="480" step="5" value="' + (mt ? mt.minutes : 45) + '"></div></div>' +
+                    '<label for="mt-who">Who is coming</label><input id="mt-who" maxlength="190" value="' + esc(mt ? mt.who : '') + '" placeholder="e.g. ' + esc(P.student.firstName) + ', parents, you">' +
+                    '<label for="mt-link">Join link <span style="font-weight:500">(optional)</span></label><input id="mt-link" maxlength="300" value="' + esc(mt ? mt.link : '') + '" placeholder="https://meet.google.com/…">' +
+                    '<label for="mt-notes">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="mt-notes" maxlength="1000" rows="3" placeholder="Where to meet, what to bring, what was agreed…">' + esc(mt ? mt.notes : '') + '</textarea>' +
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
+                    '<button class="jp-btn" data-act="save-meeting"' + (mt ? ' data-k="' + esc(mt.key) + '"' : '') + '>' + (mt ? 'Save' : 'Schedule it') + '</button></div>');
+                return;
+            }
+            case 'save-meeting': {
+                if (UI.busy) return;
+                var mTitle = val('mt-title'), mDate = val('mt-date'), mLink = val('mt-link');
+                if (!mTitle) { modalError('Say what the meeting is about.'); return; }
+                if (!mDate) { modalError('Choose a date.'); return; }
+                if (mLink && mLink.indexOf('https://') !== 0) { modalError('A join link has to start with https://.'); return; }
+                var mKey = el.dataset.k;
+                var mBody = {
+                    title: mTitle, date: mDate, time: val('mt-time') || null, minutes: parseInt(val('mt-mins'), 10) || 45,
+                    mode: val('mt-mode'), who: val('mt-who'), link: mLink || null,
+                    notes: (document.getElementById('mt-notes') || {}).value || ''
+                };
+                UI.busy = true; el.disabled = true;
+                api(mKey ? 'PATCH' : 'POST', mKey ? keyUrl(P.endpoints.meeting, mKey) : P.endpoints.meetings, mBody).then(function (res) {
+                    P.meetings = res.meetings; closeModal(); render(); toast(mKey ? 'Meeting saved' : 'Meeting scheduled');
+                }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
+            case 'meeting-done': {
+                var dm = findMeeting(el.dataset.k);
+                if (!dm) return;
+                api('PATCH', keyUrl(P.endpoints.meeting, dm.key), { done: !dm.done }).then(function (res) {
+                    P.meetings = res.meetings; render(); toast(dm.done ? 'Back on the list' : 'Marked as done');
+                }, function (err) { render(); toast(err.message, true); });
+                return;
+            }
+            case 'rm-meeting': {
+                var rmk = el.dataset.k;
+                if (UI.armed !== 'rm-meeting-' + rmk) { UI.armed = 'rm-meeting-' + rmk; render(); return; }
+                UI.armed = null;
+                api('DELETE', keyUrl(P.endpoints.meeting, rmk)).then(function (res) {
+                    P.meetings = res.meetings; render(); toast('Meeting cancelled');
+                }, function (err) { render(); toast(err.message, true); });
+                return;
+            }
+            case 'add-member': case 'edit-member': {
+                var mb = act === 'edit-member' ? findMember(el.dataset.k) : null;
+                modal('<h3>' + (mb ? 'Edit this person' : 'Add someone to the file') + '</h3>' +
+                    '<p class="sub">' + esc(P.student.firstName) + ' sees the name and the designation, not the contact details.</p>' +
+                    '<label for="mb-role">Designation</label><select id="mb-role">' + options(T.teamRoles, mb ? mb.role : T.teamRoles[0]) + '</select>' +
+                    '<label for="mb-newrole">Or add a designation of your own</label><input id="mb-newrole" maxlength="60" placeholder="e.g. Portfolio reviewer">' +
+                    '<label for="mb-name">Name</label><input id="mb-name" maxlength="120" value="' + esc(mb ? mb.name : '') + '" placeholder="e.g. Priya Sharma">' +
+                    '<label for="mb-contact">Email or note <span style="font-weight:500">(optional)</span></label><input id="mb-contact" maxlength="190" value="' + esc(mb ? mb.contact : '') + '" placeholder="e.g. priya@onedegreeadvisory.com">' +
+                    '<label class="jp-check"><input type="checkbox" id="mb-ext"' + (mb && mb.external ? ' checked' : '') + '> Outside ODA (an alum, a partner, a guest expert)</label>' +
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
+                    '<button class="jp-btn" data-act="save-member"' + (mb ? ' data-k="' + esc(mb.key) + '"' : '') + '>' + (mb ? 'Save' : 'Add') + '</button></div>');
+                return;
+            }
+            case 'save-member': {
+                if (UI.busy) return;
+                var mbName = val('mb-name');
+                if (!mbName) { modalError('Give the person a name.'); return; }
+                var mbKey = el.dataset.k;
+                var mbBody = { role: val('mb-newrole') || val('mb-role'), name: mbName, contact: val('mb-contact'), external: checked('mb-ext') };
+                UI.busy = true; el.disabled = true;
+                api(mbKey ? 'PATCH' : 'POST', mbKey ? keyUrl(P.endpoints.member, mbKey) : P.endpoints.team, mbBody).then(function (res) {
+                    P.team = res.team; T.teamRoles = res.roles; closeModal(); render(); toast(mbKey ? 'Saved' : mbName + ' added');
+                }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
+            case 'rm-member': {
+                var rmb = el.dataset.k;
+                if (UI.armed !== 'rm-member-' + rmb) { UI.armed = 'rm-member-' + rmb; render(); return; }
+                UI.armed = null;
+                api('DELETE', keyUrl(P.endpoints.member, rmb)).then(function (res) {
+                    P.team = res.team; T.teamRoles = res.roles; render(); toast('Removed from the file');
+                }, function (err) { render(); toast(err.message, true); });
+                return;
+            }
             case 'add-stage': case 'edit-stage': {
                 var st = act === 'edit-stage' ? T.phases.find(function (x) { return x.key === el.dataset.p; }) : null;
                 var standard = T.phases.filter(function (x) { return !x.custom; });

@@ -238,7 +238,8 @@ class CrmDashboardController extends Controller
                 // The tiles count everyone this person can see, before any filter.
                 $journeyStats = [
                     'total' => $rows->count(),
-                    'average' => $rows->count() ? (int) round($rows->avg(fn ($r) => $r['all']['percent'])) : 0,
+                    'done' => (int) $rows->sum(fn ($r) => $r['all']['completed']),
+                    'steps' => (int) $rows->sum(fn ($r) => $r['all']['included'] - $r['all']['not_applicable']),
                     'late' => $rows->filter(fn ($r) => $r['overdue'] > 0)->count(),
                     'essays' => (int) $rows->sum(fn ($r) => $r['plan']->essays_waiting),
                     'neverSignedIn' => $rows->filter(fn ($r) => ! $r['plan']->lead->studentAccount?->last_login_at)->count(),

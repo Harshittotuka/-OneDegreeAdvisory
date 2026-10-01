@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Crm;
 
 use App\Http\Controllers\Controller;
 use App\Models\CrmJourneyApplication;
+use App\Models\CrmJourneyDocument;
 use App\Models\CrmJourneyPlan;
 use App\Models\CrmLead;
 use App\Models\CrmStudentAccount;
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The counsellor's side of the student journey planner.
@@ -66,6 +68,13 @@ class CrmJourneyPlannerController extends Controller
                 'stages' => route('crm.journey.stages.store', $lead),
                 'stage' => route('crm.journey.stages.update', [$lead, '__KEY__']),
                 'document' => route('crm.journey.documents.update', [$lead, '__ID__']),
+                'documentEdits' => route('crm.journey.documents.edits.store', [$lead, '__ID__']),
+                'team' => route('crm.journey.team.store', $lead),
+                'member' => route('crm.journey.team.update', [$lead, '__KEY__']),
+                'deadlines' => route('crm.journey.deadlines.store', $lead),
+                'deadline' => route('crm.journey.deadlines.update', [$lead, '__KEY__']),
+                'meetings' => route('crm.journey.meetings.store', $lead),
+                'meeting' => route('crm.journey.meetings.update', [$lead, '__KEY__']),
                 'back' => $back,
             ] : ['back' => $back], $mode === 'counsellor' ? session('journey_credentials') : null),
         ]);
@@ -185,6 +194,10 @@ class CrmJourneyPlannerController extends Controller
             'country' => trim((string) ($data['country'] ?? '')) ?: null,
             'program' => trim((string) ($data['program'] ?? '')) ?: null,
             'fit' => $data['fit'] ?? null,
+            'tests_required' => trim((string) ($data['tests_required'] ?? '')) ?: null,
+            'documents_required' => trim((string) ($data['documents_required'] ?? '')) ?: null,
+            'requirements' => trim((string) ($data['requirements'] ?? '')) ?: null,
+            'deadline' => $data['deadline'] ?? null,
             'activities' => JourneyPlanner::freshApplication(),
         ]);
         if ($application->fit) {
@@ -206,7 +219,7 @@ class CrmJourneyPlannerController extends Controller
         $data = $request->validate(array_merge($this->applicationRules(partial: true), [
             'offer_type' => ['sometimes', 'nullable', Rule::in(JourneyPlanner::OFFER_TYPES)],
         ]));
-        foreach (['university', 'country', 'program', 'fit', 'offer_type'] as $field) {
+        foreach (['university', 'country', 'program', 'fit', 'offer_type', 'tests_required', 'documents_required', 'requirements', 'deadline'] as $field) {
             if (array_key_exists($field, $data)) {
                 $application->{$field} = is_string($data[$field]) ? (trim($data[$field]) ?: null) : $data[$field];
             }
@@ -314,7 +327,7 @@ class CrmJourneyPlannerController extends Controller
             $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
             $tasks = $locked->custom_tasks ?? [];
             if (count($tasks) >= self::MAX_CUSTOM_TASKS) {
-                throw \Illuminate\Validation\ValidationException::withMessages(['name' => 'This plan already has '.self::MAX_CUSTOM_TASKS.' added tasks, the most it can hold. Remove one you no longer need first.']);
+                throw ValidationException::withMessages(['name' => 'This plan already has '.self::MAX_CUSTOM_TASKS.' added tasks, the most it can hold. Remove one you no longer need first.']);
             }
             $key = 'c-'.Str::lower(Str::random(10));
             $tasks[] = [
@@ -423,7 +436,7 @@ class CrmJourneyPlannerController extends Controller
             $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
             $stages = $locked->custom_stages ?? [];
             if (count($stages) >= self::MAX_CUSTOM_STAGES) {
-                throw \Illuminate\Validation\ValidationException::withMessages(['name' => 'This plan already has '.self::MAX_CUSTOM_STAGES.' added stages, the most it can hold.']);
+                throw ValidationException::withMessages(['name' => 'This plan already has '.self::MAX_CUSTOM_STAGES.' added stages, the most it can hold.']);
             }
             $stage = [
                 'key' => 's-'.Str::lower(Str::random(10)), 'name' => trim($data['name']),
@@ -521,6 +534,357 @@ class CrmJourneyPlannerController extends Controller
         ];
     }
 
+    /* ------------------------------------------------------------ team, deadlines and meetings */
+
+    /** Most rows each of the plan's three lists can hold. */
+    private const MAX_TEAM = 24;
+
+    private const MAX_ROLES = 20;
+
+    private const MAX_DEADLINES = 80;
+
+    private const MAX_MEETINGS = 120;
+
+    /**
+     * Add someone to this student's file. The designation can be one ODA
+     * already uses or a new one the counsellor types; a new one is kept on the
+     * plan so it appears in the dropdown from then on.
+     */
+    public function storeMember(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $request->validate($this->memberRules(), [], ['role' => 'designation']);
+
+        $result = $this->withList($plan, 'team', function (array &$team) use ($data, $plan): array {
+            if (count($team) >= self::MAX_TEAM) {
+                throw ValidationException::withMessages(['name' => 'This plan already names '.self::MAX_TEAM.' people, the most it can hold.']);
+            }
+            $member = [
+                'key' => 't-'.Str::lower(Str::random(10)),
+                'role' => $this->resolveRole($plan, trim($data['role'])),
+                'name' => trim($data['name']),
+                'contact' => trim((string) ($data['contact'] ?? '')),
+                'external' => (bool) ($data['external'] ?? false),
+            ];
+            $team[] = $member;
+
+            return $member;
+        });
+
+        $audit->record($request, $this->user($request), 'journey_team_added', "Added {$result['name']} ({$result['role']}) to {$lead->name}'s journey planner", [
+            'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $result['name'],
+        ]);
+
+        return $this->teamResponse($plan, ['member' => $result]);
+    }
+
+    /** Change someone's designation, name or contact details. */
+    public function updateMember(Request $request, CrmLead $lead, string $member): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $request->validate($this->memberRules(partial: true), [], ['role' => 'designation']);
+
+        $found = $this->withList($plan, 'team', function (array &$team) use ($data, $member, $plan): bool {
+            foreach ($team as &$m) {
+                if (($m['key'] ?? null) !== $member) {
+                    continue;
+                }
+                if (array_key_exists('role', $data)) {
+                    $m['role'] = $this->resolveRole($plan, trim($data['role']));
+                }
+                foreach (['name', 'contact'] as $f) {
+                    if (array_key_exists($f, $data)) {
+                        $m[$f] = trim((string) $data[$f]);
+                    }
+                }
+                if (array_key_exists('external', $data)) {
+                    $m['external'] = (bool) $data['external'];
+                }
+
+                return true;
+            }
+
+            return false;
+        });
+        abort_unless($found, 404);
+
+        return $this->teamResponse($plan);
+    }
+
+    public function destroyMember(Request $request, CrmLead $lead, string $member, CrmAuditLogger $audit): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+
+        $gone = $this->withList($plan, 'team', function (array &$team) use ($member): ?array {
+            $match = collect($team)->firstWhere('key', $member);
+            $team = array_values(array_filter($team, fn ($m) => ($m['key'] ?? null) !== $member));
+
+            return $match;
+        });
+        abort_if($gone === null, 404);
+
+        $audit->record($request, $this->user($request), 'journey_team_removed', "Removed {$gone['name']} from {$lead->name}'s journey planner", [
+            'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $gone['name'],
+        ]);
+
+        return $this->teamResponse($plan);
+    }
+
+    /** A date this plan has to hit: the university's own, or one ODA set itself. */
+    public function storeDeadline(Request $request, CrmLead $lead): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $request->validate($this->deadlineRules(), [], ['what' => 'deadline']);
+
+        $this->withList($plan, 'deadlines', function (array &$list) use ($data): void {
+            if (count($list) >= self::MAX_DEADLINES) {
+                throw ValidationException::withMessages(['what' => 'This plan already holds '.self::MAX_DEADLINES.' deadlines, the most it can hold.']);
+            }
+            $list[] = [
+                'key' => 'd-'.Str::lower(Str::random(10)),
+                'kind' => $data['kind'],
+                'what' => trim($data['what']),
+                'who' => trim((string) ($data['who'] ?? '')),
+                'date' => $data['date'],
+            ];
+        });
+
+        return $this->deadlineResponse($plan);
+    }
+
+    public function updateDeadline(Request $request, CrmLead $lead, string $deadline): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $request->validate($this->deadlineRules(partial: true), [], ['what' => 'deadline']);
+
+        $found = $this->withList($plan, 'deadlines', function (array &$list) use ($data, $deadline): bool {
+            foreach ($list as &$d) {
+                if (($d['key'] ?? null) !== $deadline) {
+                    continue;
+                }
+                foreach (['kind', 'what', 'who', 'date'] as $f) {
+                    if (array_key_exists($f, $data)) {
+                        $d[$f] = is_string($data[$f]) ? trim($data[$f]) : $data[$f];
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        });
+        abort_unless($found, 404);
+
+        return $this->deadlineResponse($plan);
+    }
+
+    public function destroyDeadline(Request $request, CrmLead $lead, string $deadline): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+
+        $found = $this->withList($plan, 'deadlines', function (array &$list) use ($deadline): bool {
+            $before = count($list);
+            $list = array_values(array_filter($list, fn ($d) => ($d['key'] ?? null) !== $deadline));
+
+            return count($list) < $before;
+        });
+        abort_unless($found, 404);
+
+        return $this->deadlineResponse($plan);
+    }
+
+    /**
+     * Book a meeting on this plan. The planner can't create a Google Meet room
+     * itself — that belongs to the counsellor's own Google account — so the
+     * page sends them to Google Calendar with the details filled in, and the
+     * join link it hands back is stored here where the student will find it.
+     */
+    public function storeMeeting(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $request->validate($this->meetingRules(), [], ['title' => 'meeting', 'who' => 'attendees']);
+
+        $meeting = $this->withList($plan, 'meetings', function (array &$list) use ($data): array {
+            if (count($list) >= self::MAX_MEETINGS) {
+                throw ValidationException::withMessages(['title' => 'This plan already holds '.self::MAX_MEETINGS.' meetings, the most it can hold.']);
+            }
+            $meeting = [
+                'key' => 'm-'.Str::lower(Str::random(10)),
+                'title' => trim($data['title']),
+                'date' => $data['date'],
+                'time' => (string) ($data['time'] ?? ''),
+                'minutes' => (int) ($data['minutes'] ?? 45),
+                'mode' => $data['mode'],
+                'who' => trim((string) ($data['who'] ?? '')),
+                'link' => trim((string) ($data['link'] ?? '')),
+                'notes' => trim((string) ($data['notes'] ?? '')),
+                'done' => false,
+            ];
+            $list[] = $meeting;
+
+            return $meeting;
+        });
+
+        $audit->record($request, $this->user($request), 'journey_meeting_added', "Booked “{$meeting['title']}” with {$lead->name} for {$meeting['date']}", [
+            'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $meeting['title'],
+        ]);
+
+        return $this->meetingResponse($plan, ['meeting' => $meeting]);
+    }
+
+    public function updateMeeting(Request $request, CrmLead $lead, string $meeting): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $request->validate(array_merge($this->meetingRules(partial: true), [
+            'done' => ['sometimes', 'boolean'],
+        ]), [], ['title' => 'meeting', 'who' => 'attendees']);
+
+        $found = $this->withList($plan, 'meetings', function (array &$list) use ($data, $meeting): bool {
+            foreach ($list as &$m) {
+                if (($m['key'] ?? null) !== $meeting) {
+                    continue;
+                }
+                foreach (['title', 'date', 'time', 'mode', 'who', 'link', 'notes'] as $f) {
+                    if (array_key_exists($f, $data)) {
+                        $m[$f] = trim((string) $data[$f]);
+                    }
+                }
+                if (array_key_exists('minutes', $data)) {
+                    $m['minutes'] = (int) $data['minutes'];
+                }
+                if (array_key_exists('done', $data)) {
+                    $m['done'] = (bool) $data['done'];
+                }
+
+                return true;
+            }
+
+            return false;
+        });
+        abort_unless($found, 404);
+
+        return $this->meetingResponse($plan);
+    }
+
+    public function destroyMeeting(Request $request, CrmLead $lead, string $meeting, CrmAuditLogger $audit): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+
+        $gone = $this->withList($plan, 'meetings', function (array &$list) use ($meeting): ?array {
+            $match = collect($list)->firstWhere('key', $meeting);
+            $list = array_values(array_filter($list, fn ($m) => ($m['key'] ?? null) !== $meeting));
+
+            return $match;
+        });
+        abort_if($gone === null, 404);
+
+        $audit->record($request, $this->user($request), 'journey_meeting_removed', "Cancelled “{$gone['title']}” with {$lead->name}", [
+            'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $gone['title'],
+        ]);
+
+        return $this->meetingResponse($plan);
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    private function memberRules(bool $partial = false): array
+    {
+        $required = $partial ? 'sometimes' : 'required';
+
+        return [
+            'role' => [$required, 'string', 'max:60'],
+            'name' => [$required, 'string', 'max:120'],
+            'contact' => ['sometimes', 'nullable', 'string', 'max:190'],
+            'external' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    private function deadlineRules(bool $partial = false): array
+    {
+        $required = $partial ? 'sometimes' : 'required';
+
+        return [
+            'kind' => [$required, Rule::in(array_keys(JourneyPlanner::DEADLINE_KINDS))],
+            'what' => [$required, 'string', 'max:150'],
+            'who' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'date' => [$required, 'date_format:Y-m-d'],
+        ];
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    private function meetingRules(bool $partial = false): array
+    {
+        $required = $partial ? 'sometimes' : 'required';
+
+        return [
+            'title' => [$required, 'string', 'max:150'],
+            'date' => [$required, 'date_format:Y-m-d'],
+            'time' => ['sometimes', 'nullable', 'date_format:H:i'],
+            'minutes' => ['sometimes', 'nullable', 'integer', 'min:5', 'max:480'],
+            'mode' => [$required, Rule::in(JourneyPlanner::MEETING_MODES)],
+            'who' => ['sometimes', 'nullable', 'string', 'max:190'],
+            'link' => ['sometimes', 'nullable', 'url:https', 'max:300'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
+        ];
+    }
+
+    /**
+     * The designation to store. One ODA already uses is taken as it is; a new
+     * one is added to this plan's own list so it joins the dropdown.
+     */
+    private function resolveRole(CrmJourneyPlan $plan, string $role): string
+    {
+        $existing = collect($plan->teamRoles())->first(fn (string $r) => mb_strtolower($r) === mb_strtolower($role));
+        if ($existing !== null) {
+            return $existing;
+        }
+        $roles = array_values(array_filter($plan->roles ?? [], 'is_string'));
+        if (count($roles) >= self::MAX_ROLES) {
+            throw ValidationException::withMessages(['role' => 'This plan already has '.self::MAX_ROLES.' designations of its own. Pick one from the list instead.']);
+        }
+        $roles[] = $role;
+        $plan->forceFill(['roles' => $roles])->save();
+
+        return $role;
+    }
+
+    /** @param  array<string, mixed>  $extra */
+    private function teamResponse(CrmJourneyPlan $plan, array $extra = []): JsonResponse
+    {
+        $fresh = $plan->fresh();
+
+        return response()->json(['ok' => true, 'team' => $fresh->teamMembers(), 'roles' => $fresh->teamRoles()] + $extra);
+    }
+
+    private function deadlineResponse(CrmJourneyPlan $plan): JsonResponse
+    {
+        return response()->json(['ok' => true, 'deadlines' => $plan->fresh()->deadlineRows()]);
+    }
+
+    /** @param  array<string, mixed>  $extra */
+    private function meetingResponse(CrmJourneyPlan $plan, array $extra = []): JsonResponse
+    {
+        return response()->json(['ok' => true, 'meetings' => $plan->fresh()->meetingRows()] + $extra);
+    }
+
+    /**
+     * Change one of the plan's JSON lists under a lock, so two counsellors
+     * editing the same plan can't write over each other's row.
+     *
+     * @param  \Closure(array): mixed  $fn  receives the list by reference
+     */
+    private function withList(CrmJourneyPlan $plan, string $column, \Closure $fn): mixed
+    {
+        return DB::transaction(function () use ($plan, $column, $fn): mixed {
+            $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
+            $list = $locked->{$column} ?? [];
+            $out = $fn($list);
+            $locked->forceFill([$column => array_values($list)])->save();
+
+            return $out;
+        });
+    }
+
     /* ------------------------------------------------------------ documents & essays */
 
     public function storeDocument(Request $request, CrmLead $lead): JsonResponse
@@ -542,6 +906,25 @@ class CrmJourneyPlannerController extends Controller
         return response()->json(['ok' => true, 'document' => $this->documentArray($lead, $doc->fresh())]);
     }
 
+    /**
+     * Record a change made to a document. The planner writes its own entries
+     * as drafts move; this is for a change made outside it — a file re-sent by
+     * email, a paragraph rewritten with the student on a call.
+     */
+    public function storeDocumentEdit(Request $request, CrmLead $lead, int $document): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $doc = JourneyDocuments::find($plan, $document);
+        $data = $request->validate([
+            'note' => ['required', 'string', 'max:290'],
+            'new_version' => ['sometimes', 'boolean'],
+        ], [], ['note' => 'what changed']);
+
+        JourneyDocuments::noteEdit($doc, $data['note'], $this->user($request), (bool) ($data['new_version'] ?? false));
+
+        return response()->json(['ok' => true, 'document' => $this->documentArray($lead, $doc->fresh())]);
+    }
+
     public function destroyDocument(Request $request, CrmLead $lead, int $document): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
@@ -559,9 +942,9 @@ class CrmJourneyPlannerController extends Controller
         return JourneyDocuments::download(JourneyDocuments::find($plan, $document));
     }
 
-    private function documentArray(CrmLead $lead, \App\Models\CrmJourneyDocument $document): array
+    private function documentArray(CrmLead $lead, CrmJourneyDocument $document): array
     {
-        $document->load(['application', 'creator', 'reviewer']);
+        $document->load(['application', 'creator', 'reviewer', 'edits.author']);
 
         return JourneyDocuments::toArray($document, 'counsellor', fn ($d) => route('crm.journey.documents.file', [$lead, $d]));
     }
@@ -584,6 +967,11 @@ class CrmJourneyPlannerController extends Controller
             'country' => ['sometimes', 'nullable', 'string', 'max:80'],
             'program' => ['sometimes', 'nullable', 'string', 'max:190'],
             'fit' => ['sometimes', 'nullable', Rule::in(array_keys(JourneyPlanner::FITS))],
+            // What this university asks for: the brief beside the checklist.
+            'tests_required' => ['sometimes', 'nullable', 'string', 'max:190'],
+            'documents_required' => ['sometimes', 'nullable', 'string', 'max:300'],
+            'requirements' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'deadline' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
         ];
     }
 

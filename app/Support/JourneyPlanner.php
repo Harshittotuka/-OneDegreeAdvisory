@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\CrmJourneyPlan;
+use Illuminate\Support\Str;
+
 /**
  * ODA's Overseas Admission Journey Planner — the reference content and the
  * progress rules behind the student journey planner.
@@ -28,6 +31,21 @@ class JourneyPlanner
     public const OFFER_TYPES = ['Unconditional', 'Conditional', 'Waitlist', 'Rejected'];
 
     public const LEVELS = ['Undergraduate', 'Masters', 'MBA', 'PhD', 'Diploma', 'MBBS'];
+
+    /**
+     * The designations someone on a student's file can hold. A counsellor can
+     * add more for one student; see CrmJourneyPlan::teamRoles().
+     */
+    public const TEAM_ROLES = [
+        'Counsellor', 'Specialist / Mentor', 'External expert', 'Supervisor',
+        'Content writer', 'Test prep tutor', 'Student', 'Parent',
+    ];
+
+    /** How a meeting happens. Google Meet is the one that carries a join link. */
+    public const MEETING_MODES = ['Google Meet', 'In person', 'Phone call'];
+
+    /** Deadlines come in two kinds: the university's dates, and ODA's own. */
+    public const DEADLINE_KINDS = ['uni' => 'University', 'own' => 'Ours'];
 
     /** Statuses a student may pick for themselves. "Not Applicable" is the counsellor's call. */
     public const STUDENT_STATUSES = ['Not Started', 'In Progress', 'Submitted', 'Completed'];
@@ -148,8 +166,14 @@ class JourneyPlanner
     /**
      * The seven phases with this plan's own tasks added at the end of the
      * phase each belongs to. Standard tasks carry `custom: false`.
+     *
+     * $reader is true for anyone but the counsellor who maintains the plan.
+     * They are sent only the stages that have something switched on for this
+     * student — a stage where nothing applies, or one the counsellor added and
+     * hasn't filled, isn't part of their journey. What is left is their whole
+     * journey in order, so the page can number it 1, 2, 3… straight through.
      */
-    public static function phasesFor(\App\Models\CrmJourneyPlan $plan, bool $hideEmptyAdded = false): array
+    public static function phasesFor(CrmJourneyPlan $plan, bool $reader = false): array
     {
         $custom = $plan->customDefinitions();
 
@@ -164,8 +188,14 @@ class JourneyPlanner
             return $p;
         }, $plan->orderedPhases());
 
-        // A stage the counsellor added but hasn't filled yet means nothing to a student.
-        return array_values($hideEmptyAdded ? array_filter($phases, fn ($p) => ! $p['custom'] || $p['activities'] !== []) : $phases);
+        if (! $reader) {
+            return $phases;
+        }
+
+        $core = $plan->coreState();
+
+        return array_values(array_filter($phases, fn (array $p): bool => collect($p['activities'])
+            ->contains(fn (array $a) => (bool) ($core[$a['key']]['inc'] ?? false))));
     }
 
     /** @return array<string, array{key: string, name: string, desc: string, owner: string, docs: string, inc: bool}> */
@@ -286,7 +316,7 @@ class JourneyPlanner
      * @param  array<string, string|null>  $endpoints
      * @return array<string, mixed>
      */
-    public static function payload(\App\Models\CrmJourneyPlan $plan, string $mode, array $endpoints = [], ?array $credentials = null): array
+    public static function payload(CrmJourneyPlan $plan, string $mode, array $endpoints = [], ?array $credentials = null): array
     {
         $lead = $plan->lead;
         $account = $lead->studentAccount;
@@ -296,7 +326,7 @@ class JourneyPlanner
             'today' => now()->toDateString(),
             'student' => [
                 'name' => $lead->name,
-                'firstName' => \Illuminate\Support\Str::before(trim($lead->name).' ', ' '),
+                'firstName' => Str::before(trim($lead->name).' ', ' '),
                 'counsellor' => $lead->assignee?->name,
                 'level' => (string) $plan->level,
                 'intake' => (string) $plan->intake,
@@ -312,9 +342,20 @@ class JourneyPlanner
                 'fits' => self::FITS,
                 'offerTypes' => self::OFFER_TYPES,
                 'levels' => self::LEVELS,
+                'teamRoles' => $plan->teamRoles(),
+                'meetingModes' => self::MEETING_MODES,
+                'deadlineKinds' => self::DEADLINE_KINDS,
             ],
             'core' => $plan->coreState(),
             'apps' => $plan->applications->map->toPlannerArray()->values()->all(),
+            // Who is on the file. A student sees the names and the roles; the
+            // contact details are the team's own, so they stay in the CRM.
+            'team' => array_map(
+                fn (array $m) => $mode === 'student' ? ['key' => $m['key'], 'role' => $m['role'], 'name' => $m['name'], 'contact' => '', 'external' => $m['external']] : $m,
+                $plan->teamMembers(),
+            ),
+            'deadlines' => $plan->deadlineRows(),
+            'meetings' => $plan->meetingRows(),
             // The student's sign-in, for the counsellor's "Student login" card.
             // The password itself is only ever the one just issued, shown once.
             'login' => $mode === 'counsellor' && $account ? [
@@ -327,7 +368,7 @@ class JourneyPlanner
             ] : null,
             'credentials' => $mode === 'counsellor' ? $credentials : null,
             'account' => $mode === 'student' && $account ? ['email' => $account->email] : null,
-            'documents' => $plan->documents()->with(['application', 'creator', 'reviewer'])->get()
+            'documents' => $plan->documents()->with(['application', 'creator', 'reviewer', 'edits.author'])->get()
                 ->map(fn ($d) => JourneyDocuments::toArray($d, $mode, fn ($doc) => $mode === 'student'
                     ? route('student.documents.file', $doc)
                     : route('crm.journey.documents.file', [$lead, $doc])))->values()->all(),
@@ -349,7 +390,7 @@ class JourneyPlanner
      *
      * @return array<string, mixed>
      */
-    public static function summary(\App\Models\CrmJourneyPlan $plan): array
+    public static function summary(CrmJourneyPlan $plan): array
     {
         $core = $plan->coreState();
         $coreDefs = $plan->coreDefinitions();
@@ -401,6 +442,12 @@ class JourneyPlanner
             'overdue' => $overdue,
             'next' => $next,
         ];
+    }
+
+    /** Whether a stored value is a plain Y-m-d date. */
+    public static function isDate(mixed $value): bool
+    {
+        return self::dateOrNull($value) !== null;
     }
 
     /** Whether the student may change this activity from their portal: the owner has to name the Student. */

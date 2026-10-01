@@ -9,7 +9,7 @@
 
 <section class="stats" aria-label="Journey planner summary">
     <div class="stat"><span class="stat-top"><span class="stat-icon">◈</span></span><strong>{{ $journeyStats['total'] }}</strong><span>{{ $isAdmin ? 'Planners started' : 'Your students with a planner' }}</span></div>
-    <div class="stat"><span class="stat-top"><span class="stat-icon">%</span></span><strong>{{ $journeyStats['average'] }}%</strong><span>Average progress</span></div>
+    <div class="stat"><span class="stat-top"><span class="stat-icon">◷</span></span><strong>{{ number_format($journeyStats['done']) }} / {{ number_format($journeyStats['steps']) }}</strong><span>Steps done across them</span></div>
     <a @class(['stat', 'danger' => $journeyStats['late'] > 0]) href="{{ route('crm.dashboard', ['view' => 'journeys', 'journey_show' => 'attention']) }}"><span class="stat-top"><span class="stat-icon">!</span></span><strong>{{ $journeyStats['late'] }}</strong><span>Students with late tasks</span></a>
     <a @class(['stat', 'hot' => $journeyStats['essays'] > 0]) href="{{ route('crm.dashboard', ['view' => 'journeys', 'journey_show' => 'attention']) }}"><span class="stat-top"><span class="stat-icon">✎</span></span><strong>{{ $journeyStats['essays'] }}</strong><span>Essays waiting for review</span></a>
     <a class="stat" href="{{ route('crm.dashboard', ['view' => 'journeys', 'journey_show' => 'not_signed_in']) }}"><span class="stat-top"><span class="stat-icon">○</span></span><strong>{{ $journeyStats['neverSignedIn'] }}</strong><span>Students not signed in yet</span></a>
@@ -61,7 +61,9 @@
                     $lead = $plan->lead;
                     $account = $lead->studentAccount;
                     $essays = $plan->essays_waiting;
-                    $percent = $row['all']['percent'];
+                    $percent = $row['all']['percent']; // the stripe's width only; the card shows counts
+                    $done = $row['all']['completed'];
+                    $steps = $row['all']['included'] - $row['all']['not_applicable'];
                     // The stripe says the one thing to notice first.
                     $state = $row['overdue'] ? 'is-late' : ($essays ? 'is-review' : ($percent === 100 ? 'is-complete' : ''));
                     $loginNote = match (true) {
@@ -77,13 +79,13 @@
                             <span class="journey-card-name">{{ $lead->name }}</span>
                             <span class="journey-card-sub">{{ $lead->lead_number }} · {{ collect([$plan->level, $plan->intake])->filter()->implode(' · ') ?: 'Plan details not set' }}@if($isAdmin) · {{ $lead->assignee?->name ?? 'Unassigned' }}@endif</span>
                         </span>
-                        <span class="journey-card-pct">{{ $percent }}%<small>Overall</small></span>
+                        <span class="journey-card-pct">{{ $done }}<small>of {{ $steps }} done</small></span>
                     </span>
 
                     <span class="journey-card-bar" aria-hidden="true"><i style="width:{{ $percent }}%"></i></span>
                     <span class="journey-card-split">
-                        <span>Journey {{ $row['core']['percent'] }}%</span>
-                        <span>{{ $row['universities'] }} {{ Str::plural('university', $row['universities']) }}{{ $row['universities'] ? ' · '.$row['apps']['percent'].'%' : '' }}</span>
+                        <span>Journey {{ $row['core']['completed'] }}/{{ max(0, $row['core']['included'] - $row['core']['not_applicable']) }}</span>
+                        <span>{{ $row['universities'] }} {{ Str::plural('university', $row['universities']) }}{{ $row['universities'] ? ' · '.$row['apps']['completed'].'/'.max(0, $row['apps']['included'] - $row['apps']['not_applicable']) : '' }}</span>
                     </span>
 
                     <span class="journey-card-stage">

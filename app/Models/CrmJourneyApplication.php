@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** One university or programme block in a student's journey planner. */
 class CrmJourneyApplication extends Model
 {
-    protected $fillable = ['plan_id', 'position', 'university', 'country', 'program', 'fit', 'offer_type', 'activities'];
+    protected $fillable = [
+        'plan_id', 'position', 'university', 'country', 'program', 'fit', 'offer_type', 'activities',
+        'tests_required', 'documents_required', 'requirements', 'deadline',
+    ];
 
     protected function casts(): array
     {
-        return ['activities' => 'array', 'position' => 'integer'];
+        return ['activities' => 'array', 'position' => 'integer', 'deadline' => 'date'];
     }
 
     public function plan(): BelongsTo
@@ -37,6 +40,11 @@ class CrmJourneyApplication extends Model
             'program' => (string) $this->program,
             'fit' => (string) $this->fit,
             'offerType' => (string) $this->offer_type,
+            // What this university asks for, as the counsellor recorded it.
+            'tests' => (string) $this->tests_required,
+            'docs' => (string) $this->documents_required,
+            'requirements' => (string) $this->requirements,
+            'deadline' => $this->deadline?->toDateString(),
             'acts' => $this->activityState(),
         ];
     }

@@ -4,19 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** A file or an essay stored on a student's journey plan. See App\Support\JourneyDocuments. */
 class CrmJourneyDocument extends Model
 {
     protected $fillable = [
-        'plan_id', 'application_id', 'kind', 'title', 'category', 'body', 'status', 'feedback', 'feedback_by',
-        'feedback_at', 'submitted_at', 'path', 'original_name', 'mime', 'size', 'by_student', 'created_by',
+        'plan_id', 'application_id', 'kind', 'title', 'category', 'version', 'body', 'status', 'feedback',
+        'feedback_by', 'feedback_at', 'submitted_at', 'path', 'original_name', 'mime', 'size', 'by_student', 'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'by_student' => 'boolean', 'size' => 'integer',
+            'by_student' => 'boolean', 'size' => 'integer', 'version' => 'integer',
             'feedback_at' => 'datetime', 'submitted_at' => 'datetime',
         ];
     }
@@ -39,6 +40,12 @@ class CrmJourneyDocument extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(CrmUser::class, 'feedback_by');
+    }
+
+    /** This document's edit history, newest first. */
+    public function edits(): HasMany
+    {
+        return $this->hasMany(CrmJourneyDocumentEdit::class, 'document_id')->latest('id');
     }
 
     public function isEssay(): bool

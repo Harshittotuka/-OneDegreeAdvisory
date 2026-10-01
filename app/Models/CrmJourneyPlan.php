@@ -6,6 +6,7 @@ use App\Support\JourneyPlanner;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * One enrolled student's journey planner: the Core Journey plus one
@@ -13,11 +14,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class CrmJourneyPlan extends Model
 {
-    protected $fillable = ['crm_lead_id', 'level', 'intake', 'focus', 'core', 'custom_tasks', 'custom_stages', 'created_by'];
+    protected $fillable = [
+        'crm_lead_id', 'level', 'intake', 'focus', 'core', 'custom_tasks', 'custom_stages',
+        'team', 'roles', 'deadlines', 'meetings', 'created_by',
+    ];
 
     protected function casts(): array
     {
-        return ['core' => 'array', 'custom_tasks' => 'array', 'custom_stages' => 'array'];
+        return [
+            'core' => 'array', 'custom_tasks' => 'array', 'custom_stages' => 'array',
+            'team' => 'array', 'roles' => 'array', 'deadlines' => 'array', 'meetings' => 'array',
+        ];
     }
 
     /** The plan for an enrolled student, created from the template the first time it is asked for. */
@@ -109,7 +116,7 @@ class CrmJourneyPlan extends Model
     {
         $added = $this->customStages();
         $asPhase = fn (array $st): array => [
-            'key' => $st['key'], 'name' => $st['name'], 'short' => \Illuminate\Support\Str::limit($st['name'], 22, '…'),
+            'key' => $st['key'], 'name' => $st['name'], 'short' => Str::limit($st['name'], 22, '…'),
             'timeline' => $st['timeline'] !== '' ? $st['timeline'] : 'Added by your counsellor', 'activities' => [], 'custom' => true, 'after' => $st['after'],
         ];
         $out = [];
@@ -126,6 +133,106 @@ class CrmJourneyPlan extends Model
                 $out[] = $asPhase($st);
             }
         }
+
+        return $out;
+    }
+
+    /* ------------------------------------------------------------ team, deadlines, meetings */
+
+    /**
+     * Who is on this student's file. Stored rows are read back against the
+     * shape the page expects, so nothing half-written can break the screen.
+     *
+     * @return list<array{key: string, role: string, name: string, contact: string, external: bool}>
+     */
+    public function teamMembers(): array
+    {
+        $roles = $this->teamRoles();
+        $out = [];
+        foreach ($this->team ?? [] as $m) {
+            if (! is_array($m) || empty($m['key']) || trim((string) ($m['name'] ?? '')) === '') {
+                continue;
+            }
+            $out[] = [
+                'key' => (string) $m['key'],
+                'role' => in_array($m['role'] ?? null, $roles, true) ? $m['role'] : $roles[0],
+                'name' => (string) $m['name'],
+                'contact' => (string) ($m['contact'] ?? ''),
+                'external' => (bool) ($m['external'] ?? false),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * The designations a member can hold: ODA's standard list plus any this
+     * counsellor added for this student.
+     *
+     * @return list<string>
+     */
+    public function teamRoles(): array
+    {
+        $extra = array_values(array_filter(
+            array_map(fn ($r) => is_string($r) ? trim($r) : '', $this->roles ?? []),
+            fn (string $r) => $r !== '' && ! in_array($r, JourneyPlanner::TEAM_ROLES, true),
+        ));
+
+        return array_values(array_unique(array_merge(JourneyPlanner::TEAM_ROLES, $extra)));
+    }
+
+    /**
+     * Every date on this plan that isn't a task's own target: the universities'
+     * dates and ODA's internal ones, earliest first.
+     *
+     * @return list<array{key: string, kind: string, what: string, who: string, date: string}>
+     */
+    public function deadlineRows(): array
+    {
+        $out = [];
+        foreach ($this->deadlines ?? [] as $d) {
+            if (! is_array($d) || empty($d['key']) || ! JourneyPlanner::isDate($d['date'] ?? null)) {
+                continue;
+            }
+            $out[] = [
+                'key' => (string) $d['key'],
+                'kind' => ($d['kind'] ?? null) === 'uni' ? 'uni' : 'own',
+                'what' => (string) ($d['what'] ?? 'Deadline'),
+                'who' => (string) ($d['who'] ?? ''),
+                'date' => (string) $d['date'],
+            ];
+        }
+        usort($out, fn (array $a, array $b) => $a['date'] <=> $b['date']);
+
+        return $out;
+    }
+
+    /**
+     * Meetings and calls booked on this plan, earliest first.
+     *
+     * @return list<array{key: string, title: string, date: string, time: string, minutes: int, mode: string, who: string, link: string, notes: string, done: bool}>
+     */
+    public function meetingRows(): array
+    {
+        $out = [];
+        foreach ($this->meetings ?? [] as $m) {
+            if (! is_array($m) || empty($m['key']) || ! JourneyPlanner::isDate($m['date'] ?? null)) {
+                continue;
+            }
+            $out[] = [
+                'key' => (string) $m['key'],
+                'title' => (string) ($m['title'] ?? 'Meeting'),
+                'date' => (string) $m['date'],
+                'time' => preg_match('/^\d{2}:\d{2}$/', (string) ($m['time'] ?? '')) ? $m['time'] : '',
+                'minutes' => max(5, min(480, (int) ($m['minutes'] ?? 45))),
+                'mode' => in_array($m['mode'] ?? null, JourneyPlanner::MEETING_MODES, true) ? $m['mode'] : JourneyPlanner::MEETING_MODES[0],
+                'who' => (string) ($m['who'] ?? ''),
+                'link' => (string) ($m['link'] ?? ''),
+                'notes' => (string) ($m['notes'] ?? ''),
+                'done' => (bool) ($m['done'] ?? false),
+            ];
+        }
+        usort($out, fn (array $a, array $b) => [$a['date'], $a['time']] <=> [$b['date'], $b['time']]);
 
         return $out;
     }

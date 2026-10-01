@@ -181,6 +181,7 @@ Route::prefix('student')->name('student.')->controller(\App\Http\Controllers\Stu
         Route::post('documents', 'storeDocument')->middleware('throttle:30,1')->name('documents.store');
         Route::patch('documents/{document}', 'updateDocument')->whereNumber('document')->middleware('throttle:60,1')->name('documents.update');
         Route::delete('documents/{document}', 'destroyDocument')->whereNumber('document')->name('documents.destroy');
+        Route::post('documents/{document}/edits', 'storeDocumentEdit')->whereNumber('document')->middleware('throttle:60,1')->name('documents.edits.store');
         Route::get('documents/{document}/file', 'downloadDocument')->whereNumber('document')->name('documents.file');
     });
 });
@@ -266,9 +267,21 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::post('tasks', 'storeTask')->name('tasks.store');
             Route::patch('tasks/{task}', 'updateTask')->where('task', 'c-[a-z0-9]{10}')->name('tasks.update');
             Route::delete('tasks/{task}', 'destroyTask')->where('task', 'c-[a-z0-9]{10}')->name('tasks.destroy');
+            // Who is on the file, the dates the plan has to hit, and the
+            // meetings booked on it. Each row is addressed by its own key.
+            Route::post('team', 'storeMember')->name('team.store');
+            Route::patch('team/{member}', 'updateMember')->where('member', 't-[a-z0-9]{10}')->name('team.update');
+            Route::delete('team/{member}', 'destroyMember')->where('member', 't-[a-z0-9]{10}')->name('team.destroy');
+            Route::post('deadlines', 'storeDeadline')->name('deadlines.store');
+            Route::patch('deadlines/{deadline}', 'updateDeadline')->where('deadline', 'd-[a-z0-9]{10}')->name('deadlines.update');
+            Route::delete('deadlines/{deadline}', 'destroyDeadline')->where('deadline', 'd-[a-z0-9]{10}')->name('deadlines.destroy');
+            Route::post('meetings', 'storeMeeting')->name('meetings.store');
+            Route::patch('meetings/{meeting}', 'updateMeeting')->where('meeting', 'm-[a-z0-9]{10}')->name('meetings.update');
+            Route::delete('meetings/{meeting}', 'destroyMeeting')->where('meeting', 'm-[a-z0-9]{10}')->name('meetings.destroy');
             Route::post('documents', 'storeDocument')->middleware('throttle:30,1')->name('documents.store');
             Route::patch('documents/{document}', 'updateDocument')->whereNumber('document')->name('documents.update');
             Route::delete('documents/{document}', 'destroyDocument')->whereNumber('document')->name('documents.destroy');
+            Route::post('documents/{document}/edits', 'storeDocumentEdit')->whereNumber('document')->middleware('throttle:60,1')->name('documents.edits.store');
             Route::get('documents/{document}/file', 'downloadDocument')->whereNumber('document')->name('documents.file');
         });
         // Report-production tool (moved from the admin CMS). The GET page is the

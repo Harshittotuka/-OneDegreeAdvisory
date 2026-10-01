@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\StudentAuth;
 use App\Models\CrmJourneyApplication;
+use App\Models\CrmJourneyDocument;
 use App\Models\CrmJourneyPlan;
 use App\Models\CrmLeadActivity;
 use App\Models\CrmStudentAccount;
@@ -127,6 +128,7 @@ class StudentPortalController extends Controller
                 'activity' => route('student.activity'),
                 'documents' => route('student.documents.store'),
                 'document' => route('student.documents.update', ['document' => '__ID__']),
+                'documentEdits' => route('student.documents.edits.store', ['document' => '__ID__']),
                 'password' => route('student.password'),
                 'logout' => route('student.logout'),
             ]),
@@ -210,6 +212,20 @@ class StudentPortalController extends Controller
         return response()->json(['ok' => true, 'document' => $this->documentArray($doc->fresh())]);
     }
 
+    /** Record a change the student made to their own document outside the planner. */
+    public function storeDocumentEdit(Request $request, int $document): JsonResponse
+    {
+        $doc = JourneyDocuments::find($this->plan($request), $document);
+        $data = $request->validate([
+            'note' => ['required', 'string', 'max:290'],
+            'new_version' => ['sometimes', 'boolean'],
+        ], [], ['note' => 'what changed']);
+
+        JourneyDocuments::noteEdit($doc, $data['note'], null, (bool) ($data['new_version'] ?? false));
+
+        return response()->json(['ok' => true, 'document' => $this->documentArray($doc->fresh())]);
+    }
+
     public function destroyDocument(Request $request, int $document): JsonResponse
     {
         JourneyDocuments::delete(JourneyDocuments::find($this->plan($request), $document), null);
@@ -222,9 +238,9 @@ class StudentPortalController extends Controller
         return JourneyDocuments::download(JourneyDocuments::find($this->plan($request), $document));
     }
 
-    private function documentArray(\App\Models\CrmJourneyDocument $document): array
+    private function documentArray(CrmJourneyDocument $document): array
     {
-        $document->load(['application', 'creator', 'reviewer']);
+        $document->load(['application', 'creator', 'reviewer', 'edits.author']);
 
         return JourneyDocuments::toArray($document, 'student', fn ($d) => route('student.documents.file', $d));
     }

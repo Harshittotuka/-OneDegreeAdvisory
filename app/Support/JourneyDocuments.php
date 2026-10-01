@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\CrmJourneyApplication;
 use App\Models\CrmJourneyDocument;
+use App\Models\CrmJourneyDocumentEdit;
 use App\Models\CrmJourneyPlan;
 use App\Models\CrmLeadActivity;
 use App\Models\CrmUser;
@@ -25,6 +26,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *  - An essay moves Draft → Submitted (the student sends it for review) →
  *    Needs changes or Approved (the counsellor's call, with feedback).
  *    The student can keep editing until it is approved.
+ *  - Every document carries its own edit history: the planner writes an entry
+ *    whenever the document moves (a draft saved, sent for review, reviewed),
+ *    and either side can add one by hand for a change made outside the
+ *    planner. The version number moves only when the content does.
  *
  * Files sit on the private disk and are only served through the planner's
  * signed-in download routes, never from a public URL.
@@ -84,6 +89,7 @@ class JourneyDocuments
             'kind' => $kind,
             'category' => $data['category'],
             'application_id' => $data['application_id'] ?? null,
+            'version' => 1,
             'by_student' => $user === null,
             'created_by' => $user?->id,
         ];
@@ -111,6 +117,7 @@ class JourneyDocuments
         }
 
         $document = $plan->documents()->create($attributes);
+        self::recordEdit($document, $kind === 'file' ? 'Uploaded “'.$document->original_name.'”' : 'Started the draft', $user);
 
         if ($user === null && $kind === 'file') {
             self::log($plan, 'The student uploaded “'.$document->title.'” ('.$document->category.self::where($document).').');
@@ -140,7 +147,9 @@ class JourneyDocuments
                 $document->{$field} = $field === 'title' ? (trim((string) $data[$field]) ?: $document->title) : $data[$field];
             }
         }
+        $bodyChanged = false;
         if ($document->isEssay() && array_key_exists('body', $data)) {
+            $bodyChanged = (string) $data['body'] !== (string) $document->body;
             $document->body = (string) $data['body'];
             // Editing an essay that came back for changes starts a new draft.
             if ($student && $document->status === 'Needs changes') {
@@ -166,6 +175,22 @@ class JourneyDocuments
         }
 
         $document->save();
+
+        // The history: the content moving earns a new version, the rest is a
+        // note on the version that is there.
+        if ($bodyChanged) {
+            self::recordEdit($document, $student ? 'Draft rewritten' : 'Edited the draft', $user, newVersion: true);
+        }
+        if ($submitted) {
+            self::recordEdit($document, 'Sent for review ('.$document->wordCount().' words)', $user);
+        }
+        if (! $student && array_key_exists('review_status', $data)) {
+            self::recordEdit($document, match ($document->status) {
+                'Approved' => 'Approved',
+                'Needs changes' => 'Sent back for changes',
+                default => 'Review status set to '.$document->status,
+            }, $user);
+        }
 
         if ($student && $submitted) {
             self::log($document->plan, 'The student sent the essay “'.$document->title.'”'.self::where($document).' for review ('.$document->wordCount().' words).');
@@ -244,6 +269,8 @@ class JourneyDocuments
             'kind' => $d->kind,
             'title' => $d->title,
             'category' => $d->category,
+            'version' => (int) $d->version,
+            'edits' => self::editsToArray($d, $mode),
             'applicationId' => $d->application_id,
             'university' => $d->application?->university,
             'status' => $d->status,
@@ -274,6 +301,71 @@ class JourneyDocuments
             'file.mimes' => 'Upload a PDF, Word document, or JPG/PNG image.',
             'file.required_if' => 'Choose a file to upload.',
         ]);
+    }
+
+    /** The most entries one document's history keeps; the oldest drop off. */
+    private const MAX_EDITS = 80;
+
+    /**
+     * Add an entry to a document's history. Repeating the same note within
+     * half an hour is treated as one sitting: the entry already there is
+     * touched instead of another being added, and the version doesn't move
+     * again, so saving a draft five times in an afternoon reads as one edit.
+     */
+    public static function recordEdit(CrmJourneyDocument $document, string $note, ?CrmUser $user, bool $newVersion = false): CrmJourneyDocumentEdit
+    {
+        $note = Str::limit(trim($note) ?: 'Edited', 290);
+        $recent = $document->edits()->first();
+        $sameSitting = $recent && $recent->note === $note && $recent->by_student === ($user === null)
+            && (int) $recent->created_by === (int) $user?->id && $recent->updated_at?->gt(now()->subMinutes(30));
+
+        if ($sameSitting) {
+            $recent->touch();
+
+            return $recent;
+        }
+        if ($newVersion) {
+            $document->forceFill(['version' => (int) $document->version + 1])->save();
+        }
+
+        $edit = $document->edits()->create([
+            'version' => (int) $document->version,
+            'note' => $note,
+            'by_student' => $user === null,
+            'created_by' => $user?->id,
+        ]);
+
+        $keep = $document->edits()->limit(self::MAX_EDITS)->pluck('id');
+        $document->edits()->whereNotIn('id', $keep)->delete();
+
+        return $edit;
+    }
+
+    /** Someone recording a change they made to the document outside the planner. */
+    public static function noteEdit(CrmJourneyDocument $document, string $note, ?CrmUser $user, bool $newVersion): CrmJourneyDocumentEdit
+    {
+        if ($user === null && ! $document->by_student) {
+            abort(403, 'Your counsellor added this one, so only they can record changes to it.');
+        }
+
+        return self::recordEdit($document, $note, $user, $newVersion);
+    }
+
+    /**
+     * One document's history as the page needs it.
+     *
+     * @param  'counsellor'|'partner'|'student'  $mode
+     * @return list<array<string, mixed>>
+     */
+    public static function editsToArray(CrmJourneyDocument $d, string $mode): array
+    {
+        return $d->edits->map(fn (CrmJourneyDocumentEdit $e) => [
+            'id' => $e->id,
+            'note' => $e->note,
+            'version' => $e->version,
+            'byName' => $e->by_student ? ($mode === 'student' ? 'You' : 'Student') : ($e->author?->name ?: 'Counsellor'),
+            'at' => $e->created_at?->toIso8601String(),
+        ])->values()->all();
     }
 
     private static function where(CrmJourneyDocument $d): string
