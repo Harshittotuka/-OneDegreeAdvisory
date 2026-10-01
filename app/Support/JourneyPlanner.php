@@ -26,6 +26,24 @@ class JourneyPlanner
         'Student', 'Counsellor', 'University', 'Bank/Financial Institution', 'Student & Counsellor',
     ];
 
+    /**
+     * A task can also be owned by one of the people named on this student's
+     * file, stored as "member:<their key>" rather than their name so that
+     * renaming them doesn't orphan every task they hold.
+     */
+    public const MEMBER_OWNER = '/^member:t-[a-z0-9]{10}$/';
+
+    public static function isMemberOwner(mixed $owner): bool
+    {
+        return is_string($owner) && preg_match(self::MEMBER_OWNER, $owner) === 1;
+    }
+
+    /** The key inside a "member:…" owner. */
+    public static function ownerMemberKey(string $owner): string
+    {
+        return substr($owner, 7);
+    }
+
     public const FITS = ['reach' => 'Reach', 'match' => 'Match', 'safe' => 'Safe'];
 
     public const OFFER_TYPES = ['Unconditional', 'Conditional', 'Waitlist', 'Rejected'];
@@ -468,6 +486,12 @@ class JourneyPlanner
      */
     private static function owner(mixed $stored, string $default): string
     {
+        // A task handed to someone named on the file keeps that reference even
+        // if they later leave it; the page says so rather than silently
+        // reassigning work to whoever the template had in mind.
+        if (self::isMemberOwner($stored)) {
+            return $stored;
+        }
         $legacy = ['Parent' => 'Student', 'Student & Parent' => 'Student', 'Student & Parent & Counsellor' => 'Student & Counsellor'];
         $owner = is_string($stored) ? ($legacy[$stored] ?? $stored) : null;
 

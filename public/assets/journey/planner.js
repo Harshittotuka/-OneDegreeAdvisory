@@ -35,6 +35,52 @@
     function isC() { return MODE === 'counsellor'; }
     function isStudent() { return MODE === 'student'; }
     function studentOwns(owner) { return owner.indexOf('Student') >= 0; }
+    /*
+     * A task is owned either by a role ODA always has — the student, the
+     * counsellor, the university — or by one of the people named on this
+     * file. A person is stored as "member:<their key>", never as their name,
+     * so renaming them doesn't orphan the work they hold; the name is looked
+     * up here each time it is drawn.
+     */
+    var PEOPLE = {};
+    function refreshPeople() {
+        PEOPLE = {};
+        T.ownerPeople = (P.team || []).map(function (m) { return { value: 'member:' + m.key, name: m.name, role: m.role }; });
+        T.ownerPeople.forEach(function (m) { PEOPLE[m.value] = m; });
+    }
+    function isMemberOwner(owner) { return /^member:t-/.test(String(owner == null ? '' : owner)); }
+    function ownerName(owner) {
+        if (!isMemberOwner(owner)) return owner;
+        var m = PEOPLE[owner];
+        return m ? m.name : 'No longer on the file';
+    }
+    /** What the owner chip says to this reader. */
+    function ownerLabel(owner) {
+        if (isMemberOwner(owner)) return ownerName(owner);
+        return isStudent() && studentOwns(owner) ? owner.replace('Student', 'You') : owner;
+    }
+    function ownerIsMine(owner) { return isStudent() && !isMemberOwner(owner) && studentOwns(owner); }
+    /** The owner dropdown: ODA's roles, then everyone named on this file. */
+    function ownerOptionsHtml(selected) {
+        var html = '<optgroup label="Roles">' + T.owners.map(function (o) {
+            return '<option value="' + esc(o) + '"' + (o === selected ? ' selected' : '') + '>' + esc(o) + '</option>';
+        }).join('') + '</optgroup>';
+        if (T.ownerPeople.length) {
+            html += '<optgroup label="People on this file">' + T.ownerPeople.map(function (m) {
+                return '<option value="' + esc(m.value) + '"' + (m.value === selected ? ' selected' : '') + '>' + esc(m.name) + ' · ' + esc(m.role) + '</option>';
+            }).join('') + '</optgroup>';
+        }
+        if (isMemberOwner(selected) && !PEOPLE[selected]) {
+            html += '<option value="' + esc(selected) + '" selected>No longer on the file</option>';
+        }
+        return html;
+    }
+    /** Does this activity match the owner filter? */
+    function ownerMatches(owner) {
+        if (UI.owner === 'all') return true;
+        if (isMemberOwner(UI.owner)) return owner === UI.owner;
+        return !isMemberOwner(owner) && owner.indexOf(UI.owner) >= 0;
+    }
     function closed(st) { return st === 'Completed' || st === 'Not Applicable'; }
     function canEdit(a) { return isC() || (isStudent() && a.inc && studentOwns(a.owner) && a.status !== 'Not Applicable'); }
     function today() { var n = new Date(); n.setHours(0, 0, 0, 0); return n; }
@@ -223,6 +269,21 @@
         return P.meetings.filter(function (m) { var d = daysUntil(m.date); return !m.done && d != null && d >= 0 && d <= 7; });
     }
     function pad2(n) { return String(n).padStart(2, '0'); }
+    /*
+     * A join code for a video meeting, in Google's own three-four-three shape.
+     * It is generated here, not by Google — the planner has no account to make
+     * a room with — so it is offered as a starting point the counsellor can
+     * paste a real link over.
+     */
+    function meetLink() {
+        var alphabet = 'abcdefghijkmnopqrstuvwxyz';
+        function pick(n) {
+            var out = '';
+            for (var i = 0; i < n; i++) out += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            return out;
+        }
+        return 'https://meet.google.com/' + pick(3) + '-' + pick(4) + '-' + pick(3);
+    }
     /*
      * A Google Meet room belongs to the counsellor's own Google account, so the
      * planner can't mint one. It sends them to Google Calendar with everything
@@ -418,7 +479,7 @@
         var d = due(daysUntil(i.a.target)), editable = canEdit(i.a);
         return '<div class="jp-task' + (d && d.cls === 'danger' ? ' over' : '') + '">' +
             '<button class="jp-tick" data-act="tick" data-scope="' + i.scope + '" data-app="' + (i.appId || '') + '" data-key="' + esc(i.key) + '"' + (editable ? '' : ' disabled title="Your counsellor completes this one"') + ' aria-label="Mark ' + esc(i.name) + ' as done">' + ICO.check + '</button>' +
-            '<div><div class="t">' + esc(i.name) + '</div><div class="w">' + esc(i.where) + (isStudent() ? '' : ' · ' + esc(i.a.owner)) + (i.a.status !== 'Not Started' ? ' · <span class="jp-state ' + stPill(i.a.status) + '">' + esc(i.a.status) + '</span>' : '') + '</div></div>' +
+            '<div><div class="t">' + esc(i.name) + '</div><div class="w">' + esc(i.where) + (isStudent() ? '' : ' · ' + esc(ownerLabel(i.a.owner))) + (i.a.status !== 'Not Started' ? ' · <span class="jp-state ' + stPill(i.a.status) + '">' + esc(i.a.status) + '</span>' : '') + '</div></div>' +
             (d ? '<span class="pill ' + d.cls + '">' + d.label + '</span>' : '<span class="pill wait">No date</span>') + '</div>';
     }
 
@@ -442,7 +503,7 @@
     function actRow(scope, appId, def, a, timeline, filtered) {
         if (!a.inc && (!isC() || !UI.showExcluded)) return '';
         if (filtered) {
-            if (UI.owner !== 'all' && a.owner.indexOf(UI.owner) < 0) return '';
+            if (!ownerMatches(a.owner)) return '';
             if (UI.status === 'open' && closed(a.status)) return '';
             if (UI.status !== 'all' && UI.status !== 'open' && a.status !== UI.status) return '';
         }
@@ -469,12 +530,12 @@
             detail = '<div class="jp-detail"><div><p class="desc">' + esc(def.desc) + '</p><dl class="jp-kv">' +
                 '<dt>Documents</dt><dd>' + esc(def.docs) + '</dd>' +
                 (timeline ? '<dt>Best time</dt><dd>' + esc(timeline) + '</dd>' : '') +
-                (!isC() ? '<dt>Who does it</dt><dd>' + esc(a.owner) + '</dd><dt>Completed on</dt><dd>' + (a.done ? fmt(a.done) : '—') + '</dd>' : '') +
+                (!isC() ? '<dt>Who does it</dt><dd>' + esc(ownerLabel(a.owner)) + '</dd><dt>Completed on</dt><dd>' + (a.done ? fmt(a.done) : '—') + '</dd>' : '') +
                 (isC() && a.by === 'student' && a.at ? '<dt>Last change</dt><dd>By the student, ' + esc(when(a.at)) + '</dd>' : '') +
                 '</dl></div>' +
                 (isC()
                     ? '<div class="jp-fields">' +
-                        '<div><label for="ow-' + esc(k) + '">Owner</label><select id="ow-' + esc(k) + '" data-f="owner"' + data + '>' + T.owners.map(function (o) { return '<option' + (o === a.owner ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></div>' +
+                        '<div><label for="ow-' + esc(k) + '">Owner</label><select id="ow-' + esc(k) + '" data-f="owner"' + data + '>' + ownerOptionsHtml(a.owner) + '</select></div>' +
                         '<div><label for="dn-' + esc(k) + '">Completion date</label><input id="dn-' + esc(k) + '" type="date" data-f="done"' + data + ' value="' + esc(a.done || '') + '"></div>' +
                         '<div class="full"><label for="nt-' + esc(k) + '">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="nt-' + esc(k) + '" data-f="notes"' + data + ' maxlength="1000" placeholder="Scores, offer conditions, what to chase…">' + esc(a.notes) + '</textarea></div>' +
                         (def.custom ? '<div class="full jp-task-tools"><span class="muted">You added this task for this student.</span><button class="jp-btn ghost sm" data-act="edit-task" data-key="' + esc(def.key) + '">Edit task</button>' +
@@ -486,7 +547,7 @@
         return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + '"><div class="jp-row">' +
             (isC() ? '<button class="jp-inc' + (a.inc ? ' on' : '') + '" data-act="toggle-inc"' + data + ' aria-pressed="' + a.inc + '" title="' + (a.inc ? 'Included for this student. Click to exclude.' : 'Excluded. Click to include.') + '">' + (a.inc ? ICO.check : '') + '</button>' : '') +
             '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + esc(def.name) + (def.custom && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button>' +
-            '<span class="jp-ocell"><span class="jp-owner-chip' + (isStudent() && studentOwns(a.owner) ? ' mine' : '') + '">' + esc(isStudent() && studentOwns(a.owner) ? a.owner.replace('Student', 'You') : a.owner) + '</span></span>' +
+            '<span class="jp-ocell"><span class="jp-owner-chip' + (ownerIsMine(a.owner) ? ' mine' : '') + (isMemberOwner(a.owner) ? ' person' : '') + '" title="' + esc(isMemberOwner(a.owner) ? ownerName(a.owner) + ' · ' + (PEOPLE[a.owner] ? PEOPLE[a.owner].role : 'off the file') : a.owner) + '">' + esc(ownerLabel(a.owner)) + '</span></span>' +
             status + date + '<span class="jp-due">' + after + '</span>' +
             '<button class="jp-chev" data-act="toggle-row"' + data + ' aria-label="Show details">' + ICO.chev + '</button></div>' + detail + '</div>';
     }
@@ -496,7 +557,10 @@
         var cur = currentPhase();
         var owners = ['Student', 'Counsellor', 'University', 'Bank/Financial Institution'];
         var tools = '<div class="jp-tools">' +
-            '<select id="f-owner" aria-label="Filter by owner"><option value="all">Everyone\'s tasks</option>' + owners.map(function (o) { return '<option value="' + esc(o) + '"' + (UI.owner === o ? ' selected' : '') + '>' + (isStudent() && o === 'Student' ? 'My tasks' : (o === 'Bank/Financial Institution' ? 'Bank' : o)) + '</option>'; }).join('') + '</select>' +
+            '<select id="f-owner" aria-label="Filter by owner"><option value="all">Everyone\'s tasks</option>' +
+            '<optgroup label="Roles">' + owners.map(function (o) { return '<option value="' + esc(o) + '"' + (UI.owner === o ? ' selected' : '') + '>' + (isStudent() && o === 'Student' ? 'My tasks' : (o === 'Bank/Financial Institution' ? 'Bank' : o)) + '</option>'; }).join('') + '</optgroup>' +
+            (T.ownerPeople.length ? '<optgroup label="People on this file">' + T.ownerPeople.map(function (m) { return '<option value="' + esc(m.value) + '"' + (UI.owner === m.value ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('') + '</optgroup>' : '') +
+            '</select>' +
             '<select id="f-status" aria-label="Filter by status"><option value="all">Any status</option><option value="open"' + (UI.status === 'open' ? ' selected' : '') + '>Still to do</option>' + T.statuses.map(function (s) { return '<option' + (UI.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
             (isC() ? '<label><input type="checkbox" id="f-excl"' + (UI.showExcluded ? ' checked' : '') + '> Show excluded</label>' : '') +
             '<span class="sp"></span>' + (isC() ? '<button class="jp-btn sm" data-act="add-stage">' + ICO.plus + ' Add a stage</button>' : '') + '<button class="jp-btn ghost sm" data-act="expand-all">Open all</button><button class="jp-btn ghost sm" data-act="collapse-all">Close all</button></div>';
@@ -624,7 +688,7 @@
             var d = due(daysUntil(i.a.target));
             return '<div class="jp-dl' + (d.cls === 'danger' ? ' over' : '') + '">' + calBox(i.a.target, d.cls === 'danger') +
                 '<button class="w" data-act="jump-item" data-scope="' + i.scope + '" data-app="' + (i.appId || '') + '" data-key="' + esc(i.key) + '"><span class="t">' + esc(i.name) + '</span><span class="s">' + esc(i.where) + ' · ' + fmt(i.a.target) + '</span></button>' +
-                '<span class="o"><span class="jp-owner-chip' + (isStudent() && studentOwns(i.a.owner) ? ' mine' : '') + '">' + esc(isStudent() && studentOwns(i.a.owner) ? i.a.owner.replace('Student', 'You') : i.a.owner) + '</span></span><span class="pill ' + d.cls + '">' + d.label + '</span></div>';
+                '<span class="o"><span class="jp-owner-chip' + (ownerIsMine(i.a.owner) ? ' mine' : '') + (isMemberOwner(i.a.owner) ? ' person' : '') + '">' + esc(ownerLabel(i.a.owner)) + '</span></span><span class="pill ' + d.cls + '">' + d.label + '</span></div>';
         }).join('');
 
         var taskCard = '<section class="jp-card flush"><div class="jp-card-h pad"><div><h2>Task dates</h2><p>Every open task that has a target date on it.</p></div></div>' +
@@ -746,13 +810,8 @@
                 (list.length > 3 ? '<span class="more num">+' + (list.length - 3) + ' more</span>' : '') + '</div>';
         }
 
-        var picked = UI.cal.sel ? (byDay[UI.cal.sel] || []) : null;
-        var detail = UI.cal.sel
-            ? '<div class="jp-day-detail"><div class="jp-day-detail-h"><h3>' + esc(fmt(UI.cal.sel, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</h3>' +
-                (isC() ? '<button class="jp-btn sm" data-act="add-meeting" data-d="' + UI.cal.sel + '">' + ICO.plus + ' Meeting on this day</button>' +
-                    '<button class="jp-btn ghost sm" data-act="add-deadline" data-v="own" data-d="' + UI.cal.sel + '">' + ICO.plus + ' Deadline</button>' : '') + '</div>' +
-                (picked.length ? picked.map(dayRow).join('') : '<p class="muted">Nothing on this day.' + (isC() ? ' Add a meeting or a deadline above.' : '') + '</p>') + '</div>'
-            : '<p class="jp-day-hint muted">Choose a day to see what is on it' + (isC() ? ', or to add a meeting to it' : '') + '.</p>';
+        // The day itself opens in a dialog; the month stays a month.
+        var detail = '<p class="jp-day-hint muted">Choose a day to see what is on it' + (isC() ? ', or to put a meeting or a deadline on it' : '') + '. Choose an entry to go straight to it.</p>';
 
         var legend = '<div class="jp-legend"><span class="lbl">Colour</span>' +
             ['late', 'today', 'soon', 'later', 'done'].map(function (k) {
@@ -770,6 +829,22 @@
             legend + '<div class="jp-month">' + DOW.map(function (d) { return '<span class="dow">' + d + '</span>'; }).join('') + cells + '</div>' + detail + '</section>';
 
         return month + renderMeetings();
+    }
+
+    /** Everything on one day, in a dialog over the month. */
+    function openDay(iso) {
+        var byDay = {};
+        calendarEvents().forEach(function (e) { if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
+        var list = byDay[iso] || [];
+        var days = daysUntil(iso);
+        modal('<h3>' + esc(fmt(iso, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</h3>' +
+            '<p class="sub">' + (iso === P.today ? 'Today' : days < 0 ? plural(Math.abs(days), 'day', 'days') + ' ago' : 'In ' + plural(days, 'day', 'days')) +
+            ' · ' + (list.length ? plural(list.length, 'thing', 'things') + ' on it' : 'nothing on it yet') + '.</p>' +
+            (list.length ? '<div class="jp-day-list">' + list.map(dayRow).join('') + '</div>' : '') +
+            '<div class="jp-actions">' +
+            (isC() ? '<button class="jp-btn ghost" data-act="add-deadline" data-v="own" data-d="' + iso + '">' + ICO.plus + ' Deadline</button>' +
+                '<button class="jp-btn ghost" data-act="add-meeting" data-d="' + iso + '">' + ICO.plus + ' Meeting</button>' : '') +
+            '<button class="jp-btn" data-act="cancel">Close</button></div>', 'wide');
     }
 
     /** One entry in the chosen day's panel, with whatever can be done to it. */
@@ -844,7 +919,25 @@
                     (mine.length ? '<ul>' + mine.slice(0, 6).map(function (i) { var d = daysUntil(i.a.target); return '<li><div>' + esc(i.name) + '<small>' + esc(i.where) + '</small></div><span class="when num' + (d != null && d < 0 ? ' over' : '') + '">' + (i.a.target ? fmt(i.a.target, { day: 'numeric', month: 'short' }) : 'No date') + '</span></li>'; }).join('') + '</ul>'
                         : '<p class="muted" style="font-size:.85rem">Nothing open.</p>') + '</div>';
             }).join('') + '</div></section>';
-        return renderTeam() + owners;
+        return renderTeam() + owners + renderPersonLoad(items);
+    }
+
+    /** Open tasks grouped by the person they were handed to. */
+    function renderPersonLoad(items) {
+        var held = T.ownerPeople.map(function (m) {
+            return { person: m, tasks: items.filter(function (i) { return i.a.owner === m.value; }) };
+        }).filter(function (row) { return row.tasks.length; });
+        if (!held.length) return '';
+        return '<section class="jp-card"><div class="jp-card-h"><div><h2>By person</h2><p>Tasks handed to someone by name, rather than to a side.</p></div></div>' +
+            '<div class="jp-person-load">' + held.map(function (row) {
+                return '<div class="jp-person"><div class="jp-person-h"><span class="jp-avatar sm">' + esc(initials(row.person.name)) + '</span>' +
+                    '<div><b>' + esc(row.person.name) + '</b><small>' + esc(row.person.role) + '</small></div>' +
+                    '<span class="num">' + row.tasks.length + '</span></div><ul>' +
+                    row.tasks.slice(0, 6).map(function (i) {
+                        var d = daysUntil(i.a.target);
+                        return '<li><div>' + esc(i.name) + '<small>' + esc(i.where) + '</small></div><span class="when num' + (d != null && d < 0 ? ' over' : '') + '">' + (i.a.target ? fmt(i.a.target, { day: 'numeric', month: 'short' }) : 'No date') + '</span></li>';
+                    }).join('') + '</ul></div>';
+            }).join('') + '</div></section>';
     }
 
     /*
@@ -1088,8 +1181,8 @@
     }
 
     /* ------------------------------------------------------------ modals */
-    function modal(html) {
-        document.getElementById('jp-modal').innerHTML = '<div class="jp-backdrop" data-act="close-modal"><div class="jp-dialog" role="dialog" aria-modal="true">' + html + '</div></div>';
+    function modal(html, cls) {
+        document.getElementById('jp-modal').innerHTML = '<div class="jp-backdrop" data-act="close-modal"><div class="jp-dialog' + (cls ? ' ' + cls : '') + '" role="dialog" aria-modal="true">' + html + '</div></div>';
         var f = document.querySelector('.jp-dialog input, .jp-dialog select'); if (f) setTimeout(function () { f.focus(); }, 20);
     }
     function closeModal() { document.getElementById('jp-modal').innerHTML = ''; }
@@ -1152,12 +1245,14 @@
             case 'expand-all': case 'collapse-all':
                 T.phases.forEach(function (p) { UI.openPhases[p.key] = act === 'expand-all'; }); render(); return;
             case 'jump-phase':
+                closeModal();
                 UI.openPhases[el.dataset.p] = true;
                 if (UI.view !== 'journey') goTo('journey'); else render();
                 scrollToEl('ph-' + el.dataset.p);
                 return;
             case 'toggle-row': { var k = rowKey(el.dataset.scope, appId, el.dataset.key); UI.openRows[k] = !UI.openRows[k]; render(); return; }
             case 'jump-item': {
+                closeModal();
                 UI.owner = 'all'; UI.status = 'all';
                 UI.openRows[rowKey(el.dataset.scope, appId, el.dataset.key)] = true;
                 if (el.dataset.scope === 'core') {
@@ -1177,7 +1272,7 @@
                 var t0 = new Date(P.today + 'T00:00:00');
                 UI.cal.y = t0.getFullYear(); UI.cal.m = t0.getMonth(); UI.cal.sel = P.today; render(); return;
             }
-            case 'cal-day': UI.cal.sel = UI.cal.sel === el.dataset.d ? null : el.dataset.d; render(); return;
+            case 'cal-day': UI.cal.sel = el.dataset.d; render(); openDay(el.dataset.d); return;
             case 'doc-history': {
                 var hid = parseInt(el.dataset.id, 10);
                 UI.openDoc = UI.openDoc === hid ? null : hid; render(); return;
@@ -1188,7 +1283,7 @@
                 if (UI.essayDirty && UI.armed !== 'essay-back') { UI.armed = 'essay-back'; render(); return; }
                 UI.armed = null; UI.essayId = null; UI.essayDirty = false; UI.draft = null; render(); return;
             case 'pick-uni': UI.appId = parseInt(el.dataset.u, 10); render(); scrollToEl('jp-block'); return;
-            case 'open-uni': UI.appId = parseInt(el.dataset.u, 10); goTo('universities'); return;
+            case 'open-uni': closeModal(); UI.appId = parseInt(el.dataset.u, 10); goTo('universities'); return;
             case 'tick': {
                 var a = actFor(el.dataset.scope, appId, el.dataset.key);
                 if (a && canEdit(a)) saveActivity(el.dataset.scope, appId, el.dataset.key, { status: 'Completed' }, isStudent() ? 'Nice one. Marked as done.' : 'Completed');
@@ -1361,10 +1456,10 @@
                     '<div><label for="mt-mins">Minutes</label><input id="mt-mins" type="number" min="5" max="480" step="5" value="' + (mt ? mt.minutes : 45) + '"></div></div>' +
 
                     '<div id="mt-link-wrap"' + (mtMode === 'Phone call' ? ' hidden' : '') + '>' +
-                    '<label for="mt-link">Join link</label><input id="mt-link" maxlength="300" value="' + esc(mt ? mt.link : '') + '" placeholder="https://meet.google.com/…">' +
-                    '<div class="jp-inline-acts"><button type="button" class="jp-btn ghost sm" data-act="new-meet-room">Create a Meet room</button>' +
-                    '<button type="button" class="jp-btn ghost sm" data-act="paste-link">Paste it back</button></div>' +
-                    '<p class="jp-hint">“Create a Meet room” opens Google and makes a real room on the spot. Copy the address it lands on and choose “Paste it back”.</p></div>' +
+                    '<label for="mt-link">Join link</label>' +
+                    '<div class="jp-field-row"><input id="mt-link" maxlength="300" value="' + esc(mt && mt.link ? mt.link : (mtMode === 'Google Meet' ? meetLink() : '')) + '" placeholder="https://meet.google.com/…">' +
+                    '<button type="button" class="jp-btn ghost sm" data-act="copy-meet-link">Copy</button></div>' +
+                    '<p class="jp-hint">Made for this meeting. Paste a different link over it if you already have one.</p></div>' +
 
                     '<div id="mt-phone-wrap"' + (mtMode === 'Phone call' ? '' : ' hidden') + '>' +
                     '<label for="mt-phone">Phone number</label><input id="mt-phone" type="tel" maxlength="40" value="' + esc(mt ? mt.phone : '') + '" placeholder="e.g. +91 98290 00000"></div>' +
@@ -1375,22 +1470,12 @@
                     '<label for="mt-notes">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="mt-notes" maxlength="1000" rows="3" placeholder="Where to meet, what to bring, what was agreed…">' + esc(mt ? mt.notes : '') + '</textarea>' +
                     '<label class="jp-check"><input type="checkbox" id="mt-notify" checked> Email them the joining details when I save</label>' +
                     '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
-                    '<button class="jp-btn" data-act="save-meeting"' + (mt ? ' data-k="' + esc(mt.key) + '"' : '') + '>' + (mt ? 'Save' : 'Schedule it') + '</button></div>');
+                    '<button class="jp-btn" data-act="save-meeting"' + (mt ? ' data-k="' + esc(mt.key) + '"' : '') + '>' + (mt ? 'Save' : 'Schedule it') + '</button></div>', 'wide');
                 return;
             }
-            case 'new-meet-room':
-                // Google makes the room; a signed-in counsellor lands straight on it.
-                window.open('https://meet.google.com/new', '_blank', 'noopener');
-                toast('Copy the meet.google.com address Google lands on, then choose “Paste it back”.');
-                return;
-            case 'paste-link': {
-                var into = document.getElementById('mt-link');
-                if (!into || !navigator.clipboard || !navigator.clipboard.readText) { modalError('Paste the link into the box yourself — this browser won\'t hand it over.'); return; }
-                navigator.clipboard.readText().then(function (text) {
-                    var link = String(text || '').trim();
-                    if (link.indexOf('https://') !== 0) { modalError('What is on the clipboard is not an https link.'); return; }
-                    into.value = link; modalError('');
-                }, function () { modalError('Couldn\'t read the clipboard. Paste it into the box yourself.'); });
+            case 'copy-meet-link': {
+                var linkBox = document.getElementById('mt-link');
+                if (linkBox && linkBox.value) copyText(linkBox.value, 'Join link copied');
                 return;
             }
             case 'save-meeting': {
@@ -1441,6 +1526,7 @@
             case 'meeting-done': {
                 var dm = findMeeting(el.dataset.k);
                 if (!dm) return;
+                closeModal();
                 api('PATCH', keyUrl(P.endpoints.meeting, dm.key), { done: !dm.done }).then(function (res) {
                     P.meetings = res.meetings; render(); toast(dm.done ? 'Back on the list' : 'Marked as done');
                 }, function (err) { render(); toast(err.message, true); });
@@ -1479,7 +1565,7 @@
                 var mbBody = { role: mbRole, name: mbName, contact: val('mb-contact'), external: checked('mb-ext') };
                 UI.busy = true; el.disabled = true;
                 api(mbKey ? 'PATCH' : 'POST', mbKey ? keyUrl(P.endpoints.member, mbKey) : P.endpoints.team, mbBody).then(function (res) {
-                    P.team = res.team; T.teamRoles = res.roles; closeModal(); render(); toast(mbKey ? 'Saved' : mbName + ' added');
+                    P.team = res.team; T.teamRoles = res.roles; refreshPeople(); closeModal(); render(); toast(mbKey ? 'Saved' : mbName + ' added');
                 }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 return;
             }
@@ -1489,7 +1575,7 @@
                 if (!nrName) { modalError('Give the designation a name.'); return; }
                 UI.busy = true; el.disabled = true;
                 api('PATCH', keyUrl(P.endpoints.member, el.dataset.k), { role: nrName }).then(function (res) {
-                    P.team = res.team; T.teamRoles = res.roles; closeModal(); render(); toast('“' + nrName + '” added');
+                    P.team = res.team; T.teamRoles = res.roles; refreshPeople(); closeModal(); render(); toast('“' + nrName + '” added');
                 }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 return;
             }
@@ -1498,7 +1584,7 @@
                 if (UI.armed !== 'rm-member-' + rmb) { UI.armed = 'rm-member-' + rmb; render(); return; }
                 UI.armed = null;
                 api('DELETE', keyUrl(P.endpoints.member, rmb)).then(function (res) {
-                    P.team = res.team; T.teamRoles = res.roles; render(); toast('Removed from the file');
+                    P.team = res.team; T.teamRoles = res.roles; refreshPeople(); render(); toast('Removed from the file');
                 }, function (err) { render(); toast(err.message, true); });
                 return;
             }
@@ -1554,7 +1640,7 @@
                     '<label for="tk-name">Task</label><input id="tk-name" maxlength="150" value="' + esc(editing ? editing.name : '') + '" placeholder="e.g. Book a campus visit">' +
                     '<label for="tk-desc">What to do <span style="font-weight:500">(optional)</span></label><input id="tk-desc" maxlength="500" value="' + esc(editing ? editing.desc : '') + '" placeholder="A line the student will read">' +
                     '<label for="tk-docs">Documents needed <span style="font-weight:500">(optional)</span></label><input id="tk-docs" maxlength="190" value="' + esc(editing && editing.docs !== 'None' ? editing.docs : '') + '" placeholder="e.g. Visit confirmation">' +
-                    (editing ? '' : '<div class="two"><div><label for="tk-owner">Who does it</label><select id="tk-owner">' + T.owners.map(function (o) { return '<option' + (o === 'Student' ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></div>' +
+                    (editing ? '' : '<div class="two"><div><label for="tk-owner">Who does it</label><select id="tk-owner">' + ownerOptionsHtml('Student') + '</select></div>' +
                         '<div><label for="tk-target">Target date <span style="font-weight:500">(optional)</span></label><input id="tk-target" type="date"></div></div>') +
                     '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-task" data-p="' + esc(phaseKey) + '"' + (editing ? ' data-key="' + esc(editing.key) + '"' : '') + '>' + (editing ? 'Save' : 'Add task') + '</button></div>');
                 return;
@@ -1702,7 +1788,7 @@
                 return;
             }
             api('PATCH', keyUrl(P.endpoints.member, mKey), { role: el.value }).then(function (res) {
-                P.team = res.team; T.teamRoles = res.roles; render(); toast('Designation changed');
+                P.team = res.team; T.teamRoles = res.roles; refreshPeople(); render(); toast('Designation changed');
             }, function (err) { render(); toast(err.message, true); });
             return;
         }
@@ -1718,8 +1804,10 @@
         // How a meeting happens decides which of the two fields is asked for.
         if (el.id === 'mt-mode') {
             var linkWrap = document.getElementById('mt-link-wrap'), phoneWrap = document.getElementById('mt-phone-wrap');
+            var linkBox = document.getElementById('mt-link');
             if (linkWrap) linkWrap.hidden = el.value === 'Phone call';
             if (phoneWrap) phoneWrap.hidden = el.value !== 'Phone call';
+            if (el.value === 'Google Meet' && linkBox && !linkBox.value.trim()) linkBox.value = meetLink();
             return;
         }
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }
@@ -1760,6 +1848,7 @@
         }
     });
 
+    refreshPeople();
     fromHash();
     render();
 })();

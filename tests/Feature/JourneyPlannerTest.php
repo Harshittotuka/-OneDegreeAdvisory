@@ -1223,4 +1223,97 @@ class JourneyPlannerTest extends TestCase
     {
         return CrmJourneyPlan::query()->where('crm_lead_id', $lead->id)->firstOrFail();
     }
+
+    /* ------------------------------------------------------------ a task handed to a person */
+
+    public function test_a_task_can_be_owned_by_someone_named_on_the_file(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $writer = $this->as($counsellor)->postJson(route('crm.journey.team.store', $lead), [
+            'role' => 'Content writer', 'name' => 'Ishaan Rao', 'contact' => 'ishaan@onedegreeadvisory.com',
+        ])->assertOk()->json('member.key');
+        $owner = 'member:'.$writer;
+
+        // The person joins the owners a task may be given to.
+        $plan = $this->planOf($lead);
+        $this->assertContains($owner, $plan->ownerValues());
+        $this->assertContains('Counsellor', $plan->ownerValues());
+
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), [
+            'scope' => 'core', 'key' => 'gap-analysis', 'owner' => $owner,
+        ])->assertOk()->assertJsonPath('activity.owner', $owner);
+
+        $this->assertSame($owner, $this->planOf($lead)->coreState()['gap-analysis']['owner']);
+
+        // Somebody who is on nobody's file is refused.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), [
+            'scope' => 'core', 'key' => 'gap-analysis', 'owner' => 'member:t-0000000000',
+        ])->assertStatus(422)->assertJsonValidationErrors('owner');
+    }
+
+    public function test_an_added_task_can_be_handed_to_a_person_too(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $mentor = 'member:'.$this->as($counsellor)->postJson(route('crm.journey.team.store', $lead), [
+            'role' => 'Specialist / Mentor', 'name' => 'Dr Rahul Nair',
+        ])->json('member.key');
+
+        $key = $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), [
+            'phase' => 'profile', 'name' => 'Review the research proposal', 'owner' => $mentor,
+        ])->assertOk()->assertJsonPath('task.owner', $mentor)->json('task.key');
+
+        $this->assertSame($mentor, $this->planOf($lead)->coreState()[$key]['owner']);
+    }
+
+    public function test_a_task_held_by_a_person_is_not_the_students_to_tick(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $owner = 'member:'.$this->as($counsellor)->postJson(route('crm.journey.team.store', $lead), [
+            'role' => 'Content writer', 'name' => 'Ishaan Rao',
+        ])->json('member.key');
+
+        // "initial-consultation" is the student's by default; hand it to Ishaan.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), [
+            'scope' => 'core', 'key' => 'initial-consultation', 'owner' => $owner,
+        ])->assertOk();
+
+        $this->assertFalse(JourneyPlanner::studentOwns($owner), 'A person on the team is not the student.');
+        $this->signedInStudent($lead)
+            ->patchJson(route('student.activity'), ['scope' => 'core', 'key' => 'initial-consultation', 'status' => 'Completed'])
+            ->assertForbidden();
+    }
+
+    public function test_work_handed_to_someone_survives_them_being_renamed_or_removed(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $key = $this->as($counsellor)->postJson(route('crm.journey.team.store', $lead), [
+            'role' => 'Content writer', 'name' => 'Ishaan Rao',
+        ])->json('member.key');
+        $owner = 'member:'.$key;
+
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), [
+            'scope' => 'core', 'key' => 'gap-analysis', 'owner' => $owner,
+        ])->assertOk();
+
+        // Renaming them keeps the task with them — the owner is a reference,
+        // not a copy of the name.
+        $this->as($counsellor)->patchJson(route('crm.journey.team.update', [$lead, $key]), ['name' => 'Ishaan R.'])->assertOk();
+        $this->assertSame($owner, $this->planOf($lead)->coreState()['gap-analysis']['owner']);
+        $this->assertSame('Ishaan R.', $this->planOf($lead)->teamMembers()[0]['name']);
+
+        // Taking them off the file leaves the task pointing at them rather
+        // than quietly reassigning it to whoever the template had in mind.
+        $this->as($counsellor)->deleteJson(route('crm.journey.team.destroy', [$lead, $key]))->assertOk();
+        $this->assertSame($owner, $this->planOf($lead)->coreState()['gap-analysis']['owner']);
+        $this->assertNotContains($owner, $this->planOf($lead)->ownerValues());
+    }
 }

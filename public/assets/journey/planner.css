@@ -872,3 +872,42 @@ body.jp-mode-student .jp-block-h { background: linear-gradient(135deg, var(--pur
     .jp-day-row { grid-template-columns: 14px minmax(0, 1fr) auto; }
     .jp-day-row .a { grid-column: 2 / -1; justify-content: flex-start; }
 }
+
+/* ---------- a wider dialog, for the forms that earn it ---------- */
+.jp-dialog.wide { max-width: 680px; }
+.jp-dialog.wide .two { gap: 14px; }
+.jp-field-row { display: flex; gap: 8px; align-items: center; }
+.jp-field-row input { flex: 1; min-width: 0; }
+.jp-field-row .jp-btn { flex: none; }
+
+/* ---------- an owner who is a person, not a role ---------- */
+.jp-owner-chip.person { background: var(--purple-soft); color: var(--purple-ink); border-color: transparent; }
+.jp-tools optgroup, .jp-fields optgroup, .jp-dialog optgroup { font-style: normal; font-weight: 800; color: var(--muted); }
+
+/* ---------- what is on for one day, in a dialog ---------- */
+.jp-day-list { display: flex; flex-direction: column; margin: 6px 0 4px; }
+.jp-day-list .jp-day-row { padding: 11px 0; border-bottom: 1px solid var(--line); }
+.jp-day-list .jp-day-row:last-child { border-bottom: none; }
+.jp-day-list .jp-day-row b { font-size: 0.92rem; }
+.jp-dialog .jp-day-row .a .jp-btn { white-space: nowrap; }
+
+/* ---------- open tasks by the person holding them ---------- */
+.jp-person-load { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.jp-person { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: var(--surface-2); border-top: 4px solid var(--purple); }
+.jp-person-h { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.jp-person-h > div { flex: 1; min-width: 0; }
+.jp-person-h b { display: block; font-size: 0.94rem; line-height: 1.25; }
+.jp-person-h small { display: block; font-size: 0.74rem; color: var(--muted); }
+.jp-person-h .num { min-width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 0.9rem; background: var(--purple-soft); color: var(--purple-ink); }
+.jp-person ul { list-style: none; display: flex; flex-direction: column; }
+.jp-person li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.85rem; line-height: 1.3; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.jp-person li:last-child { border-bottom: none; padding-bottom: 0; }
+.jp-person li > div { min-width: 0; font-weight: 600; }
+.jp-person li small { display: block; color: var(--muted); font-size: 0.74rem; font-weight: 500; }
+.jp-person li .when { font-size: 0.76rem; color: var(--muted); white-space: nowrap; font-weight: 700; }
+.jp-person li .when.over { color: var(--pink-ink); }
+
+@media (max-width: 640px) {
+    .jp-field-row { flex-wrap: wrap; }
+    .jp-field-row input { flex: 1 1 100%; }
+}

@@ -68,7 +68,7 @@ class CrmJourneyPlan extends Model
             }
             $out[$t['key']] = [
                 'key' => $t['key'], 'name' => (string) ($t['name'] ?? 'Task'), 'desc' => (string) ($t['desc'] ?? ''),
-                'owner' => in_array($t['owner'] ?? null, JourneyPlanner::OWNERS, true) ? $t['owner'] : 'Student',
+                'owner' => in_array($t['owner'] ?? null, $this->ownerValues(), true) ? $t['owner'] : 'Student',
                 'docs' => (string) (($t['docs'] ?? '') ?: 'None'), 'inc' => true, 'phase' => $t['phase'], 'custom' => true,
             ];
         }
@@ -163,6 +163,20 @@ class CrmJourneyPlan extends Model
         }
 
         return $out;
+    }
+
+    /**
+     * Everything a task on this plan may be owned by: ODA's standard roles,
+     * and each person named on the file.
+     *
+     * @return list<string>
+     */
+    public function ownerValues(): array
+    {
+        return array_merge(JourneyPlanner::OWNERS, array_map(
+            fn (array $m) => 'member:'.$m['key'],
+            $this->teamMembers(),
+        ));
     }
 
     /**

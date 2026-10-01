@@ -150,7 +150,7 @@ class CrmJourneyPlannerController extends Controller
             'key' => ['required', 'string', 'max:60'],
             'inc' => ['sometimes', 'boolean'],
             'status' => ['sometimes', Rule::in(JourneyPlanner::STATUSES)],
-            'owner' => ['sometimes', Rule::in(JourneyPlanner::OWNERS)],
+            'owner' => ['sometimes', Rule::in($plan->ownerValues())],
             'target' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'done' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
@@ -322,7 +322,7 @@ class CrmJourneyPlannerController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'desc' => ['nullable', 'string', 'max:500'],
             'docs' => ['nullable', 'string', 'max:190'],
-            'owner' => ['required', Rule::in(JourneyPlanner::OWNERS)],
+            'owner' => ['required', Rule::in($plan->ownerValues())],
             'target' => ['nullable', 'date_format:Y-m-d'],
         ], [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents']);
         $user = $this->user($request);
