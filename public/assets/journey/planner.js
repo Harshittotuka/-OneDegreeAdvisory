@@ -275,6 +275,16 @@
      * a room with — so it is offered as a starting point the counsellor can
      * paste a real link over.
      */
+    /*
+     * How a meeting happens decides what it needs to be reached on. A join
+     * link belongs to a video call and nothing else; a number belongs to a
+     * phone call, and to meeting in person, where someone always ends up
+     * ringing ahead.
+     */
+    function wantsLink(mode) { return mode === 'Google Meet'; }
+    function wantsPhone(mode) { return mode === 'Phone call' || mode === 'In person'; }
+    function phoneLabel(mode) { return mode === 'In person' ? 'Contact number' : 'Phone number'; }
+
     function meetLink() {
         var alphabet = 'abcdefghijkmnopqrstuvwxyz';
         function pick(n) {
@@ -882,10 +892,10 @@
         var days = daysUntil(m.date), armed = UI.armed === 'rm-meeting-' + m.key;
         var late = !m.done && days != null && days < 0;
         var when = m.done ? 'Done' : (days === 0 ? 'Today' : late ? Math.abs(days) + (Math.abs(days) === 1 ? ' day ago' : ' days ago') : 'In ' + plural(days, 'day', 'days'));
-        var how = m.mode === 'Phone call' && m.phone
-            ? '<a class="jp-meet-join" href="tel:' + esc(m.phone.replace(/[^0-9+]/g, '')) + '">' + esc(m.phone) + '</a>'
-            : (m.link ? '<a class="jp-meet-join" href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link.replace(/^https:\/\//, '')) + '</a>'
-                : (isC() ? '<span class="jp-meet-nolink">No link yet</span>' : ''));
+        var how = '';
+        if (m.phone) how += '<a class="jp-meet-join" href="tel:' + esc(m.phone.replace(/[^0-9+]/g, '')) + '">' + esc(m.phone) + '</a>';
+        if (m.link) how += '<a class="jp-meet-join" href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link.replace(/^https:\/\//, '')) + '</a>';
+        if (!how && isC() && wantsLink(m.mode)) how = '<span class="jp-meet-nolink">No link yet</span>';
         var invited = m.emails && m.emails.length
             ? '<span class="jp-meet-sent' + (m.sentAt ? ' ok' : '') + '">' + (m.sentAt ? 'Link sent ' + esc(when2(m.sentAt)) : 'Not sent yet') + ' · ' + plural(m.emails.length, 'address', 'addresses') + '</span>'
             : (isC() ? '<span class="jp-meet-sent">Nobody to email</span>' : '');
@@ -1385,12 +1395,12 @@
                 if (!ra) return;
                 modal('<h3>What ' + esc(ra.university) + ' asks for</h3>' +
                     '<p class="sub">One per line, or separated by commas. They are shown as separate items on the university, not as one long line.</p>' +
-                    '<label for="rq-tests">Tests required</label><textarea id="rq-tests" rows="3" maxlength="190" placeholder="IELTS 7.0&#10;SAT 1400">' + esc(splitList(ra.tests).join('\n')) + '</textarea>' +
-                    '<label for="rq-docs">Documents required</label><textarea id="rq-docs" rows="4" maxlength="300" placeholder="Transcripts&#10;Essays&#10;2 LORs&#10;CV">' + esc(splitList(ra.docs).join('\n')) + '</textarea>' +
+                    '<div class="two"><div><label for="rq-tests">Tests required</label><textarea id="rq-tests" rows="5" maxlength="190" placeholder="IELTS 7.0&#10;SAT 1400">' + esc(splitList(ra.tests).join('\n')) + '</textarea></div>' +
+                    '<div><label for="rq-docs">Documents required</label><textarea id="rq-docs" rows="5" maxlength="300" placeholder="Transcripts&#10;Essays&#10;2 LORs&#10;CV">' + esc(splitList(ra.docs).join('\n')) + '</textarea></div></div>' +
                     '<label for="rq-deadline">Application closes</label><input id="rq-deadline" type="date" value="' + esc(ra.deadline || '') + '">' +
                     '<label for="rq-notes">Entry requirements and anything else</label><textarea id="rq-notes" rows="4" maxlength="2000" placeholder="Grades, prerequisites, portfolio rules, interview format…">' + esc(ra.requirements || '') + '</textarea>' +
                     '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
-                    '<button class="jp-btn" data-act="save-reqs" data-u="' + ra.id + '">Save</button></div>');
+                    '<button class="jp-btn" data-act="save-reqs" data-u="' + ra.id + '">Save</button></div>', 'wide');
                 return;
             }
             case 'save-reqs': {
@@ -1450,22 +1460,23 @@
                 modal('<h3>' + (mt ? 'Edit meeting' : 'Schedule a meeting') + '</h3>' +
                     '<p class="sub">Everyone you list is emailed the joining details when you save.</p>' +
                     '<label for="mt-title">What is it about?</label><input id="mt-title" maxlength="150" value="' + esc(mt ? mt.title : '') + '" placeholder="e.g. Shortlist review with parents">' +
-                    '<div class="two"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : (el.dataset.d || '')) + '"></div>' +
-                    '<div><label for="mt-time">Time</label><input id="mt-time" type="time" value="' + esc(mt ? mt.time : '16:00') + '"></div></div>' +
-                    '<div class="two"><div><label for="mt-mode">How</label><select id="mt-mode">' + options(T.meetingModes, mtMode) + '</select></div>' +
+                    '<div class="three"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : (el.dataset.d || '')) + '"></div>' +
+                    '<div><label for="mt-time">Time</label><input id="mt-time" type="time" value="' + esc(mt ? mt.time : '16:00') + '"></div>' +
                     '<div><label for="mt-mins">Minutes</label><input id="mt-mins" type="number" min="5" max="480" step="5" value="' + (mt ? mt.minutes : 45) + '"></div></div>' +
+                    '<label for="mt-mode">How</label><select id="mt-mode">' + options(T.meetingModes, mtMode) + '</select>' +
 
-                    '<div id="mt-link-wrap"' + (mtMode === 'Phone call' ? ' hidden' : '') + '>' +
+                    '<div id="mt-link-wrap"' + (wantsLink(mtMode) ? '' : ' hidden') + '>' +
                     '<label for="mt-link">Join link</label>' +
                     '<div class="jp-field-row"><input id="mt-link" maxlength="300" value="' + esc(mt && mt.link ? mt.link : (mtMode === 'Google Meet' ? meetLink() : '')) + '" placeholder="https://meet.google.com/…">' +
                     '<button type="button" class="jp-btn ghost sm" data-act="copy-meet-link">Copy</button></div>' +
                     '<p class="jp-hint">Made for this meeting. Paste a different link over it if you already have one.</p></div>' +
 
-                    '<div id="mt-phone-wrap"' + (mtMode === 'Phone call' ? '' : ' hidden') + '>' +
-                    '<label for="mt-phone">Phone number</label><input id="mt-phone" type="tel" maxlength="40" value="' + esc(mt ? mt.phone : '') + '" placeholder="e.g. +91 98290 00000"></div>' +
+                    '<div id="mt-phone-wrap"' + (wantsPhone(mtMode) ? '' : ' hidden') + '>' +
+                    '<label for="mt-phone" id="mt-phone-label">' + phoneLabel(mtMode) + '</label>' +
+                    '<input id="mt-phone" type="tel" maxlength="40" value="' + esc(mt ? mt.phone : '') + '" placeholder="e.g. +91 98290 00000"></div>' +
 
-                    '<label for="mt-who">Who is coming</label><input id="mt-who" maxlength="190" value="' + esc(mt ? mt.who : '') + '" placeholder="e.g. ' + esc(P.student.firstName) + ', parents, you">' +
-                    '<label for="mt-emails">Email the details to</label><input id="mt-emails" maxlength="600" value="' + esc(mtMails) + '" placeholder="aarav@example.com, parent@example.com">' +
+                    '<div class="two"><div><label for="mt-who">Who is coming</label><input id="mt-who" maxlength="190" value="' + esc(mt ? mt.who : '') + '" placeholder="e.g. ' + esc(P.student.firstName) + ', parents, you"></div>' +
+                    '<div><label for="mt-emails">Email the details to</label><input id="mt-emails" maxlength="600" value="' + esc(mtMails) + '" placeholder="aarav@example.com, parent@example.com"></div></div>' +
                     '<p class="jp-hint">Separate addresses with commas. Leave it empty to send nothing.</p>' +
                     '<label for="mt-notes">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="mt-notes" maxlength="1000" rows="3" placeholder="Where to meet, what to bring, what was agreed…">' + esc(mt ? mt.notes : '') + '</textarea>' +
                     '<label class="jp-check"><input type="checkbox" id="mt-notify" checked> Email them the joining details when I save</label>' +
@@ -1488,11 +1499,12 @@
                 var mMails = splitList(val('mt-emails'));
                 var mBad = mMails.filter(function (e) { return !/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(e); });
                 if (mBad.length) { modalError('This does not look like an email address: ' + mBad[0]); return; }
+                var mMode = val('mt-mode');
                 var mBody = {
                     title: mTitle, date: mDate, time: val('mt-time') || null, minutes: parseInt(val('mt-mins'), 10) || 45,
-                    mode: val('mt-mode'), who: val('mt-who'), emails: mMails,
-                    phone: val('mt-mode') === 'Phone call' ? val('mt-phone') : '',
-                    link: val('mt-mode') === 'Phone call' ? null : (mLink || null),
+                    mode: mMode, who: val('mt-who'), emails: mMails,
+                    phone: wantsPhone(mMode) ? val('mt-phone') : '',
+                    link: wantsLink(mMode) ? (mLink || null) : null,
                     notes: (document.getElementById('mt-notes') || {}).value || '',
                     notify: checked('mt-notify') && mMails.length > 0
                 };
@@ -1642,7 +1654,7 @@
                     '<label for="tk-docs">Documents needed <span style="font-weight:500">(optional)</span></label><input id="tk-docs" maxlength="190" value="' + esc(editing && editing.docs !== 'None' ? editing.docs : '') + '" placeholder="e.g. Visit confirmation">' +
                     (editing ? '' : '<div class="two"><div><label for="tk-owner">Who does it</label><select id="tk-owner">' + ownerOptionsHtml('Student') + '</select></div>' +
                         '<div><label for="tk-target">Target date <span style="font-weight:500">(optional)</span></label><input id="tk-target" type="date"></div></div>') +
-                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-task" data-p="' + esc(phaseKey) + '"' + (editing ? ' data-key="' + esc(editing.key) + '"' : '') + '>' + (editing ? 'Save' : 'Add task') + '</button></div>');
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-task" data-p="' + esc(phaseKey) + '"' + (editing ? ' data-key="' + esc(editing.key) + '"' : '') + '>' + (editing ? 'Save' : 'Add task') + '</button></div>', 'wide');
                 return;
             }
             case 'save-task': {
@@ -1804,10 +1816,11 @@
         // How a meeting happens decides which of the two fields is asked for.
         if (el.id === 'mt-mode') {
             var linkWrap = document.getElementById('mt-link-wrap'), phoneWrap = document.getElementById('mt-phone-wrap');
-            var linkBox = document.getElementById('mt-link');
-            if (linkWrap) linkWrap.hidden = el.value === 'Phone call';
-            if (phoneWrap) phoneWrap.hidden = el.value !== 'Phone call';
-            if (el.value === 'Google Meet' && linkBox && !linkBox.value.trim()) linkBox.value = meetLink();
+            var linkBox = document.getElementById('mt-link'), phoneLbl = document.getElementById('mt-phone-label');
+            if (linkWrap) linkWrap.hidden = !wantsLink(el.value);
+            if (phoneWrap) phoneWrap.hidden = !wantsPhone(el.value);
+            if (phoneLbl) phoneLbl.textContent = phoneLabel(el.value);
+            if (wantsLink(el.value) && linkBox && !linkBox.value.trim()) linkBox.value = meetLink();
             return;
         }
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }

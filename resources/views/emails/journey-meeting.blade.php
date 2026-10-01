@@ -34,12 +34,14 @@
         </tr>
     </table>
 
-    @if($meeting['mode'] === 'Phone call' && $meeting['phone'])
+    @if($meeting['phone'])
         <p style="margin:0 0 8px;font-size:13px;color:#61757f;">{{ $joinLabel }}</p>
         <p style="margin:0 0 22px;font-size:22px;font-weight:700;color:#102a43;">
             <a href="tel:{{ preg_replace('/[^0-9+]/', '', $meeting['phone']) }}" style="color:#0f5f5d;text-decoration:none;">{{ $meeting['phone'] }}</a>
         </p>
-    @elseif($meeting['link'])
+    @endif
+
+    @if($meeting['link'])
         <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">
             <tr>
                 <td style="border-radius:10px;background:#0f7a78;">

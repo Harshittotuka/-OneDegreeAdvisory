@@ -47,11 +47,9 @@ class JourneyMeetingMail extends Mailable
     {
         return new Content(view: 'emails.journey-meeting', with: [
             'when' => $this->whenLine(),
-            'joinLabel' => match ($this->meeting['mode']) {
-                'Phone call' => 'Phone number',
-                'In person' => 'Where',
-                default => 'Join link',
-            },
+            // Meeting in person still wants a number on it: someone always
+            // ends up ringing ahead.
+            'joinLabel' => $this->meeting['mode'] === 'In person' ? 'Contact number' : 'Phone number',
         ]);
     }
 

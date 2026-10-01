@@ -1197,6 +1197,20 @@ class JourneyPlannerTest extends TestCase
         // The student finds the number on their own planner.
         $this->assertSame('+91 98290 00000', JourneyPlanner::payload($this->planOf($lead), 'student')['meetings'][0]['phone']);
 
+        // Meeting in person keeps a number too — someone always rings ahead.
+        $inPerson = $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Shortlist review with parents', 'date' => '2026-10-18', 'mode' => 'In person',
+            'phone' => '+91 141 4000 000', 'emails' => ['aarav@example.test'],
+        ])->assertOk()->json('meeting');
+        $this->assertSame('+91 141 4000 000', $inPerson['phone']);
+        $this->assertSame('', $inPerson['link']);
+        Mail::assertSent(JourneyMeetingMail::class, function (JourneyMeetingMail $m) {
+            return $m->meeting['mode'] === 'In person' && $m->meeting['phone'] === '+91 141 4000 000';
+        });
+        $this->assertStringContainsString('Contact number',
+            (new JourneyMeetingMail($inPerson, $lead->name))->render(),
+            'An in-person meeting calls it a contact number, not a join link.');
+
         // A bad address is refused before anything is stored.
         $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
             'title' => 'x', 'date' => '2026-10-08', 'mode' => 'Phone call', 'emails' => ['not-an-address'],
