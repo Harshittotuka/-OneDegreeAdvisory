@@ -283,23 +283,10 @@
     function phoneLabel(mode) { return mode === 'In person' ? 'Contact number' : 'Phone number'; }
 
     /*
-     * A join code in Google's three-four-three shape, made here rather than by
-     * Google. Only used where the CRM has no Google set up at all; with Google
-     * set up, a counsellor's own account makes a real room instead.
-     */
-    function meetLink() {
-        var alphabet = 'abcdefghijkmnopqrstuvwxyz';
-        function pick(n) {
-            var out = '';
-            for (var i = 0; i < n; i++) out += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-            return out;
-        }
-        return 'https://meet.google.com/' + pick(3) + '-' + pick(4) + '-' + pick(3);
-    }
-    /*
      * The counsellor's own Google account, connected once, makes the real
-     * Meet rooms. Three states matter: not set up on this CRM (fall back to a
-     * made-up link), not connected yet, and connected but refused by Google.
+     * Meet rooms. Three states matter: not set up on this CRM (the counsellor
+     * makes the room in Google Meet and pastes its link), not connected yet,
+     * and connected but refused by Google.
      */
     function G() { return P.google || { configured: false, connected: false, works: false }; }
     function googleReady() { var g = G(); return !!(g.configured && g.connected && g.works); }
@@ -308,7 +295,7 @@
     }
     function roomHint(mt) {
         var g = G();
-        if (!g.configured) return 'Made for this meeting. Paste a different link over it if you already have one.';
+        if (!g.configured) return 'Create the room in Google Meet, then paste its link here. <a href="https://meet.google.com/new" target="_blank" rel="noopener">Open Google Meet</a>';
         if (googleReady()) {
             return (mt && mt.link && !mt.room ? 'A link pasted by hand. Clear it to have a real room made in ' : 'A real Google Meet room in ') + esc(g.email) +
                 '\'s Google Calendar. Google invites nobody — only the email below goes out.';
@@ -1209,7 +1196,9 @@
             ['The student\'s login', 'Created when the planner is started. The student sees what is switched on and updates the tasks they own; each update lands on the lead timeline.'],
             ['Documents & essays', 'Everything the student uploads or writes is under Documents. Open an essay to approve it or send it back with feedback; uploads and essays sent for review land on the lead timeline.'],
             ['University requirements', 'The top of each university block records what it asks for — tests, documents, entry requirements and the date it closes. The closing date also shows in Deadlines and on the Calendar.'],
-            ['Deadlines and meetings', 'Deadlines holds the universities\' dates and ODA\'s own separately. Calendar shows everything as a month. Connect your Google account once (on the Calendar page, above Meetings) and every Google Meet meeting gets a real room in your own Google Calendar, with nobody invited by Google — the planner emails the link itself. The connection renews itself; if Google ever ends it, the Calendar page says so and offers Reconnect.'],
+            ['Deadlines and meetings', 'Deadlines holds the universities\' dates and ODA\'s own separately. Calendar shows everything as a month. ' + (G().configured
+                ? 'Connect your Google account once (on the Calendar page, above Meetings) and every Google Meet meeting gets a real room in your own Google Calendar, with nobody invited by Google — the planner emails the link itself. The connection renews itself; if Google ever ends it, the Calendar page says so and offers Reconnect.'
+                : 'For a Google Meet meeting, create the room in Google Meet and paste its link into the meeting; everyone listed is emailed it.')],
             ['The team on a file', 'Name the counsellor, specialist, supervisor, content writer and anyone external. Type a designation of your own and it joins the dropdown for this student.'],
             ['Document edits', 'Every document keeps its own history and a version number. The planner records drafts, reviews and approvals itself; use “Log an edit” for a change made outside it. The student sees the history.'],
             ['Progress', 'Counted, never a percentage: Completed against Included minus Not Applicable. Dates do the rest of the work.']
@@ -1641,8 +1630,7 @@
                 var mt = act === 'edit-meeting' ? findMeeting(el.dataset.k) : null;
                 var mtMode = mt ? mt.mode : T.meetingModes[0];
                 var mtMails = mt && mt.emails ? mt.emails.join(', ') : '';
-                // A made-up link only where the CRM has no Google set up.
-                var mtLink = mt && mt.link ? mt.link : (mtMode === 'Google Meet' && !G().configured ? meetLink() : '');
+                var mtLink = mt && mt.link ? mt.link : '';
                 if (UI.room) releaseRoom();
                 UI.dialogSeq++;
                 modal('<h3>' + (mt ? 'Edit meeting' : 'Schedule a meeting') + '</h3>' +
@@ -2021,10 +2009,7 @@
             if (linkWrap) linkWrap.hidden = !wantsLink(el.value);
             if (phoneWrap) phoneWrap.hidden = !wantsPhone(el.value);
             if (phoneLbl) phoneLbl.textContent = phoneLabel(el.value);
-            if (wantsLink(el.value) && linkBox && !linkBox.value.trim()) {
-                if (googleReady()) makeRoom();
-                else if (!G().configured) linkBox.value = meetLink();
-            }
+            if (wantsLink(el.value) && linkBox && !linkBox.value.trim()) makeRoom();
             return;
         }
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }
