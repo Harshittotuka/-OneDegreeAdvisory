@@ -1778,4 +1778,22 @@ class JourneyPlannerTest extends TestCase
 
         return json_decode(html_entity_decode($m[1] ?? '{}'), true) ?? [];
     }
+
+    public function test_the_pdf_guide_is_offered_to_counsellor_and_student(): void
+    {
+        $path = public_path('assets/journey/journey-planner-user-guide.pdf');
+        $this->assertFileExists($path);
+        $this->assertStringStartsWith('%PDF', (string) file_get_contents($path, false, null, 0, 4));
+
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $mine = $this->payloadFrom($this->as($counsellor)->get(route('crm.journey.show', $lead)))['endpoints']['guidePdf'];
+        $this->assertStringContainsString('/assets/journey/journey-planner-user-guide.pdf?v=', $mine);
+        $theirs = $this->payloadFrom($this->signedInStudent($lead)->get(route('student.dashboard')))['endpoints']['guidePdf'];
+        $this->assertSame($mine, $theirs);
+
+        $this->assertStringContainsString('/assets/journey/journey-planner-user-guide.pdf', (string) file_get_contents(base_path('docs/crm-guide.html')));
+    }
 }

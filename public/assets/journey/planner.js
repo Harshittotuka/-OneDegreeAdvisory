@@ -1511,8 +1511,14 @@
         var at = Math.max(0, topics.findIndex(function (t) { return t.key === UI.helpTab; }));
         var cur = topics[at], prev = topics[at - 1], next = topics[at + 1];
         var goView = views().find(function (v) { return v.key === cur.go; });
-        var top = isC() && P.endpoints.guide
-            ? '<div class="jp-help-top"><p>Step-by-step help for each part of the planner. The team guide covers the whole CRM, and this planner in more depth.</p><a class="jp-btn sm" href="' + esc(P.endpoints.guide) + '" target="_blank" rel="noopener">Open the full team guide</a></div>'
+        // The team guide (counsellors) and the illustrated PDF guide (everyone).
+        var links = (isC() && P.endpoints.guide ? '<a class="jp-btn sm" href="' + esc(P.endpoints.guide) + '" target="_blank" rel="noopener">Open the full team guide</a>' : '') +
+            (P.endpoints.guidePdf ? '<a class="jp-btn ghost sm" href="' + esc(P.endpoints.guidePdf) + '" target="_blank" rel="noopener">' + ICO.doc + ' Download the PDF guide</a>' : '');
+        var top = links
+            ? '<div class="jp-help-top"><p>' + (isC()
+                ? 'Step-by-step help for each part of the planner. The team guide covers the whole CRM; the PDF guide walks through every step with screenshots, for you and for the student.'
+                : 'Step-by-step help for each part of your planner. The PDF guide shows every step with pictures, and you can keep it.') +
+              '</p><div class="jp-help-links">' + links + '</div></div>'
             : '';
         var tabs = '<div class="jp-help-tabs" role="tablist" aria-label="Help topics">' + topics.map(function (t, i) {
             return '<button role="tab" data-act="help-tab" data-v="' + t.key + '" class="' + (t === cur ? 'on' : '') + '" aria-selected="' + (t === cur) + '"><span class="n num">' + (i + 1) + '</span>' + esc(t.title) + '</button>';

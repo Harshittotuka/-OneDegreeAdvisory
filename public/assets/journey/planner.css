@@ -1025,6 +1025,8 @@ body.jp-mode-student .jp-block-h { background: linear-gradient(135deg, var(--pur
 /* ---------- Help: topic tabs and numbered steps ---------- */
 .jp-help-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding: 14px 18px; border-radius: 16px; background: var(--blue-soft); }
 .jp-help-top p { font-size: 0.9rem; color: var(--ink-2); max-width: 62ch; }
+.jp-help-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.jp-help-links .jp-btn svg { width: 15px; height: 15px; }
 .jp-help-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .jp-help-tabs button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 12px; padding: 8px 14px; font: inherit; font-size: 0.86rem; font-weight: 700; color: var(--ink-2); cursor: pointer; }
 .jp-help-tabs button .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; background: var(--surface-2); color: var(--muted); }

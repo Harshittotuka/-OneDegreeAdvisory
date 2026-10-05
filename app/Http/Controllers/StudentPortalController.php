@@ -133,6 +133,7 @@ class StudentPortalController extends Controller
                 'pulse' => route('student.pulse'),
                 'password' => route('student.password'),
                 'logout' => route('student.logout'),
+                'guidePdf' => asset('assets/journey/journey-planner-user-guide.pdf').'?v='.@filemtime(public_path('assets/journey/journey-planner-user-guide.pdf')),
             ]),
         ]);
     }
