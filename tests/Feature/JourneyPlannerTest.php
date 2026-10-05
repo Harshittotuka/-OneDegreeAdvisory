@@ -1641,17 +1641,14 @@ class JourneyPlannerTest extends TestCase
         $due = fn (array $meeting, string $at) => MeetingReminders::due($meeting, $ist($at));
 
         $this->assertNull($due($m, '2026-10-08 23:00'), 'Two days out: nothing.');
-        $this->assertNull($due($m, '2026-10-09 08:59'));
-        $this->assertSame('tomorrow', $due($m, '2026-10-09 09:00'));
-        $this->assertSame('tomorrow', $due($m, '2026-10-09 22:30'), 'A late pass still catches up the same day.');
-        $this->assertNull($due($m, '2026-10-10 07:59'));
-        $this->assertSame('today', $due($m, '2026-10-10 08:00'));
+        $this->assertNull($due($m, '2026-10-09 03:59'));
+        $this->assertSame('tomorrow', $due($m, '2026-10-09 04:00'));
+        $this->assertNull($due($m, '2026-10-10 03:59'));
+        $this->assertSame('today', $due($m, '2026-10-10 04:00'));
         $this->assertNull($due($m, '2026-10-10 16:00'), 'Not once it has started.');
 
-        // An early meeting is reminded two hours ahead instead.
-        $early = ['time' => '09:00'] + $m;
-        $this->assertSame('today', $due($early, '2026-10-10 07:00'));
-        $this->assertNull($due($early, '2026-10-10 06:59'));
+        // No two-hour rule: an early meeting is reminded at 4:00 like any other.
+        $this->assertSame('today', $due(['time' => '06:00'] + $m, '2026-10-10 04:00'));
 
         // Sent already for this date: not again. Moved: the new date is owed.
         $sent = $m + ['reminders' => ['tomorrow' => ['for' => '2026-10-10', 'at' => '2026-10-09T09:00:00+05:30']]];
@@ -1662,7 +1659,7 @@ class JourneyPlannerTest extends TestCase
         $this->assertNull($due(['done' => true] + $m, '2026-10-09 10:00'));
         $this->assertNull($due(['remind' => false] + $m, '2026-10-09 10:00'));
         $this->assertNull($due(['createdAt' => '2026-10-09T08:00:00+05:30'] + $m, '2026-10-09 10:00'), 'Booked today: the booking email is enough.');
-        $this->assertNull($due(['createdAt' => '2026-10-10T07:00:00+05:30'] + $m, '2026-10-10 09:00'));
+        $this->assertNull($due(['createdAt' => '2026-10-10T03:00:00+05:30'] + $m, '2026-10-10 04:00'));
     }
 
     public function test_reminders_go_to_everyone_listed_and_the_counsellor_once_each(): void
@@ -1679,8 +1676,8 @@ class JourneyPlannerTest extends TestCase
         ])->assertOk()->assertJsonPath('sent', 2)->assertJsonPath('meetings.0.remind', true);
         Mail::assertSent(JourneyMeetingMail::class, 2);
 
-        // The day before, at 9.
-        $this->travelTo(CarbonImmutable::parse('2026-10-09 09:05', 'Asia/Kolkata'));
+        // The day before, at 4.
+        $this->travelTo(CarbonImmutable::parse('2026-10-09 04:00', 'Asia/Kolkata'));
         $this->artisan('journey:meeting-reminders')->assertSuccessful();
         $tomorrow = fn () => Mail::sent(JourneyMeetingMail::class, fn ($mail) => $mail->reminder === 'tomorrow');
         $this->assertCount(3, $tomorrow(), 'The two listed, and the counsellor.');
@@ -1699,8 +1696,8 @@ class JourneyPlannerTest extends TestCase
         $this->assertCount(3, $tomorrow());
         $this->assertArrayHasKey('tomorrow', $this->planOf($lead)->meetingRows()[0]['reminded']);
 
-        // On the day, at 8.
-        $this->travelTo(CarbonImmutable::parse('2026-10-10 08:10', 'Asia/Kolkata'));
+        // On the day, at 4.
+        $this->travelTo(CarbonImmutable::parse('2026-10-10 04:00', 'Asia/Kolkata'));
         $this->artisan('journey:meeting-reminders')->assertSuccessful();
         $today = Mail::sent(JourneyMeetingMail::class, fn ($mail) => $mail->reminder === 'today');
         $this->assertCount(3, $today);
@@ -1740,11 +1737,12 @@ class JourneyPlannerTest extends TestCase
         Mail::assertSent(JourneyMeetingMail::class, 4);
     }
 
-    public function test_reminders_are_checked_every_fifteen_minutes(): void
+    public function test_reminders_go_out_once_a_day_at_four_india_time(): void
     {
         $event = collect(app(Schedule::class)->events())
             ->first(fn ($e) => str_contains((string) $e->command, 'journey:meeting-reminders'));
         $this->assertNotNull($event);
-        $this->assertSame('*/15 * * * *', $event->expression);
+        $this->assertSame('0 4 * * *', $event->expression);
+        $this->assertSame('Asia/Kolkata', $event->timezone);
     }
 }

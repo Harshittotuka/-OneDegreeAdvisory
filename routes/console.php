@@ -37,9 +37,8 @@ Artisan::command('google:keep-alive {--all : Renew every connection, however rec
 Schedule::command('google:keep-alive')->dailyAt('03:15')->withoutOverlapping();
 
 /*
- * Meeting reminders: the day before and on the day, to everyone listed on a
- * meeting and the student's counsellor. Each pass sends only what has come
- * due, so running it often costs nothing and a missed pass catches up.
+ * Meeting reminders: once a day at 4:00 India time, today's meetings and
+ * tomorrow's, to everyone listed on each and the student's counsellor.
  */
 Artisan::command('journey:meeting-reminders', function () {
     $out = MeetingReminders::send();
@@ -48,7 +47,8 @@ Artisan::command('journey:meeting-reminders', function () {
     return 0;
 })->purpose('Email the day-before and same-day meeting reminders');
 
-Schedule::command('journey:meeting-reminders')->everyFifteenMinutes()->withoutOverlapping();
+Schedule::command('journey:meeting-reminders')->dailyAt((string) config('journey.reminders.send_at', '04:00'))
+    ->timezone((string) config('journey.reminders.timezone', 'Asia/Kolkata'))->withoutOverlapping();
 
 Artisan::command('backup:run {--reason=manual}', function (CmsCrmBackupManager $backups) {
     try {

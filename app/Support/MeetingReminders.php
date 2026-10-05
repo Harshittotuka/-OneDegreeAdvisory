@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Mail;
  * booked: one the day before, one on the day. Each goes to the people listed
  * on the meeting and to the student's counsellor.
  *
- * Run often (every 15 minutes); each pass sends only what has come due and
- * not yet gone, so a pass that is late or missed catches up on the next one.
- * Each reminder is sent once per meeting date — move the meeting and the new
- * date is reminded afresh.
+ * Run once a day at journey.reminders.send_at (4:00 India time): that one
+ * run sends today's meetings their "today" reminder and tomorrow's their
+ * "tomorrow" one. Each reminder is sent once per meeting date, so running it
+ * again sends nothing twice, and a moved meeting is reminded afresh.
  */
 final class MeetingReminders
 {
@@ -73,20 +73,16 @@ final class MeetingReminders
         $bookedToday = $bookedOn === $now->toDateString();
 
         $today = $now->toDateString();
+        $at = self::at($now->startOfDay(), (string) config('journey.reminders.send_at', '04:00'));
+        if ($bookedToday || $now->lt($at)) {
+            return null;
+        }
         if ($today === $date->subDay()->toDateString()) {
-            $at = self::at($date->subDay(), (string) config('journey.reminders.day_before_at', '09:00'));
-
-            return ! isset($sent['tomorrow']) && ! $bookedToday && $now->gte($at) ? 'tomorrow' : null;
+            return isset($sent['tomorrow']) ? null : 'tomorrow';
         }
         if ($today === $date->toDateString()) {
-            $at = self::at($date, (string) config('journey.reminders.same_day_at', '08:00'));
-            if ($start) {
-                $early = $start->subMinutes((int) config('journey.reminders.same_day_lead_minutes', 120));
-                $at = $early->lt($at) ? $early->max($date) : $at;
-            }
-            $over = $start ? $now->gte($start) : false;
-
-            return ! isset($sent['today']) && ! $bookedToday && ! $over && $now->gte($at) ? 'today' : null;
+            // Not once it has started: a reminder then is no use to anyone.
+            return isset($sent['today']) || ($start && $now->gte($start)) ? null : 'today';
         }
 
         return null;
