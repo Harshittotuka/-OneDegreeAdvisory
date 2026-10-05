@@ -1060,7 +1060,7 @@
             ? 'Hover over an entry for its details, and click it to open it. Click a day to see everything on it' + (isC() ? ', or to put a meeting or a deadline on it' : '') + '.'
             : 'Everything this month, day by day. Switch to Month for the grid.') + '</p>';
 
-        return '<section class="jp-card jp-cal">' + bar + chips + body + legend + hint + '</section>' + renderMeetings();
+        return '<section class="jp-card jp-calendar">' + bar + chips + body + legend + hint + '</section>' + renderMeetings();
     }
 
     function calMonth(byDay, y, m) {
