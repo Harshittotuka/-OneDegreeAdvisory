@@ -966,3 +966,17 @@ body.jp-mode-student .jp-block-h { background: linear-gradient(135deg, var(--pur
     .jp-change { grid-template-columns: 10px 1fr; }
     .jp-change .by { grid-column: 2; flex-direction: row; gap: 8px; align-items: baseline; }
 }
+
+/* The card that shows a calendar entry's details on hover. */
+.jp-tip { position: fixed; z-index: 60; width: min(320px, calc(100vw - 24px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); border-radius: 14px; box-shadow: 0 14px 40px rgba(29, 35, 64, 0.18); padding: 12px 14px; font-size: 0.84rem; pointer-events: none; }
+.jp-tip[hidden] { display: none; }
+.jp-tip-h { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.jp-tip-h .pill { margin-left: auto; text-transform: none; letter-spacing: 0; }
+.jp-tip-t { display: block; margin: 6px 0 8px; font-size: 0.95rem; line-height: 1.3; overflow-wrap: anywhere; }
+.jp-tip-kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
+.jp-tip-kv dt { color: var(--muted); font-weight: 700; }
+.jp-tip-kv dd { margin: 0; overflow-wrap: anywhere; }
+.jp-tip-f { display: block; margin-top: 8px; font-size: 0.72rem; color: var(--muted); }
+.jp-tip-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.jp-tip-list li { display: flex; align-items: center; gap: 8px; }
+.jp-tip-list .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -393,6 +393,7 @@
 
     /* ------------------------------------------------------------ render */
     function render() {
+        hideTip();
         var y = window.scrollY;
         if (UI.essayId && UI.essayDirty && document.getElementById('es-body')) {
             UI.draft = Object.assign({ id: UI.essayId, feedback: (document.getElementById('es-feedback') || {}).value }, essayValues());
@@ -872,21 +873,21 @@
         P.meetings.forEach(function (m) {
             out.push({
                 date: m.date, type: 'meeting', label: m.title, done: m.done, key: m.key, link: m.link,
-                sub: [m.time, m.mode, m.who].filter(Boolean).join(' · '),
+                sub: [m.time, m.mode, m.who].filter(Boolean).join(' · '), m: m,
             });
         });
         uniDeadlines().forEach(function (d) {
-            out.push({ date: d.date, type: 'uni', label: d.what, sub: d.who, key: d.key, appId: d.appId });
+            out.push({ date: d.date, type: 'uni', label: d.what, sub: d.who, key: d.key, appId: d.appId, d: d });
         });
         ourDeadlines().forEach(function (d) {
-            out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree', key: d.key });
+            out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree', key: d.key, d: d });
         });
         // Finished tasks stay on the month, in green; only Not Applicable leaves.
         datedItems().forEach(function (i) {
             out.push({
                 date: i.a.target, type: 'task', label: i.name, done: closed(i.a.status),
                 sub: i.where + (isStudent() ? '' : ' · ' + i.a.owner),
-                scope: i.scope, appId: i.appId, itemKey: i.key,
+                scope: i.scope, appId: i.appId, itemKey: i.key, a: i.a, where: i.where,
             });
         });
         return out;
@@ -908,6 +909,87 @@
     }
     var STATUS_NAME = { done: 'Done', late: 'Late', today: 'Today', soon: 'This week', later: 'Later' };
 
+    /*
+     * Hovering an entry on the month (or tabbing to it) shows what it is
+     * without leaving the calendar: a task's place, status, owner, dates and
+     * notes; a meeting's time, how to join and who is coming; a deadline's
+     * date and how far off it is. "+3 more" lists the entries it hides.
+     */
+    var CAL_EVENTS = [];
+    function tipEl() {
+        var t = document.getElementById('jp-tip');
+        if (!t) { t = document.createElement('div'); t.id = 'jp-tip'; t.className = 'jp-tip'; t.setAttribute('role', 'tooltip'); t.hidden = true; document.body.appendChild(t); }
+        return t;
+    }
+    function hideTip() { var t = document.getElementById('jp-tip'); if (t) t.hidden = true; }
+    function tipRow(k, v) { return v ? '<dt>' + esc(k) + '</dt><dd>' + v + '</dd>' : ''; }
+    function dueText(iso, done) {
+        if (done) return '';
+        var d = daysUntil(iso);
+        if (d == null) return '';
+        return d === 0 ? 'Today' : d < 0 ? Math.abs(d) + (d === -1 ? ' day late' : ' days late') : 'In ' + plural(d, 'day', 'days');
+    }
+    function tipHtml(e) {
+        var head = '<div class="jp-tip-h"><i class="dot ' + e.type + '"></i><span>' + esc(EVENT_NAME[e.type]) + '</span>' +
+            '<span class="pill ' + ({ late: 'danger', done: 'good', later: 'wait' }[eventStatus(e)] || 'amber') + '">' + esc(STATUS_NAME[eventStatus(e)]) + '</span></div>' +
+            '<b class="jp-tip-t">' + esc(e.label) + '</b>';
+        var rows = '';
+        if (e.type === 'task') {
+            var a = e.a || {};
+            rows = tipRow('Where', esc(e.where)) +
+                tipRow('Status', '<span class="jp-state ' + stPill(a.status) + '">' + esc(a.status) + '</span>') +
+                tipRow(isStudent() ? 'Who does it' : 'Owner', esc(ownerLabel(a.owner))) +
+                tipRow('Target date', esc(fmt(a.target)) + (dueText(a.target, closed(a.status)) ? ' · ' + esc(dueText(a.target, closed(a.status))) : '')) +
+                tipRow('Completed on', a.status === 'Completed' && a.done ? esc(fmt(a.done)) : '') +
+                tipRow('Notes', a.notes ? esc(a.notes.length > 180 ? a.notes.slice(0, 180) + '…' : a.notes) : '');
+        } else if (e.type === 'meeting') {
+            var m = e.m || {};
+            rows = tipRow('When', esc(fmt(m.date, { weekday: 'short', day: 'numeric', month: 'short' })) + (m.time ? ', ' + esc(m.time) : '') + (m.minutes ? ' · ' + m.minutes + ' min' : '')) +
+                tipRow('How', esc(m.mode)) +
+                tipRow('Who', esc(m.who)) +
+                tipRow(m.mode === 'In person' ? 'Contact' : 'Phone', esc(m.phone)) +
+                tipRow('Join', m.link ? esc(m.link.replace(/^https:\/\//, '')) : '') +
+                tipRow('Notes', m.notes ? esc(m.notes.length > 180 ? m.notes.slice(0, 180) + '…' : m.notes) : '');
+        } else {
+            var d = e.d || {};
+            rows = tipRow(e.type === 'uni' ? 'University' : 'Who', esc(d.who || (e.type === 'own' ? 'One Degree' : ''))) +
+                tipRow('Date', esc(fmt(d.date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })) + (dueText(d.date) ? ' · ' + esc(dueText(d.date)) : ''));
+        }
+        return head + (rows ? '<dl class="jp-tip-kv">' + rows + '</dl>' : '') + '<span class="jp-tip-f">Click to open</span>';
+    }
+    function moreHtml(ids) {
+        return '<div class="jp-tip-h"><span>Also on this day</span></div><ul class="jp-tip-list">' + ids.map(function (i) {
+            var e = CAL_EVENTS[i];
+            return e ? '<li><i class="dot ' + e.type + '"></i><span class="t">' + esc(e.label) + '</span><span class="pill ' + ({ late: 'danger', done: 'good', later: 'wait' }[eventStatus(e)] || 'amber') + '">' + esc(STATUS_NAME[eventStatus(e)]) + '</span></li>' : '';
+        }).join('') + '</ul><span class="jp-tip-f">Click the day to see them all</span>';
+    }
+    function showTip(target) {
+        var html = '';
+        if (target.dataset.ev != null) { var e = CAL_EVENTS[parseInt(target.dataset.ev, 10)]; if (e) html = tipHtml(e); }
+        else if (target.dataset.more) html = moreHtml(target.dataset.more.split(',').map(Number));
+        if (!html) return;
+        var t = tipEl();
+        t.innerHTML = html; t.hidden = false;
+        // Below the entry, or above it when there is no room; never off the side.
+        var r = target.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight, gap = 8, edge = 12;
+        var vw = window.innerWidth || document.documentElement.clientWidth, vh = window.innerHeight || document.documentElement.clientHeight;
+        var top = r.bottom + gap;
+        if (top + h > vh - edge && r.top - gap - h > edge) top = r.top - gap - h;
+        var left = Math.min(Math.max(edge, r.left), Math.max(edge, vw - w - edge));
+        t.style.top = Math.round(top) + 'px'; t.style.left = Math.round(left) + 'px';
+    }
+    function tipTarget(node) { return node && node.closest ? node.closest('.jp-month [data-ev], .jp-month [data-more]') : null; }
+    var CAN_HOVER = !window.matchMedia || window.matchMedia('(hover: hover)').matches;
+    document.addEventListener('mouseover', function (e) { if (!CAN_HOVER) return; var t = tipTarget(e.target); if (t) showTip(t); });
+    document.addEventListener('mouseout', function (e) {
+        var t = tipTarget(e.target);
+        if (t && !(e.relatedTarget && t.contains(e.relatedTarget))) hideTip();
+    });
+    document.addEventListener('focusin', function (e) { var t = tipTarget(e.target); if (t) showTip(t); else hideTip(); });
+    document.addEventListener('focusout', function (e) { if (tipTarget(e.target)) hideTip(); });
+    window.addEventListener('scroll', hideTip, { passive: true });
+    document.addEventListener('click', hideTip, true);
+
     /** The data-act attributes that open whatever a calendar entry stands for. */
     function eventAction(e) {
         if (e.type === 'meeting') return ' data-act="cal-open-meeting" data-k="' + esc(e.key) + '"';
@@ -923,7 +1005,8 @@
         var y = UI.cal.y, m = UI.cal.m;
 
         var byDay = {};
-        calendarEvents().forEach(function (e) { if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
+        CAL_EVENTS = calendarEvents();
+        CAL_EVENTS.forEach(function (e, i) { e.i = i; if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
 
         var offset = (new Date(y, m, 1).getDay() + 6) % 7;      // weeks start on Monday
         var daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -943,10 +1026,10 @@
                 ' aria-label="' + esc(fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' })) + ', ' + plural(list.length, 'entry', 'entries') + '">' +
                 '<span class="dn num">' + cd + '</span>' +
                 list.slice(0, 3).map(function (e) {
-                    return '<button class="ev st-' + eventStatus(e) + '"' + eventAction(e) + ' title="' + esc(e.label + (e.sub ? ' — ' + e.sub : '')) + '">' +
+                    return '<button class="ev st-' + eventStatus(e) + '"' + eventAction(e) + ' data-ev="' + e.i + '" aria-label="' + esc(EVENT_NAME[e.type] + ': ' + e.label + (e.sub ? ' — ' + e.sub : '')) + '">' +
                         '<i class="dot ' + e.type + '"></i>' + esc(e.label) + '</button>';
                 }).join('') +
-                (list.length > 3 ? '<span class="more num">+' + (list.length - 3) + ' more</span>' : '') + '</div>';
+                (list.length > 3 ? '<span class="more num" data-more="' + list.slice(3).map(function (e) { return e.i; }).join(',') + '">+' + (list.length - 3) + ' more</span>' : '') + '</div>';
         }
 
         // The day itself opens in a dialog; the month stays a month.
