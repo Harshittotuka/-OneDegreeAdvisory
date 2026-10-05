@@ -255,9 +255,32 @@ class CrmJourneyPlan extends Model
                 'sentAt' => is_string($m['sentAt'] ?? null) ? $m['sentAt'] : null,
                 // A real Meet room made in a counsellor's Google account.
                 'room' => is_array($m['google'] ?? null) && ! empty($m['google']['event']),
+                // Reminders the day before and on the day; on unless switched off.
+                'remind' => (bool) ($m['remind'] ?? true),
+                'reminded' => self::remindersSent($m),
             ];
         }
         usort($out, fn (array $a, array $b) => [$a['date'], $a['time']] <=> [$b['date'], $b['time']]);
+
+        return $out;
+    }
+
+    /**
+     * Which reminders have gone out for the meeting's current date, and when.
+     * A reminder sent for a date the meeting has since moved from does not
+     * count: the new date gets its own.
+     *
+     * @return array<string, string> 'tomorrow' / 'today' => ISO time sent
+     */
+    public static function remindersSent(array $m): array
+    {
+        $out = [];
+        foreach (['tomorrow', 'today'] as $kind) {
+            $r = $m['reminders'][$kind] ?? null;
+            if (is_array($r) && ($r['for'] ?? null) === ($m['date'] ?? null) && is_string($r['at'] ?? null)) {
+                $out[$kind] = $r['at'];
+            }
+        }
 
         return $out;
     }

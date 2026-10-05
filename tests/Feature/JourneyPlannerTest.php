@@ -14,6 +14,9 @@ use App\Models\CrmStudentAccount;
 use App\Models\CrmUser;
 use App\Support\JourneyLog;
 use App\Support\JourneyPlanner;
+use App\Support\MeetingReminders;
+use Carbon\CarbonImmutable;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -1627,5 +1630,121 @@ class JourneyPlannerTest extends TestCase
         $before = JourneyPlanner::fingerprint($plan);
         JourneyLog::record($plan, $counsellor, 'Core journey', 'Gap analysis', 'Notes updated');
         $this->assertNotSame($before, JourneyPlanner::fingerprint($plan->fresh()));
+    }
+
+    /* ------------------------------------------------------------ meeting reminders */
+
+    public function test_a_meeting_is_reminded_the_day_before_and_on_the_day_at_the_right_times(): void
+    {
+        $ist = fn (string $at) => CarbonImmutable::parse($at, 'Asia/Kolkata');
+        $m = ['key' => 'm-aaaaaaaaaa', 'date' => '2026-10-10', 'time' => '16:00', 'done' => false, 'createdAt' => '2026-10-01T10:00:00+05:30'];
+        $due = fn (array $meeting, string $at) => MeetingReminders::due($meeting, $ist($at));
+
+        $this->assertNull($due($m, '2026-10-08 23:00'), 'Two days out: nothing.');
+        $this->assertNull($due($m, '2026-10-09 08:59'));
+        $this->assertSame('tomorrow', $due($m, '2026-10-09 09:00'));
+        $this->assertSame('tomorrow', $due($m, '2026-10-09 22:30'), 'A late pass still catches up the same day.');
+        $this->assertNull($due($m, '2026-10-10 07:59'));
+        $this->assertSame('today', $due($m, '2026-10-10 08:00'));
+        $this->assertNull($due($m, '2026-10-10 16:00'), 'Not once it has started.');
+
+        // An early meeting is reminded two hours ahead instead.
+        $early = ['time' => '09:00'] + $m;
+        $this->assertSame('today', $due($early, '2026-10-10 07:00'));
+        $this->assertNull($due($early, '2026-10-10 06:59'));
+
+        // Sent already for this date: not again. Moved: the new date is owed.
+        $sent = $m + ['reminders' => ['tomorrow' => ['for' => '2026-10-10', 'at' => '2026-10-09T09:00:00+05:30']]];
+        $this->assertNull($due($sent, '2026-10-09 10:00'));
+        $this->assertSame('tomorrow', $due(['date' => '2026-10-12'] + $sent, '2026-10-11 09:30'));
+
+        // Done, switched off, or booked that very day: none.
+        $this->assertNull($due(['done' => true] + $m, '2026-10-09 10:00'));
+        $this->assertNull($due(['remind' => false] + $m, '2026-10-09 10:00'));
+        $this->assertNull($due(['createdAt' => '2026-10-09T08:00:00+05:30'] + $m, '2026-10-09 10:00'), 'Booked today: the booking email is enough.');
+        $this->assertNull($due(['createdAt' => '2026-10-10T07:00:00+05:30'] + $m, '2026-10-10 09:00'));
+    }
+
+    public function test_reminders_go_to_everyone_listed_and_the_counsellor_once_each(): void
+    {
+        Mail::fake();
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $this->travelTo(CarbonImmutable::parse('2026-10-07 11:00', 'Asia/Kolkata'));
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Shortlist review', 'date' => '2026-10-10', 'time' => '16:00', 'mode' => 'Google Meet',
+            'link' => 'https://meet.google.com/abc-defg-hij', 'emails' => ['ananya@mailbox.test', 'parent@mailbox.test'],
+        ])->assertOk()->assertJsonPath('sent', 2)->assertJsonPath('meetings.0.remind', true);
+        Mail::assertSent(JourneyMeetingMail::class, 2);
+
+        // The day before, at 9.
+        $this->travelTo(CarbonImmutable::parse('2026-10-09 09:05', 'Asia/Kolkata'));
+        $this->artisan('journey:meeting-reminders')->assertSuccessful();
+        $tomorrow = fn () => Mail::sent(JourneyMeetingMail::class, fn ($mail) => $mail->reminder === 'tomorrow');
+        $this->assertCount(3, $tomorrow(), 'The two listed, and the counsellor.');
+        $this->assertEqualsCanonicalizing(
+            ['ananya@mailbox.test', 'parent@mailbox.test', $counsellor->email],
+            $tomorrow()->map(fn ($mail) => $mail->to[0]['address'])->values()->all(),
+        );
+        // Each person gets their own mail, with nobody else's address on it.
+        $this->assertTrue(Mail::sent(JourneyMeetingMail::class)->every(fn ($mail) => count($mail->to) === 1));
+        $this->assertStringStartsWith('Reminder: Shortlist review is tomorrow', $tomorrow()->first()->envelope()->subject);
+        $this->assertStringContainsString('is tomorrow', $tomorrow()->first()->render());
+
+        // Running again sends nothing more.
+        $this->travelTo(CarbonImmutable::parse('2026-10-09 09:20', 'Asia/Kolkata'));
+        $this->artisan('journey:meeting-reminders')->assertSuccessful();
+        $this->assertCount(3, $tomorrow());
+        $this->assertArrayHasKey('tomorrow', $this->planOf($lead)->meetingRows()[0]['reminded']);
+
+        // On the day, at 8.
+        $this->travelTo(CarbonImmutable::parse('2026-10-10 08:10', 'Asia/Kolkata'));
+        $this->artisan('journey:meeting-reminders')->assertSuccessful();
+        $today = Mail::sent(JourneyMeetingMail::class, fn ($mail) => $mail->reminder === 'today');
+        $this->assertCount(3, $today);
+        $this->assertStringStartsWith('Today: Shortlist review', $today->first()->envelope()->subject);
+    }
+
+    public function test_a_moved_meeting_is_reminded_for_its_new_date_and_a_switched_off_one_is_not(): void
+    {
+        Mail::fake();
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $this->travelTo(CarbonImmutable::parse('2026-10-01 11:00', 'Asia/Kolkata'));
+        $book = fn (array $extra) => $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), $extra + [
+            'title' => 'Call', 'date' => '2026-10-05', 'mode' => 'Phone call', 'phone' => '+91 98290 00000', 'emails' => ['ananya@mailbox.test'], 'notify' => false,
+        ])->assertOk()->json('meeting.key');
+        $moved = $book([]);
+        $book(['title' => 'Quiet one', 'remind' => false]);
+
+        $this->travelTo(CarbonImmutable::parse('2026-10-04 10:00', 'Asia/Kolkata'));
+        $this->artisan('journey:meeting-reminders')->assertSuccessful();
+        Mail::assertSent(JourneyMeetingMail::class, 2); // the first meeting: student and counsellor
+        Mail::assertNotSent(JourneyMeetingMail::class, fn ($mail) => $mail->meeting['title'] === 'Quiet one');
+
+        // Moved to the 8th: the 7th brings a fresh day-before reminder.
+        $this->as($counsellor)->patchJson(route('crm.journey.meetings.update', [$lead, $moved]), ['date' => '2026-10-08'])->assertOk();
+        $row = collect($this->planOf($lead)->meetingRows())->firstWhere('key', $moved);
+        $this->assertSame([], $row['reminded'], 'A reminder for the old date no longer counts.');
+        $this->travelTo(CarbonImmutable::parse('2026-10-07 09:30', 'Asia/Kolkata'));
+        $this->artisan('journey:meeting-reminders')->assertSuccessful();
+        Mail::assertSent(JourneyMeetingMail::class, 4);
+
+        // With CRM email switched off, nothing goes.
+        config(['crm.email.enabled' => false]);
+        $this->travelTo(CarbonImmutable::parse('2026-10-08 08:30', 'Asia/Kolkata'));
+        $this->artisan('journey:meeting-reminders')->assertSuccessful();
+        Mail::assertSent(JourneyMeetingMail::class, 4);
+    }
+
+    public function test_reminders_are_checked_every_fifteen_minutes(): void
+    {
+        $event = collect(app(Schedule::class)->events())
+            ->first(fn ($e) => str_contains((string) $e->command, 'journey:meeting-reminders'));
+        $this->assertNotNull($event);
+        $this->assertSame('*/15 * * * *', $event->expression);
     }
 }

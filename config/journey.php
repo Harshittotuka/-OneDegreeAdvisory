@@ -32,6 +32,28 @@ return [
         'poll_seconds' => 5,
     ],
 
+    /*
+    |----------------------------------------------------------------------
+    | Meeting reminders
+    |----------------------------------------------------------------------
+    |
+    | Besides the email when a meeting is booked, everyone listed on it —
+    | and the student's counsellor — is reminded twice: the day before, and
+    | on the day. Sent by `journey:meeting-reminders`, which the scheduler
+    | runs every 15 minutes. Times are India time and deliberately fixed
+    | here rather than read from .env.
+    |
+    | On the day, the reminder goes at same_day_at, or two hours before the
+    | meeting when it starts earlier than that would allow.
+    |
+    */
+    'reminders' => [
+        'timezone' => 'Asia/Kolkata',
+        'day_before_at' => '09:00',
+        'same_day_at' => '08:00',
+        'same_day_lead_minutes' => 120,
+    ],
+
     'documents' => [
         'disk' => 'local',
         'directory' => 'journey',

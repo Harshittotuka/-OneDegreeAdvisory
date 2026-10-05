@@ -1100,6 +1100,13 @@
             (isC() ? ' Everyone listed on a meeting is emailed its joining details.' : '') + '</p>' + googleLine() + '</div>' + add + '</div>' + body + '</section>';
     }
 
+    /* Where the two reminders stand: sent, or switched off. */
+    function reminderNote(m) {
+        var r = m.reminded || {};
+        if (m.remind === false) return '<span class="jp-meet-sent">Reminders off</span>';
+        var sent = [r.tomorrow ? 'day before' : '', r.today ? 'on the day' : ''].filter(Boolean);
+        return sent.length ? '<span class="jp-meet-sent ok">Reminder sent ' + sent.join(' and ') + '</span>' : '<span class="jp-meet-sent">Reminders: day before and on the day</span>';
+    }
     function meetingRow(m) {
         var days = daysUntil(m.date), armed = UI.armed === 'rm-meeting-' + m.key;
         var late = !m.done && days != null && days < 0;
@@ -1111,6 +1118,7 @@
         var invited = m.emails && m.emails.length
             ? '<span class="jp-meet-sent' + (m.sentAt ? ' ok' : '') + '">' + (m.sentAt ? 'Link sent ' + esc(when2(m.sentAt)) : 'Not sent yet') + ' · ' + plural(m.emails.length, 'address', 'addresses') + '</span>'
             : (isC() ? '<span class="jp-meet-sent">Nobody to email</span>' : '');
+        if (isC() && !m.done) invited += reminderNote(m);
 
         return '<div class="jp-meet' + (m.done ? ' done' : '') + '">' + calBox(m.date, late) +
             '<div class="w"><span class="t">' + esc(m.title) + '</span><span class="s">' + esc([m.time, m.minutes + ' min', m.mode, m.who].filter(Boolean).join(' · ')) + '</span>' +
@@ -1810,7 +1818,7 @@
                 if (UI.room) releaseRoom();
                 UI.dialogSeq++;
                 modal('<h3>' + (mt ? 'Edit meeting' : 'Schedule a meeting') + '</h3>' +
-                    '<p class="sub">Everyone you list is emailed the joining details when you save.</p>' +
+                    '<p class="sub">Everyone you list is emailed the joining details when you save, then reminded the day before and on the day.</p>' +
                     '<label for="mt-title">What is it about?</label><input id="mt-title" maxlength="150" value="' + esc(mt ? mt.title : '') + '" placeholder="e.g. Shortlist review with parents">' +
                     '<div class="three"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : (el.dataset.d || '')) + '"></div>' +
                     '<div><label for="mt-time">Time</label><input id="mt-time" type="time" value="' + esc(mt ? mt.time : '16:00') + '"></div>' +
@@ -1832,6 +1840,7 @@
                     '<p class="jp-hint">Separate addresses with commas. Leave it empty to send nothing.</p>' +
                     '<label for="mt-notes">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="mt-notes" maxlength="1000" rows="3" placeholder="Where to meet, what to bring, what was agreed…">' + esc(mt ? mt.notes : '') + '</textarea>' +
                     '<label class="jp-check"><input type="checkbox" id="mt-notify" checked> Email them the joining details when I save</label>' +
+                    '<label class="jp-check"><input type="checkbox" id="mt-remind"' + (mt && mt.remind === false ? '' : ' checked') + '> Remind them, and ' + esc(P.student.counsellor || 'the counsellor') + ', the day before and on the day</label>' +
                     '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
                     '<button class="jp-btn" data-act="save-meeting"' + (mt ? ' data-k="' + esc(mt.key) + '"' : '') + '>' + (mt ? 'Save' : 'Schedule it') + '</button></div>', 'wide');
                 if (wantsLink(mtMode)) makeRoom();
@@ -1869,6 +1878,7 @@
                     link: wantsLink(mMode) ? (mLink || null) : null,
                     notes: (document.getElementById('mt-notes') || {}).value || '',
                     notify: checked('mt-notify') && mMails.length > 0,
+                    remind: checked('mt-remind'),
                     room: UI.room ? UI.room.event : null
                 };
                 UI.busy = true; el.disabled = true;

@@ -5,10 +5,14 @@
 ])
 
 @section('content')
-    <div style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0f7a78;">{{ $isUpdate ? 'Meeting updated' : 'Meeting scheduled' }}</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0f7a78;">{{ match ($reminder) { 'tomorrow' => 'Reminder · tomorrow', 'today' => 'Reminder · today', default => $isUpdate ? 'Meeting updated' : 'Meeting scheduled' } }}</div>
     <h1 style="margin:10px 0 12px;font-size:27px;line-height:1.25;color:#102a43;">{{ $meeting['title'] }}</h1>
     <p style="margin:0;font-size:15px;line-height:1.75;color:#526674;">
-        {{ $isUpdate ? 'The details for this meeting have changed.' : 'This meeting has been set up' }}{{ $isUpdate ? '' : ' for '.$studentName }}{{ $counsellorName ? ' by '.$counsellorName : '' }}.
+        @if($reminder)
+            A reminder that this meeting for {{ $studentName }} is {{ $reminder === 'today' ? 'today' : 'tomorrow' }}{{ $counsellorName ? ', with '.$counsellorName : '' }}.
+        @else
+            {{ $isUpdate ? 'The details for this meeting have changed.' : 'This meeting has been set up' }}{{ $isUpdate ? '' : ' for '.$studentName }}{{ $counsellorName ? ' by '.$counsellorName : '' }}.
+        @endif
     </p>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0;border:1px solid #cfe1df;border-radius:12px;background:#f1f8f7;">

@@ -6,6 +6,7 @@ use App\Mail\ContactEnquiryMail;
 use App\Mail\ContactThankYouMail;
 use App\Services\GoogleCalendar;
 use App\Support\CmsCrmBackupManager;
+use App\Support\MeetingReminders;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
@@ -34,6 +35,20 @@ Artisan::command('google:keep-alive {--all : Renew every connection, however rec
 })->purpose('Renew Google connections and clear unused Meet rooms');
 
 Schedule::command('google:keep-alive')->dailyAt('03:15')->withoutOverlapping();
+
+/*
+ * Meeting reminders: the day before and on the day, to everyone listed on a
+ * meeting and the student's counsellor. Each pass sends only what has come
+ * due, so running it often costs nothing and a missed pass catches up.
+ */
+Artisan::command('journey:meeting-reminders', function () {
+    $out = MeetingReminders::send();
+    $this->info("Reminders sent: {$out['tomorrow']} for tomorrow, {$out['today']} for today ({$out['emails']} emails).");
+
+    return 0;
+})->purpose('Email the day-before and same-day meeting reminders');
+
+Schedule::command('journey:meeting-reminders')->everyFifteenMinutes()->withoutOverlapping();
 
 Artisan::command('backup:run {--reason=manual}', function (CmsCrmBackupManager $backups) {
     try {

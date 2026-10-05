@@ -867,6 +867,8 @@ class CrmJourneyPlannerController extends Controller
                 'done' => false,
                 'sentAt' => null,
                 'google' => $room,
+                'remind' => (bool) ($data['remind'] ?? true),
+                'createdAt' => now()->toIso8601String(),
             ];
             $list[] = $meeting;
 
@@ -914,6 +916,9 @@ class CrmJourneyPlannerController extends Controller
                 }
                 if (array_key_exists('done', $data)) {
                     $m['done'] = (bool) $data['done'];
+                }
+                if (array_key_exists('remind', $data)) {
+                    $m['remind'] = (bool) $data['remind'];
                 }
 
                 return true;
@@ -1019,6 +1024,7 @@ class CrmJourneyPlannerController extends Controller
             'link' => ['sometimes', 'nullable', 'url:https', 'max:300'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'notify' => ['sometimes', 'boolean'],
+            'remind' => ['sometimes', 'boolean'],
             // The Google room the dialog made for this meeting, if it did.
             'room' => ['sometimes', 'nullable', 'string', 'max:200', 'regex:/^[A-Za-z0-9_-]+$/'],
         ];
@@ -1181,11 +1187,13 @@ class CrmJourneyPlannerController extends Controller
         }
 
         $mailer = (string) config('crm.email.mailer');
-        $mail = new JourneyMeetingMail($meeting, $lead->name, $lead->assignee?->name, $isUpdate);
         $sent = 0;
         foreach ($meeting['emails'] as $address) {
             try {
-                Mail::mailer($mailer)->to($address)->send($mail);
+                // A fresh mail each time: sending adds the address to the
+                // mail itself, so one reused would reach everyone listed so
+                // far, again, with all their addresses on it.
+                Mail::mailer($mailer)->to($address)->send(new JourneyMeetingMail($meeting, $lead->name, $lead->assignee?->name, $isUpdate));
                 $sent++;
             } catch (\Throwable $e) {
                 Log::warning('Journey meeting mail failed', [

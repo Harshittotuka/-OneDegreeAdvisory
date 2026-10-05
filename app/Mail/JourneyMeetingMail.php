@@ -30,6 +30,8 @@ class JourneyMeetingMail extends Mailable
         public string $studentName,
         public ?string $counsellorName = null,
         public bool $isUpdate = false,
+        // 'tomorrow' or 'today' for the reminders; null for booking and changes.
+        public ?string $reminder = null,
     ) {}
 
     public function envelope(): Envelope
@@ -39,7 +41,11 @@ class JourneyMeetingMail extends Mailable
 
         return new Envelope(
             from: new Address($from, $fromName),
-            subject: ($this->isUpdate ? 'Updated: ' : '').$this->meeting['title'].' — '.$this->whenLine(),
+            subject: match ($this->reminder) {
+                'tomorrow' => 'Reminder: '.$this->meeting['title'].' is tomorrow — '.$this->whenLine(),
+                'today' => 'Today: '.$this->meeting['title'].' — '.$this->whenLine(),
+                default => ($this->isUpdate ? 'Updated: ' : '').$this->meeting['title'].' — '.$this->whenLine(),
+            },
         );
     }
 
