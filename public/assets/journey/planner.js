@@ -1276,7 +1276,7 @@
         ] : [
             ['Include or exclude', 'Every activity has an Include box. Untick what this student or university doesn\'t need; it greys out and drops out of every count.'],
             ['Your own tasks and stages', 'Open a stage and choose “Add a task to this stage”, or use “Add a stage” for a whole new stage. Added tasks and stages can be edited or removed; ODA\'s own can only be switched off.'],
-            ['More than one of something', 'In Profile building, open an activity and choose “Add another” — a second internship or a third competition is listed under the first, with its own status, owner and date.'],
+            ['More than one of something', 'In Skill Enhancers, open an activity and choose “Add another” — a second internship or a third competition is listed under the first, with its own status, owner and date.'],
             ['Recent changes', 'The dashboard lists every change made on this plan — what changed, who changed it and when — newest first. Lines added since your last visit are marked New.'],
             ['Core journey', 'Seven one-time phases, from Discovery to Pre-Departure, completed once per student however many universities they apply to.'],
             ['University blocks', 'One per university or programme. Switch on Interview and Portfolio only where required, and visa steps once a seat is confirmed.'],

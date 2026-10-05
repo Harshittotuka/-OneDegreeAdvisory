@@ -1523,7 +1523,7 @@ class JourneyPlannerTest extends TestCase
         $this->assertSame('Completed', $state[$first]['status']);
         $this->assertSame('Not Started', $state['internship']['status']);
 
-        // Only Profile building's own activities repeat.
+        // Only Skill Enhancers' own activities repeat.
         $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), ['phase' => 'tests', 'parent' => 'english-test', 'name' => 'IELTS again', 'owner' => 'Student'])
             ->assertStatus(422)->assertJsonValidationErrors('parent');
         $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), ['phase' => 'profile', 'parent' => $first, 'name' => 'Nested', 'owner' => 'Student'])

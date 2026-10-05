@@ -1362,7 +1362,7 @@ class CrmJourneyPlannerController extends Controller
             }
         }
 
-        throw ValidationException::withMessages(['parent' => 'Only the activities in Profile building can have more than one.']);
+        throw ValidationException::withMessages(['parent' => 'Only the activities in Skill Enhancers can have more than one.']);
     }
 
     /** The same reach as the lead drawer, and only for someone who has been enrolled. */

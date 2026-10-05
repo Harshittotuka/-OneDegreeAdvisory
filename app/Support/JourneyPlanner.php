@@ -100,7 +100,7 @@ class JourneyPlanner
                 // The 7th field names the document type the task's Upload button files under.
                 ['declaration-sign-off', 'Student Declaration Form Sign-off', 'Once the courses and universities are agreed, the student signs the declaration form and uploads the signed copy here.', 'Student', 'Signed declaration form', true, 'Student declaration form'],
             ]],
-            ['profile', 'Profile Building / Skill Enhancers', 'Profile building', 'Ongoing, ideally 18–6 months before intake', [
+            ['profile', 'Skill Enhancers', 'Skill enhancers', 'Ongoing, ideally 18–6 months before intake', [
                 ['research-project', 'Research project', 'Undertake a subject-relevant research project or paper.', 'Student', 'Project report/certificate', false],
                 ['internship', 'Internship', 'Secure a relevant internship or work-shadowing placement.', 'Student', 'Internship certificate/letter', false],
                 ['passion-project', 'Passion project', 'Develop an independent project that shows genuine initiative.', 'Student', 'Project documentation/portfolio', false],
