@@ -1045,3 +1045,7 @@ body.jp-mode-student .jp-block-h { background: linear-gradient(135deg, var(--pur
     .jp-steps li { padding-left: 40px; font-size: 0.9rem; }
     .jp-steps li::before { width: 28px; height: 28px; }
 }
+
+/* Space between the month and its colour key. */
+.jp-calendar .jp-legend { margin-top: 14px; margin-bottom: 0; }
+.jp-calendar .jp-legend .lbl { color: var(--muted); }

@@ -1039,8 +1039,8 @@ body.crm-map-locked{overflow:hidden}
    CRM theme is on. The accent stripe down the left says how the student is
    doing: red when something is late, amber when an essay is waiting, green
    when the plan is finished, otherwise the theme accent. */
-.journey-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;align-items:stretch;padding:18px 22px 22px}
-.journey-card{--jc:var(--dash-accent);display:flex;flex-direction:column;gap:12px;padding:16px 18px;border:1px solid var(--dash-line);border-left:4px solid var(--jc);border-radius:var(--dash-radius);background:var(--dash-panel);color:var(--dash-ink);text-decoration:none;transition:border-color .14s,box-shadow .14s,transform .14s}
+.journey-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px;align-items:stretch;padding:14px 16px 18px}
+.journey-card{--jc:var(--dash-accent);display:flex;flex-direction:column;gap:9px;padding:13px 15px;border:1px solid var(--dash-line);border-left:4px solid var(--jc);border-radius:var(--dash-radius);background:var(--dash-panel);color:var(--dash-ink);text-decoration:none;transition:border-color .14s,box-shadow .14s,transform .14s}
 .journey-card:hover{border-color:var(--jc);box-shadow:var(--dash-shadow);transform:translateY(-2px)}
 .journey-card.is-late{--jc:var(--dash-danger)}
 .journey-card.is-review{--jc:#95601c}
@@ -1053,7 +1053,7 @@ body.crm-map-locked{overflow:hidden}
 .journey-card-bar{height:8px;border-radius:99px;overflow:hidden;background:var(--dash-panel-soft);border:1px solid var(--dash-line)}
 .journey-card-bar i{display:block;height:100%;border-radius:99px;background:var(--jc)}
 .journey-card-split{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:var(--dash-muted)}
-.journey-card-stage{display:flex;gap:9px;align-items:center;padding:9px 11px;border-radius:11px;background:var(--dash-panel-soft)}
+.journey-card-stage{display:flex;gap:9px;align-items:center;padding:7px 10px;border-radius:11px;background:var(--dash-panel-soft)}
 .journey-card-step{flex:none;min-width:44px;height:32px;padding:0 10px;border-radius:9px;display:grid;place-items:center;background:var(--jc);color:#fff;font-size:.78rem;font-weight:800;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
 .journey-card-stage b{display:block;font-size:.85rem;line-height:1.25}
 .journey-card-stage>span>span{display:block;font-size:.74rem;color:var(--dash-muted)}
@@ -1062,7 +1062,7 @@ body.crm-map-locked{overflow:hidden}
 .journey-flag.is-late{color:var(--dash-danger);border-color:color-mix(in srgb,var(--dash-danger) 40%,transparent)}
 .journey-flag.is-review{color:#7d5110;border-color:rgba(149,96,28,.45)}
 .journey-flag.is-ok{color:var(--dash-positive);border-color:color-mix(in srgb,var(--dash-positive) 35%,transparent)}
-.journey-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:11px;border-top:1px solid var(--dash-line);font-size:.78rem;color:var(--dash-muted)}
+.journey-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:9px;border-top:1px solid var(--dash-line);font-size:.78rem;color:var(--dash-muted)}
 .journey-card-foot b{display:block;color:var(--dash-ink);font-size:.8rem;font-weight:700}
 .journey-card-open{flex:none;font-weight:700;color:var(--jc)}
 @media(max-width:640px){
@@ -1072,3 +1072,30 @@ body.crm-map-locked{overflow:hidden}
     .journey-card{transition:none}
     .journey-card:hover{transform:none}
 }
+
+/* The Journey planners page uses the screen: slim one-line summary tiles,
+   one toolbar instead of a second heading and a separate filter band, and
+   tighter cards so three sit side by side on a laptop. Scoped to this page
+   and written to win over every theme's .stats / .stat rules. */
+.stats.journey-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:auto;gap:10px;margin-bottom:14px}
+.stats.journey-stats .stat{grid-column:auto;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:11px;align-items:center;min-height:0;padding:11px 14px;border-radius:14px}
+.stats.journey-stats .stat-top{grid-row:1/3;grid-column:1}
+.stats.journey-stats .stat-icon{width:34px;height:34px;font-size:.9rem}
+.stats.journey-stats .stat strong{grid-column:2;margin:0;font-size:1.35rem;line-height:1.1}
+.stats.journey-stats .stat>span:last-child{grid-column:2;font-size:.7rem;line-height:1.25;letter-spacing:.03em;text-transform:none;font-weight:700;opacity:.85}
+.stats.journey-stats .stat::after,.stats.journey-stats .stat::before{display:none}
+.journey-toolbar{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--dash-line)}
+.journey-count{margin:0;font-size:.84rem;color:var(--dash-muted);white-space:nowrap}
+.journey-count b{font-size:1.05rem;color:var(--dash-ink)}
+.journey-filters{display:flex;align-items:center;gap:8px;flex:1 1 640px;flex-wrap:wrap;justify-content:flex-end;margin:0}
+.journey-filters .search-wrap{flex:1 1 220px;min-width:0}
+.journey-filters .search-wrap .control{width:100%}
+.journey-filters select.control{flex:0 1 165px;min-width:0}
+@media(max-width:1180px){.stats.journey-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:640px){
+    .stats.journey-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .journey-toolbar{padding:12px}
+    .journey-filters{flex-basis:100%}
+    .journey-filters select.control,.journey-filters .btn{flex:1 1 calc(50% - 4px)}
+}
+html[data-crm-theme="orbit"] .stats.journey-stats .stat.danger .stat-icon{background:#ffe9ec;color:#d6334a}

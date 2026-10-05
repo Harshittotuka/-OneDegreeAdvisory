@@ -7,7 +7,7 @@
     $sortOptions = ['' => 'Recently updated', 'progress_asc' => 'Least progress first', 'progress_desc' => 'Most progress first', 'late' => 'Most late tasks', 'name' => 'Name A–Z'];
 @endphp
 
-<section class="stats" aria-label="Journey planner summary">
+<section class="stats journey-stats" aria-label="Journey planner summary">
     <div class="stat"><span class="stat-top"><span class="stat-icon">◈</span></span><strong>{{ $journeyStats['total'] }}</strong><span>{{ $isAdmin ? 'Planners started' : 'Your students with a planner' }}</span></div>
     <div class="stat"><span class="stat-top"><span class="stat-icon">◷</span></span><strong>{{ number_format($journeyStats['done']) }} / {{ number_format($journeyStats['steps']) }}</strong><span>Steps done across them</span></div>
     <a @class(['stat', 'danger' => $journeyStats['late'] > 0]) href="{{ route('crm.dashboard', ['view' => 'journeys', 'journey_show' => 'attention']) }}"><span class="stat-top"><span class="stat-icon">!</span></span><strong>{{ $journeyStats['late'] }}</strong><span>Students with late tasks</span></a>
@@ -17,15 +17,11 @@
 </section>
 
 <section class="workspace crm-journey-workspace">
-    <div class="workspace-head">
-        <div class="workspace-title">
-            <h2>Journey planners</h2>
-            <p>{{ number_format($journeyPlans->total()) }} {{ Str::plural('student', $journeyPlans->total()) }} · {{ $isAdmin ? 'every counsellor’s students' : 'the students assigned to you' }}</p>
-        </div>
-        <a class="btn btn-outline" href="{{ route('crm.dashboard', ['view' => 'students']) }}">Enrolled students</a>
-    </div>
-
-    <form class="filters" method="get" action="{{ route('crm.dashboard') }}">
+    {{-- One bar: how many, then the filters. The page title already says
+         "Journey planners", and Enrolled students is in the sidebar. --}}
+    <div class="journey-toolbar">
+        <p class="journey-count"><b>{{ number_format($journeyPlans->total()) }}</b> {{ Str::plural('student', $journeyPlans->total()) }} <span>· {{ $isAdmin ? 'all counsellors' : 'yours' }}</span></p>
+    <form class="journey-filters" method="get" action="{{ route('crm.dashboard') }}">
         <input type="hidden" name="view" value="journeys">
         <div class="search-wrap"><input class="control" type="search" name="journey_search" value="{{ request('journey_search') }}" placeholder="Search name, email or lead ID"></div>
         @if($isAdmin)
@@ -47,6 +43,7 @@
             <a class="btn btn-outline" href="{{ route('crm.dashboard', ['view' => 'journeys']) }}">Clear</a>
         @endif
     </form>
+    </div>
 
     @if($journeyPlans->isEmpty())
         <div class="empty-state" style="padding:48px 24px;text-align:center">
