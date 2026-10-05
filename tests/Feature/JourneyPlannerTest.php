@@ -1759,11 +1759,11 @@ class JourneyPlannerTest extends TestCase
             $this->assertStringContainsString($part, $html);
         }
 
-        // Linked from the sidebar and from the planner's help.
+        // Linked from the CRM sidebar; the planner's Help page offers the PDF guide instead.
         $this->as($counsellor)->get(route('crm.dashboard'))->assertOk()->assertSee(route('crm.guide'), false);
         $lead = $this->student($counsellor);
         $this->start($counsellor, $lead);
-        $this->assertSame(route('crm.guide').'#planner', $this->payloadFrom($this->as($counsellor)->get(route('crm.journey.show', $lead)))['endpoints']['guide']);
+        $this->assertArrayNotHasKey('guide', $this->payloadFrom($this->as($counsellor)->get(route('crm.journey.show', $lead)))['endpoints']);
 
         // Not for a referral partner, and not without signing in.
         $this->as($this->user('partner'))->get(route('crm.guide'))->assertForbidden();

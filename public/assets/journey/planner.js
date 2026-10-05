@@ -1511,12 +1511,12 @@
         var at = Math.max(0, topics.findIndex(function (t) { return t.key === UI.helpTab; }));
         var cur = topics[at], prev = topics[at - 1], next = topics[at + 1];
         var goView = views().find(function (v) { return v.key === cur.go; });
-        // The team guide (counsellors) and the illustrated PDF guide (everyone).
-        var links = (isC() && P.endpoints.guide ? '<a class="jp-btn sm" href="' + esc(P.endpoints.guide) + '" target="_blank" rel="noopener">Open the full team guide</a>' : '') +
-            (P.endpoints.guidePdf ? '<a class="jp-btn ghost sm" href="' + esc(P.endpoints.guidePdf) + '" target="_blank" rel="noopener">' + ICO.doc + ' Download the PDF guide</a>' : '');
+        // The illustrated PDF guide, for counsellor and student alike. (The
+        // CRM's own team guide lives in the CRM sidebar, not here.)
+        var links = P.endpoints.guidePdf ? '<a class="jp-btn sm" href="' + esc(P.endpoints.guidePdf) + '" target="_blank" rel="noopener">' + ICO.doc + ' Download the PDF guide</a>' : '';
         var top = links
             ? '<div class="jp-help-top"><p>' + (isC()
-                ? 'Step-by-step help for each part of the planner. The team guide covers the whole CRM; the PDF guide walks through every step with screenshots, for you and for the student.'
+                ? 'Step-by-step help for each part of the planner. The PDF guide walks through every step with screenshots, for you and for the student.'
                 : 'Step-by-step help for each part of your planner. The PDF guide shows every step with pictures, and you can keep it.') +
               '</p><div class="jp-help-links">' + links + '</div></div>'
             : '';

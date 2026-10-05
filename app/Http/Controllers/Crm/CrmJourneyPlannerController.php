@@ -83,7 +83,6 @@ class CrmJourneyPlannerController extends Controller
             'meetingNotify' => route('crm.journey.meetings.notify', [$lead, '__KEY__']),
             'meetRoom' => route('crm.journey.meet-room.store', $lead),
             'meetRoomRelease' => route('crm.journey.meet-room.release', $lead),
-            'guide' => route('crm.guide').'#planner',
             // The illustrated step-by-step guide, for counsellor and student alike.
             'guidePdf' => asset('assets/journey/journey-planner-user-guide.pdf').'?v='.@filemtime(public_path('assets/journey/journey-planner-user-guide.pdf')),
             'pulse' => route('crm.journey.pulse', $lead),
