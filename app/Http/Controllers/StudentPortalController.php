@@ -9,6 +9,7 @@ use App\Models\CrmJourneyPlan;
 use App\Models\CrmLeadActivity;
 use App\Models\CrmStudentAccount;
 use App\Support\JourneyDocuments;
+use App\Support\JourneyLog;
 use App\Support\JourneyPlanner;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -189,6 +190,7 @@ class StudentPortalController extends Controller
                 'body' => 'The student marked “'.$name.'”'.($where ? ' for '.$where : '').' as '.$data['status'].' (was '.$from.').',
                 'metadata' => ['scope' => $data['scope'], 'application_id' => $data['application_id'] ?? null, 'key' => $data['key'], 'from' => $from, 'to' => $data['status']],
             ]);
+            JourneyLog::record($plan, null, $data['scope'] === 'core' ? 'Core journey' : 'Universities', $where ? $name.' — '.$where : (string) $name, 'Status: '.$data['status']);
 
             return ['row' => $state[$data['key']]];
         });

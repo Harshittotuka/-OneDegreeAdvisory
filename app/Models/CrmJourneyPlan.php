@@ -70,6 +70,8 @@ class CrmJourneyPlan extends Model
                 'key' => $t['key'], 'name' => (string) ($t['name'] ?? 'Task'), 'desc' => (string) ($t['desc'] ?? ''),
                 'owner' => in_array($t['owner'] ?? null, $this->ownerValues(), true) ? $t['owner'] : 'Student',
                 'docs' => (string) (($t['docs'] ?? '') ?: 'None'), 'inc' => true, 'phase' => $t['phase'], 'custom' => true,
+                // Set on a repeat of a standard activity (a second internship).
+                'parent' => is_string($t['parent'] ?? null) ? $t['parent'] : null,
             ];
         }
 

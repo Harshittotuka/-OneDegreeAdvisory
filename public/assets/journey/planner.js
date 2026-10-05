@@ -236,6 +236,23 @@
         });
         return out;
     }
+    /** Every included task with a target date, finished or not (Not Applicable aside). */
+    function datedItems() {
+        var out = [];
+        phases().forEach(function (p, pi) {
+            p.activities.forEach(function (d) {
+                var a = P.core[d.key];
+                if (a.inc && a.target && a.status !== 'Not Applicable') out.push({ scope: 'core', appId: null, key: d.key, name: d.name, where: 'Stage ' + (pi + 1) + ' · ' + p.short, a: a });
+            });
+        });
+        P.apps.forEach(function (ap) {
+            Object.keys(ap.acts).forEach(function (k) {
+                var a = ap.acts[k];
+                if (a.inc && a.target && a.status !== 'Not Applicable') out.push({ scope: 'app', appId: ap.id, key: k, name: APP_DEFS[k].name, where: ap.university, a: a });
+            });
+        });
+        return out;
+    }
     function byDate(x, y) {
         var a = x.a.target, b = y.a.target;
         if (!a && !b) return 0; if (!a) return 1; if (!b) return -1; return a < b ? -1 : a > b ? 1 : 0;
@@ -520,7 +537,34 @@
                     '<span class="fit ' + (a.fit || 'unset') + '">' + esc(T.fits[a.fit] || '—') + '</span><span class="jp-progress num"><span class="jp-bar"><i style="width:' + barWidth(r) + '"></i></span>' + shortTally(r) + '</span></button>';
             }).join('') + '</div>' : (isC() ? '<div class="jp-empty"><button class="jp-btn sm" data-act="add-uni">' + ICO.plus + ' Add university</button></div>' : '<div class="jp-empty">Your counsellor adds universities once your shortlist is agreed.</div>')) + '</section>';
 
-        return creds + hero + kpis + progress + '<div class="jp-grid-2">' + nextCard + dlCard + '</div>' + uniCard + (isStudent() ? '' : phaseTable(pr, core));
+        return creds + hero + kpis + progress + changesCard() + '<div class="jp-grid-2">' + nextCard + dlCard + '</div>' + uniCard + (isStudent() ? '' : phaseTable(pr, core));
+    }
+
+    /*
+     * Recent changes: who changed what, and when, newest first. Lines added
+     * since this person last opened the plan are marked New.
+     */
+    var SEEN_KEY = 'jp-seen:' + location.pathname;
+    var SEEN = (function () { try { return parseInt(localStorage.getItem(SEEN_KEY), 10) || 0; } catch (e) { return 0; } })();
+    function rememberSeen() {
+        var top = (P.changes || []).reduce(function (m, c) { return Math.max(m, c.id); }, 0);
+        try { if (top) localStorage.setItem(SEEN_KEY, String(top)); } catch (e) { /* private window */ }
+    }
+    function changesCard() {
+        var list = P.changes || [];
+        var shown = UI.allChanges ? list : list.slice(0, 8);
+        var fresh = SEEN ? list.filter(function (c) { return c.id > SEEN; }).length : 0;
+        var rows = shown.map(function (c) {
+            return '<li class="jp-change' + (SEEN && c.id > SEEN ? ' new' : '') + '">' +
+                '<span class="jp-change-dot ' + (c.byStudent ? 'student' : 'team') + '" aria-hidden="true"></span>' +
+                '<span class="w"><span class="t"><b>' + esc(c.subject) + '</b> <span class="muted">· ' + esc(c.section) + '</span>' + (SEEN && c.id > SEEN ? ' <span class="jp-new">New</span>' : '') + '</span>' +
+                '<span class="s">' + esc(c.what) + '</span></span>' +
+                '<span class="by"><span>' + esc(c.who) + '</span><span class="muted">' + esc(when(c.at)) + '</span></span></li>';
+        }).join('');
+        return '<section class="jp-card"><div class="jp-card-h"><div><h2>Recent changes</h2><p>' +
+            (list.length ? (fresh ? plural(fresh, 'new change', 'new changes') + ' since you last looked. ' : '') + 'Everything changed on this plan, newest first.' : 'Changes to this plan will show here.') + '</p></div>' +
+            (list.length > 8 ? '<button class="jp-btn ghost sm" data-act="toggle-changes">' + (UI.allChanges ? 'Show fewer' : 'Show more') + '</button>' : '') + '</div>' +
+            (list.length ? '<ul class="jp-changes">' + rows + '</ul>' : '<div class="jp-empty">Nothing yet.</div>') + '</section>';
     }
 
     function kpi(icon, k, v, s, cls, width) {
@@ -550,6 +594,46 @@
     function rowHead() {
         return '<div class="jp-row jp-row-head" aria-hidden="true">' + (isC() ? '<span></span>' : '') +
             '<span>Task</span><span>Owner</span><span>Status</span><span>Target date</span><span>Timing</span><span></span></div>';
+    }
+
+    /*
+     * Repeats of an activity — a second internship, a third competition —
+     * are their own tasks, listed straight under the first one. These say
+     * how many there are and how many are done.
+     */
+    function repeatsOf(key) {
+        var out = [];
+        T.phases.forEach(function (p) { p.activities.forEach(function (d) { if (d.parent === key) out.push(d); }); });
+        return out;
+    }
+    function canRepeat(def) {
+        var ph = PHASE_OF[def.key];
+        return !def.custom && ph && (T.repeatable || []).indexOf(ph.key) >= 0;
+    }
+    function repeatChip(def, a) {
+        var subs = repeatsOf(def.key);
+        if (!subs.length) return '';
+        var all = [a].concat(subs.map(function (d) { return P.core[d.key]; })).filter(function (x) { return x && x.inc; });
+        var done = all.filter(function (x) { return x.status === 'Completed'; }).length;
+        return ' <span class="jp-repeat-chip">' + all.length + ' in all · ' + done + ' done</span>';
+    }
+    /* The upload a task asks for (the signed declaration form), and what is in so far. */
+    function uploadBox(def) {
+        if (!def.upload) return '';
+        var files = (P.documents || []).filter(function (d) { return d.kind === 'file' && d.category === def.upload; });
+        var list = files.length
+            ? '<ul class="jp-task-files">' + files.map(function (d) {
+                return '<li><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.title) + '</a> <span class="muted">· ' + esc(d.byName) + ', ' + esc(when(d.createdAt)) + '</span></li>';
+            }).join('') + '</ul>'
+            : '<p class="muted">Nothing uploaded yet.</p>';
+        var can = isC() || isStudent();
+        return '<div class="full jp-task-upload"><span class="jp-note-lbl">' + esc(def.upload) + '</span>' + list +
+            (can ? '<button class="jp-btn sm" data-act="upload-doc" data-cat="' + esc(def.upload) + '">' + ICO.plus + ' ' + (files.length ? 'Upload another copy' : 'Upload the signed form') + '</button>' : '') + '</div>';
+    }
+    function uploadHint(def) {
+        if (!def.upload) return '';
+        var n = (P.documents || []).filter(function (d) { return d.kind === 'file' && d.category === def.upload; }).length;
+        return n ? ' <span class="jp-upload-chip ok">' + ICO.check + ' Uploaded</span>' : ' <span class="jp-upload-chip">Upload needed</span>';
     }
 
     /* ---- one activity row, shared by the journey and every university ---- */
@@ -591,15 +675,17 @@
                         '<div><label for="ow-' + esc(k) + '">Owner</label><select id="ow-' + esc(k) + '" data-f="owner"' + data + '>' + ownerOptionsHtml(a.owner) + '</select></div>' +
                         '<div><label for="dn-' + esc(k) + '">Completion date</label><input id="dn-' + esc(k) + '" type="date" data-f="done"' + data + ' value="' + esc(a.done || '') + '"></div>' +
                         '<div class="full"><label for="nt-' + esc(k) + '">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="nt-' + esc(k) + '" data-f="notes"' + data + ' maxlength="1000" placeholder="Scores, offer conditions, what to chase…">' + esc(a.notes) + '</textarea></div>' +
-                        (def.custom ? '<div class="full jp-task-tools"><span class="muted">You added this task for this student.</span><button class="jp-btn ghost sm" data-act="edit-task" data-key="' + esc(def.key) + '">Edit task</button>' +
+                        uploadBox(def) +
+                        (canRepeat(def) ? '<div class="full jp-task-tools"><span class="muted">Did the student do more than one?</span><button class="jp-btn ghost sm" data-act="add-repeat" data-key="' + esc(def.key) + '">' + ICO.plus + ' Add another ' + esc(def.name.toLowerCase()) + '</button></div>' : '') +
+                        (def.custom ? '<div class="full jp-task-tools"><span class="muted">' + (def.parent ? 'Another “' + esc((CORE_DEFS[def.parent] || {}).name || '') + '” for this student.' : 'You added this task for this student.') + '</span><button class="jp-btn ghost sm" data-act="edit-task" data-key="' + esc(def.key) + '">Edit task</button>' +
                             '<button class="jp-btn danger sm' + (UI.armed === 'rm-task-' + def.key ? ' armed' : '') + '" data-act="rm-task" data-key="' + esc(def.key) + '">' + (UI.armed === 'rm-task-' + def.key ? 'Click again to remove' : 'Remove task') + '</button></div>' : '') +
                         '</div>'
-                    : (a.notes ? '<div><span class="jp-note-lbl">Note from your counsellor</span><div class="jp-note">' + esc(a.notes) + '</div></div>' : '<div></div>')) +
+                    : (a.notes ? '<div><span class="jp-note-lbl">Note from your counsellor</span><div class="jp-note">' + esc(a.notes) + '</div></div>' : '<div></div>') + (def.upload ? '<div class="jp-fields">' + uploadBox(def) + '</div>' : '')) +
                 '</div>';
         }
-        return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + '"><div class="jp-row">' +
+        return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + (def.parent ? ' sub' : '') + '"><div class="jp-row">' +
             (isC() ? '<button class="jp-inc' + (a.inc ? ' on' : '') + '" data-act="toggle-inc"' + data + ' aria-pressed="' + a.inc + '" title="' + (a.inc ? 'Included for this student. Click to exclude.' : 'Excluded. Click to include.') + '">' + (a.inc ? ICO.check : '') + '</button>' : '') +
-            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + esc(def.name) + (def.custom && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button>' +
+            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + (def.parent ? '<span class="jp-sub-mark" aria-hidden="true">↳</span>' : '') + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + repeatChip(def, a) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button>' +
             '<span class="jp-ocell"><span class="jp-owner-chip' + (ownerIsMine(a.owner) ? ' mine' : '') + (isMemberOwner(a.owner) ? ' person' : '') + '" title="' + esc(isMemberOwner(a.owner) ? ownerName(a.owner) + ' · ' + (PEOPLE[a.owner] ? PEOPLE[a.owner].role : 'off the file') : a.owner) + '">' + esc(ownerLabel(a.owner)) + '</span></span>' +
             status + date + '<span class="jp-due">' + after + '</span>' +
             '<button class="jp-chev" data-act="toggle-row"' + data + ' aria-label="Show details">' + ICO.chev + '</button></div>' + detail + '</div>';
@@ -795,8 +881,8 @@
         ourDeadlines().forEach(function (d) {
             out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree', key: d.key });
         });
-        openItems().forEach(function (i) {
-            if (!i.a.target) return;
+        // Finished tasks stay on the month, in green; only Not Applicable leaves.
+        datedItems().forEach(function (i) {
             out.push({
                 date: i.a.target, type: 'task', label: i.name, done: closed(i.a.status),
                 sub: i.where + (isStudent() ? '' : ' · ' + i.a.owner),
@@ -1185,10 +1271,13 @@
             ['Your team', 'Everyone working on your journey, and what each side has open. Meetings show a Join button when there is a link.'],
             ['Edits on a document', 'Open any document to see every change made to it and which version it is on, so you always know whether you are reading the latest one.'],
             ['Documents & essays', 'Upload your documents and write your SOP and essays under My documents. Send an essay for review and your counsellor\'s feedback appears on it.'],
+            ['Recent changes', 'Your dashboard shows what has changed on your plan, who changed it and when.'],
             ['Your password', 'Change it any time from the menu. If you forget it, ask your counsellor to reset it.']
         ] : [
             ['Include or exclude', 'Every activity has an Include box. Untick what this student or university doesn\'t need; it greys out and drops out of every count.'],
             ['Your own tasks and stages', 'Open a stage and choose “Add a task to this stage”, or use “Add a stage” for a whole new stage. Added tasks and stages can be edited or removed; ODA\'s own can only be switched off.'],
+            ['More than one of something', 'In Profile building, open an activity and choose “Add another” — a second internship or a third competition is listed under the first, with its own status, owner and date.'],
+            ['Recent changes', 'The dashboard lists every change made on this plan — what changed, who changed it and when — newest first. Lines added since your last visit are marked New.'],
             ['Core journey', 'Seven one-time phases, from Discovery to Pre-Departure, completed once per student however many universities they apply to.'],
             ['University blocks', 'One per university or programme. Switch on Interview and Portfolio only where required, and visa steps once a seat is confirmed.'],
             ['Pre-filled guidance', 'Activity, description, owner and document checklist are ODA\'s standard content. Change the owner only when a case differs.'],
@@ -1218,7 +1307,7 @@
      * which lands them where they need to be anyway.
      */
     function adoptPayload(fresh) {
-        ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'meetings', 'login', 'docTemplate', 'google'].forEach(function (k) {
+        ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'meetings', 'login', 'docTemplate', 'google', 'changes'].forEach(function (k) {
             if (fresh[k] !== undefined) P[k] = fresh[k];
         });
         if (fresh.pulse) { P.pulse = fresh.pulse; LIVE.seen = fresh.pulse; LIVE.pending = false; }
@@ -1419,6 +1508,7 @@
                 if (!LIVE.timer) startLive();
                 return;
             case 'close-menu': UI.menu = false; render(); return;
+            case 'toggle-changes': UI.allChanges = !UI.allChanges; render(); return;
             case 'close-modal': if (e.target === el) closeModal(); return;
             case 'cancel': closeModal(); return;
             case 'toggle-phase': {
@@ -1520,7 +1610,7 @@
                 case 'upload-doc':
                     modal('<h3>Upload a file</h3><p class="sub">PDF, Word or JPG/PNG, up to ' + Math.round(DT.limits.maxKb / 1024) + ' MB.</p>' +
                         '<label for="up-file">File</label><input id="up-file" type="file" accept="' + DT.limits.extensions.map(function (x) { return '.' + x; }).join(',') + '">' +
-                        '<label for="up-cat">What is it?</label><select id="up-cat">' + DT.fileCategories.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>' +
+                        '<label for="up-cat">What is it?</label><select id="up-cat">' + DT.fileCategories.map(function (c) { return '<option' + (c === el.dataset.cat ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select>' +
                         '<label for="up-title">Name <span style="font-weight:500">(optional)</span></label><input id="up-title" maxlength="190" placeholder="e.g. Class 12 mark sheet">' +
                         '<label for="up-uni">University</label><select id="up-uni">' + uniOptions(null) + '</select><p class="err" role="alert"></p>' +
                         '<div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-upload">Upload</button></div>');
@@ -1536,7 +1626,10 @@
                     if (val('up-uni')) form.append('application_id', val('up-uni'));
                     UI.busy = true; el.disabled = true; el.textContent = 'Uploading…';
                     upload(P.endpoints.documents, form).then(function (res) {
-                        replaceDoc(res.document); closeModal(); UI.docTab = UI.docTab === 'essays' ? 'all' : UI.docTab; render(); toast('Uploaded');
+                        replaceDoc(res.document); closeModal(); UI.docTab = UI.docTab === 'essays' ? 'all' : UI.docTab;
+                        // A task waiting on this upload has moved on; fetch it.
+                        if (Object.keys(CORE_DEFS).some(function (k) { return CORE_DEFS[k].upload === res.document.category; })) refreshPlanner(true);
+                        render(); toast('Uploaded');
                     }, function (err) { modalError(err.message); el.disabled = false; el.textContent = 'Upload'; }).then(function () { UI.busy = false; });
                     return;
                 }
@@ -1832,6 +1925,20 @@
                 }, function (err) { render(); toast(err.message, true); });
                 return;
             }
+            case 'add-repeat': {
+                var base = CORE_DEFS[el.dataset.key];
+                if (!base) return;
+                var nth = repeatsOf(base.key).length + 2;
+                modal('<h3>Add another ' + esc(base.name.toLowerCase()) + '</h3><p class="sub">Listed under “' + esc(base.name) + '”, with its own status, owner and date.</p>' +
+                    '<label for="tk-name">Name</label><input id="tk-name" maxlength="150" value="' + esc(base.name + ' ' + nth) + '" placeholder="e.g. ' + esc(base.name) + ' — summer 2026">' +
+                    '<label for="tk-desc">What to do <span style="font-weight:500">(optional)</span></label><input id="tk-desc" maxlength="500" value="' + esc(base.desc) + '">' +
+                    '<label for="tk-docs">Documents needed <span style="font-weight:500">(optional)</span></label><input id="tk-docs" maxlength="190" value="' + esc(base.docs !== 'None' ? base.docs : '') + '">' +
+                    '<div class="two"><div><label for="tk-owner">Who does it</label><select id="tk-owner">' + ownerOptionsHtml(P.core[base.key].owner) + '</select></div>' +
+                    '<div><label for="tk-target">Target date <span style="font-weight:500">(optional)</span></label><input id="tk-target" type="date"></div></div>' +
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-task" data-p="' + esc(PHASE_OF[base.key].key) + '" data-parent="' + esc(base.key) + '">Add</button></div>', 'wide');
+                var nm = document.getElementById('tk-name'); if (nm) setTimeout(function () { nm.select(); }, 30);
+                return;
+            }
             case 'add-task': case 'edit-task': {
                 var editing = act === 'edit-task' ? CORE_DEFS[el.dataset.key] : null;
                 var phaseKey = editing ? editing.phase : el.dataset.p;
@@ -1860,12 +1967,17 @@
                         CORE_DEFS[key] = res.task; closeModal(); render(); toast('Task updated');
                     }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 } else {
-                    api('POST', P.endpoints.tasks, { phase: pk, name: name, desc: val('tk-desc'), docs: val('tk-docs'), owner: val('tk-owner'), target: val('tk-target') || null }).then(function (res) {
+                    var parentKey = el.dataset.parent || null;
+                    api('POST', P.endpoints.tasks, { phase: pk, name: name, desc: val('tk-desc'), docs: val('tk-docs'), owner: val('tk-owner'), target: val('tk-target') || null, parent: parentKey }).then(function (res) {
                         var ph3 = T.phases.find(function (x) { return x.key === pk; });
-                        ph3.activities.push(res.task);
+                        // A repeat goes straight after the last of its kind.
+                        var at = -1;
+                        if (parentKey) ph3.activities.forEach(function (a, i) { if (a.key === parentKey || a.parent === parentKey) at = i; });
+                        if (at >= 0) ph3.activities.splice(at + 1, 0, res.task); else ph3.activities.push(res.task);
                         CORE_DEFS[res.task.key] = res.task; PHASE_OF[res.task.key] = ph3; P.core[res.task.key] = res.activity;
+                        if (parentKey && res.parentActivity) P.core[parentKey] = res.parentActivity;
                         UI.openPhases[pk] = true; UI.openRows[rowKey('core', null, res.task.key)] = false;
-                        closeModal(); render(); toast('Task added');
+                        closeModal(); render(); toast(parentKey ? 'Added under ' + (CORE_DEFS[parentKey] || {}).name : 'Task added');
                     }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 }
                 return;
@@ -2053,6 +2165,7 @@
     refreshPeople();
     fromHash();
     render();
+    rememberSeen();
     startLive();
     if (P.google && P.google.notice) toast(P.google.notice.text, !P.google.notice.ok);
 })();

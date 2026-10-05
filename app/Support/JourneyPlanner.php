@@ -66,6 +66,12 @@ class JourneyPlanner
     /** Deadlines come in two kinds: the university's dates, and ODA's own. */
     public const DEADLINE_KINDS = ['uni' => 'University', 'own' => 'Ours'];
 
+    /**
+     * Stages whose activities can repeat: a second internship, a third
+     * competition. Each extra one is its own task, shown under the first.
+     */
+    public const REPEATABLE_PHASES = ['profile'];
+
     /** Statuses a student may pick for themselves. "Not Applicable" is the counsellor's call. */
     public const STUDENT_STATUSES = ['Not Started', 'In Progress', 'Submitted', 'Completed'];
 
@@ -91,6 +97,8 @@ class JourneyPlanner
                 ['course-research', 'Course direction research', "Explore course options aligned to the student's interests and career goals.", 'Student & Counsellor', 'None', true],
                 ['preliminary-shortlist', 'Preliminary shortlisting', 'Draft a working list of countries and course directions.', 'Counsellor', 'None', true],
                 ['family-sign-off', 'Shortlist review & sign-off', 'Review the findings with the counsellor and confirm the direction before proceeding.', 'Student & Counsellor', 'None', true],
+                // The 7th field names the document type the task's Upload button files under.
+                ['declaration-sign-off', 'Student Declaration Form Sign-off', 'Once the courses and universities are agreed, the student signs the declaration form and uploads the signed copy here.', 'Student', 'Signed declaration form', true, 'Student declaration form'],
             ]],
             ['profile', 'Profile Building / Skill Enhancers', 'Profile building', 'Ongoing, ideally 18–6 months before intake', [
                 ['research-project', 'Research project', 'Undertake a subject-relevant research project or paper.', 'Student', 'Project report/certificate', false],
@@ -197,12 +205,28 @@ class JourneyPlanner
         $custom = $plan->customDefinitions();
 
         $phases = array_map(function (array $p) use ($custom): array {
-            $p['activities'] = array_map(fn (array $a) => $a + ['custom' => false], $p['activities']);
+            $list = array_map(fn (array $a) => $a + ['custom' => false], $p['activities']);
+            // A repeat of an activity sits straight after it (and after the
+            // repeats before it); any other added task goes at the end.
             foreach ($custom as $def) {
-                if ($def['phase'] === $p['key']) {
-                    $p['activities'][] = $def;
+                if ($def['phase'] !== $p['key']) {
+                    continue;
+                }
+                $at = null;
+                if (! empty($def['parent'])) {
+                    foreach ($list as $i => $a) {
+                        if ($a['key'] === $def['parent'] || ($a['parent'] ?? null) === $def['parent']) {
+                            $at = $i + 1;
+                        }
+                    }
+                }
+                if ($at === null) {
+                    $list[] = $def;
+                } else {
+                    array_splice($list, $at, 0, [$def]);
                 }
             }
+            $p['activities'] = $list;
 
             return $p;
         }, $plan->orderedPhases());
@@ -364,6 +388,7 @@ class JourneyPlanner
                 'teamRoles' => $plan->teamRoles(),
                 'meetingModes' => self::MEETING_MODES,
                 'deadlineKinds' => self::DEADLINE_KINDS,
+                'repeatable' => self::REPEATABLE_PHASES,
             ],
             'core' => $plan->coreState(),
             'apps' => $plan->applications->map->toPlannerArray()->values()->all(),
@@ -401,6 +426,8 @@ class JourneyPlanner
             // has changed. The page starts from this, so a change made a
             // second after it loaded is still noticed.
             'pulse' => self::fingerprint($plan),
+            // Who changed what, newest first.
+            'changes' => JourneyLog::forPlan($plan, $mode),
             'pollSeconds' => (int) config('journey.live.poll_seconds'),
             'csrf' => csrf_token(),
             'endpoints' => $endpoints,
@@ -487,11 +514,13 @@ class JourneyPlanner
         $edits = DB::table('crm_journey_document_edits as e')
             ->join('crm_journey_documents as d', 'd.id', '=', 'e.document_id')
             ->where('d.plan_id', $plan->id)->selectRaw('COUNT(*) as c, MAX(e.updated_at) as m')->first();
+        $changes = DB::table('crm_journey_changes')
+            ->where('plan_id', $plan->id)->selectRaw('MAX(id) as i, MAX(updated_at) as m')->first();
 
         return substr(md5(implode('|', [
             $plan->id,
             $plan->updated_at?->getTimestamp(),
-            $apps->c, $apps->m, $docs->c, $docs->m, $edits->c, $edits->m,
+            $apps->c, $apps->m, $docs->c, $docs->m, $edits->c, $edits->m, $changes->i, $changes->m,
         ])), 0, 16);
     }
 
@@ -509,7 +538,8 @@ class JourneyPlanner
 
     private static function activityDef(array $a): array
     {
-        return ['key' => $a[0], 'name' => $a[1], 'desc' => $a[2], 'owner' => $a[3], 'docs' => $a[4], 'inc' => $a[5]];
+        return ['key' => $a[0], 'name' => $a[1], 'desc' => $a[2], 'owner' => $a[3], 'docs' => $a[4], 'inc' => $a[5]]
+            + (isset($a[6]) ? ['upload' => $a[6]] : []);
     }
 
     /**

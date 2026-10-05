@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Http\Middleware\StudentAuth;
 use App\Mail\JourneyMeetingMail;
 use App\Models\CrmJourneyApplication;
+use App\Models\CrmJourneyChange;
 use App\Models\CrmJourneyDocument;
 use App\Models\CrmJourneyPlan;
 use App\Models\CrmLead;
 use App\Models\CrmLeadActivity;
 use App\Models\CrmStudentAccount;
 use App\Models\CrmUser;
+use App\Support\JourneyLog;
 use App\Support\JourneyPlanner;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -74,7 +76,7 @@ class JourneyPlannerTest extends TestCase
     public function test_the_template_carries_the_workbook_content(): void
     {
         $this->assertCount(7, JourneyPlanner::phases());
-        $this->assertCount(32, JourneyPlanner::coreDefinitions());
+        $this->assertCount(33, JourneyPlanner::coreDefinitions()); // 32 from the workbook + the declaration sign-off
         $this->assertCount(22, JourneyPlanner::applicationDefinitions());
 
         // Keys are stored in every plan: they must stay unique across the template.
@@ -1447,5 +1449,183 @@ class JourneyPlannerTest extends TestCase
             }
         }
         $this->assertTrue($refused, 'One session polling without pause should eventually be refused.');
+    }
+
+    /* ------------------------------------------------------------ the declaration form */
+
+    public function test_the_declaration_sign_off_follows_the_shortlist_and_waits_for_the_signed_form(): void
+    {
+        Storage::fake('local');
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        // Straight after the shortlist is agreed, on every plan.
+        $stage = collect(JourneyPlanner::phases())->firstWhere('key', 'shortlisting');
+        $keys = array_column($stage['activities'], 'key');
+        $this->assertSame(array_search('family-sign-off', $keys, true) + 1, array_search('declaration-sign-off', $keys, true));
+        $row = $this->planOf($lead)->coreState()['declaration-sign-off'];
+        $this->assertTrue($row['inc']);
+        $this->assertSame('Not Started', $row['status']);
+        $this->assertSame('Student declaration form', JourneyPlanner::coreDefinitions()['declaration-sign-off']['upload']);
+
+        // Another kind of upload leaves it alone.
+        $this->signedInStudent($lead)->post(route('student.documents.store'), [
+            'kind' => 'file', 'category' => 'Passport / ID', 'file' => UploadedFile::fake()->create('passport.pdf', 40, 'application/pdf'),
+        ])->assertOk();
+        $this->assertSame('Not Started', $this->planOf($lead)->coreState()['declaration-sign-off']['status']);
+
+        // The signed form moves it to Submitted, for the counsellor to sign off.
+        $this->signedInStudent($lead)->post(route('student.documents.store'), [
+            'kind' => 'file', 'category' => 'Student declaration form', 'file' => UploadedFile::fake()->create('declaration.pdf', 40, 'application/pdf'),
+        ])->assertOk();
+        $row = $this->planOf($lead)->coreState()['declaration-sign-off'];
+        $this->assertSame('Submitted', $row['status']);
+        $this->assertSame('student', $row['by']);
+
+        // Once completed, a later copy does not undo that.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'declaration-sign-off', 'status' => 'Completed'])->assertOk();
+        $this->as($counsellor)->post(route('crm.journey.documents.store', $lead), [
+            'kind' => 'file', 'category' => 'Student declaration form', 'file' => UploadedFile::fake()->create('declaration-v2.pdf', 40, 'application/pdf'),
+        ])->assertOk();
+        $this->assertSame('Completed', $this->planOf($lead)->coreState()['declaration-sign-off']['status']);
+    }
+
+    /* ------------------------------------------------------------ more than one internship */
+
+    public function test_a_second_internship_sits_under_the_first_with_its_own_status(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $add = fn (string $name) => $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), [
+            'phase' => 'profile', 'parent' => 'internship', 'name' => $name, 'owner' => 'Student',
+        ])->assertOk();
+
+        $first = $add('Internship 2 — Infosys')->assertJsonPath('task.parent', 'internship')->assertJsonPath('parentActivity.inc', true)->json('task.key');
+        $second = $add('Internship 3 — NGO')->json('task.key');
+        // A task added to the stage in the ordinary way goes to the end.
+        $plain = $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), ['phase' => 'profile', 'name' => 'Summer school', 'owner' => 'Student'])->json('task.key');
+
+        // The first internship was switched off; adding another switched it on.
+        $plan = $this->planOf($lead);
+        $this->assertTrue($plan->coreState()['internship']['inc']);
+
+        $keys = array_column(collect(JourneyPlanner::phasesFor($plan))->firstWhere('key', 'profile')['activities'], 'key');
+        $at = array_search('internship', $keys, true);
+        $this->assertSame([$first, $second], array_slice($keys, $at + 1, 2), 'Repeats come straight after the first, in the order added.');
+        $this->assertSame($plain, end($keys));
+
+        // Each has its own status.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => $first, 'status' => 'Completed'])->assertOk();
+        $state = $this->planOf($lead)->coreState();
+        $this->assertSame('Completed', $state[$first]['status']);
+        $this->assertSame('Not Started', $state['internship']['status']);
+
+        // Only Profile building's own activities repeat.
+        $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), ['phase' => 'tests', 'parent' => 'english-test', 'name' => 'IELTS again', 'owner' => 'Student'])
+            ->assertStatus(422)->assertJsonValidationErrors('parent');
+        $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), ['phase' => 'profile', 'parent' => $first, 'name' => 'Nested', 'owner' => 'Student'])
+            ->assertStatus(422);
+        $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), ['phase' => 'tests', 'parent' => 'internship', 'name' => 'Wrong stage', 'owner' => 'Student'])
+            ->assertStatus(422);
+
+        // Removing a repeat leaves the first.
+        $this->as($counsellor)->deleteJson(route('crm.journey.tasks.destroy', [$lead, $second]))->assertOk();
+        $this->assertArrayHasKey('internship', $this->planOf($lead)->coreState());
+        $this->assertArrayNotHasKey($second, $this->planOf($lead)->coreState());
+    }
+
+    /* ------------------------------------------------------------ recent changes */
+
+    public function test_every_change_is_listed_with_who_did_it_and_when(): void
+    {
+        Storage::fake('local');
+        $counsellor = $this->user('counsellor', ['name' => 'Priya Sharma']);
+        $lead = $this->student($counsellor, ['name' => 'Ananya Rao']);
+        $this->start($counsellor, $lead);
+
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'gap-analysis', 'status' => 'In Progress', 'target' => '2026-11-03'])->assertOk();
+        $this->as($counsellor)->postJson(route('crm.journey.team.store', $lead), ['role' => 'Content writer', 'name' => 'Ishaan Rao'])->assertOk();
+        $this->as($counsellor)->postJson(route('crm.journey.applications.store', $lead), ['university' => 'Bocconi'])->assertOk();
+        $this->signedInStudent($lead)->patchJson(route('student.activity'), ['scope' => 'core', 'key' => 'initial-consultation', 'status' => 'Completed'])->assertOk();
+
+        $changes = JourneyPlanner::payload($this->planOf($lead)->load(['lead.assignee', 'lead.studentAccount', 'applications']), 'counsellor')['changes'];
+        $lines = array_map(fn ($c) => $c['who'].' | '.$c['section'].' | '.$c['subject'].' | '.$c['what'], $changes);
+        $this->assertContains('Ananya Rao (student) | Core journey | Initial counselling consultation | Status: Completed', $lines);
+        $this->assertContains('Priya Sharma | Universities | Bocconi | University added', $lines);
+        $this->assertContains('Priya Sharma | Team | Ishaan Rao | Added as Content writer', $lines);
+        $this->assertContains('Priya Sharma | Core journey | Gap analysis | Status: In Progress · Target date: 3 Nov 2026', $lines);
+        $this->assertSame('Ananya Rao (student)', $changes[0]['who'], 'Newest first.');
+        $this->assertNotNull($changes[0]['at']);
+
+        // The student reads it as theirs, and never sees the team's own business.
+        $student = JourneyPlanner::payload($this->planOf($lead)->load(['lead.assignee', 'lead.studentAccount', 'applications']), 'student')['changes'];
+        $this->assertSame('You', $student[0]['who']);
+        $this->assertNotContains('Team', array_column($student, 'section'));
+        $this->assertNotContains('Student login', array_column($student, 'section'));
+        $this->assertContains('Student login', array_column($changes, 'section'), 'The counsellor does see the login being created.');
+    }
+
+    public function test_a_burst_of_edits_to_one_task_reads_as_one_line(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $edit = fn (array $body) => $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'gap-analysis'] + $body)->assertOk();
+
+        $edit(['status' => 'In Progress']);
+        $edit(['target' => '2026-11-03']);
+        $edit(['notes' => 'Maths is the gap.']);
+        $edit(['status' => 'Completed']);
+
+        $rows = CrmJourneyChange::query()->where('section', 'Core journey')->get();
+        $this->assertCount(1, $rows);
+        $this->assertSame('Target date: 3 Nov 2026 · Notes updated · Status: Completed', $rows[0]->what, 'The latest status wins; each field is named once.');
+
+        // Later, it is a new line.
+        $this->travel(5)->minutes();
+        $edit(['status' => 'In Progress']);
+        $this->assertSame(2, CrmJourneyChange::query()->where('section', 'Core journey')->count());
+
+        // Saving something that did not change writes nothing.
+        $before = CrmJourneyChange::query()->count();
+        $this->travel(5)->minutes();
+        $edit(['status' => 'In Progress']);
+        $this->assertSame($before, CrmJourneyChange::query()->count());
+    }
+
+    public function test_changes_to_documents_meetings_and_deadlines_are_listed(): void
+    {
+        Storage::fake('local');
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $doc = $this->signedInStudent($lead)->post(route('student.documents.store'), [
+            'kind' => 'file', 'category' => 'Passport / ID', 'title' => 'Passport', 'file' => UploadedFile::fake()->create('passport.pdf', 40, 'application/pdf'),
+        ])->json('document.id');
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), ['title' => 'Shortlist review', 'date' => '2026-10-20', 'time' => '16:00', 'mode' => 'In person'])->assertOk();
+        $this->as($counsellor)->postJson(route('crm.journey.deadlines.store', $lead), ['kind' => 'own', 'what' => 'SOP first draft', 'date' => '2026-11-01'])->assertOk();
+        $this->as($counsellor)->deleteJson(route('crm.journey.documents.destroy', [$lead, $doc]))->assertOk();
+
+        $lines = CrmJourneyChange::query()->orderBy('id')->get()->map(fn ($c) => $c->section.' | '.$c->subject.' | '.$c->what)->all();
+        $this->assertContains('Documents | Passport | Uploaded · Passport / ID', $lines);
+        $this->assertContains('Meetings | Shortlist review | Meeting booked for 20 Oct 2026, 16:00', $lines);
+        $this->assertContains('Deadlines | SOP first draft | Deadline added for 1 Nov 2026', $lines);
+        $this->assertContains('Documents | Passport | Removed', $lines);
+    }
+
+    public function test_a_new_change_moves_the_live_pulse(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $plan = $this->planOf($lead);
+
+        $before = JourneyPlanner::fingerprint($plan);
+        JourneyLog::record($plan, $counsellor, 'Core journey', 'Gap analysis', 'Notes updated');
+        $this->assertNotSame($before, JourneyPlanner::fingerprint($plan->fresh()));
     }
 }

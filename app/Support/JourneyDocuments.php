@@ -38,7 +38,7 @@ class JourneyDocuments
 {
     public const FILE_CATEGORIES = [
         'Transcript / mark sheet', 'Test score report', 'Passport / ID', 'CV / résumé', 'Recommendation letter',
-        'Financial document', 'Offer / admission letter', 'Visa document', 'Other',
+        'Financial document', 'Offer / admission letter', 'Visa document', 'Student declaration form', 'Other',
     ];
 
     public const ESSAY_CATEGORIES = ['Statement of Purpose', 'Personal statement', 'University essay', 'Scholarship essay', 'Other'];
@@ -118,6 +118,10 @@ class JourneyDocuments
 
         $document = $plan->documents()->create($attributes);
         self::recordEdit($document, $kind === 'file' ? 'Uploaded “'.$document->original_name.'”' : 'Started the draft', $user);
+        JourneyLog::record($plan, $user, 'Documents', $document->title, ($kind === 'file' ? 'Uploaded' : 'Draft started').' · '.$document->category);
+        if ($kind === 'file') {
+            self::advanceUploadTask($plan, $document, $user);
+        }
 
         if ($user === null && $kind === 'file') {
             self::log($plan, 'The student uploaded “'.$document->title.'” ('.$document->category.self::where($document).').');
@@ -142,11 +146,13 @@ class JourneyDocuments
             abort(403, 'This essay is approved. Ask your counsellor if it needs to change again.');
         }
 
+        $wasTitle = $document->title;
         foreach (['title', 'category', 'application_id'] as $field) {
             if (array_key_exists($field, $data)) {
                 $document->{$field} = $field === 'title' ? (trim((string) $data[$field]) ?: $document->title) : $data[$field];
             }
         }
+        $detailsMoved = $document->isDirty(['title', 'category', 'application_id']);
         $bodyChanged = false;
         if ($document->isEssay() && array_key_exists('body', $data)) {
             $bodyChanged = (string) $data['body'] !== (string) $document->body;
@@ -196,6 +202,17 @@ class JourneyDocuments
             self::log($document->plan, 'The student sent the essay “'.$document->title.'”'.self::where($document).' for review ('.$document->wordCount().' words).');
         }
 
+        JourneyLog::record($document->plan, $user, 'Documents', $document->title, implode(' · ', array_filter([
+            $detailsMoved ? ($document->title !== $wasTitle ? 'Renamed from “'.$wasTitle.'”' : 'Details updated') : null,
+            $bodyChanged ? 'Draft edited' : null,
+            $submitted ? 'Sent for review' : null,
+            ! $student && array_key_exists('review_status', $data) ? match ($document->status) {
+                'Approved' => 'Approved',
+                'Needs changes' => 'Sent back for changes',
+                default => 'Review status: '.$document->status,
+            } : null,
+        ])));
+
         return $document;
     }
 
@@ -205,6 +222,8 @@ class JourneyDocuments
             abort_unless($document->by_student, 403, 'Your counsellor added this one, so only they can remove it.');
             abort_if($document->isEssay() && in_array($document->status, ['Submitted', 'Approved'], true), 403, 'This essay is with your counsellor. Ask them if it should be removed.');
         }
+
+        JourneyLog::record($document->plan, $user, 'Documents', $document->title, 'Removed');
 
         DB::transaction(function () use ($document): void {
             $path = $document->path;
@@ -347,6 +366,7 @@ class JourneyDocuments
         if ($user === null && ! $document->by_student) {
             abort(403, 'Your counsellor added this one, so only they can record changes to it.');
         }
+        JourneyLog::record($document->plan, $user, 'Documents', $document->title, ($newVersion ? 'New version: ' : 'Edit noted: ').$note);
 
         return self::recordEdit($document, $note, $user, $newVersion);
     }
@@ -373,6 +393,35 @@ class JourneyDocuments
         $university = $d->application_id ? CrmJourneyApplication::query()->whereKey($d->application_id)->value('university') : null;
 
         return $university ? ' for '.$university : '';
+    }
+
+    /**
+     * A task that asks for a document (the Student Declaration Form) moves to
+     * Submitted when that document is uploaded, so the counsellor sees it is
+     * waiting for their sign-off. Completing it stays their call.
+     */
+    private static function advanceUploadTask(CrmJourneyPlan $plan, CrmJourneyDocument $document, ?CrmUser $user): void
+    {
+        $moved = DB::transaction(function () use ($plan, $document, $user): array {
+            $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
+            $state = $locked->coreState();
+            $moved = [];
+            foreach ($locked->coreDefinitions() as $key => $def) {
+                if (($def['upload'] ?? null) === $document->category && $state[$key]['inc']
+                    && in_array($state[$key]['status'], ['Not Started', 'In Progress'], true)) {
+                    $state[$key] = JourneyPlanner::apply($state[$key], ['status' => 'Submitted'], $user ? 'team:'.$user->id : 'student');
+                    $moved[] = $def['name'];
+                }
+            }
+            if ($moved !== []) {
+                $locked->forceFill(['core' => $state])->save();
+            }
+
+            return $moved;
+        });
+        foreach ($moved as $name) {
+            JourneyLog::record($plan, $user, 'Core journey', $name, 'Status: Submitted (signed form uploaded)');
+        }
     }
 
     private static function log(CrmJourneyPlan $plan, string $body): void

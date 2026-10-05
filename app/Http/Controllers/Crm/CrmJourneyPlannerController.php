@@ -15,6 +15,7 @@ use App\Services\CrmAuditLogger;
 use App\Services\GoogleCalendar;
 use App\Services\GoogleCalendarException;
 use App\Support\JourneyDocuments;
+use App\Support\JourneyLog;
 use App\Support\JourneyPlanner;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -134,6 +135,7 @@ class CrmJourneyPlannerController extends Controller
 
         $redirect = redirect()->route('crm.journey.show', $lead);
         if ($credentials) {
+            JourneyLog::record($lead->journeyPlan()->firstOrFail(), $user, 'Student login', 'Journey planner', 'Planner started and student login created', true);
             $redirect->with('journey_credentials', $credentials);
             $audit->record($request, $user, 'journey_login_created', "Started the journey planner and created a student login for {$lead->name}", [
                 'crm_lead_id' => $lead->id, 'subject_type' => CrmStudentAccount::class, 'subject_label' => $lead->name,
@@ -165,7 +167,12 @@ class CrmJourneyPlannerController extends Controller
             'intake' => ['nullable', 'string', 'max:60'],
             'focus' => ['nullable', 'string', 'max:150'],
         ]);
+        $before = $plan->only(['level', 'intake', 'focus']);
         $plan->fill(array_map(fn ($v) => is_string($v) ? (trim($v) ?: null) : $v, $data))->save();
+        $this->logChange($request, $plan, 'Student details', 'Plan details', implode(' · ', array_filter(array_map(
+            fn (string $f) => $before[$f] !== $plan->{$f} ? ucfirst($f).': '.($plan->{$f} ?: 'cleared') : null,
+            array_keys($data),
+        ))));
 
         return response()->json(['ok' => true]);
     }
@@ -187,17 +194,18 @@ class CrmJourneyPlannerController extends Controller
         $changes = collect($data)->except(['scope', 'application_id', 'key'])->all();
         $by = 'team:'.$this->user($request)->id;
 
-        $row = DB::transaction(function () use ($plan, $data, $changes, $by): ?array {
+        $result = DB::transaction(function () use ($plan, $data, $changes, $by): ?array {
             if ($data['scope'] === 'core') {
                 $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
                 $state = $locked->coreState();
                 if (! isset($state[$data['key']])) {
                     return null;
                 }
-                $state[$data['key']] = JourneyPlanner::apply($state[$data['key']], $changes, $by);
+                $before = $state[$data['key']];
+                $state[$data['key']] = JourneyPlanner::apply($before, $changes, $by);
                 $locked->forceFill(['core' => $state])->save();
 
-                return $state[$data['key']];
+                return [$before, $state[$data['key']], 'Core journey', $locked->coreDefinitions()[$data['key']]['name'] ?? 'Task'];
             }
 
             $application = CrmJourneyApplication::query()->where('plan_id', $plan->id)->lockForUpdate()->find($data['application_id']);
@@ -205,13 +213,17 @@ class CrmJourneyPlannerController extends Controller
             if (! $application || ! isset($state[$data['key']])) {
                 return null;
             }
-            $state[$data['key']] = JourneyPlanner::apply($state[$data['key']], $changes, $by);
+            $before = $state[$data['key']];
+            $state[$data['key']] = JourneyPlanner::apply($before, $changes, $by);
             $application->forceFill(['activities' => $state])->save();
 
-            return $state[$data['key']];
+            return [$before, $state[$data['key']], 'Universities', (JourneyPlanner::applicationDefinitions()[$data['key']]['name'] ?? 'Task').' — '.$application->university];
         });
 
-        abort_if($row === null, 404);
+        abort_if($result === null, 404);
+        [$before, $row, $section, $subject] = $result;
+        // A task the student cannot see stays off their list of changes.
+        $this->logChange($request, $plan, $section, $subject, JourneyLog::describeActivity($before, $row, fn (string $o) => $this->ownerName($plan, $o)), ! $row['inc']);
 
         return response()->json(['ok' => true, 'activity' => $row]);
     }
@@ -236,6 +248,7 @@ class CrmJourneyPlannerController extends Controller
         if ($application->fit) {
             $this->markFitConfirmed($application, $this->user($request));
         }
+        $this->logChange($request, $plan, 'Universities', $application->university, 'University added'.($application->program ? ' · '.$application->program : ''));
 
         $audit->record($request, $this->user($request), 'journey_university_added', "Added {$application->university} to {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyApplication::class, 'subject_id' => $application->id, 'subject_label' => $application->university,
@@ -252,12 +265,30 @@ class CrmJourneyPlannerController extends Controller
         $data = $request->validate(array_merge($this->applicationRules(partial: true), [
             'offer_type' => ['sometimes', 'nullable', Rule::in(JourneyPlanner::OFFER_TYPES)],
         ]));
-        foreach (['university', 'country', 'program', 'fit', 'offer_type', 'tests_required', 'documents_required', 'requirements', 'deadline'] as $field) {
+        $labels = [
+            'university' => 'Name', 'country' => 'Country', 'program' => 'Programme', 'fit' => 'Fit', 'offer_type' => 'Offer',
+            'tests_required' => 'Tests required', 'documents_required' => 'Documents required', 'requirements' => 'Requirements', 'deadline' => 'Closing date',
+        ];
+        $moved = [];
+        foreach (array_keys($labels) as $field) {
             if (array_key_exists($field, $data)) {
-                $application->{$field} = is_string($data[$field]) ? (trim($data[$field]) ?: null) : $data[$field];
+                $value = is_string($data[$field]) ? (trim($data[$field]) ?: null) : $data[$field];
+                $old = $application->{$field};
+                $old = $old instanceof \DateTimeInterface ? $old->format('Y-m-d') : $old;
+                if ($value != $old) {
+                    $moved[] = match ($field) {
+                        'fit' => 'Fit: '.($value ? (JourneyPlanner::FITS[$value] ?? $value) : 'not set'),
+                        'offer_type' => 'Offer: '.($value ?: 'cleared'),
+                        'deadline' => $value ? 'Closing date: '.JourneyLog::date($value) : 'Closing date cleared',
+                        'tests_required', 'documents_required', 'requirements' => $labels[$field].' updated',
+                        default => $labels[$field].': '.($value ?: 'cleared'),
+                    };
+                }
+                $application->{$field} = $value;
             }
         }
         $application->save();
+        $this->logChange($request, $plan, 'Universities', $application->university, implode(' · ', $moved));
 
         // Choosing a fit is the first activity on the checklist; recording an
         // offer type is the "Offer received" activity. Do the obvious tick.
@@ -284,6 +315,7 @@ class CrmJourneyPlannerController extends Controller
         $audit->record($request, $this->user($request), 'journey_university_removed', "Removed {$application->university} from {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyApplication::class, 'subject_id' => $application->id, 'subject_label' => $application->university,
         ]);
+        $this->logChange($request, $plan, 'Universities', $application->university, 'University removed');
         $application->delete();
 
         return response()->json(['ok' => true]);
@@ -292,10 +324,11 @@ class CrmJourneyPlannerController extends Controller
     /** A new temporary password, shown once. The old one stops working at once. */
     public function resetPassword(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
     {
-        $this->editablePlan($request, $lead);
+        $plan = $this->editablePlan($request, $lead);
         $account = $lead->studentAccount ?? abort(404);
         $password = CrmStudentAccount::temporaryPassword();
         $account->forceFill(['password' => $password, 'must_change_password' => true])->save();
+        $this->logChange($request, $plan, 'Student login', 'Student password', 'New temporary password issued', true);
 
         $audit->record($request, $this->user($request), 'journey_password_reset', "Issued a new journey planner password for {$lead->name}", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmStudentAccount::class, 'subject_id' => $account->id, 'subject_label' => $lead->name,
@@ -307,9 +340,10 @@ class CrmJourneyPlannerController extends Controller
     /** A new admin password for this student. The old one stops working at once. */
     public function regenerateAdminPassword(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
     {
-        $this->editablePlan($request, $lead);
+        $plan = $this->editablePlan($request, $lead);
         $account = $lead->studentAccount ?? abort(404);
         $account->forceFill(['admin_password' => CrmStudentAccount::temporaryPassword(14)])->save();
+        $this->logChange($request, $plan, 'Student login', 'Admin password', 'New admin password issued', true);
 
         $audit->record($request, $this->user($request), 'journey_admin_password_reset', "Issued a new admin password for {$lead->name}'s student login", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmStudentAccount::class, 'subject_id' => $account->id, 'subject_label' => $lead->name,
@@ -321,10 +355,11 @@ class CrmJourneyPlannerController extends Controller
     /** Switch the student's sign-in off (or back on) without losing the plan. */
     public function toggleLogin(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
     {
-        $this->editablePlan($request, $lead);
+        $plan = $this->editablePlan($request, $lead);
         $account = $lead->studentAccount ?? abort(404);
         $active = (bool) $request->validate(['active' => ['required', 'boolean']])['active'];
         $account->forceFill(['is_active' => $active])->save();
+        $this->logChange($request, $plan, 'Student login', 'Student login', $active ? 'Login switched on' : 'Login switched off', true);
 
         $audit->record($request, $this->user($request), $active ? 'journey_login_enabled' : 'journey_login_disabled', ($active ? 'Switched on' : 'Switched off')." the journey planner login for {$lead->name}", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmStudentAccount::class, 'subject_id' => $account->id, 'subject_label' => $lead->name,
@@ -353,10 +388,13 @@ class CrmJourneyPlannerController extends Controller
             'docs' => ['nullable', 'string', 'max:190'],
             'owner' => ['required', Rule::in($plan->ownerValues())],
             'target' => ['nullable', 'date_format:Y-m-d'],
+            // Another one of a standard activity: a second internship.
+            'parent' => ['sometimes', 'nullable', 'string', 'max:60'],
         ], [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents']);
         $user = $this->user($request);
+        $parent = $this->repeatableParent($data['parent'] ?? null, $data['phase']);
 
-        $result = DB::transaction(function () use ($plan, $data, $user): array {
+        $result = DB::transaction(function () use ($plan, $data, $user, $parent): array {
             $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
             $tasks = $locked->custom_tasks ?? [];
             if (count($tasks) >= self::MAX_CUSTOM_TASKS) {
@@ -367,15 +405,21 @@ class CrmJourneyPlannerController extends Controller
                 'key' => $key, 'phase' => $data['phase'], 'name' => trim($data['name']),
                 'desc' => trim((string) ($data['desc'] ?? '')), 'docs' => trim((string) ($data['docs'] ?? '')),
                 'owner' => $data['owner'], 'created_by' => $user->id, 'created_at' => now()->toIso8601String(),
-            ];
+            ] + ($parent ? ['parent' => $parent['key']] : []);
             $locked->custom_tasks = $tasks;
             $state = $locked->coreState(); // the new key appears here with its defaults
             $state[$key] = JourneyPlanner::apply($state[$key], ['owner' => $data['owner'], 'target' => $data['target'] ?? null], 'team:'.$user->id);
+            // Adding a second internship means the first one counts too.
+            if ($parent && ! $state[$parent['key']]['inc']) {
+                $state[$parent['key']] = JourneyPlanner::apply($state[$parent['key']], ['inc' => true], 'team:'.$user->id);
+            }
             $locked->core = $state;
             $locked->save();
 
-            return ['task' => $locked->customDefinitions()[$key], 'activity' => $state[$key]];
+            return ['task' => $locked->customDefinitions()[$key], 'activity' => $state[$key], 'parentActivity' => $parent ? $state[$parent['key']] : null];
         });
+
+        $this->logChange($request, $plan, 'Core journey', $result['task']['name'], $parent ? 'Added under “'.$parent['name'].'”' : 'Task added');
 
         $audit->record($request, $user, 'journey_task_added', "Added the task “{$result['task']['name']}” to {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $result['task']['name'],
@@ -417,6 +461,7 @@ class CrmJourneyPlannerController extends Controller
             return $locked->customDefinitions()[$task] ?? null;
         });
         abort_if($def === null, 404);
+        $this->logChange($request, $plan, 'Core journey', $def['name'], array_key_exists('name', $data) ? 'Task renamed' : 'Task details updated');
 
         return response()->json(['ok' => true, 'task' => $def]);
     }
@@ -443,6 +488,8 @@ class CrmJourneyPlannerController extends Controller
             return $gone['name'] ?? 'Task';
         });
         abort_if($name === null, 404);
+
+        $this->logChange($request, $plan, 'Core journey', $name, 'Task removed');
 
         $audit->record($request, $this->user($request), 'journey_task_removed', "Removed the task “{$name}” from {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $name,
@@ -481,6 +528,8 @@ class CrmJourneyPlannerController extends Controller
             return collect($locked->orderedPhases())->firstWhere('key', $stage['key']);
         });
 
+        $this->logChange($request, $plan, 'Core journey', $stage['name'], 'Stage added', true);
+
         $audit->record($request, $this->user($request), 'journey_stage_added', "Added the stage “{$stage['name']}” to {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $stage['name'],
         ]);
@@ -518,6 +567,7 @@ class CrmJourneyPlannerController extends Controller
         abort_unless($found, 404);
 
         $fresh = $plan->fresh();
+        $this->logChange($request, $plan, 'Core journey', (string) (collect($fresh->orderedPhases())->firstWhere('key', $stage)['name'] ?? 'Stage'), array_key_exists('name', $data) ? 'Stage renamed' : 'Stage details updated', true);
 
         return response()->json(['ok' => true, 'stage' => collect($fresh->orderedPhases())->firstWhere('key', $stage), 'order' => array_column($fresh->orderedPhases(), 'key')]);
     }
@@ -550,6 +600,8 @@ class CrmJourneyPlannerController extends Controller
             return $gone['name'] ?? 'Stage';
         });
         abort_if($name === null, 404);
+
+        $this->logChange($request, $plan, 'Core journey', $name, 'Stage removed, with its tasks', true);
 
         $audit->record($request, $this->user($request), 'journey_stage_removed', "Removed the stage “{$name}” from {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $name,
@@ -604,6 +656,8 @@ class CrmJourneyPlannerController extends Controller
             return $member;
         });
 
+        $this->logChange($request, $plan, 'Team', $result['name'], 'Added as '.$result['role'], true);
+
         $audit->record($request, $this->user($request), 'journey_team_added', "Added {$result['name']} ({$result['role']}) to {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $result['name'],
         ]);
@@ -617,7 +671,7 @@ class CrmJourneyPlannerController extends Controller
         $plan = $this->editablePlan($request, $lead);
         $data = $request->validate($this->memberRules(partial: true), [], ['role' => 'designation']);
 
-        $found = $this->withList($plan, 'team', function (array &$team) use ($data, $member, $plan): bool {
+        $found = $this->withList($plan, 'team', function (array &$team) use ($data, $member, $plan): array|false {
             foreach ($team as &$m) {
                 if (($m['key'] ?? null) !== $member) {
                     continue;
@@ -634,12 +688,13 @@ class CrmJourneyPlannerController extends Controller
                     $m['external'] = (bool) $data['external'];
                 }
 
-                return true;
+                return $m;
             }
 
             return false;
         });
         abort_unless($found, 404);
+        $this->logChange($request, $plan, 'Team', $found['name'], array_key_exists('role', $data) ? 'Designation: '.$found['role'] : 'Details updated', true);
 
         return $this->teamResponse($plan);
     }
@@ -655,6 +710,8 @@ class CrmJourneyPlannerController extends Controller
             return $match;
         });
         abort_if($gone === null, 404);
+
+        $this->logChange($request, $plan, 'Team', $gone['name'], 'Removed from the file', true);
 
         $audit->record($request, $this->user($request), 'journey_team_removed', "Removed {$gone['name']} from {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $gone['name'],
@@ -681,6 +738,7 @@ class CrmJourneyPlannerController extends Controller
                 'date' => $data['date'],
             ];
         });
+        $this->logChange($request, $plan, 'Deadlines', trim($data['what']), 'Deadline added for '.JourneyLog::date($data['date']));
 
         return $this->deadlineResponse($plan);
     }
@@ -690,23 +748,25 @@ class CrmJourneyPlannerController extends Controller
         $plan = $this->editablePlan($request, $lead);
         $data = $request->validate($this->deadlineRules(partial: true), [], ['what' => 'deadline']);
 
-        $found = $this->withList($plan, 'deadlines', function (array &$list) use ($data, $deadline): bool {
+        $found = $this->withList($plan, 'deadlines', function (array &$list) use ($data, $deadline): array|false {
             foreach ($list as &$d) {
                 if (($d['key'] ?? null) !== $deadline) {
                     continue;
                 }
+                $moved = array_key_exists('date', $data) && $data['date'] !== ($d['date'] ?? null);
                 foreach (['kind', 'what', 'who', 'date'] as $f) {
                     if (array_key_exists($f, $data)) {
                         $d[$f] = is_string($data[$f]) ? trim($data[$f]) : $data[$f];
                     }
                 }
 
-                return true;
+                return $d + ['moved' => $moved];
             }
 
             return false;
         });
         abort_unless($found, 404);
+        $this->logChange($request, $plan, 'Deadlines', (string) $found['what'], $found['moved'] ? 'Moved to '.JourneyLog::date($found['date']) : 'Deadline updated');
 
         return $this->deadlineResponse($plan);
     }
@@ -715,13 +775,14 @@ class CrmJourneyPlannerController extends Controller
     {
         $plan = $this->editablePlan($request, $lead);
 
-        $found = $this->withList($plan, 'deadlines', function (array &$list) use ($deadline): bool {
-            $before = count($list);
+        $found = $this->withList($plan, 'deadlines', function (array &$list) use ($deadline): ?array {
+            $match = collect($list)->firstWhere('key', $deadline);
             $list = array_values(array_filter($list, fn ($d) => ($d['key'] ?? null) !== $deadline));
 
-            return count($list) < $before;
+            return $match;
         });
-        abort_unless($found, 404);
+        abort_if($found === null, 404);
+        $this->logChange($request, $plan, 'Deadlines', (string) ($found['what'] ?? 'Deadline'), 'Deadline removed');
 
         return $this->deadlineResponse($plan);
     }
@@ -814,6 +875,8 @@ class CrmJourneyPlannerController extends Controller
 
         $sent = ($data['notify'] ?? true) ? $this->sendMeeting($plan, $lead, $meeting['key'], false) : 0;
 
+        $this->logChange($request, $plan, 'Meetings', $meeting['title'], 'Meeting booked for '.JourneyLog::date($meeting['date']).($meeting['time'] ? ', '.$meeting['time'] : '').($sent ? ' · details emailed to '.$sent : ''));
+
         $audit->record($request, $this->user($request), 'journey_meeting_added', "Booked “{$meeting['title']}” with {$lead->name} for {$meeting['date']}", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $meeting['title'],
         ]);
@@ -861,6 +924,11 @@ class CrmJourneyPlannerController extends Controller
         abort_unless($found, 404);
 
         $sent = ($data['notify'] ?? false) ? $this->sendMeeting($plan, $lead, $meeting, true) : 0;
+        $this->logChange($request, $plan, 'Meetings', (string) ($data['title'] ?? $current['title'] ?? 'Meeting'), match (true) {
+            array_keys($data) === ['done'] => $data['done'] ? 'Marked done' : 'Reopened',
+            array_key_exists('date', $data) && $data['date'] !== ($current['date'] ?? null) => 'Moved to '.JourneyLog::date($data['date']),
+            default => 'Meeting details updated',
+        }.($sent ? ' · details emailed to '.$sent : ''));
 
         return $this->meetingResponse($plan, ['sent' => $sent, 'warning' => $warning]);
     }
@@ -877,6 +945,9 @@ class CrmJourneyPlannerController extends Controller
         abort_if($row['emails'] === [], 422);
 
         $sent = $this->sendMeeting($plan, $lead, $meeting, true);
+        if ($sent) {
+            $this->logChange($request, $plan, 'Meetings', $row['title'], 'Joining details emailed to '.$sent);
+        }
 
         return $this->meetingResponse($plan, ['sent' => $sent]);
     }
@@ -894,6 +965,8 @@ class CrmJourneyPlannerController extends Controller
         abort_if($gone === null, 404);
         // A cancelled meeting's room comes off the counsellor's calendar too.
         $this->dropRoom($google, $gone['google'] ?? null);
+
+        $this->logChange($request, $plan, 'Meetings', $gone['title'], 'Meeting cancelled');
 
         $audit->record($request, $this->user($request), 'journey_meeting_removed', "Cancelled “{$gone['title']}” with {$lead->name}", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $gone['title'],
@@ -1251,6 +1324,45 @@ class CrmJourneyPlannerController extends Controller
     private function user(Request $request): CrmUser
     {
         return $request->attributes->get('crm_user');
+    }
+
+    /** One line on the plan's "Recent changes", in the signed-in team member's name. */
+    private function logChange(Request $request, CrmJourneyPlan $plan, string $section, string $subject, string $what, bool $internal = false): void
+    {
+        JourneyLog::record($plan, $this->user($request), $section, $subject, $what, $internal);
+    }
+
+    /** An owner as a person reads it: a team member by name, a role as it is. */
+    private function ownerName(CrmJourneyPlan $plan, string $owner): string
+    {
+        if (! JourneyPlanner::isMemberOwner($owner)) {
+            return $owner;
+        }
+
+        return (string) (collect($plan->fresh()->teamMembers())->firstWhere('key', JourneyPlanner::ownerMemberKey($owner))['name'] ?? 'A former team member');
+    }
+
+    /**
+     * The standard activity a new task repeats, checked: it has to be one of
+     * ODA's own, in a stage whose activities may repeat, and in the stage the
+     * task is being added to.
+     *
+     * @return array{key: string, name: string}|null
+     */
+    private function repeatableParent(?string $key, string $phase): ?array
+    {
+        if ($key === null || $key === '') {
+            return null;
+        }
+        foreach (JourneyPlanner::phases() as $p) {
+            foreach ($p['activities'] as $a) {
+                if ($a['key'] === $key && $p['key'] === $phase && in_array($phase, JourneyPlanner::REPEATABLE_PHASES, true)) {
+                    return ['key' => $a['key'], 'name' => $a['name']];
+                }
+            }
+        }
+
+        throw ValidationException::withMessages(['parent' => 'Only the activities in Profile building can have more than one.']);
     }
 
     /** The same reach as the lead drawer, and only for someone who has been enrolled. */
