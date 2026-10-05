@@ -149,6 +149,7 @@
             @endunless
             @if($crmUser->isSuperAdmin())<a class="nav-link nav-partner-codes {{ $view === 'partner-codes' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'partner-codes']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'partner-codes'])</span><span class="nav-text">Partner codes</span>@if($partnerCodeCount)<span class="nav-badge">{{ $partnerCodeCount }}</span>@endif</a>@endif
             @if($crmUser->isSuperAdmin())<a class="nav-link nav-subscriptions {{ $view === 'subscriptions' ? 'active' : '' }}" href="{{ route('crm.dashboard', ['view' => 'subscriptions']) }}"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'subscriptions'])</span><span class="nav-text">Subscriptions</span><span class="nav-badge">{{ $subscriberCount }}</span></a>@endif
+            @unless($crmUser->isPartner())<a class="nav-link nav-guide" href="{{ route('crm.guide') }}" target="_blank" rel="noopener"><span class="nav-icon">@include('crm.partials.nav-icon',['name'=>'guide'])</span><span class="nav-text">Team guide</span></a>@endunless
         </nav>
         <div class="sidebar-bottom">
             <div class="side-user-wrap" data-user-menu>

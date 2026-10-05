@@ -999,15 +999,71 @@
         return '';
     }
 
+    var EVENT_NAMES = { meeting: 'Meetings', uni: 'University deadlines', own: 'Our deadlines', task: 'Task dates' };
+    /* What the reader has chosen to see: some kinds, and finished things or not. */
+    function calShows(e) {
+        if ((UI.cal.kinds || {})[e.type] === false) return false;
+        return !(UI.cal.hideDone && eventStatus(e) === 'done');
+    }
+    function evTime(e) { return e.type === 'meeting' && e.m && e.m.time ? e.m.time : ''; }
+    function byWhen(a, b) {
+        var x = a.date + ' ' + (evTime(a) || '99'), y2 = b.date + ' ' + (evTime(b) || '99');
+        return x < y2 ? -1 : x > y2 ? 1 : 0;
+    }
+
+    /*
+     * The calendar: a month (or, on a phone, an agenda) of meetings,
+     * deadlines and task dates. Chips choose which kinds show and count what
+     * the month holds; colour says where each thing stands.
+     */
     function renderCalendar() {
         var now = new Date(P.today + 'T00:00:00');
         if (UI.cal.y == null) { UI.cal.y = now.getFullYear(); UI.cal.m = now.getMonth(); }
-        var y = UI.cal.y, m = UI.cal.m;
+        if (!UI.cal.view) UI.cal.view = (window.innerWidth && window.innerWidth < 640) ? 'agenda' : 'month';
+        if (!UI.cal.kinds) UI.cal.kinds = { meeting: true, uni: true, own: true, task: true };
+        var y = UI.cal.y, m = UI.cal.m, monthKey = y + '-' + pad2(m + 1);
 
-        var byDay = {};
         CAL_EVENTS = calendarEvents();
-        CAL_EVENTS.forEach(function (e, i) { e.i = i; if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
+        CAL_EVENTS.forEach(function (e, i) { e.i = i; });
+        var inMonth = CAL_EVENTS.filter(function (e) { return e.date && e.date.slice(0, 7) === monthKey; });
+        var byDay = {};
+        CAL_EVENTS.filter(calShows).forEach(function (e) { if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
+        Object.keys(byDay).forEach(function (d) { byDay[d].sort(byWhen); });
 
+        var late = inMonth.filter(function (e) { return eventStatus(e) === 'late'; }).length;
+        var bar = '<div class="jp-cal-bar">' +
+            '<div class="jp-cal-title"><button class="jp-cal-arrow" data-act="cal-step" data-v="-1" aria-label="Previous month">‹</button>' +
+            '<h2>' + MONTHS[m] + ' <span>' + y + '</span></h2>' +
+            '<button class="jp-cal-arrow" data-act="cal-step" data-v="1" aria-label="Next month">›</button>' +
+            '<button class="jp-btn ghost sm" data-act="cal-today">Today</button></div>' +
+            '<div class="jp-cal-tools"><div class="jp-seg" role="group" aria-label="Calendar view">' +
+            ['month', 'agenda'].map(function (v) {
+                return '<button data-act="cal-view" data-v="' + v + '" class="' + (UI.cal.view === v ? 'on' : '') + '" aria-pressed="' + (UI.cal.view === v) + '">' + (v === 'month' ? 'Month' : 'Agenda') + '</button>';
+            }).join('') + '</div>' +
+            (isC() ? '<button class="jp-btn sm" data-act="add-meeting">' + ICO.plus + ' Meeting</button><button class="jp-btn ghost sm" data-act="add-deadline" data-v="own">' + ICO.plus + ' Deadline</button>' : '') +
+            '</div></div>';
+
+        var chips = '<div class="jp-cal-filters"><span class="lbl">Show</span>' + ['meeting', 'uni', 'own', 'task'].map(function (k) {
+            var on = UI.cal.kinds[k] !== false, n = inMonth.filter(function (e) { return e.type === k; }).length;
+            return '<button class="jp-cal-chip' + (on ? ' on' : '') + '" data-act="cal-kind" data-v="' + k + '" aria-pressed="' + on + '"><i class="dot ' + k + '"></i>' + EVENT_NAMES[k] + ' <b class="num">' + n + '</b></button>';
+        }).join('') +
+            '<label class="jp-cal-done"><input type="checkbox" id="cal-hide-done"' + (UI.cal.hideDone ? ' checked' : '') + '> Hide finished</label>' +
+            (late ? '<span class="pill danger">' + late + ' late this month</span>' : '') + '</div>';
+
+        var body = UI.cal.view === 'agenda' ? calAgenda(byDay, monthKey) : calMonth(byDay, y, m);
+
+        var legend = '<div class="jp-legend"><span class="lbl">Colour</span>' +
+            ['late', 'today', 'soon', 'later', 'done'].map(function (k) {
+                return '<span><i class="chip st-' + k + '"></i>' + STATUS_NAME[k] + '</span>';
+            }).join('') + '</div>';
+        var hint = '<p class="jp-day-hint muted">' + (UI.cal.view === 'month'
+            ? 'Hover over an entry for its details, and click it to open it. Click a day to see everything on it' + (isC() ? ', or to put a meeting or a deadline on it' : '') + '.'
+            : 'Everything this month, day by day. Switch to Month for the grid.') + '</p>';
+
+        return '<section class="jp-card jp-cal">' + bar + chips + body + legend + hint + '</section>' + renderMeetings();
+    }
+
+    function calMonth(byDay, y, m) {
         var offset = (new Date(y, m, 1).getDay() + 6) % 7;      // weeks start on Monday
         var daysInMonth = new Date(y, m + 1, 0).getDate();
         var prevDays = new Date(y, m, 0).getDate();
@@ -1021,36 +1077,31 @@
             // The day is the click target; each entry inside it is its own,
             // so clicking an entry opens that thing and clicking the space
             // around it opens the day.
-            cells += '<div class="jp-day' + (other ? ' other' : '') + (iso === P.today ? ' today' : '') + (iso === UI.cal.sel ? ' sel' : '') + '"' +
+            cells += '<div class="jp-day' + (other ? ' other' : '') + (n % 7 >= 5 ? ' wkend' : '') + (iso === P.today ? ' today' : '') + (iso < P.today ? ' past' : '') + (iso === UI.cal.sel ? ' sel' : '') + '"' +
                 ' data-act="cal-day" data-d="' + iso + '" role="button" tabindex="0"' +
                 ' aria-label="' + esc(fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' })) + ', ' + plural(list.length, 'entry', 'entries') + '">' +
-                '<span class="dn num">' + cd + '</span>' +
+                '<span class="dn num">' + cd + (iso === P.today ? '<span class="tdy">Today</span>' : '') + '</span>' +
                 list.slice(0, 3).map(function (e) {
                     return '<button class="ev st-' + eventStatus(e) + '"' + eventAction(e) + ' data-ev="' + e.i + '" aria-label="' + esc(EVENT_NAME[e.type] + ': ' + e.label + (e.sub ? ' — ' + e.sub : '')) + '">' +
-                        '<i class="dot ' + e.type + '"></i>' + esc(e.label) + '</button>';
+                        '<i class="dot ' + e.type + '"></i>' + (evTime(e) ? '<span class="tm num">' + evTime(e) + '</span>' : '') + '<span class="lb">' + esc(e.label) + '</span></button>';
                 }).join('') +
                 (list.length > 3 ? '<span class="more num" data-more="' + list.slice(3).map(function (e) { return e.i; }).join(',') + '">+' + (list.length - 3) + ' more</span>' : '') + '</div>';
         }
+        return '<div class="jp-month">' + DOW.map(function (d, i) { return '<span class="dow' + (i >= 5 ? ' wkend' : '') + '">' + d + '</span>'; }).join('') + cells + '</div>';
+    }
 
-        // The day itself opens in a dialog; the month stays a month.
-        var detail = '<p class="jp-day-hint muted">Choose a day to see what is on it' + (isC() ? ', or to put a meeting or a deadline on it' : '') + '. Choose an entry to go straight to it.</p>';
-
-        var legend = '<div class="jp-legend"><span class="lbl">Colour</span>' +
-            ['late', 'today', 'soon', 'later', 'done'].map(function (k) {
-                return '<span><i class="chip st-' + k + '"></i>' + STATUS_NAME[k] + '</span>';
-            }).join('') + '</div>' +
-            '<div class="jp-legend"><span class="lbl">Kind</span>' +
-            ['meeting', 'uni', 'own', 'task'].map(function (k) {
-                return '<span><i class="dot ' + k + '"></i>' + EVENT_NAME[k] + '</span>';
-            }).join('') + '</div>';
-
-        var month = '<section class="jp-card"><div class="jp-card-h"><div><h2>' + MONTHS[m] + ' ' + y + '</h2><p>Meetings, deadlines and task dates together. Choose an entry to open it.</p></div>' +
-            '<div class="jp-monthnav"><button class="jp-btn ghost sm" data-act="cal-step" data-v="-1">Previous</button>' +
-            '<button class="jp-btn ghost sm" data-act="cal-today">Today</button>' +
-            '<button class="jp-btn ghost sm" data-act="cal-step" data-v="1">Next</button></div></div>' +
-            legend + '<div class="jp-month">' + DOW.map(function (d) { return '<span class="dow">' + d + '</span>'; }).join('') + cells + '</div>' + detail + '</section>';
-
-        return month + renderMeetings();
+    /* The same month as a list of days, for a narrow screen or a quick read. */
+    function calAgenda(byDay, monthKey) {
+        var days = Object.keys(byDay).filter(function (d) { return d.slice(0, 7) === monthKey; }).sort();
+        if (!days.length) return '<div class="jp-empty"><b>Nothing this month</b>' + (UI.cal.hideDone || Object.keys(UI.cal.kinds).some(function (k) { return UI.cal.kinds[k] === false; }) ? 'Some kinds are hidden — check the chips above.' : 'Use Next to look further ahead.') + '</div>';
+        return '<div class="jp-agenda">' + days.map(function (d) {
+            var n = daysUntil(d);
+            return '<div class="jp-agenda-day' + (d === P.today ? ' today' : '') + (d < P.today ? ' past' : '') + '">' +
+                '<button class="jp-agenda-h" data-act="cal-day" data-d="' + d + '">' + calBox(d, false) +
+                '<span><b>' + esc(fmt(d, { weekday: 'long', day: 'numeric', month: 'long' })) + '</b><small>' +
+                (n === 0 ? 'Today' : n < 0 ? plural(Math.abs(n), 'day', 'days') + ' ago' : 'In ' + plural(n, 'day', 'days')) + ' · ' + plural(byDay[d].length, 'thing', 'things') + '</small></span></button>' +
+                '<div class="jp-day-list">' + byDay[d].map(dayRow).join('') + '</div></div>';
+        }).join('') + '</div>';
     }
 
     /** Everything on one day, in a dialog over the month. */
@@ -1351,39 +1402,129 @@
     }
 
     /* ---- help ---- */
-    function renderGuide() {
-        var g = isStudent() ? [
-            ['Your journey', 'Seven stages you go through once, from the first consultation to flying out. The Dashboard shows where you are.'],
-            ['Your universities', 'Each university has its own checklist: requirements, documents, the application itself, and the offer and visa.'],
-            ['Ticking things off', 'You can update the tasks that are yours. When one is done, tick it and your counsellor is told.'],
-            ['Dates and notes', 'Your counsellor sets the target dates and leaves notes on tasks. Open any task to see what to prepare.'],
-            ['Late tasks', 'Anything past its date turns red. If a date no longer works, talk to your counsellor and they\'ll move it.'],
-            ['Deadlines and the Calendar', 'Deadlines keeps the universities\' dates and One Degree\'s own side by side, and your task dates below them. Calendar shows the same dates as a month, with every meeting booked.'],
-            ['Your team', 'Everyone working on your journey, and what each side has open. Meetings show a Join button when there is a link.'],
-            ['Edits on a document', 'Open any document to see every change made to it and which version it is on, so you always know whether you are reading the latest one.'],
-            ['Documents & essays', 'Upload your documents and write your SOP and essays under My documents. Send an essay for review and your counsellor\'s feedback appears on it.'],
-            ['Recent changes', 'Your dashboard shows what has changed on your plan, who changed it and when.'],
-            ['Your password', 'Change it any time from the menu. If you forget it, ask your counsellor to reset it.']
-        ] : [
-            ['Include or exclude', 'Every activity has an Include box. Untick what this student or university doesn\'t need; it greys out and drops out of every count.'],
-            ['Your own tasks and stages', 'Open a stage and choose “Add a task to this stage”, or use “Add a stage” for a whole new stage. Added tasks and stages can be edited or removed; ODA\'s own can only be switched off.'],
-            ['More than one of something', 'In Skill Enhancers, open an activity and choose “Add another” — a second internship or a third competition is listed under the first, with its own status, owner and date.'],
-            ['Recent changes', 'The dashboard lists every change made on this plan — what changed, who changed it and when — newest first. Lines added since your last visit are marked New.'],
-            ['Core journey', 'Seven one-time phases, from Discovery to Pre-Departure, completed once per student however many universities they apply to.'],
-            ['University blocks', 'One per university or programme. Switch on Interview and Portfolio only where required, and visa steps once a seat is confirmed.'],
-            ['Pre-filled guidance', 'Activity, description, owner and document checklist are ODA\'s standard content. Change the owner only when a case differs.'],
-            ['Admin password', 'Every student login has an admin password on the Student login page. It always signs in to that student\'s portal, even after they change their own password. Each use is noted on the lead timeline.'],
-            ['The student\'s login', 'Created when the planner is started. The student sees what is switched on and updates the tasks they own; each update lands on the lead timeline.'],
-            ['Documents & essays', 'Everything the student uploads or writes is under Documents. Open an essay to approve it or send it back with feedback; uploads and essays sent for review land on the lead timeline.'],
-            ['University requirements', 'The top of each university block records what it asks for — tests, documents, entry requirements and the date it closes. The closing date also shows in Deadlines and on the Calendar.'],
-            ['Deadlines and meetings', 'Deadlines holds the universities\' dates and ODA\'s own separately. Calendar shows everything as a month. ' + (G().configured
-                ? 'Connect your Google account once (on the Calendar page, above Meetings) and every Google Meet meeting gets a real room in your own Google Calendar, with nobody invited by Google — the planner emails the link itself. The connection renews itself; if Google ever ends it, the Calendar page says so and offers Reconnect.'
-                : 'For a Google Meet meeting, create the room in Google Meet and paste its link into the meeting; everyone listed is emailed it.')],
-            ['The team on a file', 'Name the counsellor, specialist, supervisor, content writer and anyone external. Type a designation of your own and it joins the dropdown for this student.'],
-            ['Document edits', 'Every document keeps its own history and a version number. The planner records drafts, reviews and approvals itself; use “Log an edit” for a change made outside it. The student sees the history.'],
-            ['Progress', 'Counted, never a percentage: Completed against Included minus Not Applicable. Dates do the rest of the work.']
+    /*
+     * Help, as tabs: one per part of the planner, each a short numbered
+     * walk-through and a few things worth knowing. **Bold** in a step marks
+     * the button or word to look for on screen.
+     */
+    function helpTopics() {
+        var meetHow = G().configured
+            ? 'Pick how it happens. **Google Meet** makes a real room in your Google account once you have connected Google on the Calendar page; otherwise paste a link. **Phone call** asks for the number; **In person** asks for a contact number.'
+            : 'Pick how it happens. For **Google Meet**, create the room in Google Meet (the **Open Google Meet** link opens it) and paste its link in. **Phone call** asks for the number; **In person** asks for a contact number.';
+        if (isStudent()) return [
+            { key: 'start', title: 'Getting started', go: 'dashboard', intro: 'This is your plan for studying abroad. Your counsellor keeps it up to date, and you tick off the tasks that are yours.', steps: [
+                'Sign in with your email and the temporary password your counsellor gave you, then choose a password of your own.',
+                'Start on the **Dashboard**: it shows the stage you are on, your next steps and the dates coming up.',
+                'Open **My journey** to see every stage, in order, and what is in each.',
+                'Check **Recent changes** on the Dashboard to see what has moved since you last looked, and who moved it.'
+            ], tips: ['The page keeps itself up to date while it is open. The round arrow at the top right refreshes it straight away.'] },
+            { key: 'tasks', title: 'Your tasks', go: 'journey', intro: 'Some tasks are yours, some are your counsellor\'s. You can update yours.', steps: [
+                'Find a task that is yours: it has a status you can change.',
+                'Choose **In Progress** when you start it and **Completed** when it is done. Your counsellor is told straight away.',
+                'Open a task to read what to do, which documents it needs, and any note your counsellor left.',
+                'Anything past its date turns red. If a date no longer works, tell your counsellor and they will move it.'
+            ], tips: ['Tasks owned by your counsellor or the university show their status, but only they can change it.', 'Doing more than one internship or competition? Each one is listed separately under Skill Enhancers.'] },
+            { key: 'unis', title: 'Universities', go: 'universities', intro: 'Each university you apply to has its own checklist.', steps: [
+                'Open **Universities** and choose a university from the cards at the top.',
+                'The top of its block shows what it asks for: tests, documents, entry requirements and the date applications close.',
+                'Work down its checklist with your counsellor: requirements, documents, the application, then the offer and visa.'
+            ] },
+            { key: 'docs', title: 'Documents & essays', go: 'documents', intro: 'Everything you upload or write for your applications lives here.', steps: [
+                'Go to **My documents** and choose **Upload a file**. Pick what it is — Passport / ID, a transcript, a test score, and so on.',
+                'For the **Student Declaration Form Sign-off** task, open the task and use its **Upload the signed form** button.',
+                'To write your SOP or an essay, choose **Write an essay**. Save the draft as often as you like.',
+                'When it is ready, **send it for review**. Your counsellor approves it or sends it back with feedback, which shows on the essay.',
+                'Each document shows its history and version number, so you always know you are reading the latest one.'
+            ], tips: ['Files are private: only you and your One Degree team can open them.'] },
+            { key: 'dates', title: 'Dates & meetings', go: 'calendar', intro: 'Every date that matters, and every meeting booked with you.', steps: [
+                '**Deadlines** lists the universities\' dates and One Degree\'s own, side by side.',
+                'The **Calendar** shows meetings, deadlines and task dates as a month, or as a list with **Agenda**. Hover over (or tap) an entry for its details.',
+                'A meeting shows how to join: a link, a phone number or a place.',
+                'You are emailed when a meeting is booked, again the day before, and on the morning of the meeting.'
+            ] },
+            { key: 'account', title: 'Your account', go: 'owners', intro: 'Your login and the people working with you.', steps: [
+                'Change your password any time from the menu at the top right.',
+                'Forgotten it? Ask your counsellor to reset it — they will give you a new temporary one.',
+                '**My team** shows everyone working on your journey, and what each side has open.'
+            ] }
         ];
-        return '<div class="jp-guide">' + g.map(function (x) { return '<div><h4>' + esc(x[0]) + '</h4><p>' + esc(x[1]) + '</p></div>'; }).join('') + '</div>';
+        return [
+            { key: 'start', title: 'Getting started', go: 'dashboard', intro: 'One planner per enrolled student. Every change saves as you make it, and the student sees their side straight away.', steps: [
+                'In the CRM, open the student, go to the **Student** tab and choose **Start journey planner**. That builds the plan and the student\'s login.',
+                'The temporary password is shown once. Send it to the student with the sign-in link from the **Student login** page.',
+                'Use **Edit plan details** on the Dashboard to set the level, intake and focus.',
+                'Go through the **Core journey** and untick anything this student does not need.',
+                'Add the universities they are applying to, then set target dates on the tasks that matter now.'
+            ], tips: ['The page updates itself every few seconds when someone else changes the plan; the round arrow at the top right refreshes it now.', 'Progress is a count — done out of included — never a percentage.'] },
+            { key: 'journey', title: 'Core journey', go: 'journey', intro: 'Seven stages done once per student, however many universities they apply to.', steps: [
+                'Open a stage to see its tasks. The box on the left includes a task for this student; untick it and it drops out of every count and the student\'s view.',
+                'Set each task\'s **status**, **owner** and **target date** in its row. Open the row for **notes** (the student reads these) and the completion date.',
+                'An owner can be a role or a person named on the **Team** page, so a task can go to the content writer by name.',
+                'Need something the template does not have? **Add a task to this stage**, or **Add a stage** for a whole new one.',
+                'In **Skill Enhancers**, open an activity and choose **Add another** for a second internship or a third competition. Each has its own status and date and sits under the first.',
+                '**Student Declaration Form Sign-off** (stage 2, after the shortlist sign-off) waits for the signed form. When it is uploaded the task moves to **Submitted**; mark it **Completed** once you have checked it.'
+            ], tips: ['ODA\'s own tasks can only be switched off; tasks and stages you add can be edited or removed.', 'The filters at the top show one owner or one status at a time.'] },
+            { key: 'unis', title: 'Universities', go: 'universities', intro: 'One block per university or programme, each with the same checklist.', steps: [
+                'Choose **Add university** and enter the university, country, programme and fit (Reach, Match or Safe).',
+                'Choose **Edit** on the requirements at the top of the block for the tests and documents it asks for, its entry requirements and the closing date. The closing date shows in Deadlines and on the Calendar.',
+                'Work down the checklist: fit and requirements, documents, the application, then the offer and visa.',
+                'Switch on Interview and Portfolio only where the university asks for them.',
+                'Record the offer type when the offer arrives — the Offer received task ticks itself.'
+            ] },
+            { key: 'docs', title: 'Documents & essays', go: 'documents', intro: 'Everything the student uploads or writes, and everything you add for them.', steps: [
+                '**Upload a file** takes PDF, Word or JPG/PNG up to 10 MB. Choose what it is and, if it is for one university, which.',
+                '**Write an essay** starts a draft. The student can write one too and send it for review.',
+                'Open an essay sent for review to **Approve** it, or send it back with feedback that shows on the essay.',
+                'Every document keeps a history and a version number. Use **Log an edit** for a change made outside the planner.'
+            ], tips: ['Files are private to people signed in to this plan.', 'A signed declaration form uploaded here moves the declaration task to Submitted.'] },
+            { key: 'calendar', title: 'Deadlines & calendar', go: 'calendar', intro: 'Every date on the plan in one place.', steps: [
+                '**Deadlines** keeps the universities\' dates and ODA\'s own apart. Add one of ours with **Add a date**, or with **Deadline** on the Calendar.',
+                'The **Calendar** shows meetings, deadlines and task dates together. Switch between **Month** and **Agenda**, and use the chips to show only some kinds.',
+                'Colour says where each thing stands: late, today, this week, later, done. Finished tasks stay on the calendar in green; **Hide finished** clears them.',
+                'Hover over an entry for its details and click it to open it. Click a day to see everything on it, or to put a meeting or deadline on it.'
+            ] },
+            { key: 'meetings', title: 'Meetings & emails', go: 'calendar', intro: 'Book calls with the student and their family; the planner sends the emails.', steps: [
+                'Choose **Schedule a meeting** (on the Calendar, or from a day). Give it a title, date, time and length.',
+                meetHow,
+                'Say who is coming and list the email addresses to send it to — start with the student\'s.',
+                'Save. Everyone listed is emailed the joining details straight away.',
+                'Reminders go by themselves at 4:00 am India time, the day before and on the day, to everyone listed and the student\'s counsellor. Untick **Remind them** to switch them off for one meeting.',
+                'Afterwards, **Mark done**. Move the date and fresh reminders follow it; **Send again** re-sends the details now.'
+            ], tips: ['These are plain emails with the details — not calendar invitations.'] },
+            { key: 'team', title: 'Team & changes', go: 'owners', intro: 'Who works on the file, and everything they change.', steps: [
+                'On **Team**, add everyone working on the file with their designation: counsellor, specialist, supervisor, content writer, test-prep tutor, external expert…',
+                'Not in the list? Choose **+ Add a designation…** and it joins the list for this student.',
+                'Everyone you add appears in every **Owner** dropdown, so tasks can be handed to them by name.',
+                'The Dashboard\'s **Recent changes** lists every change: what, who and when. Lines since your last visit are marked **New**.'
+            ], tips: ['The student sees names and designations, never contact details.', 'Team edits, login changes and stage edits stay off the student\'s list of changes.'] },
+            { key: 'login', title: 'Student login', go: 'login', intro: 'How the student signs in, and what you can do about it.', steps: [
+                'The student signs in at the address on the **Student login** page with their email and temporary password, then chooses their own.',
+                'Forgotten password? **Reset password** issues a new temporary one, shown once.',
+                'The **admin password** always opens the student\'s portal, even after they change theirs. Each use is noted on the lead timeline.',
+                '**Switch off login** stops them signing in without touching the plan.'
+            ] }
+        ];
+    }
+    function helpText(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+    function renderGuide() {
+        var topics = helpTopics();
+        var at = Math.max(0, topics.findIndex(function (t) { return t.key === UI.helpTab; }));
+        var cur = topics[at], prev = topics[at - 1], next = topics[at + 1];
+        var goView = views().find(function (v) { return v.key === cur.go; });
+        var top = isC() && P.endpoints.guide
+            ? '<div class="jp-help-top"><p>Step-by-step help for each part of the planner. The team guide covers the whole CRM, and this planner in more depth.</p><a class="jp-btn sm" href="' + esc(P.endpoints.guide) + '" target="_blank" rel="noopener">Open the full team guide</a></div>'
+            : '';
+        var tabs = '<div class="jp-help-tabs" role="tablist" aria-label="Help topics">' + topics.map(function (t, i) {
+            return '<button role="tab" data-act="help-tab" data-v="' + t.key + '" class="' + (t === cur ? 'on' : '') + '" aria-selected="' + (t === cur) + '"><span class="n num">' + (i + 1) + '</span>' + esc(t.title) + '</button>';
+        }).join('') + '</div>';
+        var panel = '<section class="jp-card jp-help" role="tabpanel"><div class="jp-card-h"><div><h2>' + esc(cur.title) + '</h2><p>' + esc(cur.intro) + '</p></div>' +
+            (goView && cur.go !== 'help' ? '<a class="jp-btn ghost sm" href="#' + cur.go + '">Go to ' + esc(label(goView)) + '</a>' : '') + '</div>' +
+            '<ol class="jp-steps">' + cur.steps.map(function (st) { return '<li>' + helpText(st) + '</li>'; }).join('') + '</ol>' +
+            (cur.tips ? '<div class="jp-help-tips">' + cur.tips.map(function (t) { return '<p><span class="tag">Good to know</span>' + helpText(t) + '</p>'; }).join('') + '</div>' : '') +
+            '<div class="jp-help-nav">' +
+            (prev ? '<button class="jp-btn ghost sm" data-act="help-tab" data-v="' + prev.key + '">‹ ' + esc(prev.title) + '</button>' : '<span></span>') +
+            (next ? '<button class="jp-btn sm" data-act="help-tab" data-v="' + next.key + '">' + esc(next.title) + ' ›</button>' : '') + '</div></section>';
+        return top + tabs + panel;
     }
 
     /* ------------------------------------------------------------ refreshing */
@@ -1637,6 +1778,13 @@
                 UI.cal.y = t0.getFullYear(); UI.cal.m = t0.getMonth(); UI.cal.sel = P.today; render(); return;
             }
             case 'cal-day': UI.cal.sel = el.dataset.d; render(); openDay(el.dataset.d); return;
+            case 'cal-view': UI.cal.view = el.dataset.v; render(); return;
+            case 'cal-kind': {
+                UI.cal.kinds = UI.cal.kinds || {};
+                UI.cal.kinds[el.dataset.v] = UI.cal.kinds[el.dataset.v] === false;
+                render(); return;
+            }
+            case 'help-tab': UI.helpTab = el.dataset.v; render(); window.scrollTo(0, 0); return;
             case 'doc-history': {
                 var hid = parseInt(el.dataset.id, 10);
                 UI.openDoc = UI.openDoc === hid ? null : hid; render(); return;
@@ -2220,6 +2368,7 @@
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }
         if (el.id === 'f-status') { UI.status = el.value; render(); return; }
         if (el.id === 'f-excl') { UI.showExcluded = el.checked; render(); return; }
+        if (el.id === 'cal-hide-done') { UI.cal.hideDone = el.checked; render(); return; }
         if (el.id === 'es-cat' || el.id === 'es-uni') { UI.essayDirty = true; var st = document.getElementById('es-state'); if (st) st.textContent = 'Unsaved changes'; return; }
         if (el.dataset.uf && isC()) {
             var id = parseInt(el.dataset.u, 10), body = {}; body[el.dataset.uf] = el.value || null;

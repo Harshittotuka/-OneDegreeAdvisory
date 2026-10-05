@@ -980,3 +980,68 @@ body.jp-mode-student .jp-block-h { background: linear-gradient(135deg, var(--pur
 .jp-tip-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .jp-tip-list li { display: flex; align-items: center; gap: 8px; }
 .jp-tip-list .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Calendar: toolbar, filters, month and agenda ---------- */
+.jp-cal-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.jp-cal-title { display: flex; align-items: center; gap: 8px; }
+.jp-cal-title h2 { font-size: 1.35rem; font-weight: 800; min-width: 10ch; text-align: center; }
+.jp-cal-title h2 span { color: var(--muted); font-weight: 600; }
+.jp-cal-arrow { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.jp-cal-arrow:hover { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-ink); }
+.jp-cal-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.jp-seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 3px; }
+.jp-seg button { border: 0; background: transparent; padding: 5px 12px; border-radius: 7px; font: inherit; font-size: 0.8rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+.jp-seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+.jp-cal-filters { display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.jp-cal-filters .lbl { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.jp-cal-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 0.78rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+.jp-cal-chip b { font-weight: 800; color: var(--ink-2); }
+.jp-cal-chip.on { border-color: var(--blue); color: var(--ink); background: var(--blue-soft); }
+.jp-cal-chip:not(.on) { text-decoration: line-through; opacity: 0.7; }
+.jp-cal-done { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; color: var(--ink-2); margin-left: 4px; }
+.jp-month .dow.wkend { color: var(--pink-ink); }
+.jp-day.wkend:not(.other) { background: var(--surface-2); }
+.jp-day.past:not(.today) .dn { opacity: 0.6; }
+.jp-day .dn { display: flex; align-items: center; gap: 6px; }
+.jp-day .dn .tdy { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; background: var(--gold); color: #fff; border-radius: 5px; padding: 1px 5px; }
+.jp-day .ev .tm { font-weight: 800; opacity: 0.85; flex: none; }
+.jp-day .ev .lb { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.jp-day .more { cursor: default; }
+.jp-agenda { display: flex; flex-direction: column; gap: 10px; }
+.jp-agenda-day { border: 1px solid var(--line); border-radius: 14px; padding: 6px 14px 4px; background: var(--surface); }
+.jp-agenda-day.today { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.jp-agenda-day.past { opacity: 0.75; }
+.jp-agenda-h { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: transparent; padding: 8px 0; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.jp-agenda-h b { display: block; font-size: 0.95rem; }
+.jp-agenda-h small { display: block; font-size: 0.78rem; color: var(--muted); }
+.jp-agenda .jp-day-list { margin: 0; border-top: 1px solid var(--line); }
+@media (max-width: 640px) {
+    .jp-cal-title h2 { font-size: 1.1rem; min-width: 0; }
+    .jp-cal-bar { flex-direction: column; align-items: stretch; }
+    .jp-cal-tools { justify-content: space-between; }
+    .jp-day .ev .tm { display: none; }
+}
+
+/* ---------- Help: topic tabs and numbered steps ---------- */
+.jp-help-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding: 14px 18px; border-radius: 16px; background: var(--blue-soft); }
+.jp-help-top p { font-size: 0.9rem; color: var(--ink-2); max-width: 62ch; }
+.jp-help-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.jp-help-tabs button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 12px; padding: 8px 14px; font: inherit; font-size: 0.86rem; font-weight: 700; color: var(--ink-2); cursor: pointer; }
+.jp-help-tabs button .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; background: var(--surface-2); color: var(--muted); }
+.jp-help-tabs button:hover { border-color: var(--blue); }
+.jp-help-tabs button.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.jp-help-tabs button.on .n { background: rgba(255, 255, 255, 0.25); color: #fff; }
+.jp-steps { counter-reset: step; list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 12px; max-width: 74ch; }
+.jp-steps li { counter-increment: step; position: relative; padding: 2px 0 2px 46px; font-size: 0.94rem; line-height: 1.6; color: var(--ink); }
+.jp-steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue-ink); font-weight: 800; font-size: 0.86rem; }
+.jp-steps li b { color: var(--blue-ink); }
+.jp-help-tips { display: grid; gap: 8px; margin-top: 18px; }
+.jp-help-tips p { font-size: 0.88rem; color: var(--ink-2); padding: 10px 14px; border-radius: 12px; background: var(--green-soft); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.jp-help-tips .tag { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-ink); flex: none; }
+.jp-help-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+@media (max-width: 640px) {
+    .jp-help-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+    .jp-help-tabs button { flex: none; }
+    .jp-steps li { padding-left: 40px; font-size: 0.9rem; }
+    .jp-steps li::before { width: 28px; height: 28px; }
+}

@@ -22,6 +22,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class JourneyPlannerTest extends TestCase
@@ -1744,5 +1745,37 @@ class JourneyPlannerTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame('0 4 * * *', $event->expression);
         $this->assertSame('Asia/Kolkata', $event->timezone);
+    }
+
+    /* ------------------------------------------------------------ the team guide */
+
+    public function test_the_team_guide_opens_in_the_crm_for_the_team_only(): void
+    {
+        $counsellor = $this->user();
+        $html = $this->as($counsellor)->get(route('crm.guide'))->assertOk()
+            ->assertHeader('X-Robots-Tag', 'noindex, nofollow')->getContent();
+        $this->assertStringContainsString('Using the One Degree CRM', $html);
+        foreach (['id="planner"', 'id="planner-meetings"', 'Student Declaration Form Sign-off', '4:00 am IST', 'Add another'] as $part) {
+            $this->assertStringContainsString($part, $html);
+        }
+
+        // Linked from the sidebar and from the planner's help.
+        $this->as($counsellor)->get(route('crm.dashboard'))->assertOk()->assertSee(route('crm.guide'), false);
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $this->assertSame(route('crm.guide').'#planner', $this->payloadFrom($this->as($counsellor)->get(route('crm.journey.show', $lead)))['endpoints']['guide']);
+
+        // Not for a referral partner, and not without signing in.
+        $this->as($this->user('partner'))->get(route('crm.guide'))->assertForbidden();
+        $this->flushSession();
+        $this->get(route('crm.guide'))->assertRedirect(route('crm.login'));
+    }
+
+    /** The planner's embedded payload, read back out of the page. */
+    private function payloadFrom(TestResponse $response): array
+    {
+        preg_match('#<script type="application/json" id="jp-payload">(.*?)</script>#s', $response->assertOk()->getContent(), $m);
+
+        return json_decode(html_entity_decode($m[1] ?? '{}'), true) ?? [];
     }
 }

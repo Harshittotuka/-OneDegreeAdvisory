@@ -291,6 +291,8 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::post('documents/{document}/edits', 'storeDocumentEdit')->whereNumber('document')->middleware('throttle:60,1')->name('documents.edits.store');
             Route::get('documents/{document}/file', 'downloadDocument')->whereNumber('document')->name('documents.file');
         });
+        // The team guide: the whole CRM and the journey planner, explained.
+        Route::get('guide', [\App\Http\Controllers\Crm\CrmGuideController::class, 'show'])->name('guide');
         // A counsellor's own Google account, connected once, so Google Meet
         // meetings on the planner get a real room.
         Route::get('google/connect', [\App\Http\Controllers\Crm\CrmGoogleController::class, 'connect'])->middleware('throttle:10,1')->name('google.connect');

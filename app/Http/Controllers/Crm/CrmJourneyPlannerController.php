@@ -83,6 +83,7 @@ class CrmJourneyPlannerController extends Controller
             'meetingNotify' => route('crm.journey.meetings.notify', [$lead, '__KEY__']),
             'meetRoom' => route('crm.journey.meet-room.store', $lead),
             'meetRoomRelease' => route('crm.journey.meet-room.release', $lead),
+            'guide' => route('crm.guide').'#planner',
             'pulse' => route('crm.journey.pulse', $lead),
             'back' => $back,
         ] : ['pulse' => route('crm.journey.pulse', $lead), 'back' => $back], $mode === 'counsellor' ? session('journey_credentials') : null);

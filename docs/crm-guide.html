@@ -123,6 +123,7 @@
     font-size: 1.1rem; box-shadow: var(--shadow); line-height: 1;
   }
   .theme-toggle:hover { border-color: var(--accent); }
+  .back-link { display: inline-block; margin-left: 1rem; font-size: .88rem; font-weight: 600; }
 
   /* ---------- Layout ---------- */
   .shell {
@@ -321,13 +322,15 @@
   <div class="masthead-inner">
     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">🌗</button>
     <span class="brand"><span class="mark">◇</span> One Degree Advisory</span>
+    <a class="back-link" href="/crm">← Back to the CRM</a>
     <p class="eyebrow" style="margin-top:1.4rem">Team handbook</p>
     <h1>Using the One Degree CRM</h1>
-    <p class="lede">A plain-language guide to how leads reach us, how you work them, and how a student journey is tracked — from the first enquiry to a granted visa.</p>
+    <p class="lede">A plain-language guide to how leads reach us, how you work them, and how each student's journey is planned and tracked in the journey planner — from the first enquiry to flying out.</p>
     <div class="chips">
       <span class="chip">👥 For <b>counsellors</b> &amp; <b>super admins</b></span>
       <span class="chip">🔑 Sign in with a <b>one-time code</b></span>
       <span class="chip">🧭 Everything lives at <b>/crm</b></span>
+      <span class="chip">🎓 Students sign in at <b>/student</b></span>
     </div>
   </div>
 </header>
@@ -350,6 +353,16 @@
         <span class="toc-label">Students</span>
         <a href="#convert">Becoming a student</a>
         <a href="#journey">The student journey</a>
+        <span class="toc-label">Journey planner</span>
+        <a href="#planner">What the planner is</a>
+        <a href="#planner-start">Starting a planner</a>
+        <a href="#planner-journey">The core journey</a>
+        <a href="#planner-unis">Universities</a>
+        <a href="#planner-docs">Documents &amp; essays</a>
+        <a href="#planner-dates">Deadlines &amp; calendar</a>
+        <a href="#planner-meetings">Meetings &amp; emails</a>
+        <a href="#planner-team">Team &amp; recent changes</a>
+        <a href="#planner-student">What the student sees</a>
         <span class="toc-label">Admin tools</span>
         <a href="#enrollments">Website payments</a>
         <a href="#subscribers">Newsletter subscribers</a>
@@ -379,6 +392,7 @@
           <p>Sees every lead across the whole team, assigns owners, manages the team, and unlocks extra areas: newsletter subscribers, the audit log, and payment management.</p>
         </div>
       </div>
+      <p>A third kind of account, <b>Referral partner</b>, is for partner companies: they see only the leads that name them as partner — read-only unless a super admin gives them edit access — and can open those students' journey planners read-only.</p>
       <div class="note tip">
         <span class="tag">In short</span>
         <p>A lead is a person we might help. A student is a lead who enrolled. The CRM keeps both, with everything that happened in between.</p>
@@ -433,6 +447,7 @@
             <tr><td>Convert a lead to a student</td><td class="tick">✓ (own leads)</td><td class="tick">✓</td></tr>
             <tr><td>Choose who owns a lead</td><td class="cross">— (auto-assigned to self)</td><td class="tick">✓ assigns anyone</td></tr>
             <tr><td>Import leads from a spreadsheet</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Journey planner</td><td class="tick">✓ (own students)</td><td class="tick">✓ (all)</td></tr>
             <tr><td>PDF shortlisting tool</td><td class="tick">✓</td><td class="tick">✓</td></tr>
             <tr><td>Newsletter subscribers</td><td class="cross">Hidden</td><td class="tick">✓</td></tr>
             <tr><td>Manage payments / enrolments</td><td>View own only</td><td class="tick">✓ edit &amp; remove</td></tr>
@@ -696,11 +711,206 @@
       <p class="caption">The eight stages of the student journey.</p>
 
       <p>Two extra states sit outside the straight line and are flagged as <b>needs attention</b>: <span class="pill t-bad">Visa rejected</span> and <span class="pill t-muted">Student dropped</span>. Each stage shows guidance on what to do next, so the whole team knows the plan.</p>
+      <div class="note tip">
+        <span class="tag">In detail</span>
+        <p>These stages are the headline. The day-to-day plan — every task, university, document, deadline and meeting — lives in the student's <a href="#planner">journey planner</a>, started from the same Student tab.</p>
+      </div>
     </section>
+
+    <!-- ============================== JOURNEY PLANNER ============================== -->
+    <section id="planner">
+      <h2><span class="num">11</span> The journey planner</h2>
+      <p>Once a lead is an enrolled student, their whole admission — from the first consultation to flying out — is planned and tracked in the <b>journey planner</b>: one page per student, built from ODA's Overseas Admission Journey Planner. You and the team work it from the CRM; the student sees their own side of the same plan in the <b>student portal</b>, and ticks off the tasks that are theirs.</p>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="flow-node plain">Start the planner<small>Student tab</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">Core journey<small>7 stages, once per student</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">University blocks<small>one per application</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">Documents &amp; essays</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node hub">Offer, visa &amp; departure</div>
+        </div>
+        <div class="offramp"><span>Alongside the whole way:</span><span class="pill t-new">Deadlines</span><span class="pill t-new">Calendar &amp; meetings</span><span class="pill t-accent">Team</span><span class="pill t-good">Recent changes</span></div>
+      </div>
+      <p class="caption">How a student's plan is laid out.</p>
+
+      <h3>The pages inside a planner</h3>
+      <div class="grid cols-3">
+        <div class="card feature"><h4><span class="ic">🏠</span> Dashboard</h4><p>Where the student stands: the current stage, what needs doing next, the dates coming up, each university's progress, and <b>Recent changes</b>.</p></div>
+        <div class="card feature"><h4><span class="ic">🧭</span> Core journey</h4><p>The seven one-time stages, each a checklist of tasks with an owner, status and date.</p></div>
+        <div class="card feature"><h4><span class="ic">🎓</span> Universities</h4><p>One block per university or programme: its requirements, then the same checklist from fit to visa.</p></div>
+        <div class="card feature"><h4><span class="ic">📁</span> Documents</h4><p>Uploaded files and essays, with review, feedback and a full edit history.</p></div>
+        <div class="card feature"><h4><span class="ic">⏰</span> Deadlines &amp; Calendar</h4><p>The universities' dates and ODA's own, and a calendar of every meeting, deadline and task date.</p></div>
+        <div class="card feature"><h4><span class="ic">👥</span> Team &amp; Student login</h4><p>Who is working on the file, and the student's sign-in.</p></div>
+      </div>
+
+      <div class="note tip">
+        <span class="tag">Always current</span>
+        <p>The planner checks every few seconds whether anyone has changed the plan and updates itself — it waits while you are typing, so nothing you are writing is lost. The round arrow at the top right refreshes it at once. Progress is always a count (done out of included), never a percentage.</p>
+      </div>
+      <p>The <b>Journey planners</b> page in the CRM sidebar lists every student whose planner has started, as cards, with tiles for students with late tasks, essays waiting for review, students who have not signed in yet, and plans that are complete.</p>
+    </section>
+
+    <section id="planner-start">
+      <h2><span class="num">12</span> Starting a planner &amp; the student's login</h2>
+      <ol class="steps">
+        <li><b>Open the student and go to the Student tab.</b> The lead has to be an enrolled student with an email address — that email becomes their sign-in, and two students can't share one.</li>
+        <li><b>Choose Start journey planner.</b> The plan is built from ODA's template and the student's login is created.</li>
+        <li><b>Copy the temporary password.</b> It is shown once, at the top of the planner. Send it to the student with the sign-in link from the <b>Student login</b> page.</li>
+        <li><b>The student signs in and picks their own password.</b> From then on they see their plan in the student portal.</li>
+        <li><b>Set the basics.</b> Use <b>Edit plan details</b> on the Dashboard for the level, intake and focus.</li>
+      </ol>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>On the Student login page</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td>Reset password</td><td>Issues a new temporary password, shown once. The old one stops working at once.</td></tr>
+            <tr><td>Admin password</td><td>Always opens this student's portal — even after they change their own password — so you can see exactly what they see. Each use is noted on the lead timeline.</td></tr>
+            <tr><td>Switch off login</td><td>Stops the student signing in, without touching the plan. Switch it back on any time.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note watch">
+        <span class="tag">Who can see a planner</span>
+        <p>A super admin sees every planner; a counsellor sees the planners of their own students. A referral partner named on the lead can open it read-only. The student sees only their own.</p>
+      </div>
+    </section>
+
+    <section id="planner-journey">
+      <h2><span class="num">13</span> The core journey</h2>
+      <p>Seven stages, done once per student however many universities they apply to. For the student they are always numbered in order, counting only the stages switched on for them.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Stage</th><th>Usually</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">1</td><td>Discovery &amp; Profile Assessment</td><td>18–24 months before intake</td></tr>
+            <tr><td class="mono">2</td><td>Country &amp; Course Shortlisting — ends with the <b>Student Declaration Form Sign-off</b></td><td>16–20 months before intake</td></tr>
+            <tr><td class="mono">3</td><td>Skill Enhancers — internships, competitions, research, community work</td><td>Ongoing, ideally 18–6 months before</td></tr>
+            <tr><td class="mono">4</td><td>Standardised Tests &amp; Language Proficiency</td><td>12–16 months before intake</td></tr>
+            <tr><td class="mono">5</td><td>Financial Planning &amp; Documentation</td><td>6–9 months before intake</td></tr>
+            <tr><td class="mono">6</td><td>Accommodation Planning</td><td>3–5 months before intake</td></tr>
+            <tr><td class="mono">7</td><td>Pre-Departure Handoff</td><td>1–3 months before departure</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Working a task</h3>
+      <ul>
+        <li><b>Include box</b> (on the left): ticked means this student needs the task. Untick it and it greys out, drops out of every count, and the student no longer sees it.</li>
+        <li><b>Status</b>: Not Started, In Progress, Submitted, Completed or Not Applicable. The student can change the tasks they own; Not Applicable is the counsellor's call.</li>
+        <li><b>Owner</b>: a role (Student, Counsellor, University, Bank) or a person named on the Team page.</li>
+        <li><b>Target date</b>, and — when you open the row — <b>notes</b> the student reads and the <b>completion date</b>.</li>
+      </ul>
+      <div class="grid cols-2">
+        <div class="card feature"><h4><span class="ic">➕</span> Your own tasks and stages</h4><p><b>Add a task to this stage</b> for something the template doesn't have, or <b>Add a stage</b> for a whole new one. What you add can be edited or removed; ODA's own tasks can only be switched off.</p></div>
+        <div class="card feature"><h4><span class="ic">🔁</span> More than one of something</h4><p>In Skill Enhancers, open an activity and choose <b>Add another</b> — a second internship, a third competition. Each is its own task, listed under the first, with its own status, owner and date.</p></div>
+        <div class="card feature"><h4><span class="ic">✍️</span> Declaration form</h4><p>The <b>Student Declaration Form Sign-off</b> has an <b>Upload the signed form</b> button. Uploading it moves the task to <b>Submitted</b>; the counsellor marks it <b>Completed</b> once checked.</p></div>
+        <div class="card feature"><h4><span class="ic">🔎</span> Filters</h4><p>Show one owner's tasks, or one status — "Still to do" hides everything finished.</p></div>
+      </div>
+    </section>
+
+    <section id="planner-unis">
+      <h2><span class="num">14</span> Universities</h2>
+      <ol class="steps">
+        <li><b>Add university.</b> The university, country, programme, and fit — Reach, Match or Safe.</li>
+        <li><b>Fill in the requirements</b> (the <b>Edit</b> button at the top of the block). The tests and documents it asks for, its entry requirements, and the date applications close. The closing date appears in Deadlines and on the Calendar.</li>
+        <li><b>Work the checklist.</b> Five groups: Fit &amp; requirements, Documents, Application, Interview &amp; portfolio, Offer &amp; visa. Switch on interview and portfolio only where the university asks for them.</li>
+        <li><b>Record the offer.</b> Unconditional, Conditional, Waitlist or Rejected — the Offer received task ticks itself.</li>
+      </ol>
+    </section>
+
+    <section id="planner-docs">
+      <h2><span class="num">15</span> Documents &amp; essays</h2>
+      <div class="grid cols-2">
+        <div class="card feature"><h4><span class="ic">📎</span> Files</h4><p><b>Upload a file</b>: PDF, Word, JPG or PNG up to 10 MB, filed under a type (transcript, test score, passport, declaration form…) and, if it is for one university, that university. Files are private — only people signed in to the plan can open them.</p></div>
+        <div class="card feature"><h4><span class="ic">📝</span> Essays</h4><p><b>Write an essay</b> for an SOP, personal statement or university essay. The student drafts and <b>sends it for review</b>; you <b>approve</b> it or send it back with feedback that shows on the essay.</p></div>
+      </div>
+      <div class="note tip">
+        <span class="tag">History</span>
+        <p>Every document keeps a version number and a history of who changed what. The planner records drafts, reviews and approvals itself; use <b>Log an edit</b> for a change made outside it. The student sees the same history.</p>
+      </div>
+    </section>
+
+    <section id="planner-dates">
+      <h2><span class="num">16</span> Deadlines &amp; the calendar</h2>
+      <p><b>Deadlines</b> keeps the universities' dates and ODA's own apart; task dates sit below them. The <b>Calendar</b> brings everything together.</p>
+      <ul>
+        <li><b>Month</b> or <b>Agenda</b>: a grid, or the same month as a list of days (the default on a phone).</li>
+        <li><b>Chips</b> show or hide each kind — meetings, university deadlines, our deadlines, task dates — with how many fall this month. <b>Hide finished</b> clears completed things.</li>
+        <li><b>Hover</b> over an entry for its details: a task's stage, status, owner, dates and notes; a meeting's time and how to join. <b>Click</b> it to open it.</li>
+        <li><b>Click a day</b> to see everything on it, or to put a meeting or deadline on it.</li>
+      </ul>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Colour</th><th>Means</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill t-bad">Late</span></td><td>Past its date and not done.</td></tr>
+            <tr><td><span class="pill t-warm">Today</span> <span class="pill t-warm">This week</span></td><td>Due today, or within seven days.</td></tr>
+            <tr><td><span class="pill t-new">Later</span></td><td>Further off.</td></tr>
+            <tr><td><span class="pill t-good">Done</span></td><td>Completed — finished tasks stay on the calendar in green.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="planner-meetings">
+      <h2><span class="num">17</span> Meetings &amp; their emails</h2>
+      <ol class="steps">
+        <li><b>Schedule a meeting</b> — on the Calendar, or from a day. Title, date, time and length.</li>
+        <li><b>Choose how.</b> Google Meet: create the room in Google Meet and paste its link (the dialog has an <b>Open Google Meet</b> link and a Copy button). Phone call: the number. In person: a contact number.</li>
+        <li><b>Who is coming, and who to email.</b> List the addresses — start with the student's.</li>
+        <li><b>Save.</b> Everyone listed is emailed the joining details straight away.</li>
+      </ol>
+      <div class="diagram">
+        <div class="flow">
+          <div class="flow-node">Booked<small>details emailed at once</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">Day before<small>reminder, 4:00 am IST</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">On the day<small>reminder, 4:00 am IST</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node hub">Mark done</div>
+        </div>
+      </div>
+      <p class="caption">The emails one meeting sends.</p>
+      <ul>
+        <li>Reminders go to everyone listed <b>and the student's counsellor</b>. Untick <b>Remind them</b> on a meeting to switch them off for it.</li>
+        <li>Move the date and the reminders follow it. <b>Send again</b> re-sends the details now. Cancelled and done meetings send nothing more.</li>
+        <li>These are plain emails with the details — not calendar invitations. Each person gets their own copy.</li>
+      </ul>
+    </section>
+
+    <section id="planner-team">
+      <h2><span class="num">18</span> The team &amp; recent changes</h2>
+      <p>On <b>Team</b>, name everyone working on the file with their designation — counsellor, specialist / mentor, external expert, supervisor, content writer, test prep tutor, or one of your own via <b>+ Add a designation…</b>. Everyone named joins every <b>Owner</b> dropdown, so a task can go to a person, not just a role. The student sees names and designations, never contact details.</p>
+      <div class="mock" aria-label="Example of Recent changes">
+        <div class="stream">
+          <div class="act"><div class="m upd">↻</div><div class="body"><div class="top"><strong>Gap analysis · Core journey</strong><span class="who">Priya Sharma · 5 Oct, 3:12 PM</span></div><p>Status: Completed · Target date: 3 Nov 2026</p></div></div>
+          <div class="act"><div class="m conv">⇧</div><div class="body"><div class="top"><strong>Passport · Documents</strong><span class="who">Ananya Rao (student) · 5 Oct, 11:40 AM</span></div><p>Uploaded · Passport / ID</p></div></div>
+        </div>
+      </div>
+      <p class="caption">Recent changes on the Dashboard (example).</p>
+      <p><b>Recent changes</b> lists every change on the plan, by the team or the student — what, who and when, newest first. A burst of edits to one thing reads as one line, and lines since your last visit are marked <b>New</b>. The student sees the same list, minus the team's own business: the team list, logins and passwords, stage edits, and tasks switched off for them.</p>
+    </section>
+
+    <section id="planner-student">
+      <h2><span class="num">19</span> What the student sees</h2>
+      <div class="grid cols-2">
+        <div class="card feature"><h4><span class="ic">✅</span> Their tasks</h4><p>Every stage and university switched on for them, in order. They change the status of tasks they own, and you are told.</p></div>
+        <div class="card feature"><h4><span class="ic">📁</span> Their documents</h4><p>They upload files, write and send essays for review, and read your feedback.</p></div>
+        <div class="card feature"><h4><span class="ic">📅</span> Dates &amp; meetings</h4><p>Deadlines, the calendar, and every meeting with how to join — plus the booking email and both reminders.</p></div>
+        <div class="card feature"><h4><span class="ic">❓</span> Help</h4><p>Their own Help page, topic by topic, with numbered steps. Yours has the same, for the team.</p></div>
+      </div>
+    </section>
+
 
     <!-- ENROLLMENTS -->
     <section id="enrollments">
-      <h2><span class="num">11</span> Website payments</h2>
+      <h2><span class="num">20</span> Website payments</h2>
       <p>The <b>Website payments</b> area lists online course payments — who paid, for which program, how much, and the payment's status. Counsellors see payments for their own leads; super admins see them all and can edit or remove entries.</p>
       <div class="table-wrap">
         <table>
@@ -718,13 +928,13 @@
 
     <!-- SUBSCRIBERS -->
     <section id="subscribers">
-      <h2><span class="num">12</span> Newsletter subscribers <span class="badge-admin">Super admin</span></h2>
+      <h2><span class="num">21</span> Newsletter subscribers <span class="badge-admin">Super admin</span></h2>
       <p>Every newsletter sign-up from the website is collected here with its source and status. Super admins can mark someone <b>active</b> or <b>unsubscribed</b>, remove entries, and export the list. Counsellors don't see this area.</p>
     </section>
 
     <!-- PARTNER CODES -->
     <section id="partner-codes">
-      <h2><span class="num">13</span> Partner codes <span class="badge-admin">Super admin</span></h2>
+      <h2><span class="num">22</span> Partner codes <span class="badge-admin">Super admin</span></h2>
       <p>A partner code is a referral company plus a code we give them. Their code turns the Student Profiler into <em>their</em> link, and every profile submitted through it is tracked back to them.</p>
       <ul>
         <li><b>Add a partner</b> with their company name, email, custom code, phone, contact name and company link. The code becomes the link to hand out — <code>/profiler?partner=CODE</code> — and <b>Copy link</b> puts it on your clipboard.</li>
@@ -740,7 +950,7 @@
 
     <!-- TEAM -->
     <section id="team">
-      <h2><span class="num">14</span> Team management <span class="badge-admin">Super admin</span></h2>
+      <h2><span class="num">23</span> Team management <span class="badge-admin">Super admin</span></h2>
       <p>Super admins add and manage the people who can use the CRM.</p>
       <ul>
         <li><b>Add a member</b> with a name, mobile, email and role (counsellor or super admin). They can sign in immediately with the OTP.</li>
@@ -755,13 +965,13 @@
 
     <!-- AUDIT -->
     <section id="audit">
-      <h2><span class="num">15</span> Audit log <span class="badge-admin">Super admin</span></h2>
+      <h2><span class="num">24</span> Audit log <span class="badge-admin">Super admin</span></h2>
       <p>The audit log is a complete, searchable record of important actions across the CRM: sign-ins, lead creation and edits, conversions, follow-up completions, imports, and every team-management change. Each entry shows who did it, when, and — where relevant — what changed. Filter by action type, by person, or search the text. It's the go-to for "who did what, and when?".</p>
     </section>
 
     <!-- SHORTLISTING -->
     <section id="shortlisting">
-      <h2><span class="num">16</span> PDF shortlisting tool</h2>
+      <h2><span class="num">25</span> PDF shortlisting tool</h2>
       <p>This tool builds a branded university-comparison sheet for a student. Upload the student's report <b>PDF</b> plus a <b>shortlist spreadsheet</b>, and it produces a polished PDF with a comparison table on the final page — ready to send. Available to everyone signed in.</p>
       <ul>
         <li>The spreadsheet lists one university per column, with the compared attributes down the first column.</li>
@@ -772,7 +982,7 @@
 
     <!-- TIPS -->
     <section id="tips">
-      <h2><span class="num">17</span> Good to know</h2>
+      <h2><span class="num">26</span> Good to know</h2>
       <div class="grid cols-2">
         <div class="card feature">
           <h4><span class="ic">📧</span> Your code comes by email</h4>
@@ -804,7 +1014,7 @@
 </div>
 
 <footer>
-  <p><strong>One Degree CRM — Team Guide.</strong> An internal reference for counsellors and super admins. Screens and figures shown are examples. For account help or a lead reassignment, contact a super admin.</p>
+  <p><strong>One Degree CRM — Team Guide.</strong> An internal reference for counsellors and super admins, opened from <b>Team guide</b> in the CRM sidebar or from the journey planner's Help page. Screens and figures shown are examples. For account help or a lead reassignment, contact a super admin.</p>
 </footer>
 
 <script>
