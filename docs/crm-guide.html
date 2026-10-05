@@ -331,6 +331,7 @@
       <span class="chip">🔑 Sign in with a <b>one-time code</b></span>
       <span class="chip">🧭 Everything lives at <b>/crm</b></span>
       <span class="chip">🎓 Students sign in at <b>/student</b></span>
+      <span class="chip">🗓️ Updated <b>5 Oct 2026</b></span>
     </div>
   </div>
 </header>
@@ -370,7 +371,10 @@
         <a href="#team">Team management</a>
         <a href="#audit">Audit log</a>
         <a href="#shortlisting">PDF shortlisting</a>
+        <a href="#mock-invites">Mock interview links</a>
+        <a href="#spam">Blocked submissions</a>
         <span class="toc-label">Reference</span>
+        <a href="#yours">Making the CRM yours</a>
         <a href="#tips">Good to know</a>
       </nav>
     </details>
@@ -423,6 +427,7 @@
         <li><b>Enter your phone or email.</b> Either one works, as long as it is registered for you in the CRM.</li>
         <li><b>Check your email for the code.</b> The code lands in your registered inbox and is valid for 5 minutes.</li>
         <li><b>Type the 6 digits.</b> You get a few tries; after that, request a fresh code.</li>
+        <li><b>Keep me signed in.</b> Ticked by default: this device stays signed in for 30 days, so you aren't asked for a code every visit. Untick it on a shared computer.</li>
       </ol>
 
       <div class="note watch">
@@ -449,6 +454,9 @@
             <tr><td>Import leads from a spreadsheet</td><td class="tick">✓</td><td class="tick">✓</td></tr>
             <tr><td>Journey planner</td><td class="tick">✓ (own students)</td><td class="tick">✓ (all)</td></tr>
             <tr><td>PDF shortlisting tool</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+            <tr><td>Mock interview links</td><td>✓ issue; revoke their own</td><td class="tick">✓ revoke any</td></tr>
+            <tr><td>Blocked submissions</td><td class="cross">✗</td><td class="tick">✓</td></tr>
+            <tr><td>Team guide (this page)</td><td class="tick">✓</td><td class="tick">✓</td></tr>
             <tr><td>Newsletter subscribers</td><td class="cross">Hidden</td><td class="tick">✓</td></tr>
             <tr><td>Manage payments / enrolments</td><td>View own only</td><td class="tick">✓ edit &amp; remove</td></tr>
             <tr><td>Partner codes</td><td class="cross">✗</td><td class="tick">✓</td></tr>
@@ -531,7 +539,12 @@
         <div class="card feature"><h4><span class="ic">💳</span> Website payments</h4><p>Online course payments and their status.</p></div>
         <div class="card feature"><h4><span class="ic">📰</span> Subscriptions <span class="badge-admin">Admin</span></h4><p>Newsletter sign-ups from the website.</p></div>
         <div class="card feature"><h4><span class="ic">🏷️</span> Partner codes <span class="badge-admin">Admin</span></h4><p>Referral companies, the tracking link each one gets, and the leads it brought in.</p></div>
+        <div class="card feature"><h4><span class="ic">🧭</span> Journey planners</h4><p>Every student whose planner has started, as cards: how far along, the current stage, anything late, and what is next.</p></div>
+        <div class="card feature"><h4><span class="ic">📑</span> PDF shortlisting</h4><p>Swap a report PDF's last page for a branded university comparison.</p></div>
+        <div class="card feature"><h4><span class="ic">🎤</span> Mock interviews</h4><p>Personal links to the visa mock interview, with an extended round, and how each student scored.</p></div>
+        <div class="card feature"><h4><span class="ic">📘</span> Team guide</h4><p>This guide. It opens in a new tab, so your place in the CRM stays put.</p></div>
       </div>
+      <p>Super admins also have an <b>Administration</b> section in the menu under their name — <b>Audit log</b>, <b>Blocked submissions</b> and <b>Team management</b>. That menu is at the bottom of the sidebar, or at the top right in the Orbit theme.</p>
 
       <h3>The leads list at a glance</h3>
       <p>Each row shows the lead plus a set of milestone ticks, so you can see how far along someone is without opening them. The last column is the latest note about the lead.</p>
@@ -752,7 +765,7 @@
         <span class="tag">Always current</span>
         <p>The planner checks every few seconds whether anyone has changed the plan and updates itself — it waits while you are typing, so nothing you are writing is lost. The round arrow at the top right refreshes it at once. Progress is always a count (done out of included), never a percentage.</p>
       </div>
-      <p>The <b>Journey planners</b> page in the CRM sidebar lists every student whose planner has started, as cards, with tiles for students with late tasks, essays waiting for review, students who have not signed in yet, and plans that are complete.</p>
+      <p>The <b>Journey planners</b> page in the CRM sidebar lists every student whose planner has started, as cards — up to four across on a wide screen. The tiles along the top count students with late tasks, essays waiting for review, students who have not signed in yet, and plans that are complete; click one to see just those students. One bar holds the search (name, email or lead ID) and the filters: counsellor (super admins), what to show, and the order — recently updated, least or most progress, most late tasks, or name. Each card opens that student's planner in a new tab.</p>
     </section>
 
     <section id="planner-start">
@@ -980,9 +993,46 @@
       </ul>
     </section>
 
+    <!-- MOCK INTERVIEWS -->
+    <section id="mock-invites">
+      <h2><span class="num">26</span> Mock interview links</h2>
+      <p>The website's free visa mock interview runs a short round of 5 or 10 questions. A <b>mock interview link</b> you issue unlocks an extended round — 15, 20 or the full 39 questions — for one named student.</p>
+      <ol class="steps">
+        <li><b>Generate a new link</b> on the Mock interviews page: the student's name and the question count, and if you like their email, mobile, destination country and a note.</li>
+        <li><b>Copy the link and send it to the student.</b> It works for 30 days unless you choose another expiry.</li>
+        <li><b>Watch the results.</b> Each link lists its attempts — when, how many questions were answered, and the score.</li>
+        <li><b>Revoke</b> a link to stop it working. You can revoke the links you issued; a super admin can revoke any.</li>
+      </ol>
+      <div class="note tip">
+        <span class="tag">Tip</span>
+        <p><b>Open the free page</b> at the top shows exactly what the public round looks like, so you know what the student is comparing it with.</p>
+      </div>
+    </section>
+
+    <!-- BLOCKED SUBMISSIONS -->
+    <section id="spam">
+      <h2><span class="num">27</span> Blocked submissions <span class="badge-admin">Super admin</span></h2>
+      <p>Every public form on the website carries a hidden field a person never sees. Bots fill it in; people don't. A submission that fills it is <b>blocked</b>: it never becomes a lead and no one is emailed — though the sender still sees the usual "thank you", so a bot has no sign it was caught. It is kept here instead, with which form it came from, what was sent, and the IP address, so a super admin can spot repeat offenders and check nothing genuine was caught.</p>
+      <div class="note watch">
+        <span class="tag">If a real enquiry is here</span>
+        <p>Add the person by hand with <b>New lead</b> — blocked submissions are a record, not a queue, and are not turned into leads from this page.</p>
+      </div>
+    </section>
+
+    <!-- MAKING IT YOURS -->
+    <section id="yours">
+      <h2><span class="num">28</span> Making the CRM yours</h2>
+      <div class="grid cols-2">
+        <div class="card feature"><h4><span class="ic">🎨</span> Three looks</h4><p>Open the menu under your name and pick an <b>Appearance</b>: <b>Classic</b> (light, with a sidebar), <b>Evergreen</b> (deep green sidebar) or <b>Orbit</b> (a dark bar along the top). Everything works the same in all three; your choice is remembered on that device.</p></div>
+        <div class="card feature"><h4><span class="ic">📘</span> This guide, in the CRM</h4><p><b>Team guide</b> in the sidebar opens this page in a new tab, and the journey planner's <b>Help</b> page links straight to the planner chapters. Referral partners don't see it.</p></div>
+        <div class="card feature"><h4><span class="ic">↻</span> Planners stay current</h4><p>A journey planner updates itself while it is open; the round arrow at its top right refreshes it at once, keeping the page you were on.</p></div>
+        <div class="card feature"><h4><span class="ic">📱</span> On a phone</h4><p>The sidebar folds into the ☰ menu at the top left. The planner's calendar switches to its Agenda list, and its Help tabs scroll sideways.</p></div>
+      </div>
+    </section>
+
     <!-- TIPS -->
     <section id="tips">
-      <h2><span class="num">26</span> Good to know</h2>
+      <h2><span class="num">29</span> Good to know</h2>
       <div class="grid cols-2">
         <div class="card feature">
           <h4><span class="ic">📧</span> Your code comes by email</h4>
