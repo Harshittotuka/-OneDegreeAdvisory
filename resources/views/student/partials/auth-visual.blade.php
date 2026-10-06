@@ -15,7 +15,7 @@
 
     <div class="sp-stage" aria-hidden="true">
     <div class="sp-scene" data-sp-parallax>
-        <svg class="sp-globe" viewBox="0 0 520 520" fill="none">
+        <svg class="sp-globe" viewBox="26 35 468 450" fill="none">
             <defs>
                 <radialGradient id="spGlobeFill" cx="38%" cy="32%" r="75%">
                     <stop offset="0%" stop-color="#3a27c4" stop-opacity=".55"/>
@@ -78,7 +78,7 @@
 
             {{-- The plane, flying the main route --}}
             <g class="sp-plane">
-                <path d="M-9 0 L9 0 M2 0 L-4 -7 M2 0 L-4 7 M-8 0 L-11 -4 M-8 0 L-11 4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path transform="scale(1.15)" d="M11 0C11-1.3 10-2 8.8-2H3.2L-2.8-9.5H-5.4L-2-2H-7.2L-9.2-4.8H-11L-9.6 0-11 4.8H-9.2L-7.2 2H-2L-5.4 9.5H-2.8L3.2 2H8.8C10 2 11 1.3 11 0Z"/>
                 <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" keyPoints="0;1;1" keyTimes="0;.8;1" calcMode="linear"><mpath href="#spR1"/></animateMotion>
                 <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.08;.72;.8;1" dur="6s" repeatCount="indefinite"/>
             </g>

@@ -36,15 +36,17 @@ a { color: inherit; }
 :focus-visible { outline: 3px solid rgba(255, 94, 50, .35); outline-offset: 2px; }
 
 /* ---------- layout ---------- */
-.sp-auth { display: grid; grid-template-columns: minmax(420px, 0.9fr) minmax(0, 1.1fr); min-height: 100vh; }
+/* The page is exactly one screen tall. If the form ever needs more room
+   than that, only the form side scrolls; the scene stays put. */
+.sp-auth { display: grid; grid-template-columns: minmax(420px, 0.85fr) minmax(0, 1.15fr); height: 100vh; height: 100dvh; min-height: 540px; }
 .sp-panel {
-    position: relative; display: grid; place-items: center; padding: 48px clamp(20px, 5vw, 72px);
+    position: relative; display: flex; overflow-y: auto; padding: clamp(20px, 5vh, 48px) clamp(20px, 5vw, 72px);
     background:
         radial-gradient(60% 50% at 0% 0%, rgba(26, 0, 136, .06) 0%, transparent 70%),
         radial-gradient(60% 50% at 100% 100%, rgba(255, 94, 50, .07) 0%, transparent 70%),
         var(--cream);
 }
-.sp-card { width: 100%; max-width: 420px; }
+.sp-card { width: 100%; max-width: 430px; margin: auto; }
 
 /* Each block of the card rises in, one after the other. */
 .sp-card > * { opacity: 0; transform: translateY(14px); animation: sp-rise .7s var(--ease) forwards; }
@@ -58,7 +60,7 @@ a { color: inherit; }
 @keyframes sp-rise { to { opacity: 1; transform: none; } }
 
 /* ---------- brand ---------- */
-.sp-brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 44px; }
+.sp-brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: clamp(18px, 5vh, 44px); }
 .sp-brand img { height: 32px; width: auto; }
 .sp-brand b { display: block; font-size: .9rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--navy); line-height: 1.2; }
 .sp-brand small { display: block; font-size: .64rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--orange); }
@@ -67,15 +69,15 @@ a { color: inherit; }
 .sp-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--orange); }
 .sp-eyebrow::before { content: ""; width: 26px; height: 2px; border-radius: 2px; background: currentColor; }
 .sp-eyebrow.light { color: #f7da82; }
-.sp-card h1 { margin: 12px 0 10px; font-family: var(--serif); font-weight: 700; font-size: clamp(2.6rem, 4.4vw, 3.4rem); line-height: 1; color: var(--navy); letter-spacing: -.005em; }
+.sp-card h1 { margin: clamp(6px, 1.4vh, 12px) 0 clamp(6px, 1.2vh, 10px); font-family: var(--serif); font-weight: 700; font-size: clamp(2.4rem, min(4.4vw, 6.4vh), 3.4rem); line-height: 1; color: var(--navy); letter-spacing: -.005em; }
 .sp-card h1 em { font-style: italic; color: var(--orange); }
-.sp-intro { margin: 0 0 28px; color: var(--muted); font-size: .95rem; max-width: 40ch; }
+.sp-intro { margin: 0 0 clamp(16px, 3.4vh, 28px); color: var(--muted); font-size: .95rem; max-width: 40ch; }
 
 /* ---------- form ---------- */
-.sp-form { display: grid; gap: 18px; }
+.sp-form { display: grid; gap: clamp(12px, 2.2vh, 18px); }
 .sp-field label { display: block; margin-bottom: 7px; font-size: .8rem; font-weight: 700; color: var(--ink-2); }
 .sp-input {
-    position: relative; display: flex; align-items: center; height: 54px; border-radius: 14px;
+    position: relative; display: flex; align-items: center; height: clamp(46px, 6.6vh, 54px); border-radius: 14px;
     background: #fff; border: 1px solid var(--line);
     box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 6px 16px -12px rgba(26, 0, 136, .35);
     transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
@@ -94,7 +96,7 @@ a { color: inherit; }
 
 .sp-btn {
     position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-    height: 54px; margin-top: 6px; border: 0; border-radius: 999px; cursor: pointer;
+    height: clamp(48px, 6.8vh, 56px); margin-top: 4px; border: 0; border-radius: 999px; cursor: pointer;
     background: var(--orange); color: #fff; font-size: 1rem; font-weight: 800; letter-spacing: .01em;
     box-shadow: 0 18px 36px -14px rgba(255, 94, 50, .7);
     transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
@@ -108,19 +110,19 @@ a { color: inherit; }
 @keyframes sp-sheen { 0%, 60% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
 .sp-btn:disabled { opacity: .75; cursor: progress; }
 
-.sp-meta { display: flex; align-items: flex-start; gap: 10px; margin-top: 22px; padding: 13px 15px; border-radius: 14px; background: rgba(26, 0, 136, .045); border: 1px solid rgba(26, 0, 136, .08); font-size: .84rem; color: var(--ink-2); }
+.sp-meta { display: flex; align-items: flex-start; gap: 10px; margin-top: clamp(14px, 2.6vh, 22px); padding: clamp(10px, 1.6vh, 13px) 15px; border-radius: 14px; background: rgba(26, 0, 136, .045); border: 1px solid rgba(26, 0, 136, .08); font-size: .84rem; color: var(--ink-2); }
 .sp-meta > svg { flex: none; width: 18px; height: 18px; margin-top: 2px; fill: none; stroke: var(--navy); stroke-width: 1.7; stroke-linecap: round; }
 .sp-meta-links { justify-content: space-between; align-items: center; }
 .sp-meta-links a, .sp-meta-links button { border: 0; background: none; padding: 0; cursor: pointer; font-weight: 700; color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .sp-meta-links form { margin: 0; }
-.sp-trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 22px; font-size: .76rem; font-weight: 600; color: var(--muted); }
+.sp-trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: clamp(12px, 2.4vh, 22px); font-size: .76rem; font-weight: 600; color: var(--muted); }
 .sp-trust span { display: inline-flex; align-items: center; gap: 6px; }
 .sp-trust svg { width: 15px; height: 15px; fill: none; stroke: var(--orange); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------- the animated panel ---------- */
 .sp-visual {
     position: relative; overflow: hidden; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 8px;
-    height: 100vh; min-height: 620px; padding: clamp(28px, 4vw, 56px); color: #fff; isolation: isolate;
+    min-height: 0; padding: clamp(22px, 4vh, 52px) clamp(24px, 4vw, 60px); color: #fff; isolation: isolate;
     background:
         radial-gradient(55% 45% at 85% 12%, rgba(255, 94, 50, .3) 0%, transparent 70%),
         radial-gradient(50% 40% at 10% 95%, rgba(247, 218, 130, .16) 0%, transparent 70%),
@@ -139,8 +141,9 @@ a { color: inherit; }
 /* The stage is the room left above the copy; the globe sizes itself to fit
    it, whichever runs out first, width or height. */
 .sp-stage { position: relative; min-height: 0; container-type: size; }
-.sp-scene { position: absolute; left: 50%; top: 50%; width: min(620px, 78cqw, 92cqh); aspect-ratio: 1; transform: translate(-50%, -50%); transition: transform .6s var(--ease); }
-.sp-globe { width: 100%; height: 100%; overflow: visible; animation: sp-float 9s ease-in-out infinite; }
+.sp-scene { position: absolute; left: 50%; top: 50%; width: min(760px, 92cqw, 104cqh); aspect-ratio: 468 / 450; transform: translate(-50%, -50%); transition: transform .6s var(--ease); }
+.sp-globe { width: 100%; height: 100%; overflow: visible; shape-rendering: geometricPrecision; animation: sp-float 9s ease-in-out infinite; }
+.sp-plane path { fill: #fff; filter: drop-shadow(0 0 5px rgba(255, 94, 50, .95)) drop-shadow(0 0 1px rgba(255, 255, 255, .8)); }
 @keyframes sp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 .sp-halo { fill: none; stroke: rgba(247, 218, 130, .18); stroke-width: 1; stroke-dasharray: 2 7; transform-origin: 260px 260px; animation: sp-spin 60s linear infinite; }
 .sp-rim { fill: none; stroke: rgba(255, 255, 255, .32); stroke-width: 1.2; }
@@ -189,7 +192,7 @@ a { color: inherit; }
 
 /* ---------- panel copy ---------- */
 .sp-visual-copy { position: relative; z-index: 1; max-width: 560px; }
-.sp-visual-copy h2 { margin: 12px 0 10px; font-family: var(--serif); font-weight: 700; font-size: clamp(2.2rem, 3.6vw, 3.3rem); line-height: 1.02; letter-spacing: -.005em; color: #fff; text-shadow: 0 2px 24px rgba(16, 2, 88, .5); }
+.sp-visual-copy h2 { margin: 12px 0 10px; text-wrap: balance; font-family: var(--serif); font-weight: 700; font-size: clamp(2.2rem, 3.6vw, 3.3rem); line-height: 1.02; letter-spacing: -.005em; color: #fff; text-shadow: 0 2px 24px rgba(16, 2, 88, .5); }
 /* The website's gold shimmer on the one highlighted phrase. */
 .sp-gold {
     font-style: italic; background-image: var(--gold-grad); background-size: 220% 100%; background-position: 0% 50%;
@@ -236,13 +239,23 @@ a { color: inherit; }
 .transition-card strong { font-family: var(--serif); font-size: 2rem; font-weight: 700; }
 .transition-card small { margin-top: 4px; font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(255, 255, 255, .65); }
 
+/* ---------- large screens: the form keeps pace with the scene ---------- */
+@media (min-width: 1680px) and (min-height: 940px) {
+    body.sp-body { font-size: 16px; }
+    .sp-card { max-width: 470px; }
+    .sp-card h1 { font-size: 3.8rem; }
+}
+
 /* ---------- smaller screens ---------- */
 /* Laptop-height screens: tighter copy, so the globe keeps its room. */
 @media (max-height: 820px) and (min-width: 861px) {
-    .sp-visual { padding-top: 24px; padding-bottom: 32px; }
     .sp-visual-copy h2 { font-size: clamp(2rem, 3vw, 2.6rem); margin: 8px 0 6px; }
     .sp-steps { margin-top: 18px; }
-    .sp-brand { margin-bottom: 30px; }
+}
+@media (max-height: 740px) and (min-width: 861px) {
+    .sp-visual-copy p { display: none; }
+    .sp-visual-copy h2 { margin-bottom: 0; }
+    .sp-intro { font-size: .9rem; }
 }
 @media (max-width: 1100px) {
     .sp-auth { grid-template-columns: minmax(380px, 1fr) minmax(0, 1fr); }
@@ -250,7 +263,8 @@ a { color: inherit; }
 }
 /* Phones and tablets: the scene becomes a banner above the form. */
 @media (max-width: 860px) {
-    .sp-auth { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .sp-auth { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; min-height: 100vh; min-height: 100dvh; }
+    .sp-panel { overflow: visible; }
     .sp-visual { order: -1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; height: 330px; padding: 24px 22px; }
     .sp-stage { position: absolute; inset: 0; container-type: normal; }
     .sp-scene { top: 40%; left: 74%; width: 360px; }
