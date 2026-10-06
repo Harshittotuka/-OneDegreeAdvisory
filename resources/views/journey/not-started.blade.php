@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $lead->name }} — Journey planner</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/Logo/favicon-32.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/journey/planner.css') }}?v={{ filemtime(public_path('assets/journey/planner.css')) }}">
 </head>
 <body>

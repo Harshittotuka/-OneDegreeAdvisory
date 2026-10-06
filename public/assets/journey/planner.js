@@ -428,7 +428,7 @@
               '<form method="post" action="' + esc(P.endpoints.logout) + '"><input type="hidden" name="_token" value="' + esc(CSRF) + '"><button class="jp-nav-link" type="submit"><span class="jp-nav-ico ico-out">' + ICO.out + '</span><span>Sign out</span></button></form>'
             : '<a class="jp-nav-link" href="' + esc(P.endpoints.back) + '"><span class="jp-nav-ico ico-out">' + ICO.back + '</span><span>Back to CRM</span></a>';
         return '<aside class="jp-side" aria-label="Planner navigation">' +
-            '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span></div>' +
+            '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO_DARK) + '" alt=""></span><span><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span></div>' +
             '<div class="jp-who"><div class="jp-who-top"><span class="jp-avatar">' + esc(initials(s.name)) + '</span><div><b>' + esc(s.name) + '</b><small>' + esc([s.level, s.intake].filter(Boolean).join(' · ') || 'Plan details not set') + '</small></div></div>' +
             '<div class="jp-who-bar"><span>Steps done</span><b class="num">' + tally(overall()) + '</b></div><div class="jp-bar side"><i style="width:' + barWidth(overall()) + '"></i></div></div>' +
             '<div class="jp-nav-label">' + (isStudent() ? 'My plan' : 'Planner') + '</div><nav class="jp-nav">' + nav + '</nav>' +
