@@ -987,3 +987,50 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Student login — the full-width card under the Student Hub tools.
+   Not a tool but the enrolled student's way in, so it reads apart from them:
+   the site's royal indigo, with the brand orange on the arrow (the key keeps
+   the themed icon tile every menu card has). Sits
+   last in the file (and repeats the html[data-color-theme] prefix) so it wins
+   over the themed card colours above.
+   --------------------------------------------------------------------------- */
+.stripe-flyout .course-menu-card--portal,
+html[data-color-theme] .stripe-flyout .course-menu-card--portal {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border-color: transparent;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(255, 94, 50, 0.38), transparent 46%),
+    linear-gradient(135deg, #2a16a0 0%, #1a0088 55%, #100258 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 26px rgba(26, 0, 136, 0.22);
+}
+
+.stripe-flyout .course-menu-card--portal .course-menu-copy strong {
+  color: #ffffff;
+}
+
+.stripe-flyout .course-menu-card--portal .course-menu-copy small {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.stripe-flyout .course-menu-card--portal .course-menu-arrow {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.stripe-flyout .course-menu-card--portal:hover,
+html[data-color-theme] .stripe-flyout .course-menu-card--portal:hover {
+  border-color: transparent;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(255, 94, 50, 0.5), transparent 50%),
+    linear-gradient(135deg, #3320b4 0%, #1f0596 55%, #12036a 100%);
+  color: #ffffff;
+  box-shadow: 0 16px 32px rgba(26, 0, 136, 0.3);
+}
+
+.stripe-flyout .course-menu-card--portal:hover .course-menu-arrow {
+  background: #ff5e32;
+}
