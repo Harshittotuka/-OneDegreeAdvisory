@@ -1,0 +1,277 @@
+/*
+ * Student portal — sign in and change password.
+ *
+ * The website's cream theme (html[data-color-theme="cream"] in styles.css):
+ * a cream page, royal indigo, the brand orange for actions, Cormorant
+ * Garamond for headings and the site's gold shimmer on the one highlighted
+ * phrase. The form sits on the left; on the right a deep indigo panel holds
+ * an animated scene — a turning globe, flight paths drawing out from India,
+ * a plane on the main route, floating destination chips and the journey's
+ * four steps lighting up in turn. All motion stops under reduced motion.
+ */
+:root {
+    --ink: #181134;
+    --ink-2: #2c2550;
+    --muted: #5f5a85;
+    --navy: #1a0088;
+    --deep: #100258;
+    --orange: #ff5e32;
+    --orange-ink: #d8431d;
+    --cream: #f4f1ec;
+    --line: #e4ded3;
+    --field: #faf8f3;
+    --gold-grad: linear-gradient(105deg, #a9791d 0%, #d9a83a 28%, #f7da82 50%, #d9a020 72%, #a9791d 100%);
+    --band: linear-gradient(150deg, #2a16a0 0%, #1a0088 52%, #100258 100%);
+    --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --sans: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body.sp-body { margin: 0; min-height: 100vh; font-family: var(--sans); font-size: 15px; line-height: 1.6; color: var(--ink); background: var(--cream); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+button, input { font: inherit; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid rgba(255, 94, 50, .35); outline-offset: 2px; }
+
+/* ---------- layout ---------- */
+.sp-auth { display: grid; grid-template-columns: minmax(420px, 0.9fr) minmax(0, 1.1fr); min-height: 100vh; }
+.sp-panel {
+    position: relative; display: grid; place-items: center; padding: 48px clamp(20px, 5vw, 72px);
+    background:
+        radial-gradient(60% 50% at 0% 0%, rgba(26, 0, 136, .06) 0%, transparent 70%),
+        radial-gradient(60% 50% at 100% 100%, rgba(255, 94, 50, .07) 0%, transparent 70%),
+        var(--cream);
+}
+.sp-card { width: 100%; max-width: 420px; }
+
+/* Each block of the card rises in, one after the other. */
+.sp-card > * { opacity: 0; transform: translateY(14px); animation: sp-rise .7s var(--ease) forwards; }
+.sp-card > :nth-child(1) { animation-delay: .05s; }
+.sp-card > :nth-child(2) { animation-delay: .14s; }
+.sp-card > :nth-child(3) { animation-delay: .22s; }
+.sp-card > :nth-child(4) { animation-delay: .3s; }
+.sp-card > :nth-child(5) { animation-delay: .38s; }
+.sp-card > :nth-child(6) { animation-delay: .46s; }
+.sp-card > :nth-child(7) { animation-delay: .54s; }
+@keyframes sp-rise { to { opacity: 1; transform: none; } }
+
+/* ---------- brand ---------- */
+.sp-brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 44px; }
+.sp-brand img { height: 32px; width: auto; }
+.sp-brand b { display: block; font-size: .9rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: var(--navy); line-height: 1.2; }
+.sp-brand small { display: block; font-size: .64rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--orange); }
+
+/* ---------- copy ---------- */
+.sp-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--orange); }
+.sp-eyebrow::before { content: ""; width: 26px; height: 2px; border-radius: 2px; background: currentColor; }
+.sp-eyebrow.light { color: #f7da82; }
+.sp-card h1 { margin: 12px 0 10px; font-family: var(--serif); font-weight: 700; font-size: clamp(2.6rem, 4.4vw, 3.4rem); line-height: 1; color: var(--navy); letter-spacing: -.005em; }
+.sp-card h1 em { font-style: italic; color: var(--orange); }
+.sp-intro { margin: 0 0 28px; color: var(--muted); font-size: .95rem; max-width: 40ch; }
+
+/* ---------- form ---------- */
+.sp-form { display: grid; gap: 18px; }
+.sp-field label { display: block; margin-bottom: 7px; font-size: .8rem; font-weight: 700; color: var(--ink-2); }
+.sp-input {
+    position: relative; display: flex; align-items: center; height: 54px; border-radius: 14px;
+    background: #fff; border: 1px solid var(--line);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 6px 16px -12px rgba(26, 0, 136, .35);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.sp-input:hover { border-color: #cfc6e6; }
+.sp-input:focus-within { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 94, 50, .14), 0 10px 22px -14px rgba(255, 94, 50, .55); }
+.sp-input > svg { flex: none; width: 20px; height: 20px; margin-left: 16px; fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: stroke .2s ease; }
+.sp-input:focus-within > svg { stroke: var(--orange); }
+.sp-input input { flex: 1; min-width: 0; height: 100%; padding: 0 14px 0 12px; border: 0; background: transparent; outline: none; font-size: .98rem; font-weight: 600; color: var(--ink); }
+.sp-input input::placeholder { color: #a8a2c2; font-weight: 500; }
+.sp-reveal { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin-right: 5px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+.sp-reveal:hover { background: rgba(26, 0, 136, .06); color: var(--navy); }
+.sp-reveal svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sp-reveal .eye-off, .sp-reveal[aria-pressed="true"] .eye { display: none; }
+.sp-reveal[aria-pressed="true"] .eye-off { display: block; }
+
+.sp-btn {
+    position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    height: 54px; margin-top: 6px; border: 0; border-radius: 999px; cursor: pointer;
+    background: var(--orange); color: #fff; font-size: 1rem; font-weight: 800; letter-spacing: .01em;
+    box-shadow: 0 18px 36px -14px rgba(255, 94, 50, .7);
+    transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.sp-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s var(--ease); }
+.sp-btn:hover { background: var(--orange-ink); transform: translateY(-2px); box-shadow: 0 22px 44px -14px rgba(255, 94, 50, .75); }
+.sp-btn:hover svg { transform: translateX(4px); }
+.sp-btn:active { transform: translateY(0); }
+/* A sheen sweeps across the button every few seconds. */
+.sp-btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .35) 50%, transparent 70%); transform: translateX(-120%); animation: sp-sheen 4.5s ease-in-out 1.4s infinite; }
+@keyframes sp-sheen { 0%, 60% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+.sp-btn:disabled { opacity: .75; cursor: progress; }
+
+.sp-meta { display: flex; align-items: flex-start; gap: 10px; margin-top: 22px; padding: 13px 15px; border-radius: 14px; background: rgba(26, 0, 136, .045); border: 1px solid rgba(26, 0, 136, .08); font-size: .84rem; color: var(--ink-2); }
+.sp-meta > svg { flex: none; width: 18px; height: 18px; margin-top: 2px; fill: none; stroke: var(--navy); stroke-width: 1.7; stroke-linecap: round; }
+.sp-meta-links { justify-content: space-between; align-items: center; }
+.sp-meta-links a, .sp-meta-links button { border: 0; background: none; padding: 0; cursor: pointer; font-weight: 700; color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
+.sp-meta-links form { margin: 0; }
+.sp-trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 22px; font-size: .76rem; font-weight: 600; color: var(--muted); }
+.sp-trust span { display: inline-flex; align-items: center; gap: 6px; }
+.sp-trust svg { width: 15px; height: 15px; fill: none; stroke: var(--orange); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- the animated panel ---------- */
+.sp-visual {
+    position: relative; overflow: hidden; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 8px;
+    height: 100vh; min-height: 620px; padding: clamp(28px, 4vw, 56px); color: #fff; isolation: isolate;
+    background:
+        radial-gradient(55% 45% at 85% 12%, rgba(255, 94, 50, .3) 0%, transparent 70%),
+        radial-gradient(50% 40% at 10% 95%, rgba(247, 218, 130, .16) 0%, transparent 70%),
+        var(--band);
+}
+/* A faint dotted grid over the indigo. */
+.sp-visual::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; opacity: .5;
+    background-image: radial-gradient(rgba(255, 255, 255, .14) 1px, transparent 1.4px); background-size: 26px 26px;
+    -webkit-mask-image: radial-gradient(80% 70% at 55% 40%, #000 30%, transparent 85%); mask-image: radial-gradient(80% 70% at 55% 40%, #000 30%, transparent 85%);
+}
+.sp-sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.sp-sky i { position: absolute; left: var(--x); top: var(--y); width: 3px; height: 3px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px 1px rgba(255, 255, 255, .7); opacity: .2; animation: sp-twinkle 3.6s ease-in-out var(--d) infinite; }
+@keyframes sp-twinkle { 0%, 100% { opacity: .15; transform: scale(.7); } 50% { opacity: .95; transform: scale(1.15); } }
+
+/* The stage is the room left above the copy; the globe sizes itself to fit
+   it, whichever runs out first, width or height. */
+.sp-stage { position: relative; min-height: 0; container-type: size; }
+.sp-scene { position: absolute; left: 50%; top: 50%; width: min(620px, 78cqw, 92cqh); aspect-ratio: 1; transform: translate(-50%, -50%); transition: transform .6s var(--ease); }
+.sp-globe { width: 100%; height: 100%; overflow: visible; animation: sp-float 9s ease-in-out infinite; }
+@keyframes sp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.sp-halo { fill: none; stroke: rgba(247, 218, 130, .18); stroke-width: 1; stroke-dasharray: 2 7; transform-origin: 260px 260px; animation: sp-spin 60s linear infinite; }
+.sp-rim { fill: none; stroke: rgba(255, 255, 255, .32); stroke-width: 1.2; }
+.sp-grid ellipse, .sp-grid line { fill: none; stroke: rgba(255, 255, 255, .13); stroke-width: 1; }
+.sp-orbit ellipse { fill: none; stroke: rgba(255, 255, 255, .16); stroke-width: 1; stroke-dasharray: 4 6; }
+.sp-sat { fill: #f7da82; filter: drop-shadow(0 0 6px rgba(247, 218, 130, .9)); }
+@keyframes sp-spin { to { transform: rotate(360deg); } }
+
+.sp-route-base { fill: none; stroke: rgba(255, 255, 255, .18); stroke-width: 1.3; stroke-dasharray: 3 6; }
+/* Each route draws out from India, holds, then fades and starts again. */
+.sp-route { fill: none; stroke: url(#spRoute); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sp-draw 6s var(--ease) infinite; filter: drop-shadow(0 0 4px rgba(255, 94, 50, .55)); }
+.sp-route.r2 { animation-delay: 1.5s; }
+.sp-route.r3 { animation-delay: 3s; }
+.sp-route.r4 { animation-delay: 4.5s; }
+@keyframes sp-draw { 0% { stroke-dashoffset: 1; opacity: 1; } 45% { stroke-dashoffset: 0; opacity: 1; } 80% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+
+.sp-pin .dot { fill: #fff; stroke: var(--orange); stroke-width: 2.5; }
+.sp-pin.home .dot { fill: var(--orange); stroke: #fff; stroke-width: 2.5; }
+.sp-pin .pulse { fill: none; stroke: rgba(255, 94, 50, .8); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: sp-pulse 2.6s ease-out var(--pd, 0s) infinite; }
+@keyframes sp-pulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(4.2); opacity: 0; } }
+
+/* Destination chips float gently around the globe. */
+.sp-chip {
+    position: absolute; display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px 7px 9px; border-radius: 999px;
+    font-size: .76rem; font-weight: 700; white-space: nowrap; color: #fff;
+    background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .6);
+    animation: sp-bob 6s ease-in-out infinite;
+}
+.sp-chip b { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 3px rgba(255, 94, 50, .28); }
+.sp-chip.c1 { left: 14%; top: 18%; animation-delay: -1s; }
+.sp-chip.c2 { left: -4%; top: 44%; animation-delay: -3s; }
+.sp-chip.c3 { left: 52%; top: 12%; animation-delay: -2s; }
+.sp-chip.c4 { right: -2%; top: 78%; animation-delay: -4s; }
+.sp-chip.home { right: -8%; top: 62%; background: rgba(255, 94, 50, .22); border-color: rgba(255, 94, 50, .55); animation-delay: -5s; }
+.sp-chip.home b { background: #fff; box-shadow: 0 0 0 3px rgba(255, 255, 255, .3); }
+@keyframes sp-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+
+/* When the stage is short the chips get smaller, and the two that would
+   crowd the globe step aside. */
+@container (max-height: 460px) {
+    .sp-chip { font-size: .68rem; padding: 5px 10px 5px 7px; gap: 6px; }
+    .sp-chip.c3, .sp-chip.c4 { display: none; }
+}
+
+/* ---------- panel copy ---------- */
+.sp-visual-copy { position: relative; z-index: 1; max-width: 560px; }
+.sp-visual-copy h2 { margin: 12px 0 10px; font-family: var(--serif); font-weight: 700; font-size: clamp(2.2rem, 3.6vw, 3.3rem); line-height: 1.02; letter-spacing: -.005em; color: #fff; text-shadow: 0 2px 24px rgba(16, 2, 88, .5); }
+/* The website's gold shimmer on the one highlighted phrase. */
+.sp-gold {
+    font-style: italic; background-image: var(--gold-grad); background-size: 220% 100%; background-position: 0% 50%;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+    animation: sp-shimmer 8s ease-in-out infinite;
+}
+@keyframes sp-shimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.sp-visual-copy p { margin: 0; max-width: 46ch; color: rgba(255, 255, 255, .8); font-size: .95rem; }
+
+/* The four steps light up one after another, then begin again. */
+.sp-steps { --dur: 8s; position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 30px 0 0; padding: 0; list-style: none; }
+.sp-steps::before, .sp-steps::after { content: ""; position: absolute; top: 15px; left: 12.5%; height: 2px; border-radius: 2px; }
+.sp-steps::before { right: 12.5%; background: rgba(255, 255, 255, .18); }
+.sp-steps::after { width: 0; background: linear-gradient(90deg, var(--orange), #f7da82); animation: sp-track var(--dur) var(--ease) infinite; }
+@keyframes sp-track { 0%, 6% { width: 0; } 70%, 88% { width: 75%; } 100% { width: 75%; opacity: 0; } }
+.sp-steps li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: .76rem; font-weight: 700; letter-spacing: .04em; color: rgba(255, 255, 255, .7); }
+.sp-steps span {
+    position: relative; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+    font-size: .78rem; font-weight: 800; color: rgba(255, 255, 255, .8);
+    background: #20109a; border: 1.5px solid rgba(255, 255, 255, .3);
+    animation: sp-step var(--dur) ease infinite; animation-delay: calc(var(--i) * 1.4s);
+}
+@keyframes sp-step {
+    0%, 4% { background: #20109a; border-color: rgba(255, 255, 255, .3); color: rgba(255, 255, 255, .8); box-shadow: none; }
+    10%, 70% { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 0 0 6px rgba(255, 94, 50, .22); }
+    85%, 100% { background: #20109a; border-color: rgba(255, 255, 255, .3); color: rgba(255, 255, 255, .8); box-shadow: none; }
+}
+
+/* ---------- hand-off screen (crm.js toggles .active) ---------- */
+.transition-screen {
+    position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; overflow: hidden;
+    background: radial-gradient(50% 45% at 80% 10%, rgba(255, 94, 50, .3), transparent 70%), var(--band);
+    opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .18s ease, visibility .18s ease;
+}
+.transition-screen.active { opacity: 1; visibility: visible; pointer-events: all; }
+.transition-card { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; color: #fff; opacity: 0; transform: translateY(12px) scale(.96); }
+.transition-screen.active .transition-card { animation: sp-rise .4s var(--ease) forwards; }
+.transition-rings { position: absolute; top: -40px; left: 50%; width: 150px; height: 150px; margin-left: -75px; }
+.transition-rings i { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .14); border-top-color: var(--orange); animation: sp-spin 1.6s linear infinite; }
+.transition-rings i:nth-child(2) { inset: 16px; border-top-color: #f7da82; animation-duration: 2.2s; animation-direction: reverse; }
+.transition-rings i:nth-child(3) { inset: 32px; border-style: dashed; border-color: rgba(255, 255, 255, .18); animation-duration: 6s; }
+.transition-logo { display: grid; place-items: center; width: 70px; height: 70px; margin-bottom: 50px; }
+.transition-logo img { width: 60px; height: auto; }
+.transition-card strong { font-family: var(--serif); font-size: 2rem; font-weight: 700; }
+.transition-card small { margin-top: 4px; font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(255, 255, 255, .65); }
+
+/* ---------- smaller screens ---------- */
+/* Laptop-height screens: tighter copy, so the globe keeps its room. */
+@media (max-height: 820px) and (min-width: 861px) {
+    .sp-visual { padding-top: 24px; padding-bottom: 32px; }
+    .sp-visual-copy h2 { font-size: clamp(2rem, 3vw, 2.6rem); margin: 8px 0 6px; }
+    .sp-steps { margin-top: 18px; }
+    .sp-brand { margin-bottom: 30px; }
+}
+@media (max-width: 1100px) {
+    .sp-auth { grid-template-columns: minmax(380px, 1fr) minmax(0, 1fr); }
+    .sp-chip.c2 { left: 0; }
+}
+/* Phones and tablets: the scene becomes a banner above the form. */
+@media (max-width: 860px) {
+    .sp-auth { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .sp-visual { order: -1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; height: 330px; padding: 24px 22px; }
+    .sp-stage { position: absolute; inset: 0; container-type: normal; }
+    .sp-scene { top: 40%; left: 74%; width: 360px; }
+    .sp-chip { display: none; }
+    .sp-visual-copy h2 { font-size: 2rem; max-width: 15ch; }
+    .sp-visual-copy p, .sp-steps { display: none; }
+    .sp-panel { padding: 34px 22px 48px; place-items: start center; }
+    .sp-brand { margin-bottom: 28px; }
+}
+@media (max-width: 480px) {
+    .sp-visual { height: 260px; }
+    .sp-scene { left: 80%; width: 300px; }
+    .sp-visual-copy h2 { font-size: 1.75rem; }
+    .sp-card h1 { font-size: 2.5rem; }
+    .sp-trust { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .sp-card > * { opacity: 1; transform: none; }
+    .sp-route { stroke-dashoffset: 0; }
+    .sp-steps::after { width: 75%; }
+    .sp-plane { display: none; }
+}

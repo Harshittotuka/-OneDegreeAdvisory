@@ -3,77 +3,66 @@
 <head>
     @include('student.partials.auth-head', ['title' => $account->must_change_password ? 'Choose your password' : 'Change password'])
 </head>
-<body>
+<body class="sp-body">
 @include('crm.partials.toasts', [
     'successMessage' => session('status'),
     'errorMessage' => $errors->first(),
 ])
-<main class="crm-login">
-    <section class="login-panel">
-        <div class="login-card auth-step">
-            <div class="login-brand">
-                <span class="brand-mark"><img src="{{ asset('assets/Logo/mark-light.svg') }}" alt=""></span>
-                <span class="brand-copy"><strong>One Degree Advisory</strong><span>Student portal</span></span>
-            </div>
+<main class="sp-auth">
+    <section class="sp-panel">
+        <div class="sp-card">
+            <a class="sp-brand" href="{{ route('student.dashboard') }}">
+                <img src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory">
+                <span><b>One Degree</b><small>Student portal</small></span>
+            </a>
 
             @if($account->must_change_password)
-                <span class="eyebrow">One quick step</span>
-                <h1>Choose your own password</h1>
-                <p class="login-intro">You signed in with the temporary password from your counsellor. Pick a new one that only you know. It needs at least 8 characters, with letters and numbers.</p>
+                <span class="sp-eyebrow">One quick step</span>
+                <h1>Choose your own <em>password</em></h1>
+                <p class="sp-intro">You signed in with the temporary password from your counsellor. Pick a new one that only you know. It needs at least 8 characters, with letters and numbers.</p>
             @else
-                <span class="eyebrow">Your account</span>
-                <h1>Change your password</h1>
-                <p class="login-intro">Signed in as {{ $account->email }}. Your new password needs at least 8 characters, with letters and numbers.</p>
+                <span class="sp-eyebrow">Your account</span>
+                <h1>Change your <em>password</em></h1>
+                <p class="sp-intro">Signed in as {{ $account->email }}. Your new password needs at least 8 characters, with letters and numbers.</p>
             @endif
 
-            <form method="post" action="{{ route('student.password.update') }}" data-transition-form data-transition-label="Saving your password…">
+            <form method="post" action="{{ route('student.password.update') }}" class="sp-form" data-transition-form data-transition-label="Saving your password…">
                 @csrf
-                <div class="field">
-                    <label for="current_password">{{ $account->must_change_password ? 'Temporary password' : 'Current password' }}</label>
-                    <div class="input-wrap"><input id="current_password" name="current_password" type="password" autocomplete="current-password" required autofocus></div>
-                </div>
-                <div class="field">
-                    <label for="password">New password</label>
-                    <div class="input-wrap"><input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
-                </div>
-                <div class="field">
-                    <label for="password_confirmation">Type the new password again</label>
-                    <div class="input-wrap"><input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" required></div>
-                </div>
-                <button class="btn btn-navy btn-block" type="submit">Save password <span aria-hidden="true">→</span></button>
+                @foreach([
+                    ['current_password', $account->must_change_password ? 'Temporary password' : 'Current password', 'current-password', true],
+                    ['password', 'New password', 'new-password', false],
+                    ['password_confirmation', 'Type the new password again', 'new-password', false],
+                ] as [$name, $label, $complete, $focus])
+                    <div class="sp-field">
+                        <label for="{{ $name }}">{{ $label }}</label>
+                        <div class="sp-input">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>
+                            <input id="{{ $name }}" name="{{ $name }}" type="password" autocomplete="{{ $complete }}" @if($name !== 'current_password') minlength="8" @endif required @if($focus) autofocus @endif>
+                            <button type="button" class="sp-reveal" data-sp-reveal="{{ $name }}" aria-label="Show password" aria-pressed="false">
+                                <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5C18 5.5 21.5 12 21.5 12a17 17 0 0 1-3 3.8M6.2 6.9C3.9 8.6 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+                <button class="sp-btn" type="submit"><span>Save password</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
             </form>
-            <div class="login-meta">
+
+            <div class="sp-meta sp-meta-links">
                 @unless($account->must_change_password)<a href="{{ route('student.dashboard') }}">Back to my journey</a>@endunless
-                <form method="post" action="{{ route('student.logout') }}" style="display:inline">@csrf<button type="submit" style="background:none;border:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0">Sign out</button></form>
+                <form method="post" action="{{ route('student.logout') }}">@csrf<button type="submit">Sign out</button></form>
             </div>
         </div>
     </section>
-    <aside class="login-visual">
-        <div class="login-graphic" aria-hidden="true">
-            <span class="orbit orbit-one"><i></i></span>
-            <span class="orbit orbit-two"><i></i></span>
-            <span class="orbit orbit-three"><i></i></span>
-            <span class="graphic-node node-lead">Shortlist</span>
-            <span class="graphic-node node-follow">Apply</span>
-            <span class="graphic-node node-enrolled">Fly out</span>
-            <span class="graphic-line line-one"></span>
-            <span class="graphic-line line-two"></span>
-        </div>
-        <div class="visual-content">
-            <span class="eyebrow crm-login-visual-eyebrow">Keep your account safe</span>
-            <h2>Your plan is private to you.</h2>
-            <p>Don't share your password. If you think someone else knows it, change it here or ask your counsellor to reset it.</p>
-        </div>
-    </aside>
+
+    @include('student.partials.auth-visual', [
+        'eyebrow' => 'Keep your account safe',
+        'lead' => 'Your plan is',
+        'gold' => 'private',
+        'tail' => 'to you.',
+        'text' => "Don't share your password. If you think someone else knows it, change it here or ask your counsellor to reset it.",
+    ])
 </main>
-<div class="transition-screen" id="transitionScreen" aria-hidden="true">
-    <div class="transition-card">
-        <span class="transition-logo"><img src="{{ asset('assets/Logo/mark-light.svg') }}" alt=""></span>
-        <span class="transition-rings" aria-hidden="true"><i></i><i></i><i></i></span>
-        <strong data-transition-copy>Saving…</strong>
-        <small>One Degree student portal</small>
-    </div>
-</div>
-<script src="{{ asset('assets/crm/crm.js') }}?v={{ filemtime(public_path('assets/crm/crm.js')) }}" defer></script>
+@include('student.partials.auth-transition', ['label' => 'Saving…'])
 </body>
 </html>

@@ -3,70 +3,66 @@
 <head>
     @include('student.partials.auth-head', ['title' => 'Student sign in'])
 </head>
-<body>
+<body class="sp-body">
 @include('crm.partials.toasts', [
     'successMessage' => session('status'),
     'errorMessage' => $errors->first(),
 ])
-<main class="crm-login">
-    <section class="login-panel">
-        <div class="login-card auth-step">
-            <div class="login-brand">
-                <span class="brand-mark"><img src="{{ asset('assets/Logo/mark-light.svg') }}" alt=""></span>
-                <span class="brand-copy"><strong>One Degree Advisory</strong><span>Student portal</span></span>
-            </div>
+<main class="sp-auth">
+    <section class="sp-panel">
+        <div class="sp-card">
+            <a class="sp-brand" href="{{ url('/') }}">
+                <img src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory">
+                <span><b>One Degree</b><small>Student portal</small></span>
+            </a>
 
-            <span class="eyebrow">Your study abroad journey</span>
-            <h1>Welcome back</h1>
-            <p class="login-intro">Sign in with the email address and password your counsellor gave you when they set up your journey planner.</p>
+            <span class="sp-eyebrow">Your study abroad journey</span>
+            <h1>Welcome <em>back</em></h1>
+            <p class="sp-intro">Sign in with the email address and password your counsellor gave you when they set up your journey planner.</p>
 
-            <form method="post" action="{{ route('student.login.attempt') }}" data-transition-form data-transition-label="Opening your journey…">
+            <form method="post" action="{{ route('student.login.attempt') }}" class="sp-form" data-transition-form data-transition-label="Opening your journey…">
                 @csrf
-                <div class="field">
+                <div class="sp-field">
                     <label for="email">Email address</label>
-                    <div class="input-wrap"><input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" placeholder="name@domain.com" autofocus required></div>
+                    <div class="sp-input">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+                        <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" placeholder="name@domain.com" autofocus required>
+                    </div>
                 </div>
-                <div class="field">
+                <div class="sp-field">
                     <label for="password">Password</label>
-                    <div class="input-wrap"><input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required></div>
+                    <div class="sp-input">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>
+                        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+                        <button type="button" class="sp-reveal" data-sp-reveal="password" aria-label="Show password" aria-pressed="false">
+                            <svg class="eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5C18 5.5 21.5 12 21.5 12a17 17 0 0 1-3 3.8M6.2 6.9C3.9 8.6 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+                        </button>
+                    </div>
                 </div>
-                <button class="btn btn-navy btn-block" type="submit">Sign in <span aria-hidden="true">→</span></button>
+                <button class="sp-btn" type="submit"><span>Sign in</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
             </form>
-            <div class="login-meta"><span>Forgot your password? Ask your counsellor for a new one.</span></div>
+
+            <div class="sp-meta">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>
+                <span>Forgot your password? Ask your counsellor for a new one.</span>
+            </div>
+            <div class="sp-trust" aria-hidden="true">
+                <span><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.4 3 8.3 7 9.5 4-1.2 7-5.1 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Private to you</span>
+                <span><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>Updates live</span>
+                <span><svg viewBox="0 0 24 24"><path d="M17 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20"/><circle cx="10" cy="7.5" r="3.5"/><path d="M21 20v-1.5a4 4 0 0 0-3-3.9M16 4.1a3.5 3.5 0 0 1 0 6.8"/></svg>Your counsellor sees it too</span>
+            </div>
         </div>
     </section>
-    <aside class="login-visual">
-        <div class="login-graphic" aria-hidden="true">
-            <span class="orbit orbit-one"><i></i></span>
-            <span class="orbit orbit-two"><i></i></span>
-            <span class="orbit orbit-three"><i></i></span>
-            <span class="graphic-node node-lead">Shortlist</span>
-            <span class="graphic-node node-follow">Apply</span>
-            <span class="graphic-node node-enrolled">Fly out</span>
-            <span class="graphic-line line-one"></span>
-            <span class="graphic-line line-two"></span>
-        </div>
-        <div class="visual-content">
-            <span class="eyebrow crm-login-visual-eyebrow">Everything in one place</span>
-            <h2>Your whole journey abroad, one step at a time.</h2>
-            <p>See what's done, what's next and what's due, from your first consultation to the day you fly out.</p>
-            <div class="visual-grid">
-                <div class="visual-card"><b>Your next steps</b><span>The tasks that are yours, earliest first.</span></div>
-                <div class="visual-card"><b>Every university</b><span>A checklist for each application, through to the visa.</span></div>
-                <div class="visual-card"><b>Deadlines</b><span>Every date in one list, with anything late flagged.</span></div>
-                <div class="visual-card"><b>Tick things off</b><span>Mark a task done and your counsellor sees it straight away.</span></div>
-            </div>
-        </div>
-    </aside>
+
+    @include('student.partials.auth-visual', [
+        'eyebrow' => 'Everything in one place',
+        'lead' => 'Your journey abroad,',
+        'gold' => 'one degree',
+        'tail' => 'at a time.',
+        'text' => "See what's done, what's next and what's due, from your first consultation to the day you fly out.",
+    ])
 </main>
-<div class="transition-screen" id="transitionScreen" aria-hidden="true">
-    <div class="transition-card">
-        <span class="transition-logo"><img src="{{ asset('assets/Logo/mark-light.svg') }}" alt=""></span>
-        <span class="transition-rings" aria-hidden="true"><i></i><i></i><i></i></span>
-        <strong data-transition-copy>Opening your journey…</strong>
-        <small>One Degree student portal</small>
-    </div>
-</div>
-<script src="{{ asset('assets/crm/crm.js') }}?v={{ filemtime(public_path('assets/crm/crm.js')) }}" defer></script>
+@include('student.partials.auth-transition', ['label' => 'Opening your journey…'])
 </body>
 </html>
