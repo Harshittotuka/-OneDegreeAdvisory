@@ -939,22 +939,70 @@ body:not(.jp-mode-student) .jp-counsellor b { color: #fff; }
 .jp-task-files { margin: 4px 0 0; padding-left: 18px; font-size: 0.86rem; }
 .jp-task-files li { margin: 2px 0; }
 
-/* Recent changes on the dashboard. */
-.jp-changes { list-style: none; margin: 0; padding: 0; }
-.jp-change { display: grid; grid-template-columns: 10px 1fr auto; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
-.jp-change:first-child { border-top: 0; }
-.jp-change-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; background: var(--blue); }
-.jp-change-dot.student { background: var(--gold); }
-.jp-change .w { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.jp-change .t { font-size: 0.9rem; overflow-wrap: anywhere; }
-.jp-change .s { font-size: 0.84rem; color: var(--ink-2); overflow-wrap: anywhere; }
-.jp-change .by { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.78rem; text-align: right; white-space: nowrap; }
-.jp-change.new { background: var(--blue-soft); margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-radius: 10px; }
-.jp-new { display: inline-block; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; background: var(--blue); color: #fff; vertical-align: 1px; }
+/* Recent changes on the dashboard: one timeline, broken into days. Each part
+   of the plan keeps its own icon and colour; a change since you last looked
+   gets an orange dot and a soft orange edge rather than a filled row, so a
+   long run of new lines stays calm to read. */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.jp-changes-card .jp-card-h { align-items: center; flex-wrap: wrap; }
+.jp-chg-count { color: var(--orange-ink); font-weight: 800; }
+.jp-chg-tools { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.jp-chg-tools .jp-seg button .num { margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--orange); color: #fff; font-size: 0.68rem; }
+.jp-chg-day { position: relative; display: flex; align-items: center; gap: 10px; margin: 18px 0 6px; font-family: var(--body); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.jp-chg-day::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.jp-changes-card .jp-card-h + .jp-chg-day { margin-top: 4px; }
+.jp-chg-list { position: relative; list-style: none; margin: 0; padding: 0; }
+/* The thread that joins the icons down the day. */
+.jp-chg-list::before { content: ""; position: absolute; left: 17px; top: 18px; bottom: 18px; width: 2px; border-radius: 2px; background: var(--line); }
+.jp-chg { position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 9px 12px 9px 0; border-radius: 12px; }
+.jp-chg:hover { background: var(--surface-2); }
+.jp-chg.new { background: linear-gradient(90deg, rgba(255, 94, 50, 0.07), transparent 60%); }
+.jp-chg-ico { position: relative; z-index: 1; width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--surface); box-shadow: 0 0 0 3px var(--surface), inset 0 0 0 1px var(--line-2); color: var(--muted); }
+.jp-chg-ico svg { width: 17px; height: 17px; }
+.jp-chg .w { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.jp-chg .t { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 0.9rem; line-height: 1.3; }
+.jp-chg .t b { font-weight: 700; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jp-chg-new { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 3px rgba(255, 94, 50, 0.18); }
+.jp-chg .s { display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: 0.82rem; color: var(--ink-2); overflow-wrap: anywhere; }
+.jp-chg-sec { flex: none; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 7px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
+.jp-chg .by { display: flex; align-items: center; gap: 9px; white-space: nowrap; text-align: right; }
+.jp-chg .by b { display: block; font-size: 0.8rem; font-weight: 700; color: var(--ink-2); }
+.jp-chg .by small { display: block; font-size: 0.74rem; color: var(--muted); }
+.jp-chg .by > span:last-child { display: flex; flex-direction: column; align-items: flex-end; }
+.jp-chg-who { order: 2; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 0.66rem; font-weight: 800; background: var(--blue-soft); color: var(--navy); }
+.jp-chg-who.student { background: var(--orange-soft); color: var(--orange-ink); }
+.jp-chg-more { display: flex; justify-content: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+/* Colours by part of the plan, on the icon and its label alike. */
+.jp-chg-ico.k-journey { color: var(--green-ink); background: var(--green-soft); }
+.jp-chg-ico.k-uni { color: var(--purple-ink); background: var(--purple-soft); }
+.jp-chg-ico.k-doc { color: var(--cyan); background: var(--cyan-soft); }
+.jp-chg-ico.k-deadline { color: var(--pink-ink); background: var(--pink-soft); }
+.jp-chg-ico.k-meeting { color: var(--navy); background: var(--blue-soft); }
+.jp-chg-ico.k-team { color: var(--orange-ink); background: var(--orange-soft); }
+.jp-chg-ico.k-plan, .jp-chg-ico.k-login { color: var(--gold-ink); background: var(--gold-soft); }
+.jp-chg-sec.k-journey { color: var(--green-ink); background: var(--green-soft); }
+.jp-chg-sec.k-uni { color: var(--purple-ink); background: var(--purple-soft); }
+.jp-chg-sec.k-doc { color: #0b7891; background: var(--cyan-soft); }
+.jp-chg-sec.k-deadline { color: var(--pink-ink); background: var(--pink-soft); }
+.jp-chg-sec.k-meeting { color: var(--navy); background: var(--blue-soft); }
+.jp-chg-sec.k-team { color: var(--orange-ink); background: var(--orange-soft); }
+.jp-chg-sec.k-plan, .jp-chg-sec.k-login { color: var(--gold-ink); background: var(--gold-soft); }
 @media (max-width: 640px) {
-    .jp-change { grid-template-columns: 10px 1fr; }
-    .jp-change .by { grid-column: 2; flex-direction: row; gap: 8px; align-items: baseline; }
+    .jp-chg { grid-template-columns: 36px minmax(0, 1fr); row-gap: 4px; align-items: start; padding-right: 6px; }
+    .jp-chg .by { grid-column: 2; justify-content: flex-start; }
+    .jp-chg .by > span:last-child { flex-direction: row; gap: 6px; align-items: baseline; }
+    .jp-chg-who { display: none; }
+    .jp-chg .s { flex-wrap: wrap; gap: 4px 8px; }
 }
+
+/* A finished stage keeps its number; the tick sits on its corner. */
+.jp-phase-no, .jp-route .stop { position: relative; }
+.jp-tick-badge {
+    position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%;
+    display: grid; place-items: center; background: #fff; color: var(--green);
+    box-shadow: 0 0 0 2px var(--green), 0 2px 6px rgba(18, 161, 80, 0.35);
+}
+.jp-phase-no .jp-tick-badge svg, .jp-route .stop .jp-tick-badge svg { width: 11px; height: 11px; }
 
 /* The card that shows a calendar entry's details on hover. */
 .jp-tip { position: fixed; z-index: 60; width: min(320px, calc(100vw - 24px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); border-radius: 14px; box-shadow: 0 14px 40px rgba(29, 35, 64, 0.18); padding: 12px 14px; font-size: 0.84rem; pointer-events: none; }

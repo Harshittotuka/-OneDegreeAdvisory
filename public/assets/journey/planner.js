@@ -508,7 +508,7 @@
             var cls = complete ? 'done' : (i === cur ? 'now' : '');
             return '<li class="' + cls + '"><button data-act="jump-phase" data-p="' + p.key + '" aria-label="Stage ' + (i + 1) + ', ' + esc(p.name) + ', ' + tally(r) + ' done">' +
                 (i === cur ? '<span class="here">You are here</span>' : '') +
-                '<span class="stop">' + (complete ? ICO.check : (i === cur ? ICO.plane : (i + 1))) + '</span>' +
+                '<span class="stop">' + (i === cur && !complete ? ICO.plane : (i + 1)) + (complete ? '<i class="jp-tick-badge">' + ICO.check + '</i>' : '') + '</span>' +
                 '<span class="name">' + esc(p.short) + '</span><span class="pct num">' + shortTally(r) + '</span></button></li>';
         }).join('');
         var progress = '<section class="jp-card jp-progress-card"><div class="jp-card-h"><div><h2>Journey progress</h2><p>' +
@@ -551,21 +551,54 @@
         var top = (P.changes || []).reduce(function (m, c) { return Math.max(m, c.id); }, 0);
         try { if (top) localStorage.setItem(SEEN_KEY, String(top)); } catch (e) { /* private window */ }
     }
+    /* Each part of the plan keeps one icon and one colour on the timeline. */
+    var CHANGE_KIND = {
+        'Core journey': ['journey', 'k-journey'], 'Universities': ['uni', 'k-uni'], 'Documents': ['doc', 'k-doc'],
+        'Deadlines': ['alarm', 'k-deadline'], 'Meetings': ['calendar', 'k-meeting'], 'Team': ['people', 'k-team'],
+        'Plan details': ['pen', 'k-plan'], 'Journey planner': ['spark', 'k-plan'], 'Student login': ['key', 'k-login']
+    };
+    function changeDay(iso) {
+        var d = new Date(iso), today = new Date(), y = new Date();
+        y.setDate(today.getDate() - 1);
+        if (d.toDateString() === today.toDateString()) return 'Today';
+        if (d.toDateString() === y.toDateString()) return 'Yesterday';
+        return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
+    }
+    function changeTime(iso) { return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
     function changesCard() {
-        var list = P.changes || [];
+        var all = P.changes || [];
+        var isNew = function (c) { return SEEN && c.id > SEEN; };
+        var fresh = all.filter(isNew).length;
+        if (UI.changesNewOnly && !fresh) UI.changesNewOnly = false;
+        var list = UI.changesNewOnly ? all.filter(isNew) : all;
         var shown = UI.allChanges ? list : list.slice(0, 8);
-        var fresh = SEEN ? list.filter(function (c) { return c.id > SEEN; }).length : 0;
-        var rows = shown.map(function (c) {
-            return '<li class="jp-change' + (SEEN && c.id > SEEN ? ' new' : '') + '">' +
-                '<span class="jp-change-dot ' + (c.byStudent ? 'student' : 'team') + '" aria-hidden="true"></span>' +
-                '<span class="w"><span class="t"><b>' + esc(c.subject) + '</b> <span class="muted">· ' + esc(c.section) + '</span>' + (SEEN && c.id > SEEN ? ' <span class="jp-new">New</span>' : '') + '</span>' +
-                '<span class="s">' + esc(c.what) + '</span></span>' +
-                '<span class="by"><span>' + esc(c.who) + '</span><span class="muted">' + esc(when(c.at)) + '</span></span></li>';
-        }).join('');
-        return '<section class="jp-card"><div class="jp-card-h"><div><h2>Recent changes</h2><p>' +
-            (list.length ? (fresh ? plural(fresh, 'new change', 'new changes') + ' since you last looked. ' : '') + 'Everything changed on this plan, newest first.' : 'Changes to this plan will show here.') + '</p></div>' +
-            (list.length > 8 ? '<button class="jp-btn ghost sm" data-act="toggle-changes">' + (UI.allChanges ? 'Show fewer' : 'Show more') + '</button>' : '') + '</div>' +
-            (list.length ? '<ul class="jp-changes">' + rows + '</ul>' : '<div class="jp-empty">Nothing yet.</div>') + '</section>';
+        // One timeline, broken into days; within a day only the time is shown.
+        var lastDay = null, body = '';
+        shown.forEach(function (c) {
+            var day = changeDay(c.at), kind = CHANGE_KIND[c.section] || ['spark', 'k-plan'];
+            if (day !== lastDay) {
+                body += (lastDay === null ? '' : '</ol>') + '<h3 class="jp-chg-day">' + esc(day) + '</h3><ol class="jp-chg-list">';
+                lastDay = day;
+            }
+            body += '<li class="jp-chg' + (isNew(c) ? ' new' : '') + '">' +
+                '<span class="jp-chg-ico ' + kind[1] + '" aria-hidden="true">' + ICO[kind[0]] + '</span>' +
+                '<span class="w"><span class="t">' + (isNew(c) ? '<i class="jp-chg-new" title="New since you last looked"></i><span class="sr">New: </span>' : '') + '<b>' + esc(c.subject) + '</b></span>' +
+                '<span class="s"><span class="jp-chg-sec ' + kind[1] + '">' + esc(c.section) + '</span>' + esc(c.what) + '</span></span>' +
+                '<span class="by"><span class="jp-chg-who' + (c.byStudent ? ' student' : '') + '" title="' + esc(c.who) + '">' + esc(initials(c.who === 'You' ? P.student.name : c.who)) + '</span>' +
+                '<span><b>' + esc(c.who) + '</b><small class="num">' + esc(changeTime(c.at)) + '</small></span></span></li>';
+        });
+        if (lastDay !== null) body += '</ol>';
+
+        var tools = all.length ? '<div class="jp-chg-tools">' +
+            (fresh ? '<div class="jp-seg" role="group" aria-label="Which changes"><button class="' + (UI.changesNewOnly ? '' : 'on') + '" data-act="changes-filter" data-v="all">All</button>' +
+                '<button class="' + (UI.changesNewOnly ? 'on' : '') + '" data-act="changes-filter" data-v="new">New <span class="num">' + fresh + '</span></button></div>' +
+                '<button class="jp-link" data-act="changes-seen">Mark all as seen</button>' : '') + '</div>' : '';
+        var more = list.length > 8 ? '<div class="jp-chg-more"><button class="jp-btn ghost sm" data-act="toggle-changes">' +
+            (UI.allChanges ? 'Show fewer' : 'Show all ' + list.length) + '</button></div>' : '';
+        return '<section class="jp-card jp-changes-card"><div class="jp-card-h"><div><h2>Recent changes</h2><p>' +
+            (all.length ? (fresh ? '<b class="jp-chg-count">' + plural(fresh, 'new change', 'new changes') + '</b> since you last looked. ' : '') + 'Everything changed on this plan, newest first.' : 'Changes to this plan will show here.') + '</p></div>' +
+            tools + '</div>' +
+            (all.length ? body + more : '<div class="jp-empty">Nothing yet.</div>') + '</section>';
     }
 
     function kpi(icon, k, v, s, cls, width) {
@@ -726,7 +759,7 @@
             }
             return '<div class="jp-phase ph-c' + (i % 7) + (open ? ' open' : '') + (complete ? ' complete' : '') + (i === cur ? ' current' : '') + '" id="ph-' + p.key + '">' +
                 '<button class="jp-phase-h" data-act="toggle-phase" data-p="' + p.key + '" aria-expanded="' + open + '">' +
-                '<span class="jp-phase-no">' + (complete ? ICO.check : (i + 1)) + '</span>' +
+                '<span class="jp-phase-no">' + (i + 1) + (complete ? '<i class="jp-tick-badge">' + ICO.check + '</i>' : '') + '</span>' +
                 '<span><span class="ttl">' + esc(p.name) + (p.custom && isC() ? ' <span class="jp-added">Added</span>' : '') + '</span><span class="tl">' + esc(p.timeline) + (isC() ? ' · ' + inc + ' of ' + p.activities.length + ' included' : ' · ' + plural(inc, 'task', 'tasks')) + '</span></span>' +
                 '<span class="jp-progress num"><span class="jp-bar"><i style="width:' + barWidth(r) + '"></i></span>' + tally(r) + '</span>' + ICO.chev +
                 '</button>' + body + '</div>';
@@ -1747,6 +1780,10 @@
                 return;
             case 'close-menu': UI.menu = false; render(); return;
             case 'toggle-changes': UI.allChanges = !UI.allChanges; render(); return;
+            case 'changes-filter': UI.changesNewOnly = el.dataset.v === 'new'; UI.allChanges = false; render(); return;
+            // The marker already moved forward when the page opened; this only
+            // clears the New marks from the page in front of them.
+            case 'changes-seen': SEEN = (P.changes || []).reduce(function (m, c) { return Math.max(m, c.id); }, 0); UI.changesNewOnly = false; render(); return;
             case 'close-modal': if (e.target === el) closeModal(); return;
             case 'cancel': closeModal(); return;
             case 'toggle-phase': {
