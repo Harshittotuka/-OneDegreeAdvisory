@@ -100,70 +100,94 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
 .jp-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- app shell ---------- */
-.jp-app { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); min-height: 100vh; }
+.jp-app { display: grid; grid-template-columns: calc(var(--side-w) + 12px) minmax(0, 1fr); min-height: 100vh; }
+/* The side panel floats as a card, a little in from the screen's edge, in
+   the manner of the website's dropdown cards: hairline border, soft shadow,
+   rounded corners. Slim inside: small icon tiles, and the page you're on in
+   a tinted, outlined row with a solid tile. */
 .jp-side {
-    position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
-    padding: calc(20px + env(safe-area-inset-top, 0px)) 14px 16px;
-    background: var(--surface); border-right: 1px solid var(--line);
+    position: sticky; top: 12px; height: calc(100vh - 24px); margin: 12px 0 12px 12px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 2px;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 12px 12px;
+    background: var(--surface); border: 1px solid rgba(26, 0, 136, 0.08); border-radius: 22px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 20px 44px -30px rgba(26, 0, 136, 0.4), 0 2px 6px -4px rgba(40, 33, 22, 0.12);
+    scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
 }
-.jp-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; }
+.jp-brand { position: relative; display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; margin-bottom: 14px; }
+/* A hairline with a small diamond at its centre, as under the website's headings. */
+.jp-brand::before { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2) 18%, var(--line-2) 82%, transparent); }
+.jp-brand::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg); background: var(--orange); box-shadow: 0 0 0 3px var(--surface); }
 .jp-brand-mark { display: grid; place-items: center; flex: none; }
 .jp-brand-mark img { height: 26px; width: auto; display: block; }
 .jp-brand b { display: block; font-size: 0.86rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--navy); line-height: 1.2; }
 .jp-brand small { display: block; white-space: nowrap; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange); }
-.jp-who { padding: 12px; margin: 0 0 12px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.jp-who {
+    padding: 12px 12px 10px; margin: 0 0 14px; border-radius: 16px;
+    background: linear-gradient(160deg, #ffffff 0%, var(--surface-2) 100%);
+    border: 1px solid var(--line); box-shadow: 0 6px 16px -14px rgba(26, 0, 136, 0.5);
+}
 .jp-who-top { display: flex; gap: 10px; align-items: center; }
-.jp-who b { display: block; font-size: 0.9rem; line-height: 1.25; color: var(--navy); }
+.jp-who-top > div { min-width: 0; }
+.jp-who b { display: block; font-size: 0.9rem; line-height: 1.25; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jp-who small { display: block; font-size: 0.74rem; color: var(--muted); }
-.jp-who-bar { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); margin: 10px 0 6px; font-weight: 600; }
+.jp-who .jp-avatar { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px rgba(26, 0, 136, 0.18); }
+.jp-who-bar { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); margin: 12px 0 6px; font-weight: 600; }
 .jp-who-bar b { color: var(--orange-ink); display: inline; }
-.jp-bar.side { background: var(--track); height: 6px; }
-.jp-bar.side i { background: var(--orange); }
+.jp-who-pct { margin-top: 5px; font-size: 0.68rem; font-weight: 600; color: var(--muted); }
+.jp-bar.side { background: var(--track); height: 5px; }
+.jp-bar.side i { background: linear-gradient(90deg, #ff8a5c, var(--orange)); }
 .jp-avatar { width: 36px; height: 36px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 800; font-size: 0.78rem; background: var(--navy); color: #fff; }
 .jp-avatar.sm { width: 34px; height: 34px; font-size: 0.74rem; }
 .jp-avatar.alt { background: var(--orange); }
-.jp-nav-label { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); padding: 6px 12px 4px; }
-.jp-nav { display: flex; flex-direction: column; gap: 1px; }
-/* Plain icon and label, as in the website's menu: the page you're on gets
-   the orange tint and the orange bar down its left edge. */
+.jp-nav-label { display: flex; align-items: center; gap: 8px; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 4px 10px 6px; }
+.jp-nav-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.jp-nav { display: flex; flex-direction: column; gap: 2px; }
 .jp-nav-link {
-    position: relative; display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 12px; border-radius: 10px; border: none; background: none;
-    color: var(--navy); text-decoration: none; font-weight: 600; font-size: 0.9rem; text-align: left;
+    position: relative; display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 10px 6px 6px;
+    border-radius: 12px; border: 1px solid transparent; background: none;
+    color: var(--ink-2); text-decoration: none; font-weight: 600; font-size: 0.88rem; text-align: left;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
-.jp-nav-link:hover { background: var(--blue-soft); }
-.jp-nav-link.active { background: var(--orange-soft); font-weight: 700; }
-.jp-nav-link.active::before { content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 20px; transform: translateY(-50%); border-radius: 0 4px 4px 0; background: var(--orange); }
-.jp-nav-ico { width: 20px; height: 20px; display: grid; place-items: center; flex: none; color: var(--muted); }
-.jp-nav-ico svg { width: 18px; height: 18px; }
-.jp-nav-link:hover .jp-nav-ico { color: var(--navy); }
-.jp-nav-link.active .jp-nav-ico { color: var(--orange); }
-.jp-badge { margin-left: auto; min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--pink); color: #fff; font-size: 0.72rem; text-align: center; line-height: 1.7; font-weight: 800; }
-.jp-side-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 1px; }
+.jp-nav-link:hover { background: var(--surface-2); color: var(--navy); }
+.jp-nav-link.active { background: var(--orange-soft); border-color: rgba(255, 94, 50, 0.22); color: var(--navy); font-weight: 700; }
+.jp-nav-ico { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; flex: none; color: var(--muted); transition: background .15s ease, color .15s ease; }
+.jp-nav-ico svg { width: 17px; height: 17px; }
+.jp-nav-link:hover .jp-nav-ico { background: var(--blue-soft); color: var(--navy); }
+.jp-nav-link.active .jp-nav-ico { background: var(--orange); color: #fff; box-shadow: 0 6px 12px -6px rgba(255, 94, 50, 0.8); }
+.jp-badge { margin-left: auto; min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--pink); color: #fff; font-size: 0.7rem; text-align: center; line-height: 1.7; font-weight: 800; box-shadow: 0 0 0 2px var(--surface); }
+.jp-side-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
 .jp-side-foot form { margin: 0; }
-.jp-counsellor { padding: 4px 12px 8px; }
-.jp-counsellor small { display: block; font-size: 0.72rem; color: var(--muted); }
-.jp-counsellor b { font-size: 0.9rem; color: var(--navy); }
+.jp-counsellor { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; padding: 9px 10px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.jp-counsellor > span:last-child { min-width: 0; }
+.jp-counsellor .jp-avatar { width: 30px; height: 30px; font-size: 0.66rem; }
+.jp-counsellor small { display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.jp-counsellor b { display: block; font-size: 0.86rem; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jp-scrim { display: none; }
 
 /* The counsellor's (and partner's) side panel carries a light golden tone,
    so the CRM's planner reads apart from the student's own portal at a
-   glance: the same light, slim panel, washed in warm gold, with gold on the
-   page you're on in place of the orange. */
+   glance: the same card, washed in warm gold, with gold where the student's
+   panel has orange. */
 body:not(.jp-mode-student) .jp-side {
     background: linear-gradient(180deg, #fffaf0 0%, #fbf1dc 100%);
-    border-right-color: rgba(201, 151, 31, 0.35);
+    border-color: rgba(201, 151, 31, 0.3);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 20px 44px -30px rgba(138, 100, 16, 0.45), 0 2px 6px -4px rgba(40, 33, 22, 0.12);
 }
 body:not(.jp-mode-student) .jp-brand small { color: var(--gold-ink); }
-body:not(.jp-mode-student) .jp-who { background: rgba(255, 255, 255, 0.7); border-color: rgba(201, 151, 31, 0.3); }
+body:not(.jp-mode-student) .jp-brand::before { background: linear-gradient(90deg, transparent, rgba(201, 151, 31, 0.45) 18%, rgba(201, 151, 31, 0.45) 82%, transparent); }
+body:not(.jp-mode-student) .jp-brand::after { background: var(--gold-grad); box-shadow: 0 0 0 3px #fffaf0; }
+body:not(.jp-mode-student) .jp-who { background: rgba(255, 255, 255, 0.75); border-color: rgba(201, 151, 31, 0.28); }
 body:not(.jp-mode-student) .jp-who-bar b { color: var(--gold-ink); }
 body:not(.jp-mode-student) .jp-bar.side { background: rgba(201, 151, 31, 0.16); }
 body:not(.jp-mode-student) .jp-bar.side i { background: var(--gold-grad); }
 body:not(.jp-mode-student) .jp-nav-label { color: var(--gold-ink); }
-body:not(.jp-mode-student) .jp-nav-link:hover { background: rgba(201, 151, 31, 0.1); }
-body:not(.jp-mode-student) .jp-nav-link.active { background: rgba(201, 151, 31, 0.18); }
-body:not(.jp-mode-student) .jp-nav-link.active::before { background: var(--gold); }
-body:not(.jp-mode-student) .jp-nav-link.active .jp-nav-ico { color: var(--gold-ink); }
+body:not(.jp-mode-student) .jp-nav-label::after { background: rgba(201, 151, 31, 0.28); }
 body:not(.jp-mode-student) .jp-side-foot { border-top-color: rgba(201, 151, 31, 0.28); }
+body:not(.jp-mode-student) .jp-nav-link:hover { background: rgba(201, 151, 31, 0.1); }
+body:not(.jp-mode-student) .jp-nav-link:hover .jp-nav-ico { background: rgba(201, 151, 31, 0.16); color: var(--gold-ink); }
+body:not(.jp-mode-student) .jp-nav-link.active { background: rgba(201, 151, 31, 0.16); border-color: rgba(201, 151, 31, 0.35); }
+body:not(.jp-mode-student) .jp-nav-link.active .jp-nav-ico { background: var(--gold-grad); color: #3d2a00; box-shadow: 0 6px 12px -6px rgba(169, 121, 29, 0.8); }
+body:not(.jp-mode-student) .jp-counsellor { background: rgba(255, 255, 255, 0.7); border-color: rgba(201, 151, 31, 0.28); }
 
 .jp-body { min-width: 0; display: flex; flex-direction: column; }
 .jp-topbar {
@@ -547,7 +571,7 @@ body:not(.jp-mode-student) .jp-side-foot { border-top-color: rgba(201, 151, 31, 
 @media (max-width: 900px) {
     /* The sidebar becomes a drawer behind the menu button. */
     .jp-app { grid-template-columns: 1fr; }
-    .jp-side { position: fixed; z-index: 60; left: 0; top: 0; bottom: 0; width: min(290px, 86vw); transform: translateX(-100%); transition: transform .2s; box-shadow: var(--shadow); }
+    .jp-side { position: fixed; z-index: 60; left: 0; top: 0; bottom: 0; height: auto; margin: 0; width: min(290px, 86vw); border-radius: 0 22px 22px 0; border-left: 0; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--shadow); }
     .menu-open .jp-side { transform: none; }
     .menu-open .jp-scrim { display: block; position: fixed; inset: 0; z-index: 55; background: var(--backdrop); }
     .jp-menu { display: grid; }
