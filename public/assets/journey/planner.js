@@ -1129,7 +1129,7 @@
 
     /** The data-act attributes that open whatever a calendar entry stands for. */
     function eventAction(e) {
-        if (e.type === 'meeting') return ' data-act="cal-open-meeting" data-k="' + esc(e.key) + '"';
+        if (e.type === 'meeting') return ' data-act="' + (isC() ? 'edit-meeting' : 'cal-open-meeting') + '" data-k="' + esc(e.key) + '"';
         if (e.type === 'task') return ' data-act="jump-item" data-scope="' + e.scope + '" data-app="' + (e.appId || '') + '" data-key="' + esc(e.itemKey) + '"';
         if (e.type === 'uni' && e.appId) return ' data-act="open-uni" data-u="' + e.appId + '"';
         if (isC()) return ' data-act="edit-deadline" data-k="' + esc(e.key) + '"';
@@ -1255,6 +1255,28 @@
             (isC() ? '<button class="jp-btn ghost" data-act="add-deadline" data-v="own" data-d="' + iso + '">' + ICO.plus + ' Deadline</button>' +
                 '<button class="jp-btn ghost" data-act="add-meeting" data-d="' + iso + '">' + ICO.plus + ' Meeting</button>' : '') +
             '<button class="jp-btn" data-act="cancel">Close</button></div>', 'wide');
+    }
+
+    /* A meeting, as a student or partner reads it: when, how, with whom, the
+       way in, and the notes. The counsellor edits it instead. */
+    function openMeeting(m) {
+        var days = daysUntil(m.date);
+        var when = m.done ? 'Done' : days === 0 ? 'Today' : days < 0 ? plural(Math.abs(days), 'day', 'days') + ' ago' : 'In ' + plural(days, 'day', 'days');
+        var row = function (k, v) { return v ? '<dt>' + k + '</dt><dd>' + v + '</dd>' : ''; };
+        modal('<h3>' + esc(m.title) + '</h3>' +
+            '<p class="sub">' + esc(fmt(m.date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + ' · ' + when + '</p>' +
+            '<dl class="jp-kv">' +
+            row('Time', esc([m.time, m.minutes + ' min'].filter(Boolean).join(' · '))) +
+            row('How', esc(m.mode)) +
+            row('With', esc(m.who)) +
+            row('Joining link', m.link ? '<a class="jp-meet-join" href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link.replace(/^https:\/\//, '')) + '</a>' : '') +
+            row('Phone', m.phone ? '<a class="jp-meet-join" href="tel:' + esc(m.phone.replace(/[^0-9+]/g, '')) + '">' + esc(m.phone) + '</a>' : '') +
+            row('Notes', m.notes ? '<span style="white-space:pre-wrap">' + esc(m.notes) + '</span>' : '') +
+            '</dl>' +
+            (!m.link && !m.phone && !m.done ? '<p class="jp-hint">Your counsellor will add how to join before the meeting.</p>' : '') +
+            '<div class="jp-actions">' +
+            (m.link && !m.done ? '<a class="jp-btn" href="' + esc(m.link) + '" target="_blank" rel="noopener">Join</a>' : '') +
+            '<button class="jp-btn ghost" data-act="cancel">Close</button></div>');
     }
 
     /** One entry in the chosen day's panel, with whatever can be done to it. */
@@ -1913,6 +1935,8 @@
             // clears the New marks from the page in front of them.
             case 'changes-seen': SEEN = (P.changes || []).reduce(function (m, c) { return Math.max(m, c.id); }, 0); UI.changesNewOnly = false; render(); return;
             case 'close-modal': if (e.target === el) closeModal(); return;
+            // A meeting opened from the calendar by a student or partner.
+            case 'cal-open-meeting': { var om = findMeeting(el.dataset.k); if (om) openMeeting(om); return; }
             case 'cancel': closeModal(); return;
             case 'toggle-phase': {
                 var isOpen = !!document.querySelector('#ph-' + el.dataset.p + '.open');
@@ -2217,16 +2241,6 @@
                     P.meetings = res.meetings; render();
                     toast(res.sent ? 'Sent to ' + plural(res.sent, 'person', 'people') : 'Nothing went out — check the addresses.', !res.sent);
                 }, function (err) { render(); toast(err.message, true); });
-                return;
-            }
-            case 'cal-open-meeting': {
-                // A meeting opened from the month: the day it sits on is
-                // selected, and the meetings list below is scrolled to.
-                var cm = findMeeting(el.dataset.k);
-                if (!cm) return;
-                UI.cal.sel = cm.date;
-                render();
-                scrollToEl('jp-meetings');
                 return;
             }
             case 'meeting-done': {
