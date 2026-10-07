@@ -457,8 +457,9 @@
     }
 
     /* The look of the planner, chosen in the account menu: the themes listed
-       in config/themes.php (window.JP_THEMES), and for themes that have one,
-       light, dark or automatic appearance. Kept in this browser. */
+       in config/themes.php (window.JP_THEMES); for themes that have them,
+       light, dark or automatic appearance and tinted or clear glass. Kept in
+       this browser. */
     function appearanceMenu() {
         var T = window.JP_THEMES || { current: '', list: [] };
         if (T.list.length < 2) return '';
@@ -472,6 +473,7 @@
         return '<div class="jp-usermenu-sep"></div><div class="jp-usermenu-sec">' +
             '<span class="jp-usermenu-label">Look</span>' + seg('set-theme', T.list.map(function (t) { return [t.key, t.label]; }), T.current) +
             (cur.appearance ? '<span class="jp-usermenu-label">Appearance</span>' + seg('set-appearance', [['light', 'Light'], ['dark', 'Dark'], ['auto', 'Auto']], mode) : '') +
+            (cur.material ? '<span class="jp-usermenu-label">Glass</span>' + seg('set-glass', [['tinted', 'Tinted'], ['clear', 'Clear']], document.documentElement.dataset.glass || 'tinted') : '') +
             '</div>';
     }
 
@@ -1841,6 +1843,11 @@
             case 'set-theme':
                 try { localStorage.setItem('jpTheme', el.dataset.v); } catch (err) { /* private window */ }
                 if (window.JP_THEMES && el.dataset.v !== window.JP_THEMES.current) location.reload();
+                return;
+            case 'set-glass':
+                document.documentElement.dataset.glass = el.dataset.v;
+                try { localStorage.setItem('jpGlass', el.dataset.v); } catch (err) { /* private window */ }
+                render();
                 return;
             case 'set-appearance':
                 document.documentElement.dataset.appearance = el.dataset.v;

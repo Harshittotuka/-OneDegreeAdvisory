@@ -1,229 +1,240 @@
 /*
  * Glass — design tokens.
  *
- * The one source of colour, type, shape, depth and motion for the Glass
- * theme (config/themes.php). Every Glass stylesheet reads these and nothing
- * else, so a change here changes the whole theme. Loaded only when Glass is
- * the chosen theme, so the selectors need no theme scoping.
+ * The one source of colour, type, shape, depth, material and motion for the
+ * Glass theme (config/themes.php): iOS-style Liquid Glass. Every Glass
+ * stylesheet reads these and nothing else. Loaded only when Glass is the
+ * chosen theme, so the selectors need no theme scoping.
  *
- * Appearance: light by default; <html data-appearance="dark"> for dark, and
- * "auto" to follow the system.
+ *   <html data-appearance>  light (default) | dark | auto (follows the system)
+ *   <html data-glass>       tinted (default: frostier, a touch of the tint
+ *                           colour, easier to read) | clear (see-through)
  *
- * Surfaces, back to front:
- *   canvas    the wallpaper everything sits on
- *   pane      frosted chrome (sidebar, toolbar, tab bar): translucent + blur
- *   surface   content: opaque, for reading
- *   raised    a surface lifted above another (selected segment, ticket hover)
- *   float     menus, popovers, tooltips: frosted, deep shadow
- *   modal     dialogs over a dimmed page
+ * Layers, back to front: the wallpaper; glass panels (--lg-*), which blur
+ * and tint whatever is behind them; controls inside them, filled with
+ * translucent greys; and floating glass (menus, sheets, tooltips), frostier.
  */
 :root {
     color-scheme: light;
 
-    /* type: the system's own faces; nothing is downloaded */
+    /* type: the system's own faces (SF Pro on Apple devices) */
     --g-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --g-font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --g-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-    --g-fs-display: 1.625rem;   /* 26 */
-    --g-fs-h1: 1.375rem;        /* 22 */
-    --g-fs-h2: 1.0625rem;       /* 17 */
-    --g-fs-h3: 0.9375rem;       /* 15 */
-    --g-fs-h4: 0.8125rem;       /* 13 */
-    --g-fs-body: 0.875rem;      /* 14 */
-    --g-fs-table: 0.8125rem;    /* 13 */
-    --g-fs-small: 0.75rem;      /* 12 */
-    --g-fs-caption: 0.6875rem;  /* 11 */
-    --g-fs-label: 0.75rem;      /* 12 */
-    --g-fs-control: 0.8125rem;  /* 13: buttons, nav, inputs */
-    --g-lh-tight: 1.2;
-    --g-lh-body: 1.5;
-    --g-track-display: -0.022em;
-    --g-track-heading: -0.012em;
+    /* the iOS text styles, sized for a desk-width screen */
+    --g-fs-large: 1.875rem;     /* 30  large title */
+    --g-fs-display: 1.625rem;   /* 26  title 1 */
+    --g-fs-h1: 1.375rem;        /* 22  title 2 */
+    --g-fs-h2: 1.1875rem;       /* 19  title 3 */
+    --g-fs-h3: 1rem;            /* 16  headline */
+    --g-fs-h4: 0.875rem;        /* 14 */
+    --g-fs-body: 0.9375rem;     /* 15  body */
+    --g-fs-table: 0.875rem;     /* 14 */
+    --g-fs-small: 0.8125rem;    /* 13  footnote */
+    --g-fs-caption: 0.75rem;    /* 12  caption */
+    --g-fs-label: 0.8125rem;
+    --g-fs-control: 0.875rem;   /* 14  buttons, rows, fields */
+    --g-lh-tight: 1.15;
+    --g-lh-body: 1.45;
+    --g-track-display: -0.025em;
+    --g-track-heading: -0.015em;
     --g-w-regular: 400;
     --g-w-medium: 500;
     --g-w-semibold: 600;
+    --g-w-bold: 700;
 
-    /* shape: radius grows with elevation */
-    --g-r-xs: 5px;      /* tags, calendar chips */
-    --g-r-ctl: 8px;     /* buttons, fields, rows */
-    --g-r-card: 14px;   /* content surfaces */
-    --g-r-float: 12px;  /* menus, popovers */
-    --g-r-pane: 18px;   /* sidebar, dialogs */
-    --g-r-pill: 999px;
+    /* shape: generous and concentric */
+    --g-r-xs: 7px;
+    --g-r-ctl: 12px;      /* fields, rows */
+    --g-r-card: 26px;     /* glass panels */
+    --g-r-float: 22px;    /* menus, popovers */
+    --g-r-pane: 30px;     /* sidebar, sheets */
+    --g-r-pill: 999px;    /* buttons, segments, tags */
 
-    /* spacing: a 4px grid */
     --g-s1: 4px; --g-s2: 8px; --g-s3: 12px; --g-s4: 16px; --g-s5: 20px; --g-s6: 24px; --g-s8: 32px;
 
-    /* motion */
-    --g-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* motion: soft and springy */
+    --g-ease: cubic-bezier(0.25, 0.8, 0.25, 1);
     --g-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --g-dur-fast: 150ms;
-    --g-dur: 200ms;
-    --g-dur-slow: 250ms;
+    --g-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --g-dur-fast: 160ms;
+    --g-dur: 220ms;
+    --g-dur-slow: 320ms;
 
-    /* colour: light */
-    --g-canvas: #eef0f4;
-    --g-wallpaper:
-        radial-gradient(1100px 760px at -8% -12%, rgba(120, 160, 255, 0.30), transparent 62%),
-        radial-gradient(900px 700px at 108% -6%, rgba(196, 164, 255, 0.24), transparent 60%),
-        radial-gradient(1000px 760px at 100% 108%, rgba(255, 186, 150, 0.22), transparent 62%),
-        #eef0f4;
-    --g-pane: rgba(246, 247, 250, 0.62);
-    --g-pane-strong: rgba(248, 249, 251, 0.82);
-    --g-pane-blur: blur(30px) saturate(180%);
-    --g-surface: #ffffff;
-    --g-surface-2: #f6f7f9;     /* inset areas inside a surface */
-    --g-surface-3: #eef0f3;     /* headers, wells */
-    --g-raised: #ffffff;
-    --g-float: rgba(250, 250, 252, 0.86);
-
-    --g-ink: #1c1c1f;
-    --g-ink-2: #3a3b41;
-    --g-muted: #6e6f78;
-    --g-faint: #a0a1a8;
+    /* the iOS system colours (light) */
+    --g-accent: #007aff;   /* the tint */
+    --g-accent-hover: #0a6fe6;
+    --g-accent-press: #0062cc;
+    --g-accent-soft: rgba(0, 122, 255, 0.14);
+    --g-accent-ink: #0060d1;
     --g-on-accent: #ffffff;
+    --g-focus: 0 0 0 3.5px rgba(0, 122, 255, 0.38);
 
-    --g-separator: rgba(16, 18, 30, 0.09);
-    --g-separator-strong: rgba(16, 18, 30, 0.15);
-    --g-hairline: 0 0 0 0.5px rgba(16, 18, 30, 0.12);
-    --g-fill: rgba(118, 118, 128, 0.12);         /* control fill, tracks */
+    --g-green: #34c759;   --g-green-ink: #1e8a3c;   --g-green-soft: rgba(52, 199, 89, 0.18);
+    --g-orange: #ff9500;  --g-orange-ink: #b56800;  --g-orange-soft: rgba(255, 149, 0, 0.18);
+    --g-red: #ff3b30;     --g-red-ink: #d0261c;     --g-red-soft: rgba(255, 59, 48, 0.15);
+    --g-purple: #af52de;  --g-purple-ink: #8a33b8;  --g-purple-soft: rgba(175, 82, 222, 0.16);
+    --g-teal: #30b0c7;    --g-teal-ink: #1a7f91;    --g-teal-soft: rgba(48, 176, 199, 0.17);
+    --g-yellow: #ffcc00;  --g-yellow-ink: #9a7a00;  --g-yellow-soft: rgba(255, 204, 0, 0.22);
+    --g-indigo: #5856d6;  --g-indigo-ink: #4240b8;  --g-indigo-soft: rgba(88, 86, 214, 0.15);
+    --g-pink: #ff2d55;
+
+    --g-ink: #0b0b0f;
+    --g-ink-2: rgba(28, 28, 34, 0.86);
+    --g-muted: rgba(40, 40, 52, 0.62);   /* secondary label */
+    --g-faint: rgba(40, 40, 52, 0.36);   /* tertiary label */
+
+    /* the wallpaper the glass picks its colour up from */
+    --g-canvas: #e4ebfb;
+    --g-wallpaper:
+        radial-gradient(900px 720px at 6% -6%, #9cc8ff 0%, transparent 62%),
+        radial-gradient(820px 720px at 96% 4%, #d4b2ff 0%, transparent 60%),
+        radial-gradient(900px 820px at 86% 104%, #ffbdd2 0%, transparent 62%),
+        radial-gradient(780px 700px at -4% 100%, #a9f0dc 0%, transparent 60%),
+        linear-gradient(160deg, #e7eefd 0%, #f1ebfc 100%);
+
+    /* controls inside glass: translucent fills, as on iOS */
+    --g-fill: rgba(118, 118, 128, 0.12);
     --g-fill-hover: rgba(118, 118, 128, 0.18);
-    --g-fill-press: rgba(118, 118, 128, 0.24);
+    --g-fill-press: rgba(118, 118, 128, 0.26);
+    --g-separator: rgba(60, 60, 67, 0.14);
+    --g-separator-strong: rgba(60, 60, 67, 0.24);
+    --g-hairline: 0 0 0 0.5px rgba(60, 60, 67, 0.18);
+    --g-solid: #ffffff;            /* a knock-out ring behind a marker */
+    --g-surface: rgba(255, 255, 255, 0.58);
+    --g-surface-2: rgba(255, 255, 255, 0.34);
+    --g-surface-3: rgba(255, 255, 255, 0.5);
+    --g-raised: #ffffff;           /* a segmented control's thumb */
 
-    --g-accent: #0a68e0;
-    --g-accent-hover: #0959c2;
-    --g-accent-press: #084ca6;
-    --g-accent-soft: rgba(10, 104, 224, 0.11);
-    --g-accent-ink: #0857bd;
-    --g-focus: 0 0 0 3.5px rgba(10, 104, 224, 0.32);
+    --g-avatar: linear-gradient(180deg, #a3a8b4 0%, #858a96 100%);
+    --g-scrim: rgba(10, 14, 40, 0.22);
+    --g-hud: rgba(30, 32, 40, 0.72);
 
-    --g-green: #28a35a;   --g-green-ink: #1b7a41;   --g-green-soft: rgba(40, 163, 90, 0.12);
-    --g-orange: #e8870b;  --g-orange-ink: #a85e00;  --g-orange-soft: rgba(232, 135, 11, 0.13);
-    --g-red: #e0383e;     --g-red-ink: #b8232a;     --g-red-soft: rgba(224, 56, 62, 0.11);
-    --g-purple: #8a4fd6;  --g-purple-ink: #6c35b4;  --g-purple-soft: rgba(138, 79, 214, 0.12);
-    --g-teal: #1592b3;    --g-teal-ink: #0d6f8a;    --g-teal-soft: rgba(21, 146, 179, 0.12);
-    --g-yellow: #d4a00a;  --g-yellow-ink: #8d6a00;  --g-yellow-soft: rgba(212, 160, 10, 0.15);
-    --g-indigo: #5856d6;  --g-indigo-ink: #4240b8;  --g-indigo-soft: rgba(88, 86, 214, 0.12);
-
-    /* the monogram avatar, as on a contact card */
-    --g-avatar: linear-gradient(180deg, #a7aab2 0%, #868a93 100%);
-
-    /* depth */
-    --g-shadow-1: 0 0 0 0.5px rgba(16, 18, 30, 0.08), 0 1px 2px rgba(16, 18, 30, 0.06);
-    --g-shadow-2: 0 0 0 0.5px rgba(16, 18, 30, 0.08), 0 1px 3px rgba(16, 18, 30, 0.05), 0 6px 16px rgba(16, 18, 30, 0.06);
-    --g-shadow-3: 0 0 0 0.5px rgba(16, 18, 30, 0.12), 0 2px 6px rgba(16, 18, 30, 0.07), 0 14px 36px rgba(16, 18, 30, 0.16);
-    --g-shadow-modal: 0 0 0 0.5px rgba(16, 18, 30, 0.14), 0 30px 80px rgba(16, 18, 30, 0.28), 0 4px 14px rgba(16, 18, 30, 0.10);
-    --g-shadow-control: 0 0 0 0.5px rgba(16, 18, 30, 0.14), 0 1px 1.5px rgba(16, 18, 30, 0.10);
-    --g-scrim: rgba(18, 20, 28, 0.26);
-    --g-hud: rgba(30, 31, 36, 0.86);
+    /* ---------- Liquid Glass ---------- */
+    --lg-base: 255 255 255;    /* the glass's own colour, before the tint */
+    --lg-a: 0.62;              /* how frosted (tinted) */
+    --lg-tint: 6%;             /* how much of the tint colour it carries */
+    --lg-blur: blur(28px) saturate(190%);
+    --lg-panel: color-mix(in srgb, var(--g-accent) var(--lg-tint), rgb(var(--lg-base) / var(--lg-a)));
+    --lg-strong: color-mix(in srgb, var(--g-accent) var(--lg-tint), rgb(var(--lg-base) / calc(var(--lg-a) + 0.16)));
+    --lg-control: rgb(var(--lg-base) / calc(var(--lg-a) - 0.06));
+    /* the gloss light catches on the top-left of a pane */
+    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0) 52%);
+    /* bright edges, and the shadow the pane casts */
+    --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.85), inset -1px -1px 0 rgba(255, 255, 255, 0.35), 0 0 0 0.5px rgba(255, 255, 255, 0.6);
+    --lg-lift: 0 10px 30px rgba(30, 40, 100, 0.13), 0 2px 6px rgba(30, 40, 100, 0.07);
+    --lg-lift-high: 0 24px 60px rgba(20, 28, 80, 0.22), 0 4px 14px rgba(20, 28, 80, 0.10);
 }
 
-/* colour: dark */
+/* clear glass: see-through, no tint */
+:root[data-glass="clear"] { --lg-a: 0.3; --lg-tint: 0%; }
+
+/* ---------- dark ---------- */
 :root[data-appearance="dark"] {
     color-scheme: dark;
-    --g-canvas: #121318;
+    --g-accent: #0a84ff;
+    --g-accent-hover: #2b95ff;
+    --g-accent-press: #0071e0;
+    --g-accent-soft: rgba(10, 132, 255, 0.24);
+    --g-accent-ink: #5aaeff;
+    --g-focus: 0 0 0 3.5px rgba(10, 132, 255, 0.5);
+    --g-green: #30d158;   --g-green-ink: #5fe07f;   --g-green-soft: rgba(48, 209, 88, 0.22);
+    --g-orange: #ff9f0a;  --g-orange-ink: #ffbb52;  --g-orange-soft: rgba(255, 159, 10, 0.22);
+    --g-red: #ff453a;     --g-red-ink: #ff7b73;     --g-red-soft: rgba(255, 69, 58, 0.22);
+    --g-purple: #bf5af2;  --g-purple-ink: #d390f6;  --g-purple-soft: rgba(191, 90, 242, 0.22);
+    --g-teal: #40c8e0;    --g-teal-ink: #7ad9ea;    --g-teal-soft: rgba(64, 200, 224, 0.2);
+    --g-yellow: #ffd60a;  --g-yellow-ink: #ffe25c;  --g-yellow-soft: rgba(255, 214, 10, 0.2);
+    --g-indigo: #5e5ce6;  --g-indigo-ink: #9897ff;  --g-indigo-soft: rgba(94, 92, 230, 0.24);
+    --g-pink: #ff375f;
+    --g-ink: #ffffff;
+    --g-ink-2: rgba(235, 235, 245, 0.86);
+    --g-muted: rgba(235, 235, 245, 0.6);
+    --g-faint: rgba(235, 235, 245, 0.3);
+    --g-canvas: #070912;
     --g-wallpaper:
-        radial-gradient(1100px 760px at -8% -12%, rgba(52, 92, 210, 0.30), transparent 62%),
-        radial-gradient(900px 700px at 108% -6%, rgba(126, 72, 190, 0.22), transparent 60%),
-        radial-gradient(1000px 760px at 100% 108%, rgba(170, 82, 70, 0.18), transparent 62%),
-        #121318;
-    --g-pane: rgba(36, 37, 43, 0.58);
-    --g-pane-strong: rgba(34, 35, 41, 0.86);
-    --g-surface: #1f2025;
-    --g-surface-2: #26272d;
-    --g-surface-3: #2c2d34;
-    --g-raised: #3a3b42;
-    --g-float: rgba(44, 45, 52, 0.86);
-
-    --g-ink: #f2f2f5;
-    --g-ink-2: #d7d8de;
-    --g-muted: #9c9da6;
-    --g-faint: #6e6f78;
-
-    --g-separator: rgba(255, 255, 255, 0.08);
-    --g-separator-strong: rgba(255, 255, 255, 0.14);
-    --g-hairline: 0 0 0 0.5px rgba(255, 255, 255, 0.10);
+        radial-gradient(900px 720px at 6% -6%, #1d3fa8 0%, transparent 62%),
+        radial-gradient(820px 720px at 96% 4%, #5a2a9e 0%, transparent 60%),
+        radial-gradient(900px 820px at 86% 104%, #8f2363 0%, transparent 62%),
+        radial-gradient(780px 700px at -4% 100%, #0d6670 0%, transparent 60%),
+        linear-gradient(160deg, #0a0d1f 0%, #120a1e 100%);
     --g-fill: rgba(118, 118, 128, 0.24);
     --g-fill-hover: rgba(118, 118, 128, 0.32);
-    --g-fill-press: rgba(118, 118, 128, 0.40);
-
-    --g-accent: #3d8bff;
-    --g-accent-hover: #5a9cff;
-    --g-accent-press: #2d78e8;
-    --g-accent-soft: rgba(61, 139, 255, 0.18);
-    --g-accent-ink: #7ab0ff;
-    --g-focus: 0 0 0 3.5px rgba(61, 139, 255, 0.45);
-
-    --g-green: #38c06c;   --g-green-ink: #5fd68d;   --g-green-soft: rgba(56, 192, 108, 0.18);
-    --g-orange: #f59f2a;  --g-orange-ink: #ffbe63;  --g-orange-soft: rgba(245, 159, 42, 0.18);
-    --g-red: #ff5a5f;     --g-red-ink: #ff8a8d;     --g-red-soft: rgba(255, 90, 95, 0.17);
-    --g-purple: #b182ff;  --g-purple-ink: #c9a8ff;  --g-purple-soft: rgba(177, 130, 255, 0.18);
-    --g-teal: #4cc3e0;    --g-teal-ink: #7dd6eb;    --g-teal-soft: rgba(76, 195, 224, 0.17);
-    --g-yellow: #f2c230;  --g-yellow-ink: #ffd766;  --g-yellow-soft: rgba(242, 194, 48, 0.17);
-    --g-indigo: #7d7bff;  --g-indigo-ink: #a3a1ff;  --g-indigo-soft: rgba(125, 123, 255, 0.18);
-
-    --g-avatar: linear-gradient(180deg, #7c7f88 0%, #5f626b 100%);
-
-    --g-shadow-1: 0 0 0 0.5px rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35);
-    --g-shadow-2: 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.28);
-    --g-shadow-3: 0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.5);
-    --g-shadow-modal: 0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 30px 80px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.4);
-    --g-shadow-control: 0 0 0 0.5px rgba(255, 255, 255, 0.10), 0 1px 1.5px rgba(0, 0, 0, 0.4);
+    --g-fill-press: rgba(118, 118, 128, 0.4);
+    --g-separator: rgba(255, 255, 255, 0.1);
+    --g-separator-strong: rgba(255, 255, 255, 0.18);
+    --g-hairline: 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+    --g-solid: #262833;
+    --g-surface: rgba(255, 255, 255, 0.07);
+    --g-surface-2: rgba(255, 255, 255, 0.045);
+    --g-surface-3: rgba(255, 255, 255, 0.1);
+    --g-raised: rgba(255, 255, 255, 0.28);
+    --g-avatar: linear-gradient(180deg, #7d828e 0%, #5d6270 100%);
     --g-scrim: rgba(0, 0, 0, 0.45);
-    --g-hud: rgba(52, 53, 60, 0.9);
+    --g-hud: rgba(60, 62, 72, 0.7);
+    --lg-base: 28 30 42;
+    --lg-a: 0.56;
+    --lg-tint: 9%;
+    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 34%, rgba(255, 255, 255, 0) 52%);
+    --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.22), inset -1px -1px 0 rgba(255, 255, 255, 0.07), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+    --lg-lift: 0 12px 36px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.3);
+    --lg-lift-high: 0 28px 70px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.35);
 }
+:root[data-appearance="dark"][data-glass="clear"] { --lg-a: 0.28; --lg-tint: 0%; }
 
-/* "auto" follows the system; the same values as dark, repeated because a
-   media query cannot share a rule with the attribute selector above */
+/* "auto" follows the system: the dark values again, because a media query
+   cannot share a rule with the attribute selector above */
 @media (prefers-color-scheme: dark) {
     :root[data-appearance="auto"] {
         color-scheme: dark;
-        --g-canvas: #121318;
+        --g-accent: #0a84ff;
+        --g-accent-hover: #2b95ff;
+        --g-accent-press: #0071e0;
+        --g-accent-soft: rgba(10, 132, 255, 0.24);
+        --g-accent-ink: #5aaeff;
+        --g-focus: 0 0 0 3.5px rgba(10, 132, 255, 0.5);
+        --g-green: #30d158;   --g-green-ink: #5fe07f;   --g-green-soft: rgba(48, 209, 88, 0.22);
+        --g-orange: #ff9f0a;  --g-orange-ink: #ffbb52;  --g-orange-soft: rgba(255, 159, 10, 0.22);
+        --g-red: #ff453a;     --g-red-ink: #ff7b73;     --g-red-soft: rgba(255, 69, 58, 0.22);
+        --g-purple: #bf5af2;  --g-purple-ink: #d390f6;  --g-purple-soft: rgba(191, 90, 242, 0.22);
+        --g-teal: #40c8e0;    --g-teal-ink: #7ad9ea;    --g-teal-soft: rgba(64, 200, 224, 0.2);
+        --g-yellow: #ffd60a;  --g-yellow-ink: #ffe25c;  --g-yellow-soft: rgba(255, 214, 10, 0.2);
+        --g-indigo: #5e5ce6;  --g-indigo-ink: #9897ff;  --g-indigo-soft: rgba(94, 92, 230, 0.24);
+        --g-pink: #ff375f;
+        --g-ink: #ffffff;
+        --g-ink-2: rgba(235, 235, 245, 0.86);
+        --g-muted: rgba(235, 235, 245, 0.6);
+        --g-faint: rgba(235, 235, 245, 0.3);
+        --g-canvas: #070912;
         --g-wallpaper:
-            radial-gradient(1100px 760px at -8% -12%, rgba(52, 92, 210, 0.30), transparent 62%),
-            radial-gradient(900px 700px at 108% -6%, rgba(126, 72, 190, 0.22), transparent 60%),
-            radial-gradient(1000px 760px at 100% 108%, rgba(170, 82, 70, 0.18), transparent 62%),
-            #121318;
-        --g-pane: rgba(36, 37, 43, 0.58);
-        --g-pane-strong: rgba(34, 35, 41, 0.86);
-        --g-surface: #1f2025;
-        --g-surface-2: #26272d;
-        --g-surface-3: #2c2d34;
-        --g-raised: #3a3b42;
-        --g-float: rgba(44, 45, 52, 0.86);
-        --g-ink: #f2f2f5;
-        --g-ink-2: #d7d8de;
-        --g-muted: #9c9da6;
-        --g-faint: #6e6f78;
-        --g-separator: rgba(255, 255, 255, 0.08);
-        --g-separator-strong: rgba(255, 255, 255, 0.14);
-        --g-hairline: 0 0 0 0.5px rgba(255, 255, 255, 0.10);
+            radial-gradient(900px 720px at 6% -6%, #1d3fa8 0%, transparent 62%),
+            radial-gradient(820px 720px at 96% 4%, #5a2a9e 0%, transparent 60%),
+            radial-gradient(900px 820px at 86% 104%, #8f2363 0%, transparent 62%),
+            radial-gradient(780px 700px at -4% 100%, #0d6670 0%, transparent 60%),
+            linear-gradient(160deg, #0a0d1f 0%, #120a1e 100%);
         --g-fill: rgba(118, 118, 128, 0.24);
         --g-fill-hover: rgba(118, 118, 128, 0.32);
-        --g-fill-press: rgba(118, 118, 128, 0.40);
-        --g-accent: #3d8bff;
-        --g-accent-hover: #5a9cff;
-        --g-accent-press: #2d78e8;
-        --g-accent-soft: rgba(61, 139, 255, 0.18);
-        --g-accent-ink: #7ab0ff;
-        --g-focus: 0 0 0 3.5px rgba(61, 139, 255, 0.45);
-        --g-green: #38c06c;   --g-green-ink: #5fd68d;   --g-green-soft: rgba(56, 192, 108, 0.18);
-        --g-orange: #f59f2a;  --g-orange-ink: #ffbe63;  --g-orange-soft: rgba(245, 159, 42, 0.18);
-        --g-red: #ff5a5f;     --g-red-ink: #ff8a8d;     --g-red-soft: rgba(255, 90, 95, 0.17);
-        --g-purple: #b182ff;  --g-purple-ink: #c9a8ff;  --g-purple-soft: rgba(177, 130, 255, 0.18);
-        --g-teal: #4cc3e0;    --g-teal-ink: #7dd6eb;    --g-teal-soft: rgba(76, 195, 224, 0.17);
-        --g-yellow: #f2c230;  --g-yellow-ink: #ffd766;  --g-yellow-soft: rgba(242, 194, 48, 0.17);
-        --g-indigo: #7d7bff;  --g-indigo-ink: #a3a1ff;  --g-indigo-soft: rgba(125, 123, 255, 0.18);
-        --g-avatar: linear-gradient(180deg, #7c7f88 0%, #5f626b 100%);
-        --g-shadow-1: 0 0 0 0.5px rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35);
-        --g-shadow-2: 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.28);
-        --g-shadow-3: 0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.5);
-        --g-shadow-modal: 0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 30px 80px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.4);
-        --g-shadow-control: 0 0 0 0.5px rgba(255, 255, 255, 0.10), 0 1px 1.5px rgba(0, 0, 0, 0.4);
+        --g-fill-press: rgba(118, 118, 128, 0.4);
+        --g-separator: rgba(255, 255, 255, 0.1);
+        --g-separator-strong: rgba(255, 255, 255, 0.18);
+        --g-hairline: 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+        --g-solid: #262833;
+        --g-surface: rgba(255, 255, 255, 0.07);
+        --g-surface-2: rgba(255, 255, 255, 0.045);
+        --g-surface-3: rgba(255, 255, 255, 0.1);
+        --g-raised: rgba(255, 255, 255, 0.28);
+        --g-avatar: linear-gradient(180deg, #7d828e 0%, #5d6270 100%);
         --g-scrim: rgba(0, 0, 0, 0.45);
-        --g-hud: rgba(52, 53, 60, 0.9);
+        --g-hud: rgba(60, 62, 72, 0.7);
+        --lg-base: 28 30 42;
+        --lg-a: 0.56;
+        --lg-tint: 9%;
+        --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 34%, rgba(255, 255, 255, 0) 52%);
+        --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.22), inset -1px -1px 0 rgba(255, 255, 255, 0.07), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+        --lg-lift: 0 12px 36px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.3);
+        --lg-lift-high: 0 28px 70px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.35);
     }
+    :root[data-appearance="auto"][data-glass="clear"] { --lg-a: 0.28; --lg-tint: 0%; }
 }
 
 /* The logo comes in two inks; the page shows the one its appearance needs. */
@@ -233,4 +244,11 @@
 @media (prefers-color-scheme: dark) {
     :root[data-appearance="auto"] .logo-light { display: none !important; }
     :root[data-appearance="auto"] .logo-dark { display: block !important; }
+}
+
+/* Where the browser cannot blur behind an element, glass turns frosty
+   enough to read without it. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root { --lg-a: 0.9; }
+    :root[data-appearance="dark"] { --lg-a: 0.88; }
 }

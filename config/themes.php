@@ -7,7 +7,8 @@
  * partials.theme-head partial writes the chosen theme's sheets before the
  * page paints. The choice is the viewer's own, kept in their browser
  * (localStorage "jpTheme"), and falls back to "default" here. A theme that
- * offers light, dark and automatic appearance says so with "appearance".
+ * offers light, dark and automatic appearance says so with "appearance";
+ * one whose glass can be tinted or clear says so with "material".
  *
  * To add a theme: add an entry with its sheets. The account menu in the
  * planner lists every theme here, so nothing else has to change.
@@ -22,11 +23,12 @@ return [
         'default' => 'glass',
 
         'themes' => [
-            // A macOS-inspired look: frosted sidebar over a soft wallpaper,
-            // system fonts, light and dark.
+            // iOS-style Liquid Glass: glass panels over a vivid wallpaper,
+            // system fonts, light and dark, tinted or clear glass.
             'glass' => [
                 'label' => 'Glass',
                 'appearance' => true,
+                'material' => true,
                 'planner' => [
                     'assets/glass/glass-tokens.css',
                     'assets/journey/planner-glass.css',
