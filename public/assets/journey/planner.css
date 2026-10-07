@@ -1194,3 +1194,14 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
     .side-min .jp-brand { padding-bottom: 10px; }
     .side-min .jp-who { margin-bottom: 8px; }
 }
+
+/* Shared markup that other themes use (config/themes.php): the light-ink
+   logo for dark appearance and the phone tab bar have no place here; the
+   account menu's "Look" section does. */
+.logo-dark, .jp-tabbar { display: none !important; }
+.jp-usermenu-sep { height: 1px; margin: 4px 6px; background: var(--line); }
+.jp-usermenu-sec { padding: 4px 8px 6px; }
+.jp-usermenu-label { display: block; margin: 4px 0 5px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.jp-usermenu-sec .jp-seg { display: flex; width: 100%; }
+.jp-usermenu-sec .jp-seg button { flex: 1; }
+.jp-usermenu-pop form { border-top: 0; margin-top: 0; padding-top: 0; }

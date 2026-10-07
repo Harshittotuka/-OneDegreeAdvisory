@@ -16,8 +16,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/Logo/favicon-32.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/journey/planner.css') }}?v={{ filemtime(public_path('assets/journey/planner.css')) }}">
+    @include('partials.theme-head', ['surface' => 'planner'])
 </head>
 <body class="jp-mode-{{ $payload['mode'] }}">
     <div id="planner" aria-live="off">

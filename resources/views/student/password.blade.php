@@ -12,7 +12,8 @@
     <section class="sp-panel">
         <div class="sp-card">
             <a class="sp-brand" href="{{ route('student.dashboard') }}">
-                <img src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory">
+                <img class="logo-light" src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory">
+                <img class="logo-dark" src="{{ asset('assets/Logo/mark-light.svg') }}" alt="">
                 <span><b>One Degree</b><small>Student portal</small></span>
             </a>
 

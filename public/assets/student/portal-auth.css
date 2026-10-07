@@ -289,3 +289,6 @@ a { color: inherit; }
     .sp-steps::after { width: 75%; }
     .sp-plane { display: none; }
 }
+
+/* The light-ink logo is for themes with a dark appearance (config/themes.php). */
+.logo-dark { display: none !important; }

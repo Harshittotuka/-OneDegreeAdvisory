@@ -412,7 +412,7 @@
             '<div class="jp-scrim" data-act="close-menu"></div>' +
             '<div class="jp-body">' + renderBar(v) + '<main class="jp-content" id="jp-content">' + body + '</main>' +
             '<footer class="jp-foot">One Degree Advisory · Overseas Admission Journey Planner' +
-            (isStudent() ? ' · Your plan is private to you.' : '') + '</footer></div></div>';
+            (isStudent() ? ' · Your plan is private to you.' : '') + '</footer></div>' + renderTabbar() + '</div>';
         window.scrollTo(0, y);
     }
 
@@ -432,7 +432,7 @@
             : '<a class="jp-nav-link" href="' + esc(P.endpoints.back) + '"><span class="jp-nav-ico ico-out">' + ICO.back + '</span><span>Back to CRM</span></a>';
         var counsellor = s.counsellor ? '<div class="jp-counsellor"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor)) + '</span><span><small>' + (isStudent() ? 'Your counsellor' : 'Counsellor') + '</small><b>' + esc(s.counsellor) + '</b></span></div>' : '';
         return '<aside class="jp-side" aria-label="Planner navigation">' +
-            '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span class="jp-brand-copy"><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span>' +
+            '<div class="jp-brand"><span class="jp-brand-mark"><img class="logo-light" src="' + esc(window.JP_LOGO) + '" alt=""><img class="logo-dark" src="' + esc(window.JP_LOGO_DARK) + '" alt=""></span><span class="jp-brand-copy"><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span>' +
             '<button class="jp-side-toggle" data-act="side-min" aria-pressed="' + (UI.sideMin ? 'true' : 'false') + '" aria-label="' + (UI.sideMin ? 'Expand the menu' : 'Collapse the menu to icons') + '" title="' + (UI.sideMin ? 'Expand menu' : 'Collapse menu') + '">' + ICO.sidebar + '</button></div>' +
             '<div class="jp-who" style="--p:' + parseInt(barWidth(overall()), 10) + '"' + (UI.sideMin ? ' title="' + esc(s.name) + ' · ' + barWidth(overall()) + ' done"' : '') + '><div class="jp-who-top"><span class="jp-avatar">' + esc(initials(s.name)) + '</span><div><b>' + esc(s.name) + '</b><small>' + esc([s.level, s.intake].filter(Boolean).join(' · ') || 'Plan details not set') + '</small></div></div>' +
             '<div class="jp-who-bar"><span>Steps done</span><b class="num">' + tally(overall()) + '</b></div><div class="jp-bar side"><i style="width:' + barWidth(overall()) + '"></i></div>' +
@@ -440,6 +440,39 @@
             '<div class="jp-nav-label">' + (isStudent() ? 'My plan' : 'Planner') + '</div><nav class="jp-nav">' + nav + '</nav>' +
             (counsellor || foot ? '<div class="jp-side-foot">' + counsellor + foot + '</div>' : '') +
             '</aside>';
+    }
+
+    /* On phones the theme may show the main pages as a tab bar; "More" opens
+       the full menu. Themes that do not use it hide it. */
+    function renderTabbar() {
+        var late = lateItems().length;
+        var tabs = views().slice(0, 4).map(function (v) {
+            var on = UI.view === v.key;
+            var badge = v.key === 'deadlines' && late ? late : (v.key === 'documents' ? docAttention() : 0);
+            return '<a class="jp-tab' + (on ? ' active' : '') + '" href="#' + v.key + '"' + (on ? ' aria-current="page"' : '') + '>' +
+                ICO[v.icon] + '<span>' + esc(label(v)) + '</span>' + (badge ? '<b class="jp-badge num">' + badge + '</b>' : '') + '</a>';
+        }).join('');
+        return '<nav class="jp-tabbar" aria-label="Planner pages">' + tabs +
+            '<button class="jp-tab" data-act="menu" aria-expanded="' + (UI.menu ? 'true' : 'false') + '">' + ICO.menu + '<span>More</span></button></nav>';
+    }
+
+    /* The look of the planner, chosen in the account menu: the themes listed
+       in config/themes.php (window.JP_THEMES), and for themes that have one,
+       light, dark or automatic appearance. Kept in this browser. */
+    function appearanceMenu() {
+        var T = window.JP_THEMES || { current: '', list: [] };
+        if (T.list.length < 2) return '';
+        var cur = T.list.find(function (t) { return t.key === T.current; }) || {};
+        var mode = document.documentElement.dataset.appearance || 'auto';
+        var seg = function (act, items, on) {
+            return '<div class="jp-seg" role="group">' + items.map(function (it) {
+                return '<button type="button" class="' + (it[0] === on ? 'on' : '') + '" data-act="' + act + '" data-v="' + esc(it[0]) + '" aria-pressed="' + (it[0] === on ? 'true' : 'false') + '">' + esc(it[1]) + '</button>';
+            }).join('') + '</div>';
+        };
+        return '<div class="jp-usermenu-sep"></div><div class="jp-usermenu-sec">' +
+            '<span class="jp-usermenu-label">Look</span>' + seg('set-theme', T.list.map(function (t) { return [t.key, t.label]; }), T.current) +
+            (cur.appearance ? '<span class="jp-usermenu-label">Appearance</span>' + seg('set-appearance', [['light', 'Light'], ['dark', 'Dark'], ['auto', 'Auto']], mode) : '') +
+            '</div>';
     }
 
     function renderBar(v) {
@@ -455,17 +488,21 @@
             login: 'How ' + s.firstName + ' signs in to their own planner.',
             help: 'How this planner works.'
         }[v.key];
-        var right = isStudent()
-            ? '<div class="jp-usermenu' + (UI.userMenu ? ' open' : '') + '">' +
-              '<button class="jp-user" data-act="user-menu" aria-haspopup="menu" aria-expanded="' + (UI.userMenu ? 'true' : 'false') + '">' +
-              '<span class="jp-avatar sm">' + esc(initials(s.name)) + '</span><span><b>' + esc(s.name) + '</b><small>Student</small></span>' +
-              '<svg class="jp-user-chev" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-              (UI.userMenu ? '<div class="jp-usermenu-pop" role="menu">' +
-                  '<a class="jp-usermenu-item" role="menuitem" href="' + esc(P.endpoints.password) + '"><span class="jp-nav-ico">' + ICO.key + '</span>Change password</a>' +
-                  '<form method="post" action="' + esc(P.endpoints.logout) + '"><input type="hidden" name="_token" value="' + esc(CSRF) + '">' +
-                  '<button class="jp-usermenu-item out" role="menuitem" type="submit"><span class="jp-nav-ico">' + ICO.out + '</span>Sign out</button></form></div>' : '') +
-              '</div>'
-            : '<span class="jp-user"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor || 'C')) + '</span><span><b>' + (MODE === 'partner' ? 'Partner view' : esc(s.counsellor || 'Counsellor')) + '</b><small>' + (MODE === 'partner' ? 'Read only' : 'Counsellor view') + '</small></span></span>';
+        var who = isStudent()
+            ? { av: '<span class="jp-avatar sm">' + esc(initials(s.name)) + '</span>', name: esc(s.name), role: 'Student' }
+            : { av: '<span class="jp-avatar sm alt">' + esc(initials(s.counsellor || 'C')) + '</span>', name: MODE === 'partner' ? 'Partner view' : esc(s.counsellor || 'Counsellor'), role: MODE === 'partner' ? 'Read only' : 'Counsellor view' };
+        var items = isStudent()
+            ? '<a class="jp-usermenu-item" role="menuitem" href="' + esc(P.endpoints.password) + '"><span class="jp-nav-ico">' + ICO.key + '</span>Change password</a>' +
+              appearanceMenu() + '<div class="jp-usermenu-sep"></div>' +
+              '<form method="post" action="' + esc(P.endpoints.logout) + '"><input type="hidden" name="_token" value="' + esc(CSRF) + '">' +
+              '<button class="jp-usermenu-item out" role="menuitem" type="submit"><span class="jp-nav-ico">' + ICO.out + '</span>Sign out</button></form>'
+            : '<a class="jp-usermenu-item" role="menuitem" href="' + esc(P.endpoints.back) + '"><span class="jp-nav-ico">' + ICO.back + '</span>Back to CRM</a>' + appearanceMenu();
+        var right = '<div class="jp-usermenu' + (UI.userMenu ? ' open' : '') + '">' +
+            '<button class="jp-user" data-act="user-menu" aria-haspopup="menu" aria-expanded="' + (UI.userMenu ? 'true' : 'false') + '">' +
+            who.av + '<span><b>' + who.name + '</b><small>' + who.role + '</small></span>' +
+            '<svg class="jp-user-chev" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+            (UI.userMenu ? '<div class="jp-usermenu-pop" role="menu">' + items + '</div>' : '') +
+            '</div>';
         return '<header class="jp-topbar"><button class="jp-menu" data-act="menu" aria-label="Open menu">' + ICO.menu + '</button>' +
             '<div class="jp-topbar-title"><span class="jp-crumb">' + (isStudent() ? 'My plan' : esc(s.name) + (s.leadNumber ? ' · ' + esc(s.leadNumber) : '')) + '</span><h1>' + label(v) + '</h1><p>' + esc(sub) + '</p></div>' +
             '<div class="jp-topbar-actions">' +
@@ -1800,6 +1837,15 @@
                 try { localStorage.setItem('jp-side-min', UI.sideMin ? '1' : '0'); } catch (err) { /* private window */ }
                 render();
                 var t = document.querySelector('.jp-side-toggle'); if (t) t.focus();
+                return;
+            case 'set-theme':
+                try { localStorage.setItem('jpTheme', el.dataset.v); } catch (err) { /* private window */ }
+                if (window.JP_THEMES && el.dataset.v !== window.JP_THEMES.current) location.reload();
+                return;
+            case 'set-appearance':
+                document.documentElement.dataset.appearance = el.dataset.v;
+                try { localStorage.setItem('jpAppearance', el.dataset.v); } catch (err) { /* private window */ }
+                render();
                 return;
             case 'user-menu': UI.userMenu = !UI.userMenu; render(); if (UI.userMenu) { var first = document.querySelector('.jp-usermenu-item'); if (first) first.focus(); } return;
             case 'changes-filter': UI.changesNewOnly = el.dataset.v === 'new'; UI.allChanges = false; render(); return;

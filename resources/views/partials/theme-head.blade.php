@@ -1,0 +1,39 @@
+{{--
+    The theme the viewer chose for the journey planner and the student portal
+    (config/themes.php), written into <head> before the page paints, so
+    there is never a flash of another theme. Sets <html data-jp-theme> and,
+    for themes that have one, <html data-appearance> (light, dark or auto).
+    Pass $surface: "planner" or "auth".
+--}}
+@php
+    $registry = config('themes.planner');
+    $sheets = [];
+    $themes = [];
+    foreach ($registry['themes'] as $key => $theme) {
+        $sheets[$key] = array_map(
+            fn (string $path) => str_starts_with($path, 'https://') ? $path : asset($path).'?v='.@filemtime(public_path($path)),
+            $theme[$surface],
+        );
+        $themes[] = ['key' => $key, 'label' => $theme['label'], 'appearance' => (bool) ($theme['appearance'] ?? false)];
+    }
+@endphp
+<script>
+    (() => {
+        const sheets = @json($sheets);
+        const themes = @json($themes);
+        let theme = @json($registry['default']);
+        let appearance = 'auto';
+        try {
+            const savedTheme = localStorage.getItem('jpTheme');
+            if (savedTheme && sheets[savedTheme]) theme = savedTheme;
+            const savedAppearance = localStorage.getItem('jpAppearance');
+            if (['light', 'dark', 'auto'].includes(savedAppearance)) appearance = savedAppearance;
+        } catch (error) { /* private window: the default stands */ }
+        const root = document.documentElement;
+        root.dataset.jpTheme = theme;
+        root.dataset.appearance = appearance;
+        window.JP_THEMES = { current: theme, list: themes };
+        document.write(sheets[theme].map((href) => '<link rel="stylesheet" href="' + href + '">').join(''));
+    })();
+</script>
+<noscript>@foreach ($sheets[$registry['default']] as $href)<link rel="stylesheet" href="{{ $href }}">@endforeach</noscript>

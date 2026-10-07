@@ -1,0 +1,149 @@
+/*
+ * Student portal — sign in and change password, in the Glass theme.
+ *
+ * A complete stylesheet (config/themes.php swaps it in for portal-auth.css),
+ * built on assets/glass/glass-tokens.css and laid out like a login window:
+ * one frosted card, centred over a soft wallpaper that drifts very slowly.
+ * The animated globe of the Standard theme stays out of this one; the
+ * markup is shared, so its scene is simply not shown.
+ */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--g-canvas); }
+body.sp-body {
+    margin: 0; min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
+    font-family: var(--g-font); font-size: var(--g-fs-body); line-height: var(--g-lh-body); color: var(--g-ink);
+    background: var(--g-wallpaper); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+/* The wallpaper's light, drifting: two soft colour fields behind the card. */
+body.sp-body::before, body.sp-body::after {
+    content: ""; position: fixed; z-index: 0; width: 60vmax; height: 60vmax; border-radius: 50%; pointer-events: none;
+    filter: blur(60px); opacity: 0.55; will-change: transform;
+}
+body.sp-body::before { left: -18vmax; top: -22vmax; background: radial-gradient(circle, rgba(110, 150, 255, 0.55), transparent 65%); animation: sp-drift-a 38s ease-in-out infinite alternate; }
+body.sp-body::after { right: -20vmax; bottom: -24vmax; background: radial-gradient(circle, rgba(255, 168, 140, 0.45), transparent 65%); animation: sp-drift-b 44s ease-in-out infinite alternate; }
+:root[data-appearance="dark"] body.sp-body::before { background: radial-gradient(circle, rgba(60, 100, 230, 0.5), transparent 65%); }
+:root[data-appearance="dark"] body.sp-body::after { background: radial-gradient(circle, rgba(150, 70, 170, 0.42), transparent 65%); }
+@media (prefers-color-scheme: dark) {
+    :root[data-appearance="auto"] body.sp-body::before { background: radial-gradient(circle, rgba(60, 100, 230, 0.5), transparent 65%); }
+    :root[data-appearance="auto"] body.sp-body::after { background: radial-gradient(circle, rgba(150, 70, 170, 0.42), transparent 65%); }
+}
+@keyframes sp-drift-a { to { transform: translate(14vmax, 10vmax) scale(1.1); } }
+@keyframes sp-drift-b { to { transform: translate(-12vmax, -8vmax) scale(1.08); } }
+img { display: block; max-width: 100%; }
+button, input { font: inherit; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: none; box-shadow: var(--g-focus); border-radius: var(--g-r-ctl); }
+
+/* ---------- the window ---------- */
+.sp-auth { position: relative; z-index: 1; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 32px 16px; }
+.sp-visual { display: none; }
+.sp-panel { width: 100%; display: grid; place-items: center; }
+.sp-card {
+    width: 100%; max-width: 380px; padding: 30px 30px 24px; text-align: center;
+    background: var(--g-pane-strong); -webkit-backdrop-filter: blur(40px) saturate(180%); backdrop-filter: blur(40px) saturate(180%);
+    border-radius: 22px; box-shadow: var(--g-shadow-modal), inset 0 0.5px 0 rgba(255, 255, 255, 0.4);
+    animation: sp-arrive var(--g-dur-slow) var(--g-ease-out);
+}
+@keyframes sp-arrive { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
+
+/* The brand as the account picture of a login window. */
+.sp-brand { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 auto 16px; text-decoration: none; border-radius: 12px; }
+.sp-brand > img { width: 62px; height: 62px; padding: 17px 10px; object-fit: contain; border-radius: 50%; background: var(--g-surface); box-shadow: var(--g-shadow-2); }
+.sp-brand > span { display: flex; flex-direction: column; gap: 1px; }
+.sp-brand b { font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); color: var(--g-ink); }
+.sp-brand small { font-size: var(--g-fs-caption); color: var(--g-muted); }
+
+.sp-eyebrow { display: none; }
+.sp-card h1 { margin: 0 0 6px; font-family: var(--g-font-display); font-size: var(--g-fs-h1); font-weight: var(--g-w-semibold); letter-spacing: var(--g-track-display); line-height: 1.2; color: var(--g-ink); }
+.sp-card h1 em { font-style: normal; }
+.sp-intro { margin: 0 auto 20px; max-width: 32ch; font-size: var(--g-fs-small); line-height: 1.5; color: var(--g-muted); }
+
+/* ---------- the form ---------- */
+.sp-form { display: grid; gap: 12px; text-align: left; }
+.sp-field label { display: block; margin: 0 0 5px 2px; font-size: var(--g-fs-small); font-weight: var(--g-w-medium); color: var(--g-ink-2); }
+.sp-input {
+    position: relative; display: flex; align-items: center; height: 36px; border-radius: 9px;
+    background: var(--g-surface); box-shadow: var(--g-shadow-control); transition: box-shadow var(--g-dur-fast) var(--g-ease);
+}
+.sp-input:focus-within { box-shadow: 0 0 0 0.5px var(--g-accent), var(--g-focus); }
+.sp-input > svg { width: 16px; height: 16px; flex: none; margin-left: 11px; fill: none; stroke: var(--g-muted); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sp-input input { flex: 1; min-width: 0; height: 100%; padding: 0 10px 0 9px; border: 0; background: transparent; outline: none; font-size: var(--g-fs-control); color: var(--g-ink); }
+.sp-input input::placeholder { color: var(--g-faint); }
+.sp-input input:focus-visible { box-shadow: none; }
+.sp-reveal { width: 30px; height: 28px; flex: none; display: grid; place-items: center; margin-right: 4px; border: 0; border-radius: 6px; background: none; color: var(--g-muted); cursor: pointer; }
+.sp-reveal:hover { background: var(--g-fill); color: var(--g-ink); }
+.sp-reveal svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sp-reveal .eye-off, .sp-reveal[aria-pressed="true"] .eye { display: none; }
+.sp-reveal[aria-pressed="true"] .eye-off { display: block; }
+
+/* The default button. */
+.sp-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; margin-top: 6px; border: 0; border-radius: 9px; cursor: pointer;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--g-accent) 88%, #fff) 0%, var(--g-accent) 100%); color: #fff;
+    font-size: var(--g-fs-control); font-weight: var(--g-w-medium);
+    box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--g-accent) 70%, #000), 0 1px 2px rgba(10, 30, 80, 0.2), inset 0 0.5px 0 rgba(255, 255, 255, 0.28);
+    transition: filter var(--g-dur-fast) var(--g-ease);
+}
+.sp-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sp-btn:hover { filter: brightness(1.06); }
+.sp-btn:active { filter: brightness(0.94); }
+.sp-btn:disabled { opacity: 0.6; cursor: progress; }
+
+.sp-meta { display: flex; align-items: flex-start; justify-content: center; gap: 7px; margin-top: 16px; font-size: var(--g-fs-small); color: var(--g-muted); text-align: left; }
+.sp-meta > svg { width: 14px; height: 14px; flex: none; margin-top: 2px; fill: none; stroke: var(--g-muted); stroke-width: 1.7; stroke-linecap: round; }
+.sp-meta-links { justify-content: space-between; align-items: center; }
+.sp-meta-links a, .sp-meta-links button { padding: 0; border: 0; background: none; color: var(--g-accent-ink); font-size: var(--g-fs-small); cursor: pointer; text-decoration: none; }
+.sp-meta-links a:hover, .sp-meta-links button:hover { text-decoration: underline; }
+.sp-meta-links form { margin: 0; }
+.sp-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--g-separator-strong); font-size: var(--g-fs-caption); color: var(--g-muted); }
+.sp-trust span { display: inline-flex; align-items: center; gap: 5px; }
+.sp-trust svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- messages (crm.js toasts), as macOS notifications ---------- */
+:root .crm-toast-stack { top: 14px; right: 14px; width: min(360px, calc(100vw - 28px)); gap: 8px; }
+:root .crm-toast {
+    min-height: 0; padding: 11px 12px; grid-template-columns: 30px minmax(0, 1fr) 24px; gap: 10px; border: 0; border-radius: 16px;
+    background: var(--g-float); color: var(--g-ink); box-shadow: var(--g-shadow-3);
+    -webkit-backdrop-filter: blur(40px) saturate(180%); backdrop-filter: blur(40px) saturate(180%);
+}
+:root .crm-toast:before, :root .crm-toast-icon:after { display: none; }
+:root .crm-toast-icon { width: 30px; height: 30px; border-radius: 8px; box-shadow: none; }
+:root .crm-toast.is-success { --toast-accent: var(--g-green); --toast-soft: var(--g-green-soft); }
+:root .crm-toast.is-error { --toast-accent: var(--g-red); --toast-soft: var(--g-red-soft); }
+:root .crm-toast.is-info { --toast-accent: var(--g-accent); --toast-soft: var(--g-accent-soft); }
+:root .crm-toast-copy strong { font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); color: var(--g-ink); }
+:root .crm-toast-copy span { font-size: var(--g-fs-small); color: var(--g-ink-2); }
+:root .crm-toast button { color: var(--g-muted); }
+
+/* ---------- the hand-off while a form submits (crm.js toggles .active) ---------- */
+.transition-screen {
+    position: fixed; inset: 0; z-index: 300; display: grid; place-items: center;
+    background: color-mix(in srgb, var(--g-canvas) 55%, transparent); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%);
+    opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--g-dur) var(--g-ease), visibility var(--g-dur) var(--g-ease);
+}
+.transition-screen.active { opacity: 1; visibility: visible; pointer-events: all; }
+.transition-card { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--g-ink); }
+.transition-logo, .transition-card > small { display: none; }
+/* A spinner of fading spokes. */
+.transition-rings { position: relative; width: 28px; height: 28px; animation: sp-spin 0.9s steps(8) infinite; }
+.transition-rings i { position: absolute; inset: 0; }
+.transition-rings i::before, .transition-rings i::after { content: ""; position: absolute; left: 50%; top: 0; width: 3px; height: 8px; margin-left: -1.5px; border-radius: 2px; background: var(--g-ink); transform-origin: 50% 14px; }
+.transition-rings i:nth-child(1)::before { opacity: 1; }
+.transition-rings i:nth-child(1)::after { transform: rotate(45deg); opacity: 0.85; }
+.transition-rings i:nth-child(2)::before { transform: rotate(90deg); opacity: 0.7; }
+.transition-rings i:nth-child(2)::after { transform: rotate(135deg); opacity: 0.55; }
+.transition-rings i:nth-child(3)::before { transform: rotate(180deg); opacity: 0.42; }
+.transition-rings i:nth-child(3)::after { transform: rotate(225deg); opacity: 0.32; }
+.transition-rings::before, .transition-rings::after { content: ""; position: absolute; left: 50%; top: 0; width: 3px; height: 8px; margin-left: -1.5px; border-radius: 2px; background: var(--g-ink); transform-origin: 50% 14px; }
+.transition-rings::before { transform: rotate(270deg); opacity: 0.24; }
+.transition-rings::after { transform: rotate(315deg); opacity: 0.16; }
+@keyframes sp-spin { to { transform: rotate(360deg); } }
+.transition-card strong { font-size: var(--g-fs-control); font-weight: var(--g-w-medium); }
+
+@media (max-width: 480px) {
+    .sp-auth { place-items: start center; padding-top: 10vh; }
+    .sp-card { padding: 26px 20px 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}

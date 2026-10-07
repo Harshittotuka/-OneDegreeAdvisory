@@ -6,12 +6,12 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $lead->name }} — Journey planner</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/Logo/favicon-32.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/journey/planner.css') }}?v={{ filemtime(public_path('assets/journey/planner.css')) }}">
+    @include('partials.theme-head', ['surface' => 'planner'])
 </head>
 <body>
     <main class="jp-message">
-        <img src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory" height="44" style="width:auto">
+        <img class="logo-light" src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory" height="44" style="width:auto">
+        <img class="logo-dark" src="{{ asset('assets/Logo/mark-light.svg') }}" alt="" height="44" style="width:auto">
         <h1>{{ $lead->name }}'s planner hasn't been started</h1>
         <p>The One Degree counsellor handling this student sets up the journey planner. It appears here as soon as they open it.</p>
         <a class="jp-btn" href="{{ route('crm.dashboard', ['view' => 'students', 'lead' => $lead->id]) }}">Back to the CRM</a>
