@@ -3,8 +3,10 @@
  *
  * The Glass theme (config/themes.php) is the macOS 26 / iOS 26 Liquid Glass
  * look, taken from the "MacOS 26 – Liquid Glass Effect" Figma file: glass
- * panels with a warm frost, bright inner highlights and a soft long shadow,
- * white text sitting on the glass, all over a warm canyon-toned wallpaper.
+ * panels with a frost, bright inner highlights and a soft long shadow,
+ * white text sitting on the glass, over a midnight-blue wallpaper. The
+ * glass is built exactly as in the file; its frost takes the cool neutral
+ * of this wallpaper where the file's took the warm of its canyon photo.
  * Every Glass stylesheet reads these and nothing else.
  *
  *   <html data-glass>   tinted (default): the same glass, frostier, for
@@ -63,8 +65,8 @@
     --g-ink-2: rgba(255, 255, 255, 0.86);
     --g-muted: rgba(255, 255, 255, 0.68);
     --g-faint: rgba(255, 255, 255, 0.42);
-    --g-number: #e7ded6;                       /* the widgets' figures */
-    --g-text-shadow: 0 1px 2px rgba(40, 18, 10, 0.28);
+    --g-number: #e6e9f5;                       /* the widgets' figures */
+    --g-text-shadow: 0 1px 2px rgba(4, 8, 30, 0.3);
 
     /* system colours, as they read on glass */
     --g-accent: #0a84ff;
@@ -91,48 +93,50 @@
     --g-separator: rgba(255, 255, 255, 0.16);
     --g-separator-strong: rgba(255, 255, 255, 0.26);
     --g-hairline: 0 0 0 1px rgba(255, 255, 255, 0.14);
-    --g-solid: #4a2a28;                        /* a knock-out ring behind a marker */
+    --g-solid: #232a55;                        /* a knock-out ring behind a marker */
     --g-surface: rgba(255, 255, 255, 0.1);
     --g-surface-2: rgba(255, 255, 255, 0.07);
     --g-surface-3: rgba(255, 255, 255, 0.14);
     --g-raised: rgba(255, 255, 255, 0.3);      /* a segmented control's thumb */
     --g-avatar: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
-    --g-scrim: rgba(24, 10, 8, 0.4);
-    --g-hud: rgba(48, 30, 26, 0.72);
+    --g-scrim: rgba(4, 6, 24, 0.45);
+    --g-hud: rgba(28, 34, 66, 0.72);
 
-    /* the wallpaper: warm canyon light, deep plum shadows */
-    --g-canvas: #3a1d22;
+    /* the wallpaper: midnight blue, lit by soft blue and violet light, as
+       on the macOS 26 desktop */
+    --g-canvas: #070b24;
     --g-wallpaper:
-        repeating-linear-gradient(116deg, rgba(255, 226, 196, 0) 0, rgba(255, 226, 196, 0.16) 22px, rgba(255, 226, 196, 0) 44px, rgba(64, 18, 28, 0) 52px, rgba(64, 18, 28, 0.2) 70px, rgba(64, 18, 28, 0) 92px),
-        repeating-linear-gradient(58deg, rgba(255, 200, 150, 0) 0, rgba(255, 200, 150, 0.08) 60px, rgba(255, 200, 150, 0) 120px, rgba(40, 10, 20, 0) 150px, rgba(40, 10, 20, 0.1) 200px, rgba(40, 10, 20, 0) 250px),
-        radial-gradient(640px 420px at 52% -8%, #ffd89a 0%, rgba(255, 196, 120, 0.55) 30%, transparent 64%),
-        radial-gradient(780px 640px at 92% 28%, #c8693a 0%, transparent 62%),
-        radial-gradient(720px 620px at 8% 34%, #6e3550 0%, transparent 64%),
-        radial-gradient(900px 700px at 70% 104%, #b25a33 0%, transparent 60%),
-        radial-gradient(800px 640px at 12% 104%, #4a2234 0%, transparent 62%),
-        linear-gradient(172deg, #6a3238 0%, #8d4334 38%, #a5532f 62%, #5c2b2e 100%);
+        radial-gradient(1200px 760px at 78% -14%, rgba(118, 146, 255, 0.62) 0%, rgba(90, 110, 240, 0.22) 38%, transparent 64%),
+        radial-gradient(980px 720px at 4% 18%, rgba(72, 56, 210, 0.6) 0%, transparent 62%),
+        radial-gradient(1100px 820px at 58% 116%, rgba(30, 110, 230, 0.5) 0%, transparent 60%),
+        radial-gradient(760px 560px at 100% 72%, rgba(150, 86, 236, 0.38) 0%, transparent 62%),
+        radial-gradient(1400px 900px at 30% 70%, rgba(16, 28, 90, 0.9) 0%, transparent 70%),
+        linear-gradient(165deg, #0e1746 0%, #0a1035 46%, #060920 100%);
 
     /* ---------- Liquid Glass: the material, as drawn (clear) ---------- */
     --lg-blur: blur(10px);
     --lg-edge: 1px solid rgba(156, 156, 156, 0.5);
-    /* a faint white veil over a warm frost, lighter at the top */
+    /* a faint white veil over a frost, lighter at the top */
     --lg-veil: rgba(255, 255, 255, 0.05);
-    --lg-frost-low: rgba(54, 37, 26, 0.06);
-    --lg-frost-high: rgba(175, 141, 121, 0.3);
-    --lg-sheen: linear-gradient(90deg, var(--lg-veil) 0%, var(--lg-veil) 100%), linear-gradient(0deg, var(--lg-frost-low) 0%, var(--lg-frost-high) 100%);
+    --lg-frost-low: rgba(22, 28, 60, 0.06);
+    --lg-frost-high: rgba(146, 156, 196, 0.3);
+    /* Apple builds the glass from three layers: highlight, shadow and
+       illumination. Illumination is the soft light inside the pane, from the top. */
+    --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 62%);
+    --lg-sheen: var(--lg-illum), linear-gradient(90deg, var(--lg-veil) 0%, var(--lg-veil) 100%), linear-gradient(0deg, var(--lg-frost-low) 0%, var(--lg-frost-high) 100%);
     --lg-panel: transparent;
-    /* floating glass (menus, sheets, the tab bar) keeps a warm dark base so
-       its text always reads */
-    --lg-strong: rgba(56, 32, 28, 0.5);
+    /* floating glass (menus, sheets, the tab bar) keeps a dark base so its
+       text always reads */
+    --lg-strong: rgba(20, 26, 62, 0.5);
     --lg-control: rgba(255, 255, 255, 0.1);
-    /* the light: highlights inside the edges, and a warm one on the top-left */
+    /* the light: highlights inside the edges, and a tinted one on the top-left */
     --lg-rim:
         inset -1px -1px 4px rgba(255, 255, 255, 0.3),
         inset 1px 0 2px rgba(255, 255, 255, 0.2),
         inset -3px -8px 10px rgba(255, 255, 255, 0.2),
         inset 4px 8px 19px rgba(255, 255, 255, 0.15),
         inset 2px 2px 4px -1px rgba(255, 255, 255, 0.3),
-        inset -2px 2px 6px rgba(128, 83, 66, 0.6);
+        inset -2px 2px 6px rgba(70, 84, 150, 0.55);
     /* the soft, long shadow the glass casts down and to the left */
     --lg-lift:
         -2px 4px 10px rgba(145, 145, 145, 0.05),
@@ -140,10 +144,10 @@
         -15px 37px 24px rgba(145, 145, 145, 0.03),
         -27px 66px 29px rgba(145, 145, 145, 0.01);
     --lg-lift-high:
-        -2px 4px 10px rgba(30, 12, 8, 0.12),
-        -7px 17px 18px rgba(30, 12, 8, 0.1),
-        -15px 37px 24px rgba(30, 12, 8, 0.08),
-        -27px 66px 29px rgba(30, 12, 8, 0.04);
+        -2px 4px 10px rgba(2, 6, 26, 0.16),
+        -7px 17px 18px rgba(2, 6, 26, 0.13),
+        -15px 37px 24px rgba(2, 6, 26, 0.1),
+        -27px 66px 29px rgba(2, 6, 26, 0.05);
 }
 
 /* tinted (the default): the same glass, frosted much more, so what is
@@ -152,17 +156,26 @@
 :root[data-glass="tinted"], :root:not([data-glass]) {
     --lg-blur: blur(30px) saturate(108%);
     --lg-veil: rgba(255, 255, 255, 0.11);
-    --lg-frost-low: rgba(54, 37, 26, 0.52);
-    --lg-frost-high: rgba(175, 141, 121, 0.62);
-    --lg-strong: rgba(56, 32, 28, 0.7);
+    --lg-frost-low: rgba(22, 28, 60, 0.52);
+    --lg-frost-high: rgba(146, 156, 196, 0.62);
+    --lg-strong: rgba(20, 26, 62, 0.7);
 }
 
 /* The glass sits on the wallpaper, so the white-ink logo always. */
 .logo-light { display: none !important; }
 .logo-dark { display: block !important; }
 
+/* The system's Reduce Transparency: glass that reads like solid. */
+@media (prefers-reduced-transparency: reduce) {
+    :root:root, :root[data-glass] { --lg-frost-low: rgba(22, 28, 60, 0.9); --lg-frost-high: rgba(56, 66, 116, 0.92); --lg-strong: rgba(20, 26, 62, 0.96); }
+}
+/* The system's Increase Contrast: brighter edges and secondary text. */
+@media (prefers-contrast: more) {
+    :root { --lg-edge: 1px solid rgba(255, 255, 255, 0.72); --g-muted: rgba(255, 255, 255, 0.86); --g-faint: rgba(255, 255, 255, 0.62); --g-separator: rgba(255, 255, 255, 0.32); }
+}
+
 /* Where the browser cannot blur behind an element, the glass turns frosty
    enough to read without it. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    :root:root, :root[data-glass] { --lg-frost-low: rgba(54, 37, 26, 0.6); --lg-frost-high: rgba(120, 86, 70, 0.7); --lg-strong: rgba(56, 32, 28, 0.9); }
+    :root:root, :root[data-glass] { --lg-frost-low: rgba(22, 28, 60, 0.7); --lg-frost-high: rgba(90, 100, 150, 0.75); --lg-strong: rgba(20, 26, 62, 0.92); }
 }

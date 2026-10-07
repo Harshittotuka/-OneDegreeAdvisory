@@ -5,7 +5,7 @@
  * planner.css), built on assets/glass/glass-tokens.css and drawn from the
  * "MacOS 26 – Liquid Glass Effect" Figma file: every panel is a glass
  * widget (warm frost, bright inner highlights, a grey edge, a long soft
- * shadow) with white text on it, over a warm canyon-toned wallpaper.
+ * shadow) with white text on it, over a midnight-blue wallpaper.
  * Buttons, segments and tags are capsules; titles are large and bold.
  * "Tinted" glass (the default) is the same glass, frostier; "clear" is the
  * glass exactly as drawn.
@@ -114,7 +114,7 @@ svg { flex: none; }
 /* The page you're on: filled with the tint, as an iPad sidebar does. */
 .jp-nav-link.active {
     background: rgba(255, 255, 255, 0.2); color: #fff; font-weight: var(--g-w-semibold);
-    box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.35), inset -1px -1px 3px rgba(255, 255, 255, 0.18), 0 4px 12px rgba(40, 14, 8, 0.16);
+    box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.35), inset -1px -1px 3px rgba(255, 255, 255, 0.18), 0 4px 12px rgba(2, 6, 26, 0.22);
 }
 .jp-nav-ico { width: 22px; height: 22px; display: grid; place-items: center; flex: none; color: rgba(255, 255, 255, 0.86); }
 .jp-nav-ico svg { width: 19px; height: 19px; }
@@ -125,7 +125,7 @@ svg { flex: none; }
     font-size: 0.6875rem; font-weight: var(--g-w-bold); line-height: 20px; text-align: center; font-variant-numeric: tabular-nums;
 }
 .jp-badge.gold { background: var(--g-orange); }
-.jp-nav-link.active .jp-badge { background: #fff; color: #5a2a26; text-shadow: none; }
+.jp-nav-link.active .jp-badge { background: #fff; color: #10184a; text-shadow: none; }
 .jp-side-foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 2px; }
 .jp-side-foot form { margin: 0; }
 .jp-counsellor { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; padding: 9px 10px; border-radius: 18px; background: var(--g-surface-2); box-shadow: var(--g-hairline); }
@@ -756,7 +756,7 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-day.past:not(.today) .dn { color: var(--g-faint); }
 /* Today: its date in red, as in macOS Calendar. */
 .jp-day.today .dn { color: #fff; font-weight: var(--g-w-bold); }
-.jp-day .dn .tdy { order: -1; margin-right: auto; padding: 0 7px; border-radius: var(--g-r-pill); background: #fff; color: #5a2a26; text-shadow: none; font-size: 0.5625rem; font-weight: var(--g-w-bold); line-height: 16px; }
+.jp-day .dn .tdy { order: -1; margin-right: auto; padding: 0 7px; border-radius: var(--g-r-pill); background: #fff; color: #10184a; text-shadow: none; font-size: 0.5625rem; font-weight: var(--g-w-bold); line-height: 16px; }
 .jp-day .ev {
     display: flex; align-items: center; gap: 5px; width: 100%; padding: 1px 6px; border: 0; border-radius: 6px;
     font-size: var(--g-fs-caption); font-weight: var(--g-w-medium); line-height: 1.45; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1031,7 +1031,7 @@ button.jp-user:active { transform: scale(0.97); }
     .jp-day { min-height: 56px; padding: 3px; }
     .jp-day .dn { justify-content: center; }
     .jp-day .dn .tdy { display: none; }
-    .jp-day.today .dn { width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; background: #fff; color: #5a2a26; text-shadow: none; }
+    .jp-day.today .dn { width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; background: #fff; color: #10184a; text-shadow: none; }
     .jp-day .ev { padding: 1px 3px; font-size: 0.5625rem; }
     .jp-day .ev .tm { display: none; }
     .jp-day .more { font-size: 0.5625rem; }
@@ -1088,24 +1088,66 @@ button.jp-user:active { transform: scale(0.97); }
     .jp-side { background: var(--lg-sheen), var(--lg-strong); box-shadow: var(--lg-rim), var(--lg-lift-high); }
 }
 
-/* Glass controls: capsules and circles of the same glass. */
-.jp-btn.ghost, .jp-btn.outline, .jp-btn.danger:not(.armed),
-.jp-refresh, .jp-side-toggle, .jp-menu, button.jp-user, .jp-cal-arrow,
+/* Controls inside a glass pane are not glass again (Apple: "avoid glass
+   on glass"): a plain veil with the same highlight. */
+.jp-btn.ghost, .jp-btn.outline, .jp-btn.danger:not(.armed), .jp-side-toggle, .jp-cal-arrow,
 .jp-tools select, .jp-select, .jp-role-select {
+    background-color: var(--g-fill); background-image: none;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.2), inset -1px -1px 1px rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+.jp-btn.danger:not(.armed) { color: var(--g-red-ink); }
+.jp-btn.ghost:hover, .jp-btn.outline:hover, .jp-btn.danger:not(.armed):hover, .jp-side-toggle:hover, .jp-cal-arrow:hover { background-color: var(--g-fill-hover); filter: none; }
+
+/* Controls that sit on the wallpaper itself are glass, like the panes. */
+.jp-topbar :is(.jp-refresh, button.jp-user, .jp-menu),
+.jp-content > .jp-tools :is(.jp-btn.ghost, .jp-btn.outline, select) {
     background-color: transparent;
     background-image: var(--lg-sheen), linear-gradient(var(--lg-control), var(--lg-control));
     border: var(--lg-edge);
     -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur);
-    box-shadow: var(--lg-rim), -2px 4px 10px rgba(40, 14, 8, 0.12);
+    box-shadow: var(--lg-rim), -2px 4px 10px rgba(2, 6, 26, 0.18);
     color: #fff;
 }
-.jp-btn.danger:not(.armed) { color: var(--g-red-ink); }
-.jp-btn.ghost:hover, .jp-btn.outline:hover, .jp-btn.danger:not(.armed):hover,
-.jp-refresh:hover, .jp-side-toggle:hover, .jp-menu:hover, button.jp-user:hover, .jp-cal-arrow:hover { filter: brightness(1.1); }
+.jp-topbar :is(.jp-refresh, button.jp-user, .jp-menu):hover { filter: brightness(1.1); }
 .jp-usermenu.open button.jp-user { border-color: rgba(255, 255, 255, 0.8); }
-/* The pop-ups keep their up/down arrows over the glass. */
+/* Pop-ups keep their up/down arrows, on either surface. */
 .jp-tools select, .jp-select, .jp-role-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23ffffff' stroke-opacity='.75' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 13px center;
+}
+/* :where() keeps this at the glass rule's specificity, so it wins by order. */
+.jp-content > .jp-tools :is(.jp-btn.ghost, .jp-btn.outline, select):where(select) {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23ffffff' stroke-opacity='.75' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"), var(--lg-sheen), linear-gradient(var(--lg-control), var(--lg-control));
-    background-repeat: no-repeat; background-position: right 13px center, 0 0, 0 0, 0 0;
+    background-repeat: no-repeat; background-position: right 13px center, 0 0, 0 0, 0 0, 0 0;
 }
 .jp-tools select option, .jp-select option, .jp-role-select option, .jp-st option, .jp-fields option, .jp-dialog option { color: #1c1c1e; background: #fff; text-shadow: none; }
+
+/* Tinted glass for the main action (Apple: glass "can be tinted"): the
+   tint colour, translucent, with the glass's highlights. */
+.jp-btn:not(.ghost):not(.outline):not(.danger):not(.armed) {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 60%), color-mix(in srgb, var(--g-accent) 74%, transparent);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.45), inset -1px -1px 2px rgba(255, 255, 255, 0.14), 0 6px 18px rgba(10, 60, 200, 0.32);
+}
+
+/* The lens: where the browser can bend a backdrop (html.lg-lens), the
+   navigation layer bends what is behind it, like gel. The glass draws its
+   backdrop on a layer beneath its content, and the lens filter bends it. */
+.lg-lens :is(.jp-side, .jp-tabbar, .jp-usermenu-pop),
+.lg-lens .jp-topbar :is(.jp-refresh, button.jp-user) {
+    -webkit-backdrop-filter: none; backdrop-filter: none; isolation: isolate;
+}
+.lg-lens :is(.jp-side, .jp-tabbar, .jp-usermenu-pop)::before,
+.lg-lens .jp-topbar :is(.jp-refresh, button.jp-user)::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+    -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur);
+    filter: url(#lg-lens);
+}
+.lg-lens .jp-topbar :is(.jp-refresh, button.jp-user) { position: relative; }
+@media (prefers-reduced-transparency: reduce) {
+    .lg-lens :is(.jp-side, .jp-tabbar, .jp-usermenu-pop)::before,
+    .lg-lens .jp-topbar :is(.jp-refresh, button.jp-user)::before { filter: none; }
+}

@@ -22,6 +22,7 @@
     <div id="planner" aria-live="off">
         <noscript><p class="jp-noscript">This planner needs JavaScript switched on.</p></noscript>
     </div>
+    @include('partials.glass-lens')
     <div id="jp-modal"></div>
     <div id="jp-toast" class="jp-toast" role="status" aria-live="polite"></div>
     <script type="application/json" id="jp-payload">@json($payload)</script>

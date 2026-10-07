@@ -25,7 +25,7 @@ return [
         'themes' => [
             // macOS 26 / iOS 26 Liquid Glass, after the "MacOS 26 – Liquid
             // Glass Effect" Figma file: glass widgets with white text over a
-            // warm wallpaper. One look; the glass can be tinted or clear.
+            // midnight-blue wallpaper. One look; the glass can be tinted or clear.
             'glass' => [
                 'label' => 'Glass',
                 'appearance' => false,

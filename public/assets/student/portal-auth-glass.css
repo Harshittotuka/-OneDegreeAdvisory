@@ -3,8 +3,8 @@
  *
  * A complete stylesheet (config/themes.php swaps it in for portal-auth.css),
  * built on assets/glass/glass-tokens.css: one Liquid Glass card, as in the
- * "MacOS 26 – Liquid Glass Effect" Figma file, centred over the warm
- * wallpaper, whose light drifts very slowly behind it.
+ * "MacOS 26 – Liquid Glass Effect" Figma file, centred over the
+ * midnight-blue wallpaper, whose light drifts very slowly behind it.
  * The animated globe of the Standard theme stays out of this one; the
  * markup is shared, so its scene is simply not shown.
  */
@@ -20,8 +20,8 @@ body.sp-body::before, body.sp-body::after {
     content: ""; position: fixed; z-index: 0; width: 60vmax; height: 60vmax; border-radius: 50%; pointer-events: none;
     filter: blur(60px); opacity: 0.7; will-change: transform;
 }
-body.sp-body::before { left: -14vmax; top: -24vmax; background: radial-gradient(circle, rgba(255, 214, 150, 0.55), transparent 65%); animation: sp-drift-a 38s ease-in-out infinite alternate; }
-body.sp-body::after { right: -20vmax; bottom: -24vmax; background: radial-gradient(circle, rgba(120, 52, 80, 0.55), transparent 65%); animation: sp-drift-b 44s ease-in-out infinite alternate; }
+body.sp-body::before { left: -14vmax; top: -24vmax; background: radial-gradient(circle, rgba(110, 140, 255, 0.55), transparent 65%); animation: sp-drift-a 38s ease-in-out infinite alternate; }
+body.sp-body::after { right: -20vmax; bottom: -24vmax; background: radial-gradient(circle, rgba(140, 80, 230, 0.45), transparent 65%); animation: sp-drift-b 44s ease-in-out infinite alternate; }
 @keyframes sp-drift-a { to { transform: translate(14vmax, 10vmax) scale(1.1); } }
 @keyframes sp-drift-b { to { transform: translate(-12vmax, -8vmax) scale(1.08); } }
 img { display: block; max-width: 100%; }
@@ -40,10 +40,18 @@ a { color: inherit; }
     animation: sp-arrive var(--g-dur-slow) var(--g-spring);
 }
 @keyframes sp-arrive { from { opacity: 0; transform: translateY(16px) scale(0.96); } }
+/* The lens (html.lg-lens, see partials.glass-lens): the card bends what is
+   behind it, like gel, on a layer beneath its content. */
+.lg-lens .sp-card { position: relative; isolation: isolate; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.lg-lens .sp-card::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+    -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur); filter: url(#lg-lens);
+}
+@media (prefers-reduced-transparency: reduce) { .lg-lens .sp-card::before { filter: none; } }
 
 /* The brand as the account picture of a login window. */
 .sp-brand { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 auto 16px; text-decoration: none; border-radius: 12px; }
-.sp-brand > img { width: 68px; height: 68px; padding: 19px 11px; object-fit: contain; border-radius: 50%; background: var(--lg-sheen), var(--lg-control); border: var(--lg-edge); box-shadow: var(--lg-rim), -2px 4px 10px rgba(40, 14, 8, 0.14); }
+.sp-brand > img { width: 68px; height: 68px; padding: 19px 11px; object-fit: contain; border-radius: 50%; background: var(--lg-sheen), var(--lg-control); border: var(--lg-edge); box-shadow: var(--lg-rim), -2px 4px 10px rgba(2, 6, 26, 0.2); }
 .sp-brand > span { display: flex; flex-direction: column; gap: 1px; }
 .sp-brand b { font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); color: var(--g-ink); }
 .sp-brand small { font-size: var(--g-fs-caption); color: var(--g-muted); }
@@ -74,8 +82,9 @@ a { color: inherit; }
 /* The default button. */
 .sp-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 48px; margin-top: 8px; border: 0; border-radius: var(--g-r-pill); cursor: pointer;
-    background: var(--g-accent); color: #fff; font-size: var(--g-fs-body); font-weight: var(--g-w-semibold);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 8px 22px color-mix(in srgb, var(--g-accent) 38%, transparent);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 60%), color-mix(in srgb, var(--g-accent) 74%, transparent);
+    border: 1px solid rgba(255, 255, 255, 0.3); color: #fff; font-size: var(--g-fs-body); font-weight: var(--g-w-semibold);
+    box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.45), inset -1px -1px 2px rgba(255, 255, 255, 0.14), 0 8px 22px rgba(10, 60, 200, 0.34);
     transition: filter var(--g-dur-fast) var(--g-ease), transform var(--g-dur-fast) var(--g-spring);
 }
 .sp-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

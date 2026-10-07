@@ -37,6 +37,10 @@
         root.dataset.jpTheme = theme;
         root.dataset.appearance = appearance;
         root.dataset.glass = glass;
+        // The glass lens bends the backdrop through an SVG filter, which only
+        // Chromium draws; elsewhere the glass is the same, without the bend.
+        const brands = (navigator.userAgentData && navigator.userAgentData.brands) || [];
+        if (brands.some((b) => /Chromium/.test(b.brand))) root.classList.add('lg-lens');
         window.JP_THEMES = { current: theme, list: themes };
         document.write(sheets[theme].map((href) => '<link rel="stylesheet" href="' + href + '">').join(''));
     })();

@@ -4,6 +4,7 @@
     @include('student.partials.auth-head', ['title' => 'Student sign in'])
 </head>
 <body class="sp-body">
+@include('partials.glass-lens')
 @include('crm.partials.toasts', [
     'successMessage' => session('status'),
     'errorMessage' => $errors->first(),

@@ -9,6 +9,7 @@
     @include('partials.theme-head', ['surface' => 'planner'])
 </head>
 <body>
+    @include('partials.glass-lens')
     <main class="jp-message">
         <img class="logo-light" src="{{ asset('assets/Logo/mark.svg') }}" alt="One Degree Advisory" height="44" style="width:auto">
         <img class="logo-dark" src="{{ asset('assets/Logo/mark-light.svg') }}" alt="" height="44" style="width:auto">
