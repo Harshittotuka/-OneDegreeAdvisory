@@ -423,17 +423,18 @@
                 (v.key === 'documents' && docAttention() ? '<b class="jp-badge gold num" title="' + (isStudent() ? 'Essays with feedback to act on' : 'Essays waiting for your review') + '">' + docAttention() + '</b>' : '') +
                 (v.key === 'login' && P.login && !P.login.active ? '<b class="jp-badge num">off</b>' : '') + '</a>';
         }).join('');
-        var foot = isStudent()
-            ? '<a class="jp-nav-link" href="' + esc(P.endpoints.password) + '"><span class="jp-nav-ico ico-login">' + ICO.key + '</span><span>Change password</span></a>' +
-              '<form method="post" action="' + esc(P.endpoints.logout) + '"><input type="hidden" name="_token" value="' + esc(CSRF) + '"><button class="jp-nav-link" type="submit"><span class="jp-nav-ico ico-out">' + ICO.out + '</span><span>Sign out</span></button></form>'
+        // The student's own account links (password, sign out) live in the
+        // menu under their name at the top right; see renderBar.
+        var foot = isStudent() ? ''
             : '<a class="jp-nav-link" href="' + esc(P.endpoints.back) + '"><span class="jp-nav-ico ico-out">' + ICO.back + '</span><span>Back to CRM</span></a>';
+        var counsellor = s.counsellor ? '<div class="jp-counsellor"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor)) + '</span><span><small>' + (isStudent() ? 'Your counsellor' : 'Counsellor') + '</small><b>' + esc(s.counsellor) + '</b></span></div>' : '';
         return '<aside class="jp-side" aria-label="Planner navigation">' +
             '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span></div>' +
             '<div class="jp-who"><div class="jp-who-top"><span class="jp-avatar">' + esc(initials(s.name)) + '</span><div><b>' + esc(s.name) + '</b><small>' + esc([s.level, s.intake].filter(Boolean).join(' · ') || 'Plan details not set') + '</small></div></div>' +
             '<div class="jp-who-bar"><span>Steps done</span><b class="num">' + tally(overall()) + '</b></div><div class="jp-bar side"><i style="width:' + barWidth(overall()) + '"></i></div>' +
             '<div class="jp-who-pct num">' + barWidth(overall()) + ' of the way there</div></div>' +
             '<div class="jp-nav-label">' + (isStudent() ? 'My plan' : 'Planner') + '</div><nav class="jp-nav">' + nav + '</nav>' +
-            '<div class="jp-side-foot">' + (s.counsellor ? '<div class="jp-counsellor"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor)) + '</span><span><small>' + (isStudent() ? 'Your counsellor' : 'Counsellor') + '</small><b>' + esc(s.counsellor) + '</b></span></div>' : '') + foot + '</div>' +
+            (counsellor || foot ? '<div class="jp-side-foot">' + counsellor + foot + '</div>' : '') +
             '</aside>';
     }
 
@@ -451,7 +452,15 @@
             help: 'How this planner works.'
         }[v.key];
         var right = isStudent()
-            ? '<span class="jp-user"><span class="jp-avatar sm">' + esc(initials(s.name)) + '</span><span><b>' + esc(s.name) + '</b><small>Student</small></span></span>'
+            ? '<div class="jp-usermenu' + (UI.userMenu ? ' open' : '') + '">' +
+              '<button class="jp-user" data-act="user-menu" aria-haspopup="menu" aria-expanded="' + (UI.userMenu ? 'true' : 'false') + '">' +
+              '<span class="jp-avatar sm">' + esc(initials(s.name)) + '</span><span><b>' + esc(s.name) + '</b><small>Student</small></span>' +
+              '<svg class="jp-user-chev" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+              (UI.userMenu ? '<div class="jp-usermenu-pop" role="menu">' +
+                  '<a class="jp-usermenu-item" role="menuitem" href="' + esc(P.endpoints.password) + '"><span class="jp-nav-ico">' + ICO.key + '</span>Change password</a>' +
+                  '<form method="post" action="' + esc(P.endpoints.logout) + '"><input type="hidden" name="_token" value="' + esc(CSRF) + '">' +
+                  '<button class="jp-usermenu-item out" role="menuitem" type="submit"><span class="jp-nav-ico">' + ICO.out + '</span>Sign out</button></form></div>' : '') +
+              '</div>'
             : '<span class="jp-user"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor || 'C')) + '</span><span><b>' + (MODE === 'partner' ? 'Partner view' : esc(s.counsellor || 'Counsellor')) + '</b><small>' + (MODE === 'partner' ? 'Read only' : 'Counsellor view') + '</small></span></span>';
         return '<header class="jp-topbar"><button class="jp-menu" data-act="menu" aria-label="Open menu">' + ICO.menu + '</button>' +
             '<div class="jp-topbar-title"><span class="jp-crumb">' + (isStudent() ? 'My plan' : esc(s.name) + (s.leadNumber ? ' · ' + esc(s.leadNumber) : '')) + '</span><h1>' + label(v) + '</h1><p>' + esc(sub) + '</p></div>' +
@@ -1764,6 +1773,7 @@
     window.addEventListener('hashchange', function () { fromHash(); UI.menu = false; UI.armed = null; if (UI.view !== 'documents') { UI.essayId = null; UI.essayDirty = false; UI.draft = null; UI.openDoc = null; } render(); window.scrollTo(0, 0); });
 
     document.addEventListener('click', function (e) {
+        if (UI.userMenu && !e.target.closest('.jp-usermenu')) closeUserMenu();
         var el = e.target.closest('[data-act]'); if (!el) return;
         var act = el.dataset.act;
         if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage',
@@ -1781,6 +1791,7 @@
                 return;
             case 'close-menu': UI.menu = false; render(); return;
             case 'toggle-changes': UI.allChanges = !UI.allChanges; render(); return;
+            case 'user-menu': UI.userMenu = !UI.userMenu; render(); if (UI.userMenu) { var first = document.querySelector('.jp-usermenu-item'); if (first) first.focus(); } return;
             case 'changes-filter': UI.changesNewOnly = el.dataset.v === 'new'; UI.allChanges = false; render(); return;
             // The marker already moved forward when the page opened; this only
             // clears the New marks from the page in front of them.
@@ -2439,8 +2450,20 @@
     });
     window.addEventListener('beforeunload', function (e) { if (UI.essayId && UI.essayDirty) { e.preventDefault(); e.returnValue = ''; } });
 
+    function closeUserMenu() {
+        UI.userMenu = false;
+        var m = document.querySelector('.jp-usermenu'); if (!m) return;
+        m.classList.remove('open');
+        var pop = m.querySelector('.jp-usermenu-pop'); if (pop) pop.remove();
+        var b = m.querySelector('.jp-user'); if (b) b.setAttribute('aria-expanded', 'false');
+    }
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeModal(); if (UI.menu) { UI.menu = false; render(); } return; }
+        if (e.key === 'Escape') {
+            closeModal();
+            if (UI.userMenu) { closeUserMenu(); var b = document.querySelector('.jp-user'); if (b) b.focus(); }
+            if (UI.menu) { UI.menu = false; render(); }
+            return;
+        }
         // A calendar day is a div so the entries inside it can be their own
         // buttons; give it back the keyboard a button would have had.
         if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('jp-day')) {

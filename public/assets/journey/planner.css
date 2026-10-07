@@ -218,6 +218,30 @@ body:not(.jp-mode-student) .jp-counsellor { background: rgba(255, 255, 255, 0.7)
 @media (prefers-reduced-motion: reduce) { .jp-refresh.spin svg { animation: none; opacity: 0.6; } }
 .jp-user { display: flex; align-items: center; gap: 10px; padding: 5px 16px 5px 5px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-sm); }
 .jp-user b { display: block; font-size: 0.85rem; line-height: 1.2; color: var(--navy); }
+/* The student's account menu, under their name at the top right. */
+.jp-usermenu { position: relative; }
+button.jp-user { border: 1px solid transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; padding-right: 12px; transition: border-color .15s ease, box-shadow .15s ease; }
+button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 0, 136, 0.14); }
+.jp-user-chev { width: 15px; height: 15px; margin-left: 4px; color: var(--muted); transition: transform .15s ease; }
+.jp-usermenu.open .jp-user-chev { transform: rotate(180deg); }
+.jp-usermenu-pop {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; min-width: 220px; padding: 6px;
+    background: var(--surface); border: 1px solid rgba(26, 0, 136, 0.1); border-radius: 16px;
+    box-shadow: 0 24px 48px -24px rgba(26, 0, 136, 0.45), 0 4px 12px -6px rgba(40, 33, 22, 0.15);
+    animation: jp-pop .16s ease-out;
+}
+@keyframes jp-pop { from { opacity: 0; transform: translateY(-4px); } }
+.jp-usermenu-pop form { margin: 0; }
+.jp-usermenu-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px 7px 6px; border: 0; border-radius: 10px; background: none;
+    font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--ink-2); text-decoration: none; text-align: left; cursor: pointer;
+}
+.jp-usermenu-item:hover, .jp-usermenu-item:focus-visible { background: var(--surface-2); color: var(--navy); outline: none; }
+.jp-usermenu-item:hover .jp-nav-ico, .jp-usermenu-item:focus-visible .jp-nav-ico { background: var(--blue-soft); color: var(--navy); }
+.jp-usermenu-item.out { color: var(--pink-ink); }
+.jp-usermenu-item.out:hover, .jp-usermenu-item.out:focus-visible { background: var(--pink-soft); color: var(--pink-ink); }
+.jp-usermenu-item.out:hover .jp-nav-ico, .jp-usermenu-item.out:focus-visible .jp-nav-ico { background: rgba(224, 64, 94, 0.14); color: var(--pink-ink); }
+.jp-usermenu-pop form { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
 .jp-user small { display: block; font-size: 0.72rem; color: var(--muted); }
 .jp-content { padding: 4px clamp(16px, 2.4vw, 40px) 40px; display: flex; flex-direction: column; gap: 18px; max-width: 1920px; width: 100%; }
 .jp-foot { padding: 18px clamp(16px, 3vw, 36px) 28px; color: var(--muted); font-size: 0.78rem; margin-top: auto; }
@@ -600,7 +624,7 @@ body:not(.jp-mode-student) .jp-counsellor { background: rgba(255, 255, 255, 0.7)
 @media (max-width: 640px) {
     .jp-topbar-title h1 { font-size: 1.25rem; }
     .jp-topbar-title p { display: none; }
-    .jp-user > span:last-child { display: none; }
+    .jp-user > span:last-of-type { display: none; }
     .jp-user { padding: 4px; }
     .jp-hero { grid-template-columns: 1fr; padding: 22px 20px; }
     .jp-hero-ring { width: 118px; height: 118px; order: -1; }
