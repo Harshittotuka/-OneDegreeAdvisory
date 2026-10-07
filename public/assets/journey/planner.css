@@ -56,7 +56,7 @@
     --shadow: 0 24px 60px -24px rgba(40, 33, 22, 0.3);
     --shadow-sm: 0 6px 18px -10px rgba(40, 33, 22, 0.2);
     --radius: 18px;
-    --side-w: 248px;
+    --side-w: 258px;
     --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
     --display: 'Manrope', 'Segoe UI', system-ui, sans-serif;
     --body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
@@ -118,9 +118,9 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
 .jp-brand::before { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2) 18%, var(--line-2) 82%, transparent); }
 .jp-brand::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg); background: var(--orange); box-shadow: 0 0 0 3px var(--surface); }
 .jp-brand-mark { display: grid; place-items: center; flex: none; }
-.jp-brand-mark img { height: 26px; width: auto; display: block; }
-.jp-brand b { display: block; font-size: 0.86rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--navy); line-height: 1.2; }
-.jp-brand small { display: block; white-space: nowrap; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange); }
+.jp-brand-mark img { height: 24px; width: auto; display: block; }
+.jp-brand b { display: block; white-space: nowrap; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; color: var(--navy); line-height: 1.2; }
+.jp-brand small { display: block; white-space: nowrap; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); }
 .jp-who {
     padding: 12px 12px 10px; margin: 0 0 14px; border-radius: 16px;
     background: linear-gradient(160deg, #ffffff 0%, var(--surface-2) 100%);
@@ -163,6 +163,53 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
 .jp-counsellor small { display: block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .jp-counsellor b { display: block; font-size: 0.86rem; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jp-scrim { display: none; }
+
+/* ---------- the fold button, and the panel folded to icons ----------
+   Wide screens only; on phones the panel is a drawer and does not fold.
+   Folded, each page shows just its icon, and its name appears in a small
+   label beside it on hover or keyboard focus. The student card becomes
+   their avatar inside a ring that fills as the plan gets done. */
+.jp-brand-copy { min-width: 0; }
+.jp-side-toggle {
+    margin-left: auto; flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.jp-side-toggle:hover { color: var(--navy); border-color: var(--line-2); background: var(--surface-2); }
+.jp-side-toggle svg { width: 17px; height: 17px; transition: transform .2s ease; }
+@media (min-width: 901px) {
+    .jp-app { transition: grid-template-columns .22s ease; }
+    .jp-app.side-min { grid-template-columns: 84px minmax(0, 1fr); }
+    .side-min .jp-side { z-index: 35; padding: 16px 10px 12px; overflow: visible; align-items: center; }
+    .side-min .jp-brand { flex-direction: column; gap: 12px; padding: 0 0 16px; margin-bottom: 12px; width: 100%; }
+    .side-min .jp-brand-copy { display: none; }
+    .side-min .jp-brand-mark img { height: 17px; }
+    .side-min .jp-side-toggle { margin: 0; }
+    .side-min .jp-side-toggle svg { transform: scaleX(-1); }
+    .side-min .jp-who { padding: 0; margin: 0 0 12px; background: none; border: 0; box-shadow: none; }
+    .side-min .jp-who-top { padding: 3px; border-radius: 50%; background: conic-gradient(var(--orange) calc(var(--p, 0) * 1%), var(--track) 0); }
+    .side-min .jp-who-top > div, .side-min .jp-who-bar, .side-min .jp-who .jp-bar, .side-min .jp-who-pct { display: none; }
+    .side-min .jp-who .jp-avatar { box-shadow: 0 0 0 2px var(--surface); }
+    .side-min .jp-nav-label { font-size: 0; padding: 2px 4px 8px; width: 100%; gap: 0; }
+    .side-min .jp-nav, .side-min .jp-side-foot { width: 100%; align-items: center; }
+    .side-min .jp-nav-link { justify-content: center; width: 44px; padding: 6px; }
+    .side-min .jp-nav-link > span:not(.jp-nav-ico) {
+        position: absolute; left: calc(100% + 12px); top: 50%; z-index: 30; transform: translate(-4px, -50%);
+        padding: 6px 11px; border-radius: 9px; background: var(--navy); color: #fff; font-size: 0.8rem; font-weight: 700; white-space: nowrap;
+        box-shadow: 0 10px 24px -10px rgba(16, 2, 88, 0.6); opacity: 0; pointer-events: none; transition: opacity .12s ease, transform .12s ease;
+    }
+    .side-min .jp-nav-link > span:not(.jp-nav-ico)::before {
+        content: ""; position: absolute; left: -4px; top: 50%; width: 8px; height: 8px; transform: translateY(-50%) rotate(45deg); background: var(--navy); border-radius: 1px;
+    }
+    .side-min .jp-nav-link:hover > span:not(.jp-nav-ico), .side-min .jp-nav-link:focus-visible > span:not(.jp-nav-ico) { opacity: 1; transform: translate(0, -50%); }
+    .side-min .jp-badge { position: absolute; top: 0; right: 0; min-width: 17px; padding: 0 4px; font-size: 0.6rem; line-height: 17px; }
+    .side-min .jp-counsellor { padding: 0; margin: 0 0 6px; background: none; border: 0; justify-content: center; }
+    .side-min .jp-counsellor > span:last-child { display: none; }
+    body:not(.jp-mode-student) .side-min .jp-who { background: none; }
+    body:not(.jp-mode-student) .side-min .jp-who-top { background: conic-gradient(var(--gold) calc(var(--p, 0) * 1%), rgba(201, 151, 31, 0.18) 0); }
+    body:not(.jp-mode-student) .side-min .jp-counsellor { background: none; }
+}
+@media (max-width: 900px) { .jp-side-toggle { display: none; } }
 
 /* The counsellor's (and partner's) side panel carries a light golden tone,
    so the CRM's planner reads apart from the student's own portal at a

@@ -26,7 +26,9 @@
         docTab: 'all', essayId: null, essayDirty: false, openDoc: null, refreshing: false,
         cal: { y: null, m: null, sel: null },
         // The Google room made for the open meeting dialog, until it is saved.
-        room: null, roomBusy: false, dialogSeq: 0
+        room: null, roomBusy: false, dialogSeq: 0,
+        // The side panel folded down to its icons (wide screens only).
+        sideMin: (function () { try { return localStorage.getItem('jp-side-min') === '1'; } catch (e) { return false; } })()
     };
     P.documents = P.documents || [];
     P.team = P.team || []; P.deadlines = P.deadlines || []; P.meetings = P.meetings || [];
@@ -134,6 +136,7 @@
         upload: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 13V4M6.3 7.6L10 3.9l3.7 3.7M4 13.5v2.7h12v-2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         spark: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 14l4-4 3 3 7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 6H17v4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         alarm: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="11" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M10 8v3.2l2 1.3M3.5 4.5l2-1.8M16.5 4.5l-2-1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+        sidebar: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="3.5" width="14" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 3.5v13" stroke="currentColor" stroke-width="1.5"/><path d="M13.4 8l-2 2 2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         refresh: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.8 3.2v3.3h-3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         out: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M8 4H5a1.5 1.5 0 0 0-1.5 1.5v9A1.5 1.5 0 0 0 5 16h3M12 6.5L15.5 10 12 13.5M15.3 10H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     };
@@ -405,7 +408,7 @@
             login: renderLogin, help: renderGuide, documents: renderDocuments
         }[UI.view]();
         document.getElementById('planner').innerHTML =
-            '<div class="jp-app' + (UI.menu ? ' menu-open' : '') + '">' + renderSidebar() +
+            '<div class="jp-app' + (UI.menu ? ' menu-open' : '') + (UI.sideMin ? ' side-min' : '') + '">' + renderSidebar() +
             '<div class="jp-scrim" data-act="close-menu"></div>' +
             '<div class="jp-body">' + renderBar(v) + '<main class="jp-content" id="jp-content">' + body + '</main>' +
             '<footer class="jp-foot">One Degree Advisory · Overseas Admission Journey Planner' +
@@ -416,7 +419,7 @@
     function renderSidebar() {
         var s = P.student, late = lateItems().length;
         var nav = views().map(function (v) {
-            return '<a class="jp-nav-link' + (UI.view === v.key ? ' active' : '') + '" href="#' + v.key + '"' + (UI.view === v.key ? ' aria-current="page"' : '') + '>' +
+            return '<a class="jp-nav-link' + (UI.view === v.key ? ' active' : '') + '" href="#' + v.key + '"' + (UI.view === v.key ? ' aria-current="page"' : '') + (UI.sideMin ? ' aria-label="' + esc(label(v)) + '"' : '') + '>' +
                 '<span class="jp-nav-ico ico-' + v.key + '">' + ICO[v.icon] + '</span><span>' + label(v) + '</span>' +
                 (v.key === 'deadlines' && late ? '<b class="jp-badge num">' + late + '</b>' : '') +
                 (v.key === 'calendar' && soonMeetings().length ? '<b class="jp-badge gold num" title="Meetings in the next seven days">' + soonMeetings().length + '</b>' : '') +
@@ -429,8 +432,9 @@
             : '<a class="jp-nav-link" href="' + esc(P.endpoints.back) + '"><span class="jp-nav-ico ico-out">' + ICO.back + '</span><span>Back to CRM</span></a>';
         var counsellor = s.counsellor ? '<div class="jp-counsellor"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor)) + '</span><span><small>' + (isStudent() ? 'Your counsellor' : 'Counsellor') + '</small><b>' + esc(s.counsellor) + '</b></span></div>' : '';
         return '<aside class="jp-side" aria-label="Planner navigation">' +
-            '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span></div>' +
-            '<div class="jp-who"><div class="jp-who-top"><span class="jp-avatar">' + esc(initials(s.name)) + '</span><div><b>' + esc(s.name) + '</b><small>' + esc([s.level, s.intake].filter(Boolean).join(' · ') || 'Plan details not set') + '</small></div></div>' +
+            '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span class="jp-brand-copy"><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span>' +
+            '<button class="jp-side-toggle" data-act="side-min" aria-pressed="' + (UI.sideMin ? 'true' : 'false') + '" aria-label="' + (UI.sideMin ? 'Expand the menu' : 'Collapse the menu to icons') + '" title="' + (UI.sideMin ? 'Expand menu' : 'Collapse menu') + '">' + ICO.sidebar + '</button></div>' +
+            '<div class="jp-who" style="--p:' + parseInt(barWidth(overall()), 10) + '"' + (UI.sideMin ? ' title="' + esc(s.name) + ' · ' + barWidth(overall()) + ' done"' : '') + '><div class="jp-who-top"><span class="jp-avatar">' + esc(initials(s.name)) + '</span><div><b>' + esc(s.name) + '</b><small>' + esc([s.level, s.intake].filter(Boolean).join(' · ') || 'Plan details not set') + '</small></div></div>' +
             '<div class="jp-who-bar"><span>Steps done</span><b class="num">' + tally(overall()) + '</b></div><div class="jp-bar side"><i style="width:' + barWidth(overall()) + '"></i></div>' +
             '<div class="jp-who-pct num">' + barWidth(overall()) + ' of the way there</div></div>' +
             '<div class="jp-nav-label">' + (isStudent() ? 'My plan' : 'Planner') + '</div><nav class="jp-nav">' + nav + '</nav>' +
@@ -1791,6 +1795,12 @@
                 return;
             case 'close-menu': UI.menu = false; render(); return;
             case 'toggle-changes': UI.allChanges = !UI.allChanges; render(); return;
+            case 'side-min':
+                UI.sideMin = !UI.sideMin;
+                try { localStorage.setItem('jp-side-min', UI.sideMin ? '1' : '0'); } catch (err) { /* private window */ }
+                render();
+                var t = document.querySelector('.jp-side-toggle'); if (t) t.focus();
+                return;
             case 'user-menu': UI.userMenu = !UI.userMenu; render(); if (UI.userMenu) { var first = document.querySelector('.jp-usermenu-item'); if (first) first.focus(); } return;
             case 'changes-filter': UI.changesNewOnly = el.dataset.v === 'new'; UI.allChanges = false; render(); return;
             // The marker already moved forward when the page opened; this only
