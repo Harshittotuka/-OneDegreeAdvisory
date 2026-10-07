@@ -127,17 +127,18 @@
     --g-hud: rgba(30, 32, 40, 0.72);
 
     /* ---------- Liquid Glass ---------- */
-    /* tinted (the default): frosted for reading */
-    --lg-blur: blur(26px) saturate(180%);
-    --lg-edge: 1px solid rgba(255, 255, 255, 0.7);
-    --lg-veil: rgba(255, 255, 255, 0.3);
-    --lg-frost-low: rgba(255, 255, 255, 0.4);
-    --lg-frost-high: rgba(255, 255, 255, 0.68);
+    /* tinted (the default): heavily frosted, milky white; the wallpaper
+       hardly shows through, so text reads as on paper */
+    --lg-blur: blur(40px) saturate(125%);
+    --lg-edge: 1px solid rgba(255, 255, 255, 0.92);
+    --lg-veil: rgba(255, 255, 255, 0.32);
+    --lg-frost-low: rgba(255, 255, 255, 0.74);
+    --lg-frost-high: rgba(255, 255, 255, 0.88);
     --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 62%);
     --lg-sheen: var(--lg-illum), linear-gradient(90deg, var(--lg-veil) 0%, var(--lg-veil) 100%), linear-gradient(0deg, var(--lg-frost-low) 0%, var(--lg-frost-high) 100%);
     --lg-panel: transparent;
-    --lg-strong: rgba(255, 255, 255, 0.62);
-    --lg-control: rgba(255, 255, 255, 0.45);
+    --lg-strong: rgba(255, 255, 255, 0.9);
+    --lg-control: rgba(255, 255, 255, 0.78);
     /* the light inside the edges, as in the Figma file */
     --lg-rim:
         inset -1px -1px 4px rgba(255, 255, 255, 0.5),
@@ -158,13 +159,24 @@
         -15px 37px 24px rgba(40, 50, 110, 0.07),
         -27px 66px 29px rgba(40, 50, 110, 0.03);
 }
-/* clear: thin and see-through */
+/* clear: barely frosted, see-through; the wallpaper's colours show through
+   every pane, and bright rims draw the edges of the glass */
 :root[data-glass="clear"] {
-    --lg-blur: blur(10px) saturate(170%);
-    --lg-veil: rgba(255, 255, 255, 0.14);
-    --lg-frost-low: rgba(255, 255, 255, 0.08);
-    --lg-frost-high: rgba(255, 255, 255, 0.34);
-    --lg-strong: rgba(255, 255, 255, 0.56);
+    --lg-blur: blur(5px) saturate(160%);
+    --lg-edge: 1px solid rgba(255, 255, 255, 0.95);
+    --lg-veil: rgba(255, 255, 255, 0.05);
+    --lg-frost-low: rgba(255, 255, 255, 0);
+    --lg-frost-high: rgba(255, 255, 255, 0.18);
+    --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 58%);
+    --lg-strong: rgba(255, 255, 255, 0.62);
+    --lg-control: rgba(255, 255, 255, 0.22);
+    --lg-rim:
+        inset -1px -1px 4px rgba(255, 255, 255, 0.7),
+        inset 1px 0 2px rgba(255, 255, 255, 0.6),
+        inset -3px -8px 10px rgba(255, 255, 255, 0.35),
+        inset 4px 8px 19px rgba(255, 255, 255, 0.3),
+        inset 2px 2px 4px -1px rgba(255, 255, 255, 0.85),
+        inset -2px 2px 6px rgba(120, 130, 170, 0.18);
 }
 
 /* ---------- dark ---------- */
@@ -218,7 +230,7 @@
     --g-separator: rgba(255, 255, 255, 0.16);
     --g-separator-strong: rgba(255, 255, 255, 0.26);
     --g-hairline: 0 0 0 1px rgba(255, 255, 255, 0.14);
-    --g-solid: #232a55;
+    --g-solid: #1b1d2c;
     --g-surface: rgba(255, 255, 255, 0.1);
     --g-surface-2: rgba(255, 255, 255, 0.07);
     --g-surface-3: rgba(255, 255, 255, 0.14);
@@ -226,38 +238,44 @@
     --g-avatar: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
     --g-scrim: rgba(4, 6, 24, 0.45);
     --g-hud: rgba(28, 34, 66, 0.72);
-    --lg-blur: blur(26px) saturate(110%);
-    --lg-edge: 1px solid rgba(156, 156, 156, 0.5);
-    --lg-veil: rgba(255, 255, 255, 0.11);
-    --lg-frost-low: rgba(22, 28, 60, 0.52);
-    --lg-frost-high: rgba(146, 156, 196, 0.62);
-    --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 62%);
-    --lg-strong: rgba(20, 26, 62, 0.7);
-    --lg-control: rgba(255, 255, 255, 0.1);
+    --lg-blur: blur(40px) saturate(130%);
+    --lg-edge: 1px solid rgba(255, 255, 255, 0.13);
+    --lg-veil: rgba(255, 255, 255, 0.03);
+    --lg-frost-low: rgba(12, 13, 22, 0.84);
+    --lg-frost-high: rgba(34, 36, 52, 0.8);
+    --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 60%);
+    --lg-strong: rgba(24, 25, 38, 0.92);
+    --lg-control: rgba(40, 42, 60, 0.78);
     --lg-rim:
-        inset -1px -1px 4px rgba(255, 255, 255, 0.3),
-        inset 1px 0 2px rgba(255, 255, 255, 0.2),
-        inset -3px -8px 10px rgba(255, 255, 255, 0.2),
-        inset 4px 8px 19px rgba(255, 255, 255, 0.15),
-        inset 2px 2px 4px -1px rgba(255, 255, 255, 0.3),
-        inset -2px 2px 6px rgba(70, 84, 150, 0.55);
+        inset 1px 1px 0 rgba(255, 255, 255, 0.16),
+        inset -1px -1px 0 rgba(255, 255, 255, 0.04),
+        inset 4px 8px 19px rgba(255, 255, 255, 0.04),
+        inset -2px -6px 12px rgba(0, 0, 0, 0.22);
     --lg-lift:
-        -2px 4px 10px rgba(2, 6, 26, 0.16),
-        -7px 17px 18px rgba(2, 6, 26, 0.13),
-        -15px 37px 24px rgba(2, 6, 26, 0.1),
-        -27px 66px 29px rgba(2, 6, 26, 0.05);
+        -2px 4px 10px rgba(0, 0, 0, 0.22),
+        -7px 17px 18px rgba(0, 0, 0, 0.18),
+        -15px 37px 24px rgba(0, 0, 0, 0.12),
+        -27px 66px 29px rgba(0, 0, 0, 0.06);
     --lg-lift-high:
-        -2px 4px 10px rgba(2, 6, 26, 0.22),
-        -7px 17px 18px rgba(2, 6, 26, 0.18),
-        -15px 37px 24px rgba(2, 6, 26, 0.12),
-        -27px 66px 29px rgba(2, 6, 26, 0.06);
+        -2px 4px 10px rgba(0, 0, 0, 0.3),
+        -7px 17px 18px rgba(0, 0, 0, 0.24),
+        -15px 37px 24px rgba(0, 0, 0, 0.16),
+        -27px 66px 29px rgba(0, 0, 0, 0.08);
 }
 :root[data-appearance="dark"][data-glass="clear"] {
-    --lg-blur: blur(10px);
-    --lg-veil: rgba(255, 255, 255, 0.05);
-    --lg-frost-low: rgba(22, 28, 60, 0.06);
-    --lg-frost-high: rgba(146, 156, 196, 0.3);
-    --lg-strong: rgba(20, 26, 62, 0.5);
+    --lg-blur: blur(5px) saturate(150%);
+    --lg-edge: 1px solid rgba(255, 255, 255, 0.3);
+    --lg-veil: rgba(255, 255, 255, 0.03);
+    --lg-frost-low: rgba(8, 9, 18, 0.16);
+    --lg-frost-high: rgba(255, 255, 255, 0.07);
+    --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 58%);
+    --lg-strong: rgba(24, 25, 38, 0.62);
+    --lg-control: rgba(255, 255, 255, 0.07);
+    --lg-rim:
+        inset 1px 1px 0 rgba(255, 255, 255, 0.34),
+        inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+        inset 4px 8px 19px rgba(255, 255, 255, 0.08),
+        inset -3px -8px 10px rgba(255, 255, 255, 0.06);
 }
 
 /* "auto" follows the system: the dark values again (a media query cannot
@@ -313,7 +331,7 @@
         --g-separator: rgba(255, 255, 255, 0.16);
         --g-separator-strong: rgba(255, 255, 255, 0.26);
         --g-hairline: 0 0 0 1px rgba(255, 255, 255, 0.14);
-        --g-solid: #232a55;
+        --g-solid: #1b1d2c;
         --g-surface: rgba(255, 255, 255, 0.1);
         --g-surface-2: rgba(255, 255, 255, 0.07);
         --g-surface-3: rgba(255, 255, 255, 0.14);
@@ -321,38 +339,44 @@
         --g-avatar: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
         --g-scrim: rgba(4, 6, 24, 0.45);
         --g-hud: rgba(28, 34, 66, 0.72);
-        --lg-blur: blur(26px) saturate(110%);
-        --lg-edge: 1px solid rgba(156, 156, 156, 0.5);
-        --lg-veil: rgba(255, 255, 255, 0.11);
-        --lg-frost-low: rgba(22, 28, 60, 0.52);
-        --lg-frost-high: rgba(146, 156, 196, 0.62);
-        --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 62%);
-        --lg-strong: rgba(20, 26, 62, 0.7);
-        --lg-control: rgba(255, 255, 255, 0.1);
+        --lg-blur: blur(40px) saturate(130%);
+        --lg-edge: 1px solid rgba(255, 255, 255, 0.13);
+        --lg-veil: rgba(255, 255, 255, 0.03);
+        --lg-frost-low: rgba(12, 13, 22, 0.84);
+        --lg-frost-high: rgba(34, 36, 52, 0.8);
+        --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 60%);
+        --lg-strong: rgba(24, 25, 38, 0.92);
+        --lg-control: rgba(40, 42, 60, 0.78);
         --lg-rim:
-            inset -1px -1px 4px rgba(255, 255, 255, 0.3),
-            inset 1px 0 2px rgba(255, 255, 255, 0.2),
-            inset -3px -8px 10px rgba(255, 255, 255, 0.2),
-            inset 4px 8px 19px rgba(255, 255, 255, 0.15),
-            inset 2px 2px 4px -1px rgba(255, 255, 255, 0.3),
-            inset -2px 2px 6px rgba(70, 84, 150, 0.55);
+            inset 1px 1px 0 rgba(255, 255, 255, 0.16),
+            inset -1px -1px 0 rgba(255, 255, 255, 0.04),
+            inset 4px 8px 19px rgba(255, 255, 255, 0.04),
+            inset -2px -6px 12px rgba(0, 0, 0, 0.22);
         --lg-lift:
-            -2px 4px 10px rgba(2, 6, 26, 0.16),
-            -7px 17px 18px rgba(2, 6, 26, 0.13),
-            -15px 37px 24px rgba(2, 6, 26, 0.1),
-            -27px 66px 29px rgba(2, 6, 26, 0.05);
+            -2px 4px 10px rgba(0, 0, 0, 0.22),
+            -7px 17px 18px rgba(0, 0, 0, 0.18),
+            -15px 37px 24px rgba(0, 0, 0, 0.12),
+            -27px 66px 29px rgba(0, 0, 0, 0.06);
         --lg-lift-high:
-            -2px 4px 10px rgba(2, 6, 26, 0.22),
-            -7px 17px 18px rgba(2, 6, 26, 0.18),
-            -15px 37px 24px rgba(2, 6, 26, 0.12),
-            -27px 66px 29px rgba(2, 6, 26, 0.06);
+            -2px 4px 10px rgba(0, 0, 0, 0.3),
+            -7px 17px 18px rgba(0, 0, 0, 0.24),
+            -15px 37px 24px rgba(0, 0, 0, 0.16),
+            -27px 66px 29px rgba(0, 0, 0, 0.08);
     }
     :root[data-appearance="auto"][data-glass="clear"] {
-        --lg-blur: blur(10px);
-        --lg-veil: rgba(255, 255, 255, 0.05);
-        --lg-frost-low: rgba(22, 28, 60, 0.06);
-        --lg-frost-high: rgba(146, 156, 196, 0.3);
-        --lg-strong: rgba(20, 26, 62, 0.5);
+        --lg-blur: blur(5px) saturate(150%);
+        --lg-edge: 1px solid rgba(255, 255, 255, 0.3);
+        --lg-veil: rgba(255, 255, 255, 0.03);
+        --lg-frost-low: rgba(8, 9, 18, 0.16);
+        --lg-frost-high: rgba(255, 255, 255, 0.07);
+        --lg-illum: radial-gradient(120% 70% at 50% -12%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 58%);
+        --lg-strong: rgba(24, 25, 38, 0.62);
+        --lg-control: rgba(255, 255, 255, 0.07);
+        --lg-rim:
+            inset 1px 1px 0 rgba(255, 255, 255, 0.34),
+            inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+            inset 4px 8px 19px rgba(255, 255, 255, 0.08),
+            inset -3px -8px 10px rgba(255, 255, 255, 0.06);
     }
 }
 
