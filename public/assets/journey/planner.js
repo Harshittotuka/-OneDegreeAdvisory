@@ -30,8 +30,10 @@
         // The side panel folded down to its icons (wide screens only).
         sideMin: (function () { try { return localStorage.getItem('jp-side-min') === '1'; } catch (e) { return false; } })()
     };
-    // When the plan on screen was last loaded from the server: the page
-    // opening, the refresh button, or a live update pulling in a change.
+    // When the plan on screen was last known to be current: the page
+    // opening, the refresh button, a live update pulling in a change, or
+    // a live check (every few seconds) finding nothing new. So the label
+    // only counts up while the live checks are not running.
     var REFRESHED_AT = Date.now();
     P.documents = P.documents || [];
     P.team = P.team || []; P.deadlines = P.deadlines || []; P.meetings = P.meetings || [];
@@ -543,8 +545,13 @@
         return short ? new Date(REFRESHED_AT).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Refreshed ' + at;
     }
     function refreshedTitle() {
-        return 'Last refreshed ' + new Date(REFRESHED_AT).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        var at = new Date(REFRESHED_AT).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return LIVE.timer
+            ? 'Up to date as of ' + at + '. This plan checks for changes every ' + plural(liveEvery() / 1000, 'second', 'seconds') + ' and updates itself.'
+            : 'Last refreshed ' + at + '. Automatic updates are paused; use refresh to update.';
     }
+    /* A live check, or a reload, found the plan on screen current. */
+    function markFresh() { REFRESHED_AT = Date.now(); updateRefreshed(); }
     function refreshedTag() {
         return '<span class="jp-refreshed" title="' + esc(refreshedTitle()) + '"><span class="long">' + esc(refreshedLabel(false)) + '</span><span class="short">' + esc(refreshedLabel(true)) + '</span></span>';
     }
@@ -1824,8 +1831,8 @@
         }).then(function (json) {
             LIVE.fails = 0;
             if (!json || !json.v) return;
-            if (LIVE.seen === null) { LIVE.seen = json.v; return; }
-            if (json.v === LIVE.seen) return;
+            if (LIVE.seen === null) { LIVE.seen = json.v; markFresh(); return; }
+            if (json.v === LIVE.seen) { markFresh(); return; }
             LIVE.seen = json.v;
             if (midEdit()) { LIVE.pending = true; return; }
             refreshPlanner(true);
