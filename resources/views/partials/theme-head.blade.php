@@ -23,7 +23,7 @@
         const sheets = @json($sheets);
         const themes = @json($themes);
         let theme = @json($registry['default']);
-        let appearance = 'auto';
+        let appearance = 'light';
         let glass = 'tinted';
         try {
             const savedTheme = localStorage.getItem('jpTheme');

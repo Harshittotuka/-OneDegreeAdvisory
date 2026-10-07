@@ -4,7 +4,7 @@
  * A complete stylesheet (config/themes.php swaps it in for portal-auth.css),
  * built on assets/glass/glass-tokens.css: one Liquid Glass card, as in the
  * "MacOS 26 – Liquid Glass Effect" Figma file, centred over the
- * midnight-blue wallpaper, whose light drifts very slowly behind it.
+ * pastel wallpaper, whose colour drifts very slowly behind it.
  * The animated globe of the Standard theme stays out of this one; the
  * markup is shared, so its scene is simply not shown.
  */
@@ -20,8 +20,15 @@ body.sp-body::before, body.sp-body::after {
     content: ""; position: fixed; z-index: 0; width: 60vmax; height: 60vmax; border-radius: 50%; pointer-events: none;
     filter: blur(60px); opacity: 0.7; will-change: transform;
 }
-body.sp-body::before { left: -14vmax; top: -24vmax; background: radial-gradient(circle, rgba(110, 140, 255, 0.55), transparent 65%); animation: sp-drift-a 38s ease-in-out infinite alternate; }
-body.sp-body::after { right: -20vmax; bottom: -24vmax; background: radial-gradient(circle, rgba(140, 80, 230, 0.45), transparent 65%); animation: sp-drift-b 44s ease-in-out infinite alternate; }
+body.sp-body::before { left: -14vmax; top: -24vmax; background: radial-gradient(circle, rgba(140, 190, 255, 0.6), transparent 65%); animation: sp-drift-a 38s ease-in-out infinite alternate; }
+body.sp-body::after { right: -20vmax; bottom: -24vmax; background: radial-gradient(circle, rgba(255, 170, 205, 0.5), transparent 65%); animation: sp-drift-b 44s ease-in-out infinite alternate; }
+/* In dark, the drifting light takes the dark wallpaper's blue and violet. */
+:root[data-appearance="dark"] body.sp-body::before { background: radial-gradient(circle, rgba(60, 100, 230, 0.5), transparent 65%); }
+:root[data-appearance="dark"] body.sp-body::after { background: radial-gradient(circle, rgba(150, 70, 170, 0.42), transparent 65%); }
+@media (prefers-color-scheme: dark) {
+    :root[data-appearance="auto"] body.sp-body::before { background: radial-gradient(circle, rgba(60, 100, 230, 0.5), transparent 65%); }
+    :root[data-appearance="auto"] body.sp-body::after { background: radial-gradient(circle, rgba(150, 70, 170, 0.42), transparent 65%); }
+}
 @keyframes sp-drift-a { to { transform: translate(14vmax, 10vmax) scale(1.1); } }
 @keyframes sp-drift-b { to { transform: translate(-12vmax, -8vmax) scale(1.08); } }
 img { display: block; max-width: 100%; }
@@ -95,7 +102,7 @@ a { color: inherit; }
 .sp-meta { display: flex; align-items: flex-start; justify-content: center; gap: 7px; margin-top: 16px; font-size: var(--g-fs-small); color: var(--g-muted); text-align: left; }
 .sp-meta > svg { width: 14px; height: 14px; flex: none; margin-top: 2px; fill: none; stroke: var(--g-muted); stroke-width: 1.7; stroke-linecap: round; }
 .sp-meta-links { justify-content: space-between; align-items: center; }
-.sp-meta-links a, .sp-meta-links button { padding: 0; border: 0; background: none; color: #fff; text-decoration: underline; text-underline-offset: 3px; font-size: var(--g-fs-small); cursor: pointer; text-decoration: none; }
+.sp-meta-links a, .sp-meta-links button { padding: 0; border: 0; background: none; color: var(--g-link); text-decoration: underline; text-underline-offset: 3px; font-size: var(--g-fs-small); cursor: pointer; text-decoration: none; }
 .sp-meta-links a:hover, .sp-meta-links button:hover { text-decoration: underline; }
 .sp-meta-links form { margin: 0; }
 .sp-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--g-separator-strong); font-size: var(--g-fs-caption); color: var(--g-muted); }

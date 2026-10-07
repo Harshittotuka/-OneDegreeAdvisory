@@ -4,8 +4,10 @@
  * A complete stylesheet in its own right (config/themes.php swaps it in for
  * planner.css), built on assets/glass/glass-tokens.css and drawn from the
  * "MacOS 26 – Liquid Glass Effect" Figma file: every panel is a glass
- * widget (warm frost, bright inner highlights, a grey edge, a long soft
- * shadow) with white text on it, over a midnight-blue wallpaper.
+ * widget (a frost lighter at the top, bright inner highlights, an edge, a
+ * long soft shadow) over a pastel wallpaper; dark text in light, white
+ * text in dark. Apple's rules apply: a lens on the navigation layer, no
+ * glass on glass, tinted glass for the main action.
  * Buttons, segments and tags are capsules; titles are large and bold.
  * "Tinted" glass (the default) is the same glass, frostier; "clear" is the
  * glass exactly as drawn.
@@ -57,7 +59,7 @@ svg { flex: none; }
 .jp-btn.sm { min-height: 28px; padding: 4px 12px; font-size: var(--g-fs-small); }
 .jp-btn svg { width: 15px; height: 15px; }
 .jp-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; transform: none; }
-.jp-link { padding: 0; background: none; border: 0; border-radius: 6px; color: #fff; font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.45); text-underline-offset: 3px; white-space: nowrap; }
+.jp-link { padding: 0; background: none; border: 0; border-radius: 6px; color: var(--g-link); font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--g-link) 45%, transparent); text-underline-offset: 3px; white-space: nowrap; }
 .jp-link:hover { opacity: 0.75; }
 
 /* ---------- the window: glass sidebar + content ---------- */
@@ -113,19 +115,19 @@ svg { flex: none; }
 .jp-nav-link:active { transform: scale(0.98); }
 /* The page you're on: filled with the tint, as an iPad sidebar does. */
 .jp-nav-link.active {
-    background: rgba(255, 255, 255, 0.2); color: #fff; font-weight: var(--g-w-semibold);
-    box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.35), inset -1px -1px 3px rgba(255, 255, 255, 0.18), 0 4px 12px rgba(2, 6, 26, 0.22);
+    background: var(--g-active-bg); color: var(--g-active-ink); font-weight: var(--g-w-semibold);
+    box-shadow: var(--g-active-shadow);
 }
-.jp-nav-ico { width: 22px; height: 22px; display: grid; place-items: center; flex: none; color: rgba(255, 255, 255, 0.86); }
+.jp-nav-ico { width: 22px; height: 22px; display: grid; place-items: center; flex: none; color: var(--g-nav-ico); }
 .jp-nav-ico svg { width: 19px; height: 19px; }
 .jp-nav-ico svg :is(path, rect, circle, line) { stroke-width: 1.75; }
-.jp-nav-link.active .jp-nav-ico { color: #fff; }
+.jp-nav-link.active .jp-nav-ico { color: var(--g-active-ink); }
 .jp-badge {
     margin-left: auto; min-width: 20px; padding: 0 6px; border-radius: var(--g-r-pill); background: var(--g-red); color: #fff;
     font-size: 0.6875rem; font-weight: var(--g-w-bold); line-height: 20px; text-align: center; font-variant-numeric: tabular-nums;
 }
 .jp-badge.gold { background: var(--g-orange); }
-.jp-nav-link.active .jp-badge { background: #fff; color: #10184a; text-shadow: none; }
+.jp-nav-link.active .jp-badge { background: #fff; color: var(--g-active-badge-ink); text-shadow: none; }
 .jp-side-foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 2px; }
 .jp-side-foot form { margin: 0; }
 .jp-counsellor { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; padding: 9px 10px; border-radius: 18px; background: var(--g-surface-2); box-shadow: var(--g-hairline); }
@@ -269,8 +271,8 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-hero-ring { position: relative; width: 136px; height: 136px; flex: none; }
 .jp-hero-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
 .jp-hero-ring circle { stroke-width: 11; }
-.jp-hero-ring .trk { stroke: rgba(255, 255, 255, 0.16); }
-.jp-hero-ring .val { stroke: #ffffff; filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.45)); transition: stroke-dashoffset 0.8s var(--g-ease-out); }
+.jp-hero-ring .trk { stroke: var(--g-ring-track); }
+.jp-hero-ring .val { stroke: var(--g-ring); filter: drop-shadow(0 0 6px var(--g-ring-glow)); transition: stroke-dashoffset 0.8s var(--g-ease-out); }
 .jp-hero-ring > div { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 .jp-hero-ring b { font-family: var(--g-font-display); font-size: 2rem; font-weight: var(--g-w-bold); letter-spacing: var(--g-track-display); line-height: 1; font-variant-numeric: tabular-nums; }
 .jp-hero-ring small { margin-top: 3px; font-size: var(--g-fs-caption); color: var(--g-muted); }
@@ -302,7 +304,7 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-route::after { width: var(--fill, 0%); background: linear-gradient(90deg, var(--g-green), var(--g-accent)); }
 .jp-route li { position: relative; }
 .jp-route button { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 100%; padding: 0 2px 4px; border: 0; border-radius: 14px; background: none; text-align: center; }
-.jp-route button:hover .name { color: #fff; }
+.jp-route button:hover .name { color: var(--g-link); }
 .jp-route .stop {
     position: relative; z-index: 1; width: 33px; height: 33px; display: grid; place-items: center; border-radius: 50%;
     background: var(--g-solid); box-shadow: inset 0 0 0 2px var(--g-separator-strong), 0 0 0 4px var(--g-solid);
@@ -312,7 +314,7 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-route li.done .stop { background: var(--g-green); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 4px var(--g-solid); }
 .jp-route li.now .stop { background: var(--g-accent); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 4px var(--g-solid), 0 0 0 8px var(--g-accent-soft); }
 .jp-route .name { font-size: var(--g-fs-small); font-weight: var(--g-w-semibold); line-height: 1.25; }
-.jp-route li.now .name { color: #fff; }
+.jp-route li.now .name { color: var(--g-link); }
 .jp-route .pct { font-size: var(--g-fs-caption); color: var(--g-muted); font-variant-numeric: tabular-nums; }
 .jp-route .here { position: absolute; top: -25px; padding: 2px 10px; border-radius: var(--g-r-pill); background: var(--g-accent); color: #fff; font-size: var(--g-fs-caption); font-weight: var(--g-w-semibold); white-space: nowrap; box-shadow: 0 3px 10px color-mix(in srgb, var(--g-accent) 35%, transparent); }
 .jp-phase-no, .jp-route .stop { position: relative; }
@@ -353,7 +355,7 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-mini-row .w, .jp-uni-row .w { min-width: 0; }
 .jp-mini-row .t, .jp-uni-row .t { display: block; font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); }
 .jp-mini-row .s, .jp-uni-row .s { display: block; font-size: var(--g-fs-small); color: var(--g-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.jp-mini-row:hover .t, .jp-uni-row:hover .t { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.jp-mini-row:hover .t, .jp-uni-row:hover .t { color: var(--g-link); text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- tags: capsules ---------- */
 .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: var(--g-r-pill); font-size: var(--g-fs-caption); font-weight: var(--g-w-semibold); white-space: nowrap; }
@@ -755,8 +757,8 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-day .dn { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: var(--g-fs-small); font-weight: var(--g-w-medium); color: var(--g-ink-2); font-variant-numeric: tabular-nums; }
 .jp-day.past:not(.today) .dn { color: var(--g-faint); }
 /* Today: its date in red, as in macOS Calendar. */
-.jp-day.today .dn { color: #fff; font-weight: var(--g-w-bold); }
-.jp-day .dn .tdy { order: -1; margin-right: auto; padding: 0 7px; border-radius: var(--g-r-pill); background: #fff; color: #10184a; text-shadow: none; font-size: 0.5625rem; font-weight: var(--g-w-bold); line-height: 16px; }
+.jp-day.today .dn { color: var(--g-today-num); font-weight: var(--g-w-bold); }
+.jp-day .dn .tdy { order: -1; margin-right: auto; padding: 0 7px; border-radius: var(--g-r-pill); background: var(--g-today-bg); color: var(--g-today-ink); text-shadow: none; font-size: 0.5625rem; font-weight: var(--g-w-bold); line-height: 16px; }
 .jp-day .ev {
     display: flex; align-items: center; gap: 5px; width: 100%; padding: 1px 6px; border: 0; border-radius: 6px;
     font-size: var(--g-fs-caption); font-weight: var(--g-w-medium); line-height: 1.45; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -823,7 +825,7 @@ button.jp-user:active { transform: scale(0.97); }
 
 /* ---------- recent changes: one timeline, broken into days ---------- */
 .jp-changes-card .jp-card-h { align-items: center; flex-wrap: wrap; }
-.jp-chg-count { color: #fff; font-weight: var(--g-w-bold); }
+.jp-chg-count { color: var(--g-link); font-weight: var(--g-w-bold); }
 .jp-chg-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .jp-chg-tools .jp-seg button .num { margin-left: 4px; padding: 0 5px; border-radius: var(--g-r-pill); background: var(--g-red); color: #fff; font-size: 0.625rem; }
 .jp-chg-day { display: flex; align-items: center; gap: 10px; margin: 16px 0 4px; font-size: var(--g-fs-small); font-weight: var(--g-w-semibold); color: var(--g-muted); }
@@ -832,13 +834,13 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-chg-list { position: relative; margin: 0; padding: 0; list-style: none; }
 .jp-chg { position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 12px 8px 6px; border-radius: 16px; }
 .jp-chg:hover { background: var(--g-fill); }
-.jp-chg.new { background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent 60%); }
+.jp-chg.new { background: linear-gradient(90deg, color-mix(in srgb, var(--g-new-dot) 14%, transparent), transparent 60%); }
 .jp-chg-ico { position: relative; z-index: 1; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--g-fill); color: var(--g-muted); }
 .jp-chg-ico svg { width: 15px; height: 15px; }
 .jp-chg .w { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .jp-chg .t { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: var(--g-fs-body); line-height: 1.3; }
 .jp-chg .t b { font-weight: var(--g-w-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.jp-chg-new { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px rgba(255, 255, 255, 0.7); }
+.jp-chg-new { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--g-new-dot); box-shadow: 0 0 6px color-mix(in srgb, var(--g-new-dot) 70%, transparent); }
 .jp-chg .s { display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: var(--g-fs-small); color: var(--g-muted); overflow-wrap: anywhere; }
 .jp-chg-sec { flex: none; padding: 0 8px; border-radius: var(--g-r-pill); background: var(--g-fill); color: var(--g-ink-2); font-size: var(--g-fs-caption); font-weight: var(--g-w-medium); }
 .jp-chg .by { display: flex; align-items: center; gap: 8px; text-align: right; white-space: nowrap; }
@@ -1031,7 +1033,7 @@ button.jp-user:active { transform: scale(0.97); }
     .jp-day { min-height: 56px; padding: 3px; }
     .jp-day .dn { justify-content: center; }
     .jp-day .dn .tdy { display: none; }
-    .jp-day.today .dn { width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; background: #fff; color: #10184a; text-shadow: none; }
+    .jp-day.today .dn { width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; background: var(--g-today-bg); color: var(--g-today-ink); text-shadow: none; }
     .jp-day .ev { padding: 1px 3px; font-size: 0.5625rem; }
     .jp-day .ev .tm { display: none; }
     .jp-day .more { font-size: 0.5625rem; }
@@ -1071,9 +1073,9 @@ button.jp-user:active { transform: scale(0.97); }
     box-shadow: var(--lg-rim), var(--lg-lift);
 }
 .jp-ticket:not(.add):hover { box-shadow: var(--lg-rim), var(--lg-lift-high); }
-.jp-ticket.on { border-color: rgba(255, 255, 255, 0.8); }
-.jp-phase.current { border-color: rgba(255, 255, 255, 0.75); }
-.jp-agenda-day.today { border-color: rgba(255, 255, 255, 0.8); }
+.jp-ticket.on { border-color: var(--g-selected-edge); }
+.jp-phase.current { border-color: var(--g-selected-edge); }
+.jp-agenda-day.today { border-color: var(--g-today-bg); }
 
 /* Floating glass: the same glass on a warm dark base, so menus, sheets and
    the tab bar always read. */
@@ -1093,10 +1095,10 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-btn.ghost, .jp-btn.outline, .jp-btn.danger:not(.armed), .jp-side-toggle, .jp-cal-arrow,
 .jp-tools select, .jp-select, .jp-role-select {
     background-color: var(--g-fill); background-image: none;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 1px solid var(--g-separator);
     -webkit-backdrop-filter: none; backdrop-filter: none;
     box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.2), inset -1px -1px 1px rgba(255, 255, 255, 0.06);
-    color: #fff;
+    color: var(--g-control-ink);
 }
 .jp-btn.danger:not(.armed) { color: var(--g-red-ink); }
 .jp-btn.ghost:hover, .jp-btn.outline:hover, .jp-btn.danger:not(.armed):hover, .jp-side-toggle:hover, .jp-cal-arrow:hover { background-color: var(--g-fill-hover); filter: none; }
@@ -1109,18 +1111,18 @@ button.jp-user:active { transform: scale(0.97); }
     border: var(--lg-edge);
     -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur);
     box-shadow: var(--lg-rim), -2px 4px 10px rgba(2, 6, 26, 0.18);
-    color: #fff;
+    color: var(--g-control-ink);
 }
 .jp-topbar :is(.jp-refresh, button.jp-user, .jp-menu):hover { filter: brightness(1.1); }
-.jp-usermenu.open button.jp-user { border-color: rgba(255, 255, 255, 0.8); }
+.jp-usermenu.open button.jp-user { border-color: var(--g-selected-edge); }
 /* Pop-ups keep their up/down arrows, on either surface. */
 .jp-tools select, .jp-select, .jp-role-select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23ffffff' stroke-opacity='.75' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23888' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 13px center;
 }
 /* :where() keeps this at the glass rule's specificity, so it wins by order. */
 .jp-content > .jp-tools :is(.jp-btn.ghost, .jp-btn.outline, select):where(select) {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23ffffff' stroke-opacity='.75' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"), var(--lg-sheen), linear-gradient(var(--lg-control), var(--lg-control));
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23888' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"), var(--lg-sheen), linear-gradient(var(--lg-control), var(--lg-control));
     background-repeat: no-repeat; background-position: right 13px center, 0 0, 0 0, 0 0, 0 0;
 }
 .jp-tools select option, .jp-select option, .jp-role-select option, .jp-st option, .jp-fields option, .jp-dialog option { color: #1c1c1e; background: #fff; text-shadow: none; }
