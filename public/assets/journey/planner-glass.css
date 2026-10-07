@@ -1158,11 +1158,11 @@ button.jp-user:active { transform: scale(0.97); }
    The large title, its line beneath, an intro and the toolbar's labels sit
    on the background, not on glass: over a dark photo they turn white, and
    over any photo in dark appearance they get a shadow to hold their edge. */
-:root[data-wp-tone="dark"] :is(.jp-topbar-title, .jp-content > .jp-intro, .jp-content > .jp-tools > label, .jp-foot) {
+:root[data-wp-tone="dark"] :is(.jp-topbar-title, .jp-content > .jp-intro, .jp-content > .jp-tools > label, .jp-foot, .jp-refreshed) {
     --g-ink: #ffffff; --g-ink-2: rgba(255, 255, 255, 0.9); --g-muted: rgba(255, 255, 255, 0.82); --g-link: #ffffff;
     color: var(--g-ink); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
-:root[data-wp-photo][data-appearance="dark"] :is(.jp-topbar-title, .jp-content > .jp-intro, .jp-content > .jp-tools > label, .jp-foot) {
+:root[data-wp-photo][data-appearance="dark"] :is(.jp-topbar-title, .jp-content > .jp-intro, .jp-content > .jp-tools > label, .jp-foot, .jp-refreshed) {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
@@ -1211,4 +1211,13 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-wp-item.on .jp-wp-name { color: var(--g-link); font-weight: var(--g-w-semibold); }
 @media (max-width: 640px) {
     .jp-wp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+}
+
+/* When the plan was last refreshed, beside the refresh button. It sits on
+   the wallpaper, so it follows the title's colour rules above. */
+.jp-refreshed { color: var(--g-muted); font-size: var(--g-fs-caption); font-weight: var(--g-w-medium); white-space: nowrap; margin-right: 2px; font-variant-numeric: tabular-nums; }
+.jp-refreshed .short { display: none; }
+@media (max-width: 640px) {
+    .jp-refreshed .long { display: none; }
+    .jp-refreshed .short { display: inline; }
 }

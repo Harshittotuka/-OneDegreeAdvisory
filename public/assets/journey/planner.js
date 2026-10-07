@@ -30,6 +30,9 @@
         // The side panel folded down to its icons (wide screens only).
         sideMin: (function () { try { return localStorage.getItem('jp-side-min') === '1'; } catch (e) { return false; } })()
     };
+    // When the plan on screen was last loaded from the server: the page
+    // opening, the refresh button, or a live update pulling in a change.
+    var REFRESHED_AT = Date.now();
     P.documents = P.documents || [];
     P.team = P.team || []; P.deadlines = P.deadlines || []; P.meetings = P.meetings || [];
     var DT = P.docTemplate || { fileCategories: [], essayCategories: [], essayStatuses: [], limits: { maxKb: 10240, extensions: [] } };
@@ -528,6 +531,33 @@
         });
     }
 
+    /* "Refreshed 5 min ago", next to the refresh button, and its short form
+       for a phone ("5m ago"). Kept current by a timer, without a redraw. */
+    function refreshedLabel(short) {
+        if (UI.refreshing) return short ? '…' : 'Refreshing…';
+        var s = Math.max(0, Math.round((Date.now() - REFRESHED_AT) / 1000)), m = Math.floor(s / 60), h = Math.floor(m / 60);
+        if (s < 45) return short ? 'now' : 'Refreshed just now';
+        if (m < 60) return short ? m + 'm ago' : 'Refreshed ' + m + ' min ago';
+        if (h < 24) return short ? h + 'h ago' : 'Refreshed ' + h + (h === 1 ? ' hr' : ' hrs') + ' ago';
+        var at = new Date(REFRESHED_AT).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return short ? new Date(REFRESHED_AT).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Refreshed ' + at;
+    }
+    function refreshedTitle() {
+        return 'Last refreshed ' + new Date(REFRESHED_AT).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    function refreshedTag() {
+        return '<span class="jp-refreshed" title="' + esc(refreshedTitle()) + '"><span class="long">' + esc(refreshedLabel(false)) + '</span><span class="short">' + esc(refreshedLabel(true)) + '</span></span>';
+    }
+    function updateRefreshed() {
+        var el = document.querySelector('.jp-refreshed');
+        if (!el) return;
+        el.title = refreshedTitle();
+        el.querySelector('.long').textContent = refreshedLabel(false);
+        el.querySelector('.short').textContent = refreshedLabel(true);
+    }
+    setInterval(updateRefreshed, 20000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) updateRefreshed(); });
+
     function renderBar(v) {
         var s = P.student;
         var sub = {
@@ -558,7 +588,7 @@
             '</div>';
         return '<header class="jp-topbar"><button class="jp-menu" data-act="menu" aria-label="Open menu">' + ICO.menu + '</button>' +
             '<div class="jp-topbar-title"><span class="jp-crumb">' + (isStudent() ? 'My plan' : esc(s.name) + (s.leadNumber ? ' · ' + esc(s.leadNumber) : '')) + '</span><h1>' + label(v) + '</h1><p>' + esc(sub) + '</p></div>' +
-            '<div class="jp-topbar-actions">' +
+            '<div class="jp-topbar-actions">' + refreshedTag() +
             '<button class="jp-refresh' + (UI.refreshing ? ' spin' : '') + (UI.armed === 'refresh' ? ' armed' : '') + '" data-act="refresh"' +
             ' aria-label="Refresh this plan" title="' + (UI.armed === 'refresh' ? 'Click again — you have unsaved changes' : 'Refresh this plan') + '">' + ICO.refresh + '</button>' +
             right + '</div></header>';
@@ -1735,6 +1765,7 @@
             var node = new DOMParser().parseFromString(html, 'text/html').getElementById('jp-payload');
             if (!node) throw new Error('not the planner');
             adoptPayload(JSON.parse(node.textContent));
+            REFRESHED_AT = Date.now();
             UI.refreshing = false;
             render();
             toast(quiet ? 'Updated' : 'Up to date');

@@ -1205,3 +1205,11 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
 .jp-usermenu-sec .jp-seg { display: flex; width: 100%; }
 .jp-usermenu-sec .jp-seg button { flex: 1; }
 .jp-usermenu-pop form { border-top: 0; margin-top: 0; padding-top: 0; }
+
+/* When the plan was last refreshed, beside the refresh button. */
+.jp-refreshed { font-size: 0.74rem; font-weight: 600; color: var(--muted); white-space: nowrap; margin-right: 2px; font-variant-numeric: tabular-nums; }
+.jp-refreshed .short { display: none; }
+@media (max-width: 640px) {
+    .jp-refreshed .long { display: none; }
+    .jp-refreshed .short { display: inline; }
+}
