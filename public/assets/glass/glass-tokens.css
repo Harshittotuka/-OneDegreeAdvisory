@@ -7,8 +7,9 @@
  * chosen theme, so the selectors need no theme scoping.
  *
  *   <html data-appearance>  light (default) | dark | auto (follows the system)
- *   <html data-glass>       tinted (default: frostier, a touch of the tint
- *                           colour, easier to read) | clear (see-through)
+ *   <html data-glass>       tinted (default: frosted glass washed with the
+ *                           tint colour, easiest to read) | clear (thin,
+ *                           see-through glass the wallpaper shows through)
  *
  * Layers, back to front: the wallpaper; glass panels (--lg-*), which blur
  * and tint whatever is behind them; controls inside them, filled with
@@ -113,22 +114,34 @@
 
     /* ---------- Liquid Glass ---------- */
     --lg-base: 255 255 255;    /* the glass's own colour, before the tint */
-    --lg-a: 0.62;              /* how frosted (tinted) */
-    --lg-tint: 6%;             /* how much of the tint colour it carries */
-    --lg-blur: blur(28px) saturate(190%);
+    --lg-a: 0.66;              /* how frosted a panel is */
+    --lg-a-strong: 0.84;       /* menus, sheets, the tab bar */
+    --lg-tint: 16%;            /* how much of the tint colour the glass carries */
+    --lg-blur: blur(30px) saturate(200%);
     --lg-panel: color-mix(in srgb, var(--g-accent) var(--lg-tint), rgb(var(--lg-base) / var(--lg-a)));
-    --lg-strong: color-mix(in srgb, var(--g-accent) var(--lg-tint), rgb(var(--lg-base) / calc(var(--lg-a) + 0.16)));
-    --lg-control: rgb(var(--lg-base) / calc(var(--lg-a) - 0.06));
+    --lg-strong: color-mix(in srgb, var(--g-accent) calc(var(--lg-tint) * 0.6), rgb(var(--lg-base) / var(--lg-a-strong)));
+    --lg-control: color-mix(in srgb, var(--g-accent) calc(var(--lg-tint) * 0.7), rgb(var(--lg-base) / calc(var(--lg-a) - 0.08)));
+    --lg-shade: rgba(0, 70, 200, 0.16);   /* the shadow takes the tint too */
     /* the gloss light catches on the top-left of a pane */
     --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0) 52%);
     /* bright edges, and the shadow the pane casts */
     --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.85), inset -1px -1px 0 rgba(255, 255, 255, 0.35), 0 0 0 0.5px rgba(255, 255, 255, 0.6);
-    --lg-lift: 0 10px 30px rgba(30, 40, 100, 0.13), 0 2px 6px rgba(30, 40, 100, 0.07);
-    --lg-lift-high: 0 24px 60px rgba(20, 28, 80, 0.22), 0 4px 14px rgba(20, 28, 80, 0.10);
+    --lg-lift: 0 10px 30px var(--lg-shade), 0 2px 6px rgba(30, 40, 100, 0.07);
+    --lg-lift-high: 0 24px 60px var(--lg-shade), 0 4px 14px rgba(20, 28, 80, 0.10);
 }
 
 /* clear glass: see-through, no tint */
-:root[data-glass="clear"] { --lg-a: 0.3; --lg-tint: 0%; }
+/* clear glass: thin and see-through, no tint; the wallpaper shows through
+   strongly, and brighter rims and gloss draw the edges instead */
+:root[data-glass="clear"] {
+    --lg-a: 0.14;
+    --lg-a-strong: 0.56;
+    --lg-tint: 0%;
+    --lg-blur: blur(10px) saturate(165%);
+    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.14) 30%, rgba(255, 255, 255, 0) 50%);
+    --lg-rim: inset 1.5px 2px 0 rgba(255, 255, 255, 0.95), inset -1px -1.5px 0 rgba(255, 255, 255, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.7);
+    --lg-shade: rgba(30, 40, 100, 0.1);
+}
 
 /* ---------- dark ---------- */
 :root[data-appearance="dark"] {
@@ -173,14 +186,21 @@
     --g-scrim: rgba(0, 0, 0, 0.45);
     --g-hud: rgba(60, 62, 72, 0.7);
     --lg-base: 28 30 42;
-    --lg-a: 0.56;
-    --lg-tint: 9%;
+    --lg-a: 0.52;
+    --lg-a-strong: 0.78;
+    --lg-tint: 24%;
+    --lg-shade: rgba(0, 0, 0, 0.45);
     --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 34%, rgba(255, 255, 255, 0) 52%);
     --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.22), inset -1px -1px 0 rgba(255, 255, 255, 0.07), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
-    --lg-lift: 0 12px 36px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.3);
-    --lg-lift-high: 0 28px 70px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.35);
+    --lg-lift: 0 12px 36px var(--lg-shade), 0 2px 6px rgba(0, 0, 0, 0.3);
+    --lg-lift-high: 0 28px 70px var(--lg-shade), 0 4px 14px rgba(0, 0, 0, 0.35);
 }
-:root[data-appearance="dark"][data-glass="clear"] { --lg-a: 0.28; --lg-tint: 0%; }
+:root[data-appearance="dark"][data-glass="clear"] {
+    --lg-a: 0.1; --lg-a-strong: 0.5; --lg-tint: 0%; --lg-blur: blur(10px) saturate(165%);
+    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0) 50%);
+    --lg-rim: inset 1.5px 2px 0 rgba(255, 255, 255, 0.34), inset -1px -1.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    --lg-shade: rgba(0, 0, 0, 0.32);
+}
 
 /* "auto" follows the system: the dark values again, because a media query
    cannot share a rule with the attribute selector above */
@@ -227,14 +247,21 @@
         --g-scrim: rgba(0, 0, 0, 0.45);
         --g-hud: rgba(60, 62, 72, 0.7);
         --lg-base: 28 30 42;
-        --lg-a: 0.56;
-        --lg-tint: 9%;
+        --lg-a: 0.52;
+        --lg-a-strong: 0.78;
+        --lg-tint: 24%;
+        --lg-shade: rgba(0, 0, 0, 0.45);
         --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 34%, rgba(255, 255, 255, 0) 52%);
         --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.22), inset -1px -1px 0 rgba(255, 255, 255, 0.07), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
-        --lg-lift: 0 12px 36px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.3);
-        --lg-lift-high: 0 28px 70px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.35);
+        --lg-lift: 0 12px 36px var(--lg-shade), 0 2px 6px rgba(0, 0, 0, 0.3);
+        --lg-lift-high: 0 28px 70px var(--lg-shade), 0 4px 14px rgba(0, 0, 0, 0.35);
     }
-    :root[data-appearance="auto"][data-glass="clear"] { --lg-a: 0.28; --lg-tint: 0%; }
+    :root[data-appearance="auto"][data-glass="clear"] {
+        --lg-a: 0.1; --lg-a-strong: 0.5; --lg-tint: 0%; --lg-blur: blur(10px) saturate(165%);
+        --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0) 50%);
+        --lg-rim: inset 1.5px 2px 0 rgba(255, 255, 255, 0.34), inset -1px -1.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2);
+        --lg-shade: rgba(0, 0, 0, 0.32);
+    }
 }
 
 /* The logo comes in two inks; the page shows the one its appearance needs. */
@@ -249,6 +276,5 @@
 /* Where the browser cannot blur behind an element, glass turns frosty
    enough to read without it. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    :root { --lg-a: 0.9; }
-    :root[data-appearance="dark"] { --lg-a: 0.88; }
+    :root:root, :root[data-glass], :root[data-appearance][data-glass] { --lg-a: 0.9; --lg-a-strong: 0.95; }
 }
