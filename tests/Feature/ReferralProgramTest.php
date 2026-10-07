@@ -183,8 +183,8 @@ class ReferralProgramTest extends TestCase
 
         $home = $this->get(route('home'))->assertOk()->getContent();
         $this->assertStringContainsString('href="'.route('referral').'"', $home);
-        // The dropdown's own tool count has to keep up with the card list.
-        $this->assertStringContainsString('6 tools', $home);
+        // The dropdown's top-right corner carries the student login.
+        $this->assertStringContainsString('class="course-menu-login" href="'.route('student.login').'"', $home);
         // Both entry points list it, so the link appears at least twice.
         $this->assertGreaterThanOrEqual(2, substr_count($home, route('referral')));
     }

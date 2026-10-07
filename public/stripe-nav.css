@@ -989,48 +989,67 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
 }
 
 /* ---------------------------------------------------------------------------
-   Student login — the full-width card under the Student Hub tools.
-   Not a tool but the enrolled student's way in, so it reads apart from them:
-   the site's royal indigo, with the brand orange on the arrow (the key keeps
-   the themed icon tile every menu card has). Sits
-   last in the file (and repeats the html[data-color-theme] prefix) so it wins
-   over the themed card colours above.
+   Student login — a pill in the Student Hub dropdown's top-right corner,
+   where a tool count would sit. Not a tool but the enrolled student's way
+   in, so it reads apart from them: the site's royal indigo, the brand
+   orange on the key.
    --------------------------------------------------------------------------- */
-.stripe-flyout .course-menu-card--portal,
-html[data-color-theme] .stripe-flyout .course-menu-card--portal {
-  grid-column: 1 / -1;
-  overflow: hidden;
-  border-color: transparent;
+.stripe-flyout .course-menu-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 11px 0 4px;
+  border-radius: 999px;
   background:
-    radial-gradient(circle at 92% 0%, rgba(255, 94, 50, 0.38), transparent 46%),
+    radial-gradient(circle at 92% 0%, rgba(255, 94, 50, 0.35), transparent 55%),
     linear-gradient(135deg, #2a16a0 0%, #1a0088 55%, #100258 100%);
   color: #ffffff;
-  box-shadow: 0 12px 26px rgba(26, 0, 136, 0.22);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(26, 0, 136, 0.24);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
-.stripe-flyout .course-menu-card--portal .course-menu-copy strong {
-  color: #ffffff;
+.stripe-flyout .course-menu-login::after {
+  display: none;
 }
 
-.stripe-flyout .course-menu-card--portal .course-menu-copy small {
-  color: rgba(255, 255, 255, 0.74);
-}
-
-.stripe-flyout .course-menu-card--portal .course-menu-arrow {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.stripe-flyout .course-menu-card--portal:hover,
-html[data-color-theme] .stripe-flyout .course-menu-card--portal:hover {
-  border-color: transparent;
-  background:
-    radial-gradient(circle at 92% 0%, rgba(255, 94, 50, 0.5), transparent 50%),
-    linear-gradient(135deg, #3320b4 0%, #1f0596 55%, #12036a 100%);
-  color: #ffffff;
-  box-shadow: 0 16px 32px rgba(26, 0, 136, 0.3);
-}
-
-.stripe-flyout .course-menu-card--portal:hover .course-menu-arrow {
+.stripe-flyout .course-menu-login-ico {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   background: #ff5e32;
+  color: #ffffff;
+}
+
+.stripe-flyout .course-menu-login svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
+  color: currentColor;
+}
+
+.stripe-flyout .course-menu-login > svg {
+  opacity: 0.85;
+  transition: transform 0.18s ease;
+}
+
+.stripe-flyout .course-menu-login:hover,
+.stripe-flyout .course-menu-login:focus-visible {
+  color: #ffffff;
+  transform: translateY(-1px);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(255, 94, 50, 0.5), transparent 60%),
+    linear-gradient(135deg, #3320b4 0%, #1f0596 55%, #12036a 100%);
+  box-shadow: 0 12px 24px rgba(26, 0, 136, 0.32);
+}
+
+.stripe-flyout .course-menu-login:hover > svg {
+  transform: translateX(2px);
 }

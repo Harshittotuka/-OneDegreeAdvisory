@@ -180,7 +180,13 @@
                 <div class="nav-dropdown-main course-menu">
                   <div class="nav-dropdown-topline course-menu-topline">
                     <span class="nav-dropdown-badge">New</span>
-                    <span class="course-menu-count">6 tools</span>
+                    {{-- The enrolled student's way into their journey planner,
+                         in the corner rather than among the tools. --}}
+                    <a class="course-menu-login" href="{{ route('student.login') }}" aria-label="Student login: open your journey planner">
+                      <span class="course-menu-login-ico" aria-hidden="true"><i data-lucide="key-round"></i></span>
+                      <span>Student login</span>
+                      <i data-lucide="arrow-right" aria-hidden="true"></i>
+                    </a>
                   </div>
 
                   <div class="course-menu-grid course-menu-grid--hub">
@@ -212,13 +218,6 @@
                     <a class="course-menu-card" href="{{ route('referral') }}">
                       <span class="course-icon course-icon--ug" aria-hidden="true"><i data-lucide="gift"></i></span>
                       <span class="course-menu-copy"><strong>Referral Program</strong><small>Refer a student and earn when they enrol</small></span>
-                      <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
-                    </a>
-                    {{-- Not one of the tools (so not in the count above): the
-                         enrolled student's way into their journey planner. --}}
-                    <a class="course-menu-card course-menu-card--portal" href="{{ route('student.login') }}">
-                      <span class="course-icon" aria-hidden="true"><i data-lucide="key-round"></i></span>
-                      <span class="course-menu-copy"><strong>Student login</strong><small>Already enrolled? Open your journey planner</small></span>
                       <span class="course-menu-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
                     </a>
                   </div>
