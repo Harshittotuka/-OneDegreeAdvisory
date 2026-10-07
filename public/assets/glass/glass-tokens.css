@@ -1,61 +1,56 @@
 /*
  * Glass — design tokens.
  *
- * The one source of colour, type, shape, depth, material and motion for the
- * Glass theme (config/themes.php): iOS-style Liquid Glass. Every Glass
- * stylesheet reads these and nothing else. Loaded only when Glass is the
- * chosen theme, so the selectors need no theme scoping.
+ * The Glass theme (config/themes.php) is the macOS 26 / iOS 26 Liquid Glass
+ * look, taken from the "MacOS 26 – Liquid Glass Effect" Figma file: glass
+ * panels with a warm frost, bright inner highlights and a soft long shadow,
+ * white text sitting on the glass, all over a warm canyon-toned wallpaper.
+ * Every Glass stylesheet reads these and nothing else.
  *
- *   <html data-appearance>  light (default) | dark | auto (follows the system)
- *   <html data-glass>       tinted (default: frosted glass washed with the
- *                           tint colour, easiest to read) | clear (thin,
- *                           see-through glass the wallpaper shows through)
+ *   <html data-glass>   tinted (default): the same glass, frostier, for
+ *                       easier reading | clear: the glass exactly as drawn
  *
- * Layers, back to front: the wallpaper; glass panels (--lg-*), which blur
- * and tint whatever is behind them; controls inside them, filled with
- * translucent greys; and floating glass (menus, sheets, tooltips), frostier.
+ * Tinted changes how frosted the glass is, never its colour.
  */
 :root {
-    color-scheme: light;
+    color-scheme: dark;
 
-    /* type: the system's own faces (SF Pro on Apple devices) */
-    --g-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --g-font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* type: SF Pro Rounded, as the widgets use, then the system's own face */
+    --g-font: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --g-font-display: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --g-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-    /* the iOS text styles, sized for a desk-width screen */
-    --g-fs-large: 1.875rem;     /* 30  large title */
-    --g-fs-display: 1.625rem;   /* 26  title 1 */
-    --g-fs-h1: 1.375rem;        /* 22  title 2 */
-    --g-fs-h2: 1.1875rem;       /* 19  title 3 */
-    --g-fs-h3: 1rem;            /* 16  headline */
-    --g-fs-h4: 0.875rem;        /* 14 */
-    --g-fs-body: 0.9375rem;     /* 15  body */
-    --g-fs-table: 0.875rem;     /* 14 */
-    --g-fs-small: 0.8125rem;    /* 13  footnote */
-    --g-fs-caption: 0.75rem;    /* 12  caption */
+    --g-fs-large: 1.875rem;     /* 30 */
+    --g-fs-display: 1.625rem;   /* 26 */
+    --g-fs-h1: 1.375rem;        /* 22 */
+    --g-fs-h2: 1.125rem;        /* 18 */
+    --g-fs-h3: 1rem;            /* 16: a widget's title (16.2) */
+    --g-fs-h4: 0.875rem;
+    --g-fs-body: 0.875rem;      /* 14: a widget's rows (13.9) */
+    --g-fs-table: 0.875rem;
+    --g-fs-small: 0.8125rem;    /* 13 */
+    --g-fs-caption: 0.75rem;    /* 12 */
     --g-fs-label: 0.8125rem;
-    --g-fs-control: 0.875rem;   /* 14  buttons, rows, fields */
+    --g-fs-control: 0.875rem;
     --g-lh-tight: 1.15;
     --g-lh-body: 1.45;
-    --g-track-display: -0.025em;
-    --g-track-heading: -0.015em;
+    --g-track-display: -0.02em;
+    --g-track-heading: -0.01em;
     --g-w-regular: 400;
     --g-w-medium: 500;
     --g-w-semibold: 600;
     --g-w-bold: 700;
 
-    /* shape: generous and concentric */
+    /* shape: a widget is 32px round */
     --g-r-xs: 7px;
-    --g-r-ctl: 12px;      /* fields, rows */
-    --g-r-card: 26px;     /* glass panels */
-    --g-r-float: 22px;    /* menus, popovers */
-    --g-r-pane: 30px;     /* sidebar, sheets */
-    --g-r-pill: 999px;    /* buttons, segments, tags */
+    --g-r-ctl: 12px;
+    --g-r-card: 32px;
+    --g-r-float: 24px;
+    --g-r-pane: 32px;
+    --g-r-pill: 999px;
 
     --g-s1: 4px; --g-s2: 8px; --g-s3: 12px; --g-s4: 16px; --g-s5: 20px; --g-s6: 24px; --g-s8: 32px;
 
-    /* motion: soft and springy */
     --g-ease: cubic-bezier(0.25, 0.8, 0.25, 1);
     --g-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --g-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -63,218 +58,111 @@
     --g-dur: 220ms;
     --g-dur-slow: 320ms;
 
-    /* the iOS system colours (light) */
-    --g-accent: #007aff;   /* the tint */
-    --g-accent-hover: #0a6fe6;
-    --g-accent-press: #0062cc;
-    --g-accent-soft: rgba(0, 122, 255, 0.14);
-    --g-accent-ink: #0060d1;
-    --g-on-accent: #ffffff;
-    --g-focus: 0 0 0 3.5px rgba(0, 122, 255, 0.38);
+    /* text on glass: white, as on the widgets */
+    --g-ink: #ffffff;
+    --g-ink-2: rgba(255, 255, 255, 0.86);
+    --g-muted: rgba(255, 255, 255, 0.68);
+    --g-faint: rgba(255, 255, 255, 0.42);
+    --g-number: #e7ded6;                       /* the widgets' figures */
+    --g-text-shadow: 0 1px 2px rgba(40, 18, 10, 0.28);
 
-    --g-green: #34c759;   --g-green-ink: #1e8a3c;   --g-green-soft: rgba(52, 199, 89, 0.18);
-    --g-orange: #ff9500;  --g-orange-ink: #b56800;  --g-orange-soft: rgba(255, 149, 0, 0.18);
-    --g-red: #ff3b30;     --g-red-ink: #d0261c;     --g-red-soft: rgba(255, 59, 48, 0.15);
-    --g-purple: #af52de;  --g-purple-ink: #8a33b8;  --g-purple-soft: rgba(175, 82, 222, 0.16);
-    --g-teal: #30b0c7;    --g-teal-ink: #1a7f91;    --g-teal-soft: rgba(48, 176, 199, 0.17);
-    --g-yellow: #ffcc00;  --g-yellow-ink: #9a7a00;  --g-yellow-soft: rgba(255, 204, 0, 0.22);
-    --g-indigo: #5856d6;  --g-indigo-ink: #4240b8;  --g-indigo-soft: rgba(88, 86, 214, 0.15);
-    --g-pink: #ff2d55;
-
-    --g-ink: #0b0b0f;
-    --g-ink-2: rgba(28, 28, 34, 0.86);
-    --g-muted: rgba(40, 40, 52, 0.62);   /* secondary label */
-    --g-faint: rgba(40, 40, 52, 0.36);   /* tertiary label */
-
-    /* the wallpaper the glass picks its colour up from */
-    --g-canvas: #e4ebfb;
-    --g-wallpaper:
-        radial-gradient(900px 720px at 6% -6%, #9cc8ff 0%, transparent 62%),
-        radial-gradient(820px 720px at 96% 4%, #d4b2ff 0%, transparent 60%),
-        radial-gradient(900px 820px at 86% 104%, #ffbdd2 0%, transparent 62%),
-        radial-gradient(780px 700px at -4% 100%, #a9f0dc 0%, transparent 60%),
-        linear-gradient(160deg, #e7eefd 0%, #f1ebfc 100%);
-
-    /* controls inside glass: translucent fills, as on iOS */
-    --g-fill: rgba(118, 118, 128, 0.12);
-    --g-fill-hover: rgba(118, 118, 128, 0.18);
-    --g-fill-press: rgba(118, 118, 128, 0.26);
-    --g-separator: rgba(60, 60, 67, 0.14);
-    --g-separator-strong: rgba(60, 60, 67, 0.24);
-    --g-hairline: 0 0 0 0.5px rgba(60, 60, 67, 0.18);
-    --g-solid: #ffffff;            /* a knock-out ring behind a marker */
-    --g-surface: rgba(255, 255, 255, 0.58);
-    --g-surface-2: rgba(255, 255, 255, 0.34);
-    --g-surface-3: rgba(255, 255, 255, 0.5);
-    --g-raised: #ffffff;           /* a segmented control's thumb */
-
-    --g-avatar: linear-gradient(180deg, #a3a8b4 0%, #858a96 100%);
-    --g-scrim: rgba(10, 14, 40, 0.22);
-    --g-hud: rgba(30, 32, 40, 0.72);
-
-    /* ---------- Liquid Glass ---------- */
-    --lg-base: 255 255 255;    /* the glass's own colour, before the tint */
-    --lg-a: 0.66;              /* how frosted a panel is */
-    --lg-a-strong: 0.84;       /* menus, sheets, the tab bar */
-    --lg-tint: 16%;            /* how much of the tint colour the glass carries */
-    --lg-blur: blur(30px) saturate(200%);
-    --lg-panel: color-mix(in srgb, var(--g-accent) var(--lg-tint), rgb(var(--lg-base) / var(--lg-a)));
-    --lg-strong: color-mix(in srgb, var(--g-accent) calc(var(--lg-tint) * 0.6), rgb(var(--lg-base) / var(--lg-a-strong)));
-    --lg-control: color-mix(in srgb, var(--g-accent) calc(var(--lg-tint) * 0.7), rgb(var(--lg-base) / calc(var(--lg-a) - 0.08)));
-    --lg-shade: rgba(0, 70, 200, 0.16);   /* the shadow takes the tint too */
-    /* the gloss light catches on the top-left of a pane */
-    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 34%, rgba(255, 255, 255, 0) 52%);
-    /* bright edges, and the shadow the pane casts */
-    --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.85), inset -1px -1px 0 rgba(255, 255, 255, 0.35), 0 0 0 0.5px rgba(255, 255, 255, 0.6);
-    --lg-lift: 0 10px 30px var(--lg-shade), 0 2px 6px rgba(30, 40, 100, 0.07);
-    --lg-lift-high: 0 24px 60px var(--lg-shade), 0 4px 14px rgba(20, 28, 80, 0.10);
-}
-
-/* clear glass: see-through, no tint */
-/* clear glass: thin and see-through, no tint; the wallpaper shows through
-   strongly, and brighter rims and gloss draw the edges instead */
-:root[data-glass="clear"] {
-    --lg-a: 0.14;
-    --lg-a-strong: 0.56;
-    --lg-tint: 0%;
-    --lg-blur: blur(10px) saturate(165%);
-    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.14) 30%, rgba(255, 255, 255, 0) 50%);
-    --lg-rim: inset 1.5px 2px 0 rgba(255, 255, 255, 0.95), inset -1px -1.5px 0 rgba(255, 255, 255, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.7);
-    --lg-shade: rgba(30, 40, 100, 0.1);
-}
-
-/* ---------- dark ---------- */
-:root[data-appearance="dark"] {
-    color-scheme: dark;
+    /* system colours, as they read on glass */
     --g-accent: #0a84ff;
     --g-accent-hover: #2b95ff;
     --g-accent-press: #0071e0;
-    --g-accent-soft: rgba(10, 132, 255, 0.24);
-    --g-accent-ink: #5aaeff;
-    --g-focus: 0 0 0 3.5px rgba(10, 132, 255, 0.5);
-    --g-green: #30d158;   --g-green-ink: #5fe07f;   --g-green-soft: rgba(48, 209, 88, 0.22);
-    --g-orange: #ff9f0a;  --g-orange-ink: #ffbb52;  --g-orange-soft: rgba(255, 159, 10, 0.22);
-    --g-red: #ff453a;     --g-red-ink: #ff7b73;     --g-red-soft: rgba(255, 69, 58, 0.22);
-    --g-purple: #bf5af2;  --g-purple-ink: #d390f6;  --g-purple-soft: rgba(191, 90, 242, 0.22);
-    --g-teal: #40c8e0;    --g-teal-ink: #7ad9ea;    --g-teal-soft: rgba(64, 200, 224, 0.2);
-    --g-yellow: #ffd60a;  --g-yellow-ink: #ffe25c;  --g-yellow-soft: rgba(255, 214, 10, 0.2);
-    --g-indigo: #5e5ce6;  --g-indigo-ink: #9897ff;  --g-indigo-soft: rgba(94, 92, 230, 0.24);
+    --g-accent-soft: rgba(10, 132, 255, 0.28);
+    --g-accent-ink: #8ec5ff;
+    --g-on-accent: #ffffff;
+    --g-focus: 0 0 0 3px rgba(255, 255, 255, 0.55);
+
+    --g-green: #30d158;   --g-green-ink: #8af0a6;   --g-green-soft: rgba(48, 209, 88, 0.26);
+    --g-orange: #ff9f0a;  --g-orange-ink: #ffd08a;  --g-orange-soft: rgba(255, 159, 10, 0.26);
+    --g-red: #ff453a;     --g-red-ink: #ffaca6;     --g-red-soft: rgba(255, 69, 58, 0.28);
+    --g-purple: #bf5af2;  --g-purple-ink: #e2b5fa;  --g-purple-soft: rgba(191, 90, 242, 0.28);
+    --g-teal: #40c8e0;    --g-teal-ink: #a6e8f3;    --g-teal-soft: rgba(64, 200, 224, 0.26);
+    --g-yellow: #ffd60a;  --g-yellow-ink: #ffe98a;  --g-yellow-soft: rgba(255, 214, 10, 0.24);
+    --g-indigo: #5e5ce6;  --g-indigo-ink: #c3c2ff;  --g-indigo-soft: rgba(94, 92, 230, 0.3);
     --g-pink: #ff375f;
-    --g-ink: #ffffff;
-    --g-ink-2: rgba(235, 235, 245, 0.86);
-    --g-muted: rgba(235, 235, 245, 0.6);
-    --g-faint: rgba(235, 235, 245, 0.3);
-    --g-canvas: #070912;
+
+    /* controls on glass: white veils */
+    --g-fill: rgba(255, 255, 255, 0.12);
+    --g-fill-hover: rgba(255, 255, 255, 0.18);
+    --g-fill-press: rgba(255, 255, 255, 0.24);
+    --g-separator: rgba(255, 255, 255, 0.16);
+    --g-separator-strong: rgba(255, 255, 255, 0.26);
+    --g-hairline: 0 0 0 1px rgba(255, 255, 255, 0.14);
+    --g-solid: #4a2a28;                        /* a knock-out ring behind a marker */
+    --g-surface: rgba(255, 255, 255, 0.1);
+    --g-surface-2: rgba(255, 255, 255, 0.07);
+    --g-surface-3: rgba(255, 255, 255, 0.14);
+    --g-raised: rgba(255, 255, 255, 0.3);      /* a segmented control's thumb */
+    --g-avatar: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
+    --g-scrim: rgba(24, 10, 8, 0.4);
+    --g-hud: rgba(48, 30, 26, 0.72);
+
+    /* the wallpaper: warm canyon light, deep plum shadows */
+    --g-canvas: #3a1d22;
     --g-wallpaper:
-        radial-gradient(900px 720px at 6% -6%, #1d3fa8 0%, transparent 62%),
-        radial-gradient(820px 720px at 96% 4%, #5a2a9e 0%, transparent 60%),
-        radial-gradient(900px 820px at 86% 104%, #8f2363 0%, transparent 62%),
-        radial-gradient(780px 700px at -4% 100%, #0d6670 0%, transparent 60%),
-        linear-gradient(160deg, #0a0d1f 0%, #120a1e 100%);
-    --g-fill: rgba(118, 118, 128, 0.24);
-    --g-fill-hover: rgba(118, 118, 128, 0.32);
-    --g-fill-press: rgba(118, 118, 128, 0.4);
-    --g-separator: rgba(255, 255, 255, 0.1);
-    --g-separator-strong: rgba(255, 255, 255, 0.18);
-    --g-hairline: 0 0 0 0.5px rgba(255, 255, 255, 0.14);
-    --g-solid: #262833;
-    --g-surface: rgba(255, 255, 255, 0.07);
-    --g-surface-2: rgba(255, 255, 255, 0.045);
-    --g-surface-3: rgba(255, 255, 255, 0.1);
-    --g-raised: rgba(255, 255, 255, 0.28);
-    --g-avatar: linear-gradient(180deg, #7d828e 0%, #5d6270 100%);
-    --g-scrim: rgba(0, 0, 0, 0.45);
-    --g-hud: rgba(60, 62, 72, 0.7);
-    --lg-base: 28 30 42;
-    --lg-a: 0.52;
-    --lg-a-strong: 0.78;
-    --lg-tint: 24%;
-    --lg-shade: rgba(0, 0, 0, 0.45);
-    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 34%, rgba(255, 255, 255, 0) 52%);
-    --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.22), inset -1px -1px 0 rgba(255, 255, 255, 0.07), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
-    --lg-lift: 0 12px 36px var(--lg-shade), 0 2px 6px rgba(0, 0, 0, 0.3);
-    --lg-lift-high: 0 28px 70px var(--lg-shade), 0 4px 14px rgba(0, 0, 0, 0.35);
-}
-:root[data-appearance="dark"][data-glass="clear"] {
-    --lg-a: 0.1; --lg-a-strong: 0.5; --lg-tint: 0%; --lg-blur: blur(10px) saturate(165%);
-    --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0) 50%);
-    --lg-rim: inset 1.5px 2px 0 rgba(255, 255, 255, 0.34), inset -1px -1.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2);
-    --lg-shade: rgba(0, 0, 0, 0.32);
+        repeating-linear-gradient(116deg, rgba(255, 226, 196, 0) 0, rgba(255, 226, 196, 0.16) 22px, rgba(255, 226, 196, 0) 44px, rgba(64, 18, 28, 0) 52px, rgba(64, 18, 28, 0.2) 70px, rgba(64, 18, 28, 0) 92px),
+        repeating-linear-gradient(58deg, rgba(255, 200, 150, 0) 0, rgba(255, 200, 150, 0.08) 60px, rgba(255, 200, 150, 0) 120px, rgba(40, 10, 20, 0) 150px, rgba(40, 10, 20, 0.1) 200px, rgba(40, 10, 20, 0) 250px),
+        radial-gradient(640px 420px at 52% -8%, #ffd89a 0%, rgba(255, 196, 120, 0.55) 30%, transparent 64%),
+        radial-gradient(780px 640px at 92% 28%, #c8693a 0%, transparent 62%),
+        radial-gradient(720px 620px at 8% 34%, #6e3550 0%, transparent 64%),
+        radial-gradient(900px 700px at 70% 104%, #b25a33 0%, transparent 60%),
+        radial-gradient(800px 640px at 12% 104%, #4a2234 0%, transparent 62%),
+        linear-gradient(172deg, #6a3238 0%, #8d4334 38%, #a5532f 62%, #5c2b2e 100%);
+
+    /* ---------- Liquid Glass: the material, as drawn (clear) ---------- */
+    --lg-blur: blur(10px);
+    --lg-edge: 1px solid rgba(156, 156, 156, 0.5);
+    /* a faint white veil over a warm frost, lighter at the top */
+    --lg-veil: rgba(255, 255, 255, 0.05);
+    --lg-frost-low: rgba(54, 37, 26, 0.06);
+    --lg-frost-high: rgba(175, 141, 121, 0.3);
+    --lg-sheen: linear-gradient(90deg, var(--lg-veil) 0%, var(--lg-veil) 100%), linear-gradient(0deg, var(--lg-frost-low) 0%, var(--lg-frost-high) 100%);
+    --lg-panel: transparent;
+    /* floating glass (menus, sheets, the tab bar) keeps a warm dark base so
+       its text always reads */
+    --lg-strong: rgba(56, 32, 28, 0.5);
+    --lg-control: rgba(255, 255, 255, 0.1);
+    /* the light: highlights inside the edges, and a warm one on the top-left */
+    --lg-rim:
+        inset -1px -1px 4px rgba(255, 255, 255, 0.3),
+        inset 1px 0 2px rgba(255, 255, 255, 0.2),
+        inset -3px -8px 10px rgba(255, 255, 255, 0.2),
+        inset 4px 8px 19px rgba(255, 255, 255, 0.15),
+        inset 2px 2px 4px -1px rgba(255, 255, 255, 0.3),
+        inset -2px 2px 6px rgba(128, 83, 66, 0.6);
+    /* the soft, long shadow the glass casts down and to the left */
+    --lg-lift:
+        -2px 4px 10px rgba(145, 145, 145, 0.05),
+        -7px 17px 18px rgba(145, 145, 145, 0.04),
+        -15px 37px 24px rgba(145, 145, 145, 0.03),
+        -27px 66px 29px rgba(145, 145, 145, 0.01);
+    --lg-lift-high:
+        -2px 4px 10px rgba(30, 12, 8, 0.12),
+        -7px 17px 18px rgba(30, 12, 8, 0.1),
+        -15px 37px 24px rgba(30, 12, 8, 0.08),
+        -27px 66px 29px rgba(30, 12, 8, 0.04);
 }
 
-/* "auto" follows the system: the dark values again, because a media query
-   cannot share a rule with the attribute selector above */
-@media (prefers-color-scheme: dark) {
-    :root[data-appearance="auto"] {
-        color-scheme: dark;
-        --g-accent: #0a84ff;
-        --g-accent-hover: #2b95ff;
-        --g-accent-press: #0071e0;
-        --g-accent-soft: rgba(10, 132, 255, 0.24);
-        --g-accent-ink: #5aaeff;
-        --g-focus: 0 0 0 3.5px rgba(10, 132, 255, 0.5);
-        --g-green: #30d158;   --g-green-ink: #5fe07f;   --g-green-soft: rgba(48, 209, 88, 0.22);
-        --g-orange: #ff9f0a;  --g-orange-ink: #ffbb52;  --g-orange-soft: rgba(255, 159, 10, 0.22);
-        --g-red: #ff453a;     --g-red-ink: #ff7b73;     --g-red-soft: rgba(255, 69, 58, 0.22);
-        --g-purple: #bf5af2;  --g-purple-ink: #d390f6;  --g-purple-soft: rgba(191, 90, 242, 0.22);
-        --g-teal: #40c8e0;    --g-teal-ink: #7ad9ea;    --g-teal-soft: rgba(64, 200, 224, 0.2);
-        --g-yellow: #ffd60a;  --g-yellow-ink: #ffe25c;  --g-yellow-soft: rgba(255, 214, 10, 0.2);
-        --g-indigo: #5e5ce6;  --g-indigo-ink: #9897ff;  --g-indigo-soft: rgba(94, 92, 230, 0.24);
-        --g-pink: #ff375f;
-        --g-ink: #ffffff;
-        --g-ink-2: rgba(235, 235, 245, 0.86);
-        --g-muted: rgba(235, 235, 245, 0.6);
-        --g-faint: rgba(235, 235, 245, 0.3);
-        --g-canvas: #070912;
-        --g-wallpaper:
-            radial-gradient(900px 720px at 6% -6%, #1d3fa8 0%, transparent 62%),
-            radial-gradient(820px 720px at 96% 4%, #5a2a9e 0%, transparent 60%),
-            radial-gradient(900px 820px at 86% 104%, #8f2363 0%, transparent 62%),
-            radial-gradient(780px 700px at -4% 100%, #0d6670 0%, transparent 60%),
-            linear-gradient(160deg, #0a0d1f 0%, #120a1e 100%);
-        --g-fill: rgba(118, 118, 128, 0.24);
-        --g-fill-hover: rgba(118, 118, 128, 0.32);
-        --g-fill-press: rgba(118, 118, 128, 0.4);
-        --g-separator: rgba(255, 255, 255, 0.1);
-        --g-separator-strong: rgba(255, 255, 255, 0.18);
-        --g-hairline: 0 0 0 0.5px rgba(255, 255, 255, 0.14);
-        --g-solid: #262833;
-        --g-surface: rgba(255, 255, 255, 0.07);
-        --g-surface-2: rgba(255, 255, 255, 0.045);
-        --g-surface-3: rgba(255, 255, 255, 0.1);
-        --g-raised: rgba(255, 255, 255, 0.28);
-        --g-avatar: linear-gradient(180deg, #7d828e 0%, #5d6270 100%);
-        --g-scrim: rgba(0, 0, 0, 0.45);
-        --g-hud: rgba(60, 62, 72, 0.7);
-        --lg-base: 28 30 42;
-        --lg-a: 0.52;
-        --lg-a-strong: 0.78;
-        --lg-tint: 24%;
-        --lg-shade: rgba(0, 0, 0, 0.45);
-        --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 34%, rgba(255, 255, 255, 0) 52%);
-        --lg-rim: inset 1px 1.5px 0 rgba(255, 255, 255, 0.22), inset -1px -1px 0 rgba(255, 255, 255, 0.07), 0 0 0 0.5px rgba(255, 255, 255, 0.14);
-        --lg-lift: 0 12px 36px var(--lg-shade), 0 2px 6px rgba(0, 0, 0, 0.3);
-        --lg-lift-high: 0 28px 70px var(--lg-shade), 0 4px 14px rgba(0, 0, 0, 0.35);
-    }
-    :root[data-appearance="auto"][data-glass="clear"] {
-        --lg-a: 0.1; --lg-a-strong: 0.5; --lg-tint: 0%; --lg-blur: blur(10px) saturate(165%);
-        --lg-sheen: linear-gradient(155deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0) 50%);
-        --lg-rim: inset 1.5px 2px 0 rgba(255, 255, 255, 0.34), inset -1px -1.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2);
-        --lg-shade: rgba(0, 0, 0, 0.32);
-    }
+/* tinted (the default): the same glass, frosted much more, so what is
+   behind it softens to colour and the text stands out. Same colours: only
+   how much of them there is. */
+:root[data-glass="tinted"], :root:not([data-glass]) {
+    --lg-blur: blur(30px) saturate(108%);
+    --lg-veil: rgba(255, 255, 255, 0.11);
+    --lg-frost-low: rgba(54, 37, 26, 0.52);
+    --lg-frost-high: rgba(175, 141, 121, 0.62);
+    --lg-strong: rgba(56, 32, 28, 0.7);
 }
 
-/* The logo comes in two inks; the page shows the one its appearance needs. */
-.logo-dark { display: none !important; }
-:root[data-appearance="dark"] .logo-light { display: none !important; }
-:root[data-appearance="dark"] .logo-dark { display: block !important; }
-@media (prefers-color-scheme: dark) {
-    :root[data-appearance="auto"] .logo-light { display: none !important; }
-    :root[data-appearance="auto"] .logo-dark { display: block !important; }
-}
+/* The glass sits on the wallpaper, so the white-ink logo always. */
+.logo-light { display: none !important; }
+.logo-dark { display: block !important; }
 
-/* Where the browser cannot blur behind an element, glass turns frosty
+/* Where the browser cannot blur behind an element, the glass turns frosty
    enough to read without it. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    :root:root, :root[data-glass], :root[data-appearance][data-glass] { --lg-a: 0.9; --lg-a-strong: 0.95; }
+    :root:root, :root[data-glass] { --lg-frost-low: rgba(54, 37, 26, 0.6); --lg-frost-high: rgba(120, 86, 70, 0.7); --lg-strong: rgba(56, 32, 28, 0.9); }
 }

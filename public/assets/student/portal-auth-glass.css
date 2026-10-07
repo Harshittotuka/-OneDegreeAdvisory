@@ -2,8 +2,9 @@
  * Student portal — sign in and change password, in the Glass theme.
  *
  * A complete stylesheet (config/themes.php swaps it in for portal-auth.css),
- * built on assets/glass/glass-tokens.css: one Liquid Glass card, centred
- * over the vivid wallpaper, whose colour drifts very slowly behind it.
+ * built on assets/glass/glass-tokens.css: one Liquid Glass card, as in the
+ * "MacOS 26 – Liquid Glass Effect" Figma file, centred over the warm
+ * wallpaper, whose light drifts very slowly behind it.
  * The animated globe of the Standard theme stays out of this one; the
  * markup is shared, so its scene is simply not shown.
  */
@@ -11,22 +12,16 @@
 html { -webkit-text-size-adjust: 100%; background: var(--g-canvas); }
 body.sp-body {
     margin: 0; min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
-    font-family: var(--g-font); font-size: var(--g-fs-body); line-height: var(--g-lh-body); color: var(--g-ink);
-    background: var(--g-wallpaper); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    font-family: var(--g-font); font-size: var(--g-fs-body); line-height: var(--g-lh-body); color: var(--g-ink); text-shadow: var(--g-text-shadow);
+    background: var(--g-wallpaper); background-attachment: fixed; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
 /* The wallpaper's light, drifting: two soft colour fields behind the card. */
 body.sp-body::before, body.sp-body::after {
     content: ""; position: fixed; z-index: 0; width: 60vmax; height: 60vmax; border-radius: 50%; pointer-events: none;
     filter: blur(60px); opacity: 0.7; will-change: transform;
 }
-body.sp-body::before { left: -18vmax; top: -22vmax; background: radial-gradient(circle, rgba(110, 150, 255, 0.55), transparent 65%); animation: sp-drift-a 38s ease-in-out infinite alternate; }
-body.sp-body::after { right: -20vmax; bottom: -24vmax; background: radial-gradient(circle, rgba(255, 168, 140, 0.45), transparent 65%); animation: sp-drift-b 44s ease-in-out infinite alternate; }
-:root[data-appearance="dark"] body.sp-body::before { background: radial-gradient(circle, rgba(60, 100, 230, 0.5), transparent 65%); }
-:root[data-appearance="dark"] body.sp-body::after { background: radial-gradient(circle, rgba(150, 70, 170, 0.42), transparent 65%); }
-@media (prefers-color-scheme: dark) {
-    :root[data-appearance="auto"] body.sp-body::before { background: radial-gradient(circle, rgba(60, 100, 230, 0.5), transparent 65%); }
-    :root[data-appearance="auto"] body.sp-body::after { background: radial-gradient(circle, rgba(150, 70, 170, 0.42), transparent 65%); }
-}
+body.sp-body::before { left: -14vmax; top: -24vmax; background: radial-gradient(circle, rgba(255, 214, 150, 0.55), transparent 65%); animation: sp-drift-a 38s ease-in-out infinite alternate; }
+body.sp-body::after { right: -20vmax; bottom: -24vmax; background: radial-gradient(circle, rgba(120, 52, 80, 0.55), transparent 65%); animation: sp-drift-b 44s ease-in-out infinite alternate; }
 @keyframes sp-drift-a { to { transform: translate(14vmax, 10vmax) scale(1.1); } }
 @keyframes sp-drift-b { to { transform: translate(-12vmax, -8vmax) scale(1.08); } }
 img { display: block; max-width: 100%; }
@@ -40,15 +35,15 @@ a { color: inherit; }
 .sp-panel { width: 100%; display: grid; place-items: center; }
 .sp-card {
     width: 100%; max-width: 392px; padding: 32px 30px 24px; text-align: center;
-    background: var(--lg-sheen), var(--lg-panel); -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur);
-    border-radius: 34px; box-shadow: var(--lg-rim), var(--lg-lift-high);
+    background: var(--lg-sheen), var(--lg-panel); border: var(--lg-edge); -webkit-backdrop-filter: var(--lg-blur); backdrop-filter: var(--lg-blur);
+    border-radius: var(--g-r-card); box-shadow: var(--lg-rim), var(--lg-lift-high);
     animation: sp-arrive var(--g-dur-slow) var(--g-spring);
 }
 @keyframes sp-arrive { from { opacity: 0; transform: translateY(16px) scale(0.96); } }
 
 /* The brand as the account picture of a login window. */
 .sp-brand { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 auto 16px; text-decoration: none; border-radius: 12px; }
-.sp-brand > img { width: 68px; height: 68px; padding: 19px 11px; object-fit: contain; border-radius: 50%; background: var(--lg-sheen), var(--lg-strong); box-shadow: var(--lg-rim), 0 6px 18px rgba(0, 0, 0, 0.12); }
+.sp-brand > img { width: 68px; height: 68px; padding: 19px 11px; object-fit: contain; border-radius: 50%; background: var(--lg-sheen), var(--lg-control); border: var(--lg-edge); box-shadow: var(--lg-rim), -2px 4px 10px rgba(40, 14, 8, 0.14); }
 .sp-brand > span { display: flex; flex-direction: column; gap: 1px; }
 .sp-brand b { font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); color: var(--g-ink); }
 .sp-brand small { font-size: var(--g-fs-caption); color: var(--g-muted); }
@@ -91,7 +86,7 @@ a { color: inherit; }
 .sp-meta { display: flex; align-items: flex-start; justify-content: center; gap: 7px; margin-top: 16px; font-size: var(--g-fs-small); color: var(--g-muted); text-align: left; }
 .sp-meta > svg { width: 14px; height: 14px; flex: none; margin-top: 2px; fill: none; stroke: var(--g-muted); stroke-width: 1.7; stroke-linecap: round; }
 .sp-meta-links { justify-content: space-between; align-items: center; }
-.sp-meta-links a, .sp-meta-links button { padding: 0; border: 0; background: none; color: var(--g-accent); font-size: var(--g-fs-small); cursor: pointer; text-decoration: none; }
+.sp-meta-links a, .sp-meta-links button { padding: 0; border: 0; background: none; color: #fff; text-decoration: underline; text-underline-offset: 3px; font-size: var(--g-fs-small); cursor: pointer; text-decoration: none; }
 .sp-meta-links a:hover, .sp-meta-links button:hover { text-decoration: underline; }
 .sp-meta-links form { margin: 0; }
 .sp-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--g-separator-strong); font-size: var(--g-fs-caption); color: var(--g-muted); }
@@ -110,6 +105,7 @@ a { color: inherit; }
 :root .crm-toast.is-success { --toast-accent: var(--g-green); --toast-soft: var(--g-green-soft); }
 :root .crm-toast.is-error { --toast-accent: var(--g-red); --toast-soft: var(--g-red-soft); }
 :root .crm-toast.is-info { --toast-accent: var(--g-accent); --toast-soft: var(--g-accent-soft); }
+:root .crm-toast { border: var(--lg-edge); }
 :root .crm-toast-copy strong { font-size: var(--g-fs-control); font-weight: var(--g-w-semibold); color: var(--g-ink); }
 :root .crm-toast-copy span { font-size: var(--g-fs-small); color: var(--g-ink-2); }
 :root .crm-toast button { color: var(--g-muted); }

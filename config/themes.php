@@ -23,11 +23,12 @@ return [
         'default' => 'glass',
 
         'themes' => [
-            // iOS-style Liquid Glass: glass panels over a vivid wallpaper,
-            // system fonts, light and dark, tinted or clear glass.
+            // macOS 26 / iOS 26 Liquid Glass, after the "MacOS 26 – Liquid
+            // Glass Effect" Figma file: glass widgets with white text over a
+            // warm wallpaper. One look; the glass can be tinted or clear.
             'glass' => [
                 'label' => 'Glass',
-                'appearance' => true,
+                'appearance' => false,
                 'material' => true,
                 'planner' => [
                     'assets/glass/glass-tokens.css',
