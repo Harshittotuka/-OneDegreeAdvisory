@@ -1,6 +1,6 @@
 {{-- Shared <head> for the student sign-in pages. The look is the theme the
-     student chose (config/themes.php, via partials.theme-head): Glass by
-     default, or Standard, the website's cream theme with the animated scene.
+     student chose (config/themes.php, via partials.theme-head): Standard by
+     default, the website's cream theme with the animated scene, or Glass.
      Toasts and the hand-off screen still come from the CRM's scripts
      (crm.js, crm-toast.css). --}}
 <meta charset="utf-8">
