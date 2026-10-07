@@ -432,14 +432,13 @@
             : '<a class="jp-nav-link" href="' + esc(P.endpoints.back) + '"><span class="jp-nav-ico ico-out">' + ICO.back + '</span><span>Back to CRM</span></a>';
         var counsellor = s.counsellor ? '<div class="jp-counsellor"><span class="jp-avatar sm alt">' + esc(initials(s.counsellor)) + '</span><span><small>' + (isStudent() ? 'Your counsellor' : 'Counsellor') + '</small><b>' + esc(s.counsellor) + '</b></span></div>' : '';
         return '<aside class="jp-side" aria-label="Planner navigation">' +
-            '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span class="jp-brand-copy"><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span></div>' +
+            '<div class="jp-brand"><span class="jp-brand-mark"><img src="' + esc(window.JP_LOGO) + '" alt=""></span><span class="jp-brand-copy"><b>One Degree</b><small>' + (isStudent() ? 'Student portal' : 'Journey planner') + '</small></span>' +
+            '<button class="jp-side-toggle" data-act="side-min" aria-pressed="' + (UI.sideMin ? 'true' : 'false') + '" aria-label="' + (UI.sideMin ? 'Expand the menu' : 'Collapse the menu to icons') + '" title="' + (UI.sideMin ? 'Expand menu' : 'Collapse menu') + '">' + ICO.sidebar + '</button></div>' +
             '<div class="jp-who" style="--p:' + parseInt(barWidth(overall()), 10) + '"' + (UI.sideMin ? ' title="' + esc(s.name) + ' · ' + barWidth(overall()) + ' done"' : '') + '><div class="jp-who-top"><span class="jp-avatar">' + esc(initials(s.name)) + '</span><div><b>' + esc(s.name) + '</b><small>' + esc([s.level, s.intake].filter(Boolean).join(' · ') || 'Plan details not set') + '</small></div></div>' +
             '<div class="jp-who-bar"><span>Steps done</span><b class="num">' + tally(overall()) + '</b></div><div class="jp-bar side"><i style="width:' + barWidth(overall()) + '"></i></div>' +
             '<div class="jp-who-pct num">' + barWidth(overall()) + ' of the way there</div></div>' +
             '<div class="jp-nav-label">' + (isStudent() ? 'My plan' : 'Planner') + '</div><nav class="jp-nav">' + nav + '</nav>' +
-            '<div class="jp-side-foot">' + counsellor + foot +
-            '<button class="jp-nav-link jp-side-toggle" data-act="side-min" aria-pressed="' + (UI.sideMin ? 'true' : 'false') + '">' +
-            '<span class="jp-nav-ico">' + ICO.sidebar + '</span><span>' + (UI.sideMin ? 'Expand menu' : 'Collapse menu') + '</span></button></div>' +
+            (counsellor || foot ? '<div class="jp-side-foot">' + counsellor + foot + '</div>' : '') +
             '</aside>';
     }
 

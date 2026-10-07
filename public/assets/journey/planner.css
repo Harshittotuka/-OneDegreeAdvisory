@@ -113,14 +113,14 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 20px 44px -30px rgba(26, 0, 136, 0.4), 0 2px 6px -4px rgba(40, 33, 22, 0.12);
     scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
 }
-.jp-brand { position: relative; display: flex; align-items: center; gap: 10px; min-width: 0; padding: 0 8px 18px; margin-bottom: 14px; }
+.jp-brand { position: relative; display: flex; align-items: center; gap: 9px; min-width: 0; padding: 0 2px 16px 6px; margin-bottom: 14px; }
 /* A hairline with a small diamond at its centre, as under the website's headings. */
 .jp-brand::before { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2) 18%, var(--line-2) 82%, transparent); }
 .jp-brand::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg); background: var(--orange); box-shadow: 0 0 0 3px var(--surface); }
 .jp-brand-mark { display: grid; place-items: center; flex: none; }
-.jp-brand-mark img { height: 24px; width: auto; display: block; }
-.jp-brand b { display: block; white-space: nowrap; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; color: var(--navy); line-height: 1.2; }
-.jp-brand small { display: block; white-space: nowrap; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); }
+.jp-brand-mark img { height: 22px; width: auto; display: block; }
+.jp-brand b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--navy); line-height: 1.2; }
+.jp-brand small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.56rem; font-weight: 700; letter-spacing: 0.08em; margin-top: 1px; text-transform: uppercase; color: var(--orange); }
 .jp-who {
     padding: 12px 12px 10px; margin: 0 0 14px; border-radius: 16px;
     background: linear-gradient(160deg, #ffffff 0%, var(--surface-2) 100%);
@@ -170,17 +170,25 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
    label beside it on hover or keyboard focus. The student card becomes
    their avatar inside a ring that fills as the plan gets done. */
 .jp-brand-copy { min-width: 0; overflow: hidden; }
-/* The fold button is the last row of the panel, quieter than the pages. */
-.jp-side-toggle { color: var(--muted); font-weight: 600; cursor: pointer; }
-.jp-side-toggle .jp-nav-ico svg { transition: transform .2s ease; }
+.jp-brand-copy { flex: 1; }
+/* The fold button closes the brand row: a small square, centred on the logo. */
+.jp-side-toggle {
+    flex: none; align-self: center; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; padding: 0;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.jp-side-toggle:hover { color: var(--navy); border-color: var(--line-2); background: var(--surface-2); }
+.jp-side-toggle svg { width: 16px; height: 16px; transition: transform .2s ease; }
+body:not(.jp-mode-student) .jp-side-toggle { background: rgba(255, 255, 255, 0.7); border-color: rgba(201, 151, 31, 0.3); }
+body:not(.jp-mode-student) .jp-side-toggle:hover { color: var(--gold-ink); border-color: rgba(201, 151, 31, 0.55); }
 @media (min-width: 901px) {
     .jp-app { transition: grid-template-columns .22s ease; }
     .jp-app.side-min { grid-template-columns: 84px minmax(0, 1fr); }
     .side-min .jp-side { z-index: 35; padding: 16px 10px 12px; overflow: visible; align-items: center; }
-    .side-min .jp-brand { justify-content: center; padding: 0 0 16px; margin-bottom: 12px; width: 100%; }
+    .side-min .jp-brand { flex-direction: column; justify-content: center; gap: 12px; padding: 0 0 16px; margin-bottom: 12px; width: 100%; }
     .side-min .jp-brand-copy { display: none; }
     .side-min .jp-brand-mark img { height: 17px; }
-    .side-min .jp-side-toggle .jp-nav-ico svg { transform: scaleX(-1); }
+    .side-min .jp-side-toggle svg { transform: scaleX(-1); }
     .side-min .jp-who { padding: 0; margin: 0 0 12px; background: none; border: 0; box-shadow: none; }
     .side-min .jp-who-top { padding: 3px; border-radius: 50%; background: conic-gradient(var(--orange) calc(var(--p, 0) * 1%), var(--track) 0); }
     .side-min .jp-who-top > div, .side-min .jp-who-bar, .side-min .jp-who .jp-bar, .side-min .jp-who-pct { display: none; }
@@ -204,10 +212,7 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
     body:not(.jp-mode-student) .side-min .jp-who-top { background: conic-gradient(var(--gold) calc(var(--p, 0) * 1%), rgba(201, 151, 31, 0.18) 0); }
     body:not(.jp-mode-student) .side-min .jp-counsellor { background: none; }
 }
-@media (max-width: 900px) {
-    .jp-side-toggle { display: none; }
-    .jp-side-foot:has(> .jp-side-toggle:only-child) { display: none; }
-}
+@media (max-width: 900px) { .jp-side-toggle { display: none; } }
 
 /* The counsellor's (and partner's) side panel carries a light golden tone,
    so the CRM's planner reads apart from the student's own portal at a
