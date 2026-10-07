@@ -1800,13 +1800,13 @@ class JourneyPlannerTest extends TestCase
     public function test_the_planner_and_student_pages_start_on_the_standard_theme(): void
     {
         $this->assertSame('standard', config('themes.planner.default'));
-        $this->assertSame('standard', array_key_first(config('themes.planner.themes')), 'Standard is first in the theme menu.');
+        $this->assertSame('standard', array_key_first(config('themes.planner.themes')), 'OneDegree (the "standard" theme) is first in the theme menu.');
 
         $counsellor = $this->user();
         $lead = $this->student($counsellor);
         $this->start($counsellor, $lead);
 
-        // Each page falls back to Standard unless the viewer picked another theme.
+        // Each page falls back to OneDegree unless the viewer picked another theme.
         $pages = [
             $this->as($counsellor)->get(route('crm.journey.show', $lead)),
             $this->signedInStudent($lead)->get(route('student.dashboard')),
@@ -1816,7 +1816,7 @@ class JourneyPlannerTest extends TestCase
         foreach ($pages as $response) {
             $html = $response->assertOk()->getContent();
             $this->assertStringContainsString('let theme = "standard";', $html);
-            $this->assertMatchesRegularExpression('#<noscript>.*?(planner|portal-auth)\.css#s', $html, 'Without scripts, the Standard sheets load.');
+            $this->assertMatchesRegularExpression('#<noscript>.*?(planner|portal-auth)\.css#s', $html, 'Without scripts, the OneDegree sheets load.');
         }
     }
 }

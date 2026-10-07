@@ -1,5 +1,5 @@
 {{-- Shared <head> for the student sign-in pages. The look is the theme the
-     student chose (config/themes.php, via partials.theme-head): Standard by
+     student chose (config/themes.php, via partials.theme-head): OneDegree by
      default, the website's cream theme with the animated scene, or Glass.
      Toasts and the hand-off screen still come from the CRM's scripts
      (crm.js, crm-toast.css). --}}

@@ -6,7 +6,7 @@
  * Each theme lists, per surface, the stylesheets that make it up; the
  * partials.theme-head partial writes the chosen theme's sheets before the
  * page paints. The choice is the viewer's own, kept in their browser
- * (localStorage "jpTheme"), and falls back to "default" here: Standard,
+ * (localStorage "jpTheme"), and falls back to "default" here: OneDegree,
  * the website's own look. The menu lists the themes in the order below. A theme that
  * offers light, dark and automatic appearance says so with "appearance";
  * one whose glass can be tinted or clear says so with "material"; one with
@@ -27,7 +27,7 @@ return [
         'themes' => [
             // The website's cream theme: indigo, orange, Cormorant headings.
             'standard' => [
-                'label' => 'Standard',
+                'label' => 'OneDegree',
                 'appearance' => false,
                 'planner' => [
                     'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap',
