@@ -474,7 +474,58 @@
             '<span class="jp-usermenu-label">Look</span>' + seg('set-theme', T.list.map(function (t) { return [t.key, t.label]; }), T.current) +
             (cur.appearance ? '<span class="jp-usermenu-label">Appearance</span>' + seg('set-appearance', [['light', 'Light'], ['dark', 'Dark'], ['auto', 'Auto']], mode) : '') +
             (cur.material ? '<span class="jp-usermenu-label">Glass</span>' + seg('set-glass', [['tinted', 'Tinted'], ['clear', 'Clear']], document.documentElement.dataset.glass || 'tinted') : '') +
-            '</div>';
+            '</div>' + wallpaperMenuItem();
+    }
+
+    /* Backgrounds behind the glass, for themes that offer them
+       (config/themes.php, window.JP_THEMES.wallpapers): a menu item showing
+       the current one, and a sheet to choose from. The choice is kept in
+       this browser and applied before paint by partials.theme-head. */
+    function wallpaperThumb(w) {
+        return '<span class="jp-wp-thumb' + (w.image ? '' : ' pastel') + '"' + (w.thumb ? ' style="background-image:url(&quot;' + esc(w.thumb) + '&quot;)"' : '') + '></span>';
+    }
+    function wallpaperMenuItem() {
+        var W = (window.JP_THEMES || {}).wallpapers;
+        if (!W) return '';
+        var cur = W.list.find(function (w) { return w.key === W.current; }) || W.list[0];
+        return '<button type="button" class="jp-usermenu-item jp-wp-open" role="menuitem" data-act="wallpaper-sheet">' +
+            wallpaperThumb(cur) + '<span>Background</span><span class="muted">' + esc(cur.label) + '</span></button>';
+    }
+    function wallpaperSheet() {
+        var W = window.JP_THEMES.wallpapers, groups = [];
+        W.list.forEach(function (w) { if (groups.indexOf(w.group) < 0) groups.push(w.group); });
+        modal('<h3>Background</h3><p class="sub">What sits behind the glass. Kept on this browser.</p>' +
+            groups.map(function (g) {
+                return '<h4 class="jp-wp-group">' + esc(g) + '</h4><div class="jp-wp-grid">' +
+                    W.list.filter(function (w) { return w.group === g; }).map(function (w) {
+                        var on = w.key === W.current;
+                        return '<button type="button" class="jp-wp-item' + (on ? ' on' : '') + '" data-act="set-wallpaper" data-v="' + esc(w.key) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+                            wallpaperThumb(w) + '<span class="jp-wp-name">' + esc(w.label) + '</span></button>';
+                    }).join('') + '</div>';
+            }).join('') +
+            '<div class="jp-actions"><button type="button" class="jp-btn" data-act="cancel">Done</button></div>', 'wide jp-wp-sheet');
+    }
+    function setWallpaper(key) {
+        var W = window.JP_THEMES.wallpapers;
+        var w = W.list.find(function (x) { return x.key === key; });
+        if (!w) return;
+        var root = document.documentElement;
+        root.dataset.wp = w.key;
+        root.dataset.wpTone = w.tone;
+        if (w.image) {
+            root.dataset.wpPhoto = '';
+            root.style.setProperty('--g-photo', 'url("' + w.image + '")');
+        } else {
+            delete root.dataset.wpPhoto;
+            root.style.removeProperty('--g-photo');
+        }
+        W.current = w.key;
+        try { localStorage.setItem('jpWallpaper', w.key); } catch (err) { /* private window */ }
+        document.querySelectorAll('.jp-wp-item').forEach(function (b) {
+            var on = b.dataset.v === w.key;
+            b.classList.toggle('on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
     }
 
     function renderBar(v) {
@@ -1844,6 +1895,8 @@
                 try { localStorage.setItem('jpTheme', el.dataset.v); } catch (err) { /* private window */ }
                 if (window.JP_THEMES && el.dataset.v !== window.JP_THEMES.current) location.reload();
                 return;
+            case 'wallpaper-sheet': UI.userMenu = false; render(); wallpaperSheet(); return;
+            case 'set-wallpaper': setWallpaper(el.dataset.v); return;
             case 'set-glass':
                 document.documentElement.dataset.glass = el.dataset.v;
                 try { localStorage.setItem('jpGlass', el.dataset.v); } catch (err) { /* private window */ }

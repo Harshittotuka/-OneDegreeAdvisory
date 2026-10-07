@@ -406,3 +406,40 @@
     :root:root, :root[data-glass] { --lg-frost-low: rgba(255, 255, 255, 0.86); --lg-frost-high: rgba(255, 255, 255, 0.92); --lg-strong: rgba(255, 255, 255, 0.95); }
     :root[data-appearance="dark"]:root, :root[data-appearance="dark"][data-glass] { --lg-frost-low: rgba(22, 28, 60, 0.7); --lg-frost-high: rgba(90, 100, 150, 0.75); --lg-strong: rgba(20, 26, 62, 0.92); }
 }
+
+/* ---------- a photo behind the glass ----------
+   html[data-wp-photo] with the picture in --g-photo (partials.theme-head,
+   from config/themes.php). In dark appearance the photo is dimmed so the
+   glass and white text keep their contrast. */
+:root[data-wp-photo] { --g-wallpaper: var(--g-photo) center / cover no-repeat; --g-canvas: #7d8496; }
+:root[data-wp-photo][data-appearance="dark"] {
+    --g-wallpaper: linear-gradient(rgba(6, 8, 18, 0.42), rgba(6, 8, 18, 0.42)), var(--g-photo) center / cover no-repeat;
+    --g-canvas: #0b0d16;
+}
+/* Clear glass over a photo keeps some frost: a picture has light and dark
+   detail anywhere behind a pane, and the text on it has to read over both.
+   Still clearly lighter than Tinted, so the photo shows through. */
+:root[data-wp-photo][data-glass="clear"] {
+    --lg-blur: blur(12px) saturate(160%);
+    --lg-frost-low: rgba(255, 255, 255, 0.42);
+    --lg-frost-high: rgba(255, 255, 255, 0.58);
+    --lg-control: rgba(255, 255, 255, 0.56);
+}
+:root[data-wp-photo][data-appearance="dark"][data-glass="clear"] {
+    --lg-blur: blur(9px) saturate(150%);
+    --lg-frost-low: rgba(8, 9, 18, 0.3);
+    --lg-frost-high: rgba(22, 24, 36, 0.26);
+    --lg-control: rgba(255, 255, 255, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+    :root[data-wp-photo][data-appearance="auto"] {
+        --g-wallpaper: linear-gradient(rgba(6, 8, 18, 0.42), rgba(6, 8, 18, 0.42)), var(--g-photo) center / cover no-repeat;
+        --g-canvas: #0b0d16;
+    }
+    :root[data-wp-photo][data-appearance="auto"][data-glass="clear"] {
+        --lg-blur: blur(9px) saturate(150%);
+        --lg-frost-low: rgba(8, 9, 18, 0.3);
+        --lg-frost-high: rgba(22, 24, 36, 0.26);
+        --lg-control: rgba(255, 255, 255, 0.08);
+    }
+}

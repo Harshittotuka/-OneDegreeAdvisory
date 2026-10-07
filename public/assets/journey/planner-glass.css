@@ -1153,3 +1153,62 @@ button.jp-user:active { transform: scale(0.97); }
     .lg-lens :is(.jp-side, .jp-tabbar, .jp-usermenu-pop)::before,
     .lg-lens .jp-topbar :is(.jp-refresh, button.jp-user)::before { filter: none; }
 }
+
+/* ---------- text that sits on the wallpaper itself ----------
+   The large title, its line beneath, an intro and the toolbar's labels sit
+   on the background, not on glass: over a dark photo they turn white, and
+   over any photo in dark appearance they get a shadow to hold their edge. */
+:root[data-wp-tone="dark"] :is(.jp-topbar-title, .jp-content > .jp-intro, .jp-content > .jp-tools > label, .jp-foot) {
+    --g-ink: #ffffff; --g-ink-2: rgba(255, 255, 255, 0.9); --g-muted: rgba(255, 255, 255, 0.82); --g-link: #ffffff;
+    color: var(--g-ink); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+:root[data-wp-photo][data-appearance="dark"] :is(.jp-topbar-title, .jp-content > .jp-intro, .jp-content > .jp-tools > label, .jp-foot) {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- choosing a background ---------- */
+.jp-wp-thumb {
+    position: relative; display: block; flex: none; border-radius: 12px; background-color: var(--g-fill);
+    background-size: cover; background-position: center;
+}
+/* The built-in pastel gradient, drawn small. */
+.jp-wp-thumb.pastel {
+    background:
+        radial-gradient(70% 90% at 6% -6%, #9cc8ff 0%, transparent 62%),
+        radial-gradient(64% 90% at 96% 4%, #d4b2ff 0%, transparent 60%),
+        radial-gradient(70% 100% at 86% 104%, #ffbdd2 0%, transparent 62%),
+        radial-gradient(60% 90% at -4% 100%, #a9f0dc 0%, transparent 60%),
+        linear-gradient(160deg, #e7eefd 0%, #f1ebfc 100%);
+}
+/* In the account menu: a small swatch, the word, and the current choice. */
+.jp-wp-open .jp-wp-thumb { width: 22px; height: 22px; border-radius: 7px; box-shadow: inset 0 0 0 1px var(--g-separator); }
+.jp-wp-open .muted { margin-left: auto; padding-left: 10px; font-size: var(--g-fs-small); color: var(--g-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+/* The sheet: a gallery, grouped. */
+.jp-dialog.jp-wp-sheet { max-width: 780px; }
+.jp-wp-group { margin: 18px 2px 9px; font-family: var(--g-font); font-size: var(--g-fs-small); font-weight: var(--g-w-semibold); letter-spacing: 0; color: var(--g-muted); }
+.jp-wp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px 12px; }
+.jp-wp-item {
+    display: flex; flex-direction: column; gap: 7px; min-width: 0; padding: 0; border: 0; border-radius: 14px; background: none;
+    color: var(--g-ink); font-size: var(--g-fs-small); font-weight: var(--g-w-medium); text-align: left; text-shadow: none;
+}
+.jp-wp-item .jp-wp-thumb {
+    aspect-ratio: 16 / 10; border-radius: 14px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 0 1px var(--g-separator), 0 4px 12px rgba(0, 0, 0, 0.12);
+    transition: transform var(--g-dur) var(--g-spring), box-shadow var(--g-dur) var(--g-ease);
+}
+.jp-wp-item:hover .jp-wp-thumb { transform: scale(1.03); }
+.jp-wp-item:active .jp-wp-thumb { transform: scale(0.98); }
+.jp-wp-item:focus-visible { box-shadow: none; }
+.jp-wp-item:focus-visible .jp-wp-thumb { box-shadow: var(--g-focus); }
+.jp-wp-item.on .jp-wp-thumb { box-shadow: 0 0 0 3px var(--g-accent), 0 6px 16px rgba(0, 0, 0, 0.18); }
+/* A tick on the one in use. */
+.jp-wp-item.on .jp-wp-thumb::after {
+    content: ""; position: absolute; right: 8px; bottom: 8px; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--g-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.2 7.3l2.5 2.5 5.1-5.4' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 13px no-repeat;
+    box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.jp-wp-name { padding: 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jp-wp-item.on .jp-wp-name { color: var(--g-link); font-weight: var(--g-w-semibold); }
+@media (max-width: 640px) {
+    .jp-wp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+}
