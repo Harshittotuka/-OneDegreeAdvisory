@@ -145,34 +145,25 @@ h1, h2, h3, h4 { font-family: var(--display); letter-spacing: -0.01em; text-wrap
 .jp-counsellor b { font-size: 0.9rem; color: var(--navy); }
 .jp-scrim { display: none; }
 
-/* The counsellor's (and partner's) side panel wears a brown-gold tone, so the
-   CRM's planner reads apart from the student's own portal at a glance. Same
-   slim layout; only the colours change. */
+/* The counsellor's (and partner's) side panel carries a light golden tone,
+   so the CRM's planner reads apart from the student's own portal at a
+   glance: the same light, slim panel, washed in warm gold, with gold on the
+   page you're on in place of the orange. */
 body:not(.jp-mode-student) .jp-side {
-    color: #f6ead2;
-    background: linear-gradient(180deg, #5b3d15 0%, #47300f 48%, #33220a 100%);
-    border-right: 1px solid rgba(232, 191, 74, 0.45);
-    scrollbar-color: rgba(232, 191, 74, 0.4) transparent;
+    background: linear-gradient(180deg, #fffaf0 0%, #fbf1dc 100%);
+    border-right-color: rgba(201, 151, 31, 0.35);
 }
-body:not(.jp-mode-student) .jp-brand b { background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-body:not(.jp-mode-student) .jp-brand small { color: rgba(246, 234, 210, 0.7); }
-body:not(.jp-mode-student) .jp-who { background: rgba(255, 255, 255, 0.07); border-color: rgba(232, 191, 74, 0.35); }
-body:not(.jp-mode-student) .jp-who b { color: #fff; }
-body:not(.jp-mode-student) .jp-who small, body:not(.jp-mode-student) .jp-who-bar { color: rgba(246, 234, 210, 0.72); }
-body:not(.jp-mode-student) .jp-who-bar b { color: var(--gold-2); }
-body:not(.jp-mode-student) .jp-bar.side { background: rgba(255, 255, 255, 0.14); }
+body:not(.jp-mode-student) .jp-brand small { color: var(--gold-ink); }
+body:not(.jp-mode-student) .jp-who { background: rgba(255, 255, 255, 0.7); border-color: rgba(201, 151, 31, 0.3); }
+body:not(.jp-mode-student) .jp-who-bar b { color: var(--gold-ink); }
+body:not(.jp-mode-student) .jp-bar.side { background: rgba(201, 151, 31, 0.16); }
 body:not(.jp-mode-student) .jp-bar.side i { background: var(--gold-grad); }
-body:not(.jp-mode-student) .jp-side .jp-avatar { background: var(--gold-grad); color: #3d2a00; }
-body:not(.jp-mode-student) .jp-nav-label { color: rgba(232, 191, 74, 0.85); }
-body:not(.jp-mode-student) .jp-nav-link { color: rgba(246, 234, 210, 0.88); }
-body:not(.jp-mode-student) .jp-nav-link:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-body:not(.jp-mode-student) .jp-nav-link.active { background: rgba(232, 191, 74, 0.18); color: #fbe3a1; }
-body:not(.jp-mode-student) .jp-nav-link.active::before { background: var(--gold-2); }
-body:not(.jp-mode-student) .jp-nav-ico { color: rgba(232, 191, 74, 0.75); }
-body:not(.jp-mode-student) .jp-nav-link:hover .jp-nav-ico, body:not(.jp-mode-student) .jp-nav-link.active .jp-nav-ico { color: var(--gold-2); }
-body:not(.jp-mode-student) .jp-side-foot { border-top-color: rgba(232, 191, 74, 0.3); }
-body:not(.jp-mode-student) .jp-counsellor small { color: rgba(246, 234, 210, 0.65); }
-body:not(.jp-mode-student) .jp-counsellor b { color: #fff; }
+body:not(.jp-mode-student) .jp-nav-label { color: var(--gold-ink); }
+body:not(.jp-mode-student) .jp-nav-link:hover { background: rgba(201, 151, 31, 0.1); }
+body:not(.jp-mode-student) .jp-nav-link.active { background: rgba(201, 151, 31, 0.18); }
+body:not(.jp-mode-student) .jp-nav-link.active::before { background: var(--gold); }
+body:not(.jp-mode-student) .jp-nav-link.active .jp-nav-ico { color: var(--gold-ink); }
+body:not(.jp-mode-student) .jp-side-foot { border-top-color: rgba(201, 151, 31, 0.28); }
 
 .jp-body { min-width: 0; display: flex; flex-direction: column; }
 .jp-topbar {
