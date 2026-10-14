@@ -609,11 +609,12 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-google.bad, .jp-google-bad { color: var(--g-red-ink); }
 
 /* ---------- who's on it ---------- */
-.jp-owners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.jp-owners { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .jp-own { --own: var(--g-accent); --own-soft: var(--g-accent-soft); position: relative; min-width: 0; padding: 18px 20px; border-radius: var(--g-r-card); }
 .jp-own-student { --own: var(--g-accent); --own-soft: var(--g-accent-soft); }
 .jp-own-counsellor { --own: var(--g-orange); --own-soft: var(--g-orange-soft); }
 .jp-own-other { --own: var(--g-teal); --own-soft: var(--g-teal-soft); }
+.jp-own-lead { --own: var(--g-purple); --own-soft: var(--g-purple-soft); }
 .jp-own h3 { display: flex; justify-content: space-between; align-items: center; font-size: var(--g-fs-h3); }
 .jp-own h3 > .num { min-width: 34px; height: 34px; padding: 0 8px; display: grid; place-items: center; border-radius: 50%; background: var(--own); color: #fff; font-size: var(--g-fs-h3); font-weight: var(--g-w-bold); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); }
 .jp-own-name { display: inline-flex; align-items: center; gap: 8px; }
@@ -798,6 +799,33 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-agenda-h b { display: block; font-size: var(--g-fs-body); font-weight: var(--g-w-semibold); }
 .jp-agenda-h small { display: block; font-size: var(--g-fs-small); color: var(--g-muted); }
 .jp-agenda .jp-day-list { margin: 0; border-top: 0.5px solid var(--g-separator); }
+
+/* ---------- blocked dates: a stretch marked out in one go ----------
+   Every day in it is shaded, and a band across the top of each cell meets
+   its neighbours' as one bar, named where it starts and on each new week. */
+.dot.block { background: var(--g-purple); }
+.jp-day.blocked:not(.other) { background: repeating-linear-gradient(-45deg, transparent 0 7px, var(--g-purple-soft) 7px 11px); }
+.jp-day.blocked:not(.other):hover { background: var(--g-purple-soft); }
+.jp-day .blk {
+    display: block; margin: 0 -6px; padding: 1px 6px; background: var(--g-purple); color: #fff; cursor: pointer;
+    font-size: var(--g-fs-caption); font-weight: var(--g-w-semibold); line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.jp-day .blk.first { margin-left: 0; border-radius: 6px 0 0 6px; }
+.jp-day .blk.last { margin-right: 0; border-radius: 0 6px 6px 0; }
+.jp-day .blk.first.last { border-radius: 6px; }
+.jp-legend i.chip.blk { background: var(--g-purple); }
+.jp-blk-list { display: flex; flex-direction: column; gap: 6px; margin: 0 0 12px; }
+.jp-blk-row { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; gap: 11px; align-items: center; padding: 9px 14px; border-radius: 14px; background: var(--g-purple-soft); }
+.jp-blk-row b { display: block; font-size: var(--g-fs-body); font-weight: var(--g-w-semibold); color: var(--g-purple-ink); overflow-wrap: anywhere; }
+.jp-blk-row small { display: block; font-size: var(--g-fs-small); color: var(--g-muted); }
+.jp-blk-row .a { display: flex; gap: 6px; }
+.jp-dl.past { opacity: 0.6; }
+.jp-hint.jp-warn { color: var(--g-orange-ink); font-weight: var(--g-w-semibold); }
+.jp-actions .push { margin-right: auto; }
+@media (max-width: 640px) {
+    .jp-blk-row { grid-template-columns: 12px minmax(0, 1fr) auto; }
+    .jp-blk-row .a { grid-column: 2 / -1; }
+}
 
 /* ---------- help ---------- */
 .jp-guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }

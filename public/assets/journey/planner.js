@@ -36,7 +36,7 @@
     // only counts up while the live checks are not running.
     var REFRESHED_AT = Date.now();
     P.documents = P.documents || [];
-    P.team = P.team || []; P.deadlines = P.deadlines || []; P.meetings = P.meetings || [];
+    P.team = P.team || []; P.deadlines = P.deadlines || []; P.meetings = P.meetings || []; P.blocks = P.blocks || [];
     var DT = P.docTemplate || { fileCategories: [], essayCategories: [], essayStatuses: [], limits: { maxKb: 10240, extensions: [] } };
 
     /* ------------------------------------------------------------ helpers */
@@ -222,6 +222,11 @@
      */
     function phases() { return isC() ? T.phases : T.phases.filter(phaseIncluded); }
     function appActs(ap) { return Object.keys(ap.acts).map(function (k) { return ap.acts[k]; }); }
+    /* A university's checklist is ODA's standard activities plus the tasks
+       the counsellor added to that university alone. */
+    function appDef(ap, key) {
+        return APP_DEFS[key] || (ap.tasks || []).find(function (t) { return t.key === key; }) || { key: key, name: 'Task', desc: '', docs: 'None' };
+    }
     /** Index into phases() of the stage being worked on now, or -1 when all are done. */
     function currentPhase() {
         var list = phases();
@@ -239,7 +244,7 @@
         P.apps.forEach(function (ap) {
             Object.keys(ap.acts).forEach(function (k) {
                 var a = ap.acts[k];
-                if (a.inc && !closed(a.status)) out.push({ scope: 'app', appId: ap.id, key: k, name: APP_DEFS[k].name, where: ap.university, a: a });
+                if (a.inc && !closed(a.status)) out.push({ scope: 'app', appId: ap.id, key: k, name: appDef(ap, k).name, where: ap.university, a: a });
             });
         });
         return out;
@@ -256,7 +261,7 @@
         P.apps.forEach(function (ap) {
             Object.keys(ap.acts).forEach(function (k) {
                 var a = ap.acts[k];
-                if (a.inc && a.target && a.status !== 'Not Applicable') out.push({ scope: 'app', appId: ap.id, key: k, name: APP_DEFS[k].name, where: ap.university, a: a });
+                if (a.inc && a.target && a.status !== 'Not Applicable') out.push({ scope: 'app', appId: ap.id, key: k, name: appDef(ap, k).name, where: ap.university, a: a });
             });
         });
         return out;
@@ -293,6 +298,40 @@
             })).sort(byDateKey);
     }
     function ourDeadlines() { return P.deadlines.filter(function (d) { return d.kind === 'own'; }).slice().sort(byDateKey); }
+    /*
+     * Blocked dates: a stretch of days marked out in one go — exams from 1 to
+     * 15 March, a holiday — rather than a date at a time. `from` and `to` are
+     * both days inside it, so a single day has the two the same.
+     */
+    function findBlock(key) { return P.blocks.find(function (b) { return b.key === key; }); }
+    function blocksOn(iso) { return P.blocks.filter(function (b) { return b.from <= iso && iso <= b.to; }); }
+    function blockDays(b) { return Math.round((new Date(b.to + 'T00:00:00') - new Date(b.from + 'T00:00:00')) / 86400000) + 1; }
+    function blockSpan(b) {
+        if (b.from === b.to) return fmt(b.from, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        return fmt(b.from, b.from.slice(0, 4) === b.to.slice(0, 4) ? { day: 'numeric', month: 'short' } : null) + ' – ' + fmt(b.to);
+    }
+    function blockState(b) { return P.today < b.from ? 'ahead' : P.today > b.to ? 'over' : 'now'; }
+    function blockWhen(b) {
+        var st = blockState(b);
+        if (st === 'over') return 'Over';
+        if (st === 'now') return b.to === P.today ? 'Ends today' : 'Until ' + fmt(b.to, { day: 'numeric', month: 'short' });
+        return due(daysUntil(b.from)).label;
+    }
+    function blockPill(b) { return { now: 'amber', over: 'na' }[blockState(b)] || 'wait'; }
+    /* Under the dates in the dialog: how long it runs, and what already sits inside it. */
+    function blockLenText(from, to) {
+        if (!from || !to) return 'Choose the first and the last day. For a single day, make them the same.';
+        if (to < from) return 'The last day is before the first.';
+        var b = { from: from, to: to };
+        var booked = P.meetings.filter(function (m) { return !m.done && m.date >= from && m.date <= to; }).length;
+        return plural(blockDays(b), 'day', 'days') + ': ' + blockSpan(b) + '.' +
+            (booked ? ' ' + plural(booked, 'meeting is', 'meetings are') + ' already booked inside it.' : '');
+    }
+    /* A meeting may still go on a blocked day, but the dialog says so. */
+    function blockedNote(iso) {
+        var hit = iso ? blocksOn(iso) : [];
+        return hit.length ? fmt(iso, { day: 'numeric', month: 'short' }) + ' falls in “' + hit[0].what + '” (' + blockSpan(hit[0]) + '). Book it anyway, or pick another day.' : '';
+    }
     function soonMeetings() {
         return P.meetings.filter(function (m) { var d = daysUntil(m.date); return !m.done && d != null && d >= 0 && d <= 7; });
     }
@@ -695,7 +734,7 @@
     /* Each part of the plan keeps one icon and one colour on the timeline. */
     var CHANGE_KIND = {
         'Core journey': ['journey', 'k-journey'], 'Universities': ['uni', 'k-uni'], 'Documents': ['doc', 'k-doc'],
-        'Deadlines': ['alarm', 'k-deadline'], 'Meetings': ['calendar', 'k-meeting'], 'Team': ['people', 'k-team'],
+        'Deadlines': ['alarm', 'k-deadline'], 'Calendar': ['calendar', 'k-deadline'], 'Meetings': ['calendar', 'k-meeting'], 'Team': ['people', 'k-team'],
         'Plan details': ['pen', 'k-plan'], 'Journey planner': ['spark', 'k-plan'], 'Student login': ['key', 'k-login']
     };
     function changeDay(iso) {
@@ -824,6 +863,8 @@
         var d = (a.inc && !closed(a.status)) ? due(daysUntil(a.target)) : null;
         var editable = canEdit(a);
         var statuses = isC() ? T.statuses : T.studentStatuses;
+        // An added task is edited and removed through its stage, or its university.
+        var taskAct = scope === 'app' ? 'app-task' : 'task', onUni = scope === 'app' ? ' data-u="' + appId + '"' : '';
 
         var status = editable
             ? '<select class="jp-st ' + stClass(a.status) + '" data-f="status"' + data + (a.inc ? '' : ' disabled') + ' aria-label="Status">' +
@@ -852,8 +893,9 @@
                         '<div class="full"><label for="nt-' + esc(k) + '">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="nt-' + esc(k) + '" data-f="notes"' + data + ' maxlength="1000" placeholder="Scores, offer conditions, what to chase…">' + esc(a.notes) + '</textarea></div>' +
                         uploadBox(def) +
                         (canRepeat(def) ? '<div class="full jp-task-tools"><span class="muted">Did the student do more than one?</span><button class="jp-btn ghost sm" data-act="add-repeat" data-key="' + esc(def.key) + '">' + ICO.plus + ' Add another ' + esc(def.name.toLowerCase()) + '</button></div>' : '') +
-                        (def.custom ? '<div class="full jp-task-tools"><span class="muted">' + (def.parent ? 'Another “' + esc((CORE_DEFS[def.parent] || {}).name || '') + '” for this student.' : 'You added this task for this student.') + '</span><button class="jp-btn ghost sm" data-act="edit-task" data-key="' + esc(def.key) + '">Edit task</button>' +
-                            '<button class="jp-btn danger sm' + (UI.armed === 'rm-task-' + def.key ? ' armed' : '') + '" data-act="rm-task" data-key="' + esc(def.key) + '">' + (UI.armed === 'rm-task-' + def.key ? 'Click again to remove' : 'Remove task') + '</button></div>' : '') +
+                        (def.custom ? '<div class="full jp-task-tools"><span class="muted">' + (def.parent ? 'Another “' + esc((CORE_DEFS[def.parent] || {}).name || '') + '” for this student.' : scope === 'app' ? 'You added this to this university only.' : 'You added this task for this student.') + '</span>' +
+                            '<button class="jp-btn ghost sm" data-act="edit-' + taskAct + '" data-key="' + esc(def.key) + '"' + onUni + '>Edit task</button>' +
+                            '<button class="jp-btn danger sm' + (UI.armed === 'rm-task-' + def.key ? ' armed' : '') + '" data-act="rm-' + taskAct + '" data-key="' + esc(def.key) + '"' + onUni + '>' + (UI.armed === 'rm-task-' + def.key ? 'Click again to remove' : 'Remove task') + '</button></div>' : '') +
                         '</div>'
                     : (a.notes ? '<div><span class="jp-note-lbl">Note from your counsellor</span><div class="jp-note">' + esc(a.notes) + '</div></div>' : '<div></div>') + (def.upload ? '<div class="jp-fields">' + uploadBox(def) + '</div>' : '')) +
                 '</div>';
@@ -869,7 +911,7 @@
     /* ---- core journey ---- */
     function renderJourney() {
         var cur = currentPhase();
-        var owners = ['Student', 'Counsellor', 'University', 'Bank/Financial Institution'];
+        var owners = ['Student', 'Counsellor', 'Program Lead', 'University', 'Bank/Financial Institution'];
         var tools = '<div class="jp-tools">' +
             '<select id="f-owner" aria-label="Filter by owner"><option value="all">Everyone\'s tasks</option>' +
             '<optgroup label="Roles">' + owners.map(function (o) { return '<option value="' + esc(o) + '"' + (UI.owner === o ? ' selected' : '') + '>' + (isStudent() && o === 'Student' ? 'My tasks' : (o === 'Bank/Financial Institution' ? 'Bank' : o)) + '</option>'; }).join('') + '</optgroup>' +
@@ -945,10 +987,13 @@
         var visaOff = !a.acts['visa-submitted'].inc || !a.acts['visa-approved'].inc;
         var banner = isC() && seat && visaOff
             ? '<div class="jp-banner"><span><b>Seat confirmed.</b> This is the chosen university, so its visa steps now apply.</span><button class="jp-btn sm" data-act="visa-on" data-u="' + a.id + '">Turn on visa steps</button></div>' : '';
+        // Each group lists ODA's activities, then what the counsellor added to it here.
         var groups = T.appGroups.map(function (g) {
-            var rows = g.activities.map(function (d) { return actRow('app', a.id, d, a.acts[d.key], '', false); }).join('');
+            var defs = g.activities.concat((a.tasks || []).filter(function (t) { return t.group === g.key; }));
+            var rows = defs.map(function (d) { return a.acts[d.key] ? actRow('app', a.id, d, a.acts[d.key], '', false) : ''; }).join('');
             return rows ? '<div class="jp-group">' + esc(g.name) + '</div>' + rows : '';
         }).join('') || '<div class="jp-empty">Nothing switched on for this university yet.</div>';
+        var addTask = isC() ? '<div class="jp-add-task"><button class="jp-btn ghost sm" data-act="add-app-task" data-u="' + a.id + '">' + ICO.plus + ' Add a task or event</button></div>' : '';
         var armed = UI.armed === 'rm-' + a.id;
         var meta = isC()
             ? '<span><span class="lbl">Fit</span><select class="jp-select" data-uf="fit" data-u="' + a.id + '" aria-label="Programme fit"><option value="">Not set</option>' + Object.keys(T.fits).map(function (f) { return '<option value="' + f + '"' + (a.fit === f ? ' selected' : '') + '>' + T.fits[f] + '</option>'; }).join('') + '</select></span>' +
@@ -960,7 +1005,7 @@
             '<div class="jp-block-meta">' + meta + '</div></div>' +
             '<div class="jp-block-side"><div class="jp-big num">' + r.done + '<small>of ' + r.den + ' done</small></div>' +
             (isC() ? '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-uni" data-u="' + a.id + '">' + (armed ? 'Click again to remove' : 'Remove') + '</button>' : '') + '</div></div>' +
-            banner + requirementsCard(a) + '<div class="jp-acts' + (isC() ? '' : ' ro') + '">' + rowHead() + groups + '</div></div>';
+            banner + requirementsCard(a) + '<div class="jp-acts' + (isC() ? '' : ' ro') + '">' + rowHead() + groups + addTask + '</div></div>';
     }
 
     /*
@@ -1131,6 +1176,11 @@
         }
         return head + (rows ? '<dl class="jp-tip-kv">' + rows + '</dl>' : '') + '<span class="jp-tip-f">Click to open</span>';
     }
+    function blockTipHtml(b) {
+        return '<div class="jp-tip-h"><i class="dot block"></i><span>Blocked dates</span><span class="pill ' + blockPill(b) + '">' + esc(blockWhen(b)) + '</span></div>' +
+            '<b class="jp-tip-t">' + esc(b.what) + '</b><dl class="jp-tip-kv">' + tipRow('When', esc(blockSpan(b))) + tipRow('Length', plural(blockDays(b), 'day', 'days')) + '</dl>' +
+            '<span class="jp-tip-f">' + (isC() ? 'Click to change or remove it' : 'Click the day to see what else is on') + '</span>';
+    }
     function moreHtml(ids) {
         return '<div class="jp-tip-h"><span>Also on this day</span></div><ul class="jp-tip-list">' + ids.map(function (i) {
             var e = CAL_EVENTS[i];
@@ -1141,6 +1191,7 @@
         var html = '';
         if (target.dataset.ev != null) { var e = CAL_EVENTS[parseInt(target.dataset.ev, 10)]; if (e) html = tipHtml(e); }
         else if (target.dataset.more) html = moreHtml(target.dataset.more.split(',').map(Number));
+        else if (target.dataset.blk) { var b = findBlock(target.dataset.blk); if (b) html = blockTipHtml(b); }
         if (!html) return;
         var t = tipEl();
         t.innerHTML = html; t.hidden = false;
@@ -1152,7 +1203,7 @@
         var left = Math.min(Math.max(edge, r.left), Math.max(edge, vw - w - edge));
         t.style.top = Math.round(top) + 'px'; t.style.left = Math.round(left) + 'px';
     }
-    function tipTarget(node) { return node && node.closest ? node.closest('.jp-month [data-ev], .jp-month [data-more]') : null; }
+    function tipTarget(node) { return node && node.closest ? node.closest('.jp-month [data-ev], .jp-month [data-more], .jp-month [data-blk]') : null; }
     var CAN_HOVER = !window.matchMedia || window.matchMedia('(hover: hover)').matches;
     document.addEventListener('mouseover', function (e) { if (!CAN_HOVER) return; var t = tipTarget(e.target); if (t) showTip(t); });
     document.addEventListener('mouseout', function (e) {
@@ -1173,7 +1224,7 @@
         return '';
     }
 
-    var EVENT_NAMES = { meeting: 'Meetings', uni: 'University deadlines', own: 'Our deadlines', task: 'Task dates' };
+    var EVENT_NAMES = { meeting: 'Meetings', uni: 'University deadlines', own: 'Our deadlines', task: 'Task dates', block: 'Blocked dates' };
     /* What the reader has chosen to see: some kinds, and finished things or not. */
     function calShows(e) {
         if ((UI.cal.kinds || {})[e.type] === false) return false;
@@ -1194,8 +1245,12 @@
         var now = new Date(P.today + 'T00:00:00');
         if (UI.cal.y == null) { UI.cal.y = now.getFullYear(); UI.cal.m = now.getMonth(); }
         if (!UI.cal.view) UI.cal.view = (window.innerWidth && window.innerWidth < 640) ? 'agenda' : 'month';
-        if (!UI.cal.kinds) UI.cal.kinds = { meeting: true, uni: true, own: true, task: true };
+        if (!UI.cal.kinds) UI.cal.kinds = { meeting: true, uni: true, own: true, task: true, block: true };
         var y = UI.cal.y, m = UI.cal.m, monthKey = y + '-' + pad2(m + 1);
+        // Blocked stretches that touch this month, and those the reader shows.
+        var monthEnd = monthKey + '-' + pad2(new Date(y, m + 1, 0).getDate());
+        var monthBlocks = P.blocks.filter(function (b) { return b.from <= monthEnd && b.to >= monthKey + '-01'; });
+        var shownBlocks = UI.cal.kinds.block === false ? [] : P.blocks;
 
         CAL_EVENTS = calendarEvents();
         CAL_EVENTS.forEach(function (e, i) { e.i = i; });
@@ -1214,30 +1269,68 @@
             ['month', 'agenda'].map(function (v) {
                 return '<button data-act="cal-view" data-v="' + v + '" class="' + (UI.cal.view === v ? 'on' : '') + '" aria-pressed="' + (UI.cal.view === v) + '">' + (v === 'month' ? 'Month' : 'Agenda') + '</button>';
             }).join('') + '</div>' +
-            (isC() ? '<button class="jp-btn sm" data-act="add-meeting">' + ICO.plus + ' Meeting</button><button class="jp-btn ghost sm" data-act="add-deadline" data-v="own">' + ICO.plus + ' Deadline</button>' : '') +
+            (isC() ? '<button class="jp-btn sm" data-act="add-meeting">' + ICO.plus + ' Meeting</button><button class="jp-btn ghost sm" data-act="add-deadline" data-v="own">' + ICO.plus + ' Deadline</button>' +
+                '<button class="jp-btn ghost sm" data-act="add-block">' + ICO.plus + ' Block dates</button>' : '') +
             '</div></div>';
 
-        var chips = '<div class="jp-cal-filters"><span class="lbl">Show</span>' + ['meeting', 'uni', 'own', 'task'].map(function (k) {
-            var on = UI.cal.kinds[k] !== false, n = inMonth.filter(function (e) { return e.type === k; }).length;
+        var chips = '<div class="jp-cal-filters"><span class="lbl">Show</span>' + ['meeting', 'uni', 'own', 'task', 'block'].map(function (k) {
+            var on = UI.cal.kinds[k] !== false;
+            var n = k === 'block' ? monthBlocks.length : inMonth.filter(function (e) { return e.type === k; }).length;
             return '<button class="jp-cal-chip' + (on ? ' on' : '') + '" data-act="cal-kind" data-v="' + k + '" aria-pressed="' + on + '"><i class="dot ' + k + '"></i>' + EVENT_NAMES[k] + ' <b class="num">' + n + '</b></button>';
         }).join('') +
             '<label class="jp-cal-done"><input type="checkbox" id="cal-hide-done"' + (UI.cal.hideDone ? ' checked' : '') + '> Hide finished</label>' +
             (late ? '<span class="pill danger">' + late + ' late this month</span>' : '') + '</div>';
 
-        var body = UI.cal.view === 'agenda' ? calAgenda(byDay, monthKey) : calMonth(byDay, y, m);
+        var body = UI.cal.view === 'agenda'
+            ? calAgenda(byDay, monthKey, monthBlocks.filter(function (b) { return shownBlocks.indexOf(b) >= 0; }))
+            : calMonth(byDay, y, m, shownBlocks);
 
         var legend = '<div class="jp-legend"><span class="lbl">Colour</span>' +
             ['late', 'today', 'soon', 'later', 'done'].map(function (k) {
                 return '<span><i class="chip st-' + k + '"></i>' + STATUS_NAME[k] + '</span>';
-            }).join('') + '</div>';
+            }).join('') + (monthBlocks.length && UI.cal.kinds.block !== false ? '<span><i class="chip blk"></i>Blocked</span>' : '') + '</div>';
         var hint = '<p class="jp-day-hint muted">' + (UI.cal.view === 'month'
-            ? 'Hover over an entry for its details, and click it to open it. Click a day to see everything on it' + (isC() ? ', or to put a meeting or a deadline on it' : '') + '.'
+            ? 'Hover over an entry for its details, and click it to open it. Click a day to see everything on it' + (isC() ? ', or to put a meeting, a deadline or blocked dates on it' : '') + '.'
             : 'Everything this month, day by day. Switch to Month for the grid.') + '</p>';
 
-        return '<section class="jp-card jp-calendar">' + bar + chips + body + legend + hint + '</section>' + renderMeetings();
+        return '<section class="jp-card jp-calendar">' + bar + chips + body + legend + hint + '</section>' + renderBlocks() + renderMeetings();
     }
 
-    function calMonth(byDay, y, m) {
+    /*
+     * A blocked stretch, drawn on one day of the month as a band across the
+     * top of the cell. The bands of neighbouring days meet, so the stretch
+     * reads as one bar; its name is written where it starts and again at the
+     * start of each week row it runs into.
+     */
+    function blockBand(b, iso, rowStart) {
+        var first = iso === b.from, last = iso === b.to;
+        return '<span class="blk' + (first ? ' first' : '') + (last ? ' last' : '') + '" data-blk="' + esc(b.key) + '" aria-hidden="true"' +
+            (isC() ? ' data-act="edit-block" data-k="' + esc(b.key) + '"' : '') + '>' + (first || rowStart ? esc(b.what) : '&nbsp;') + '</span>';
+    }
+
+    /* Every blocked stretch on the plan, with what can be done to it. */
+    function renderBlocks() {
+        if (!P.blocks.length && !isC()) return '';
+        var add = isC() ? '<button class="jp-btn ghost sm" data-act="add-block">' + ICO.plus + ' Block dates</button>' : '';
+        var rows = P.blocks.map(function (b) {
+            var armed = UI.armed === 'rm-block-' + b.key;
+            return '<div class="jp-dl with-act' + (blockState(b) === 'over' ? ' past' : '') + '">' + calBox(b.from, false) +
+                '<div class="w">' + (isC()
+                    ? '<button class="t as-link" data-act="edit-block" data-k="' + esc(b.key) + '">' + esc(b.what) + '</button>'
+                    : '<span class="t">' + esc(b.what) + '</span>') +
+                '<span class="s">' + esc(blockSpan(b)) + ' · ' + plural(blockDays(b), 'day', 'days') + '</span></div>' +
+                '<span class="o"><span class="jp-owner-chip">Blocked</span></span>' +
+                '<span class="pill ' + blockPill(b) + '">' + esc(blockWhen(b)) + '</span>' +
+                '<span class="a">' + (isC() ? '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-block" data-k="' + esc(b.key) + '">' + (armed ? 'Click again' : 'Remove') + '</button>' : '') + '</span></div>';
+        }).join('');
+        return '<section class="jp-card flush" id="jp-blocks"><div class="jp-card-h pad"><div><h2>Blocked dates</h2><p>' +
+            (isStudent() ? 'Stretches marked out on your calendar — exams, a holiday — so nothing is planned for them.'
+                : 'Stretches marked out in one go — exams, a holiday. Every day in them shows on the calendar, and a meeting booked inside one is flagged.') +
+            '</p></div>' + add + '</div>' +
+            (rows || '<div class="jp-empty"><b>Nothing blocked</b>Mark out exams or a holiday in one go, from the first day to the last.</div>') + '</section>';
+    }
+
+    function calMonth(byDay, y, m, blocks) {
         var offset = (new Date(y, m, 1).getDay() + 6) % 7;      // weeks start on Monday
         var daysInMonth = new Date(y, m + 1, 0).getDate();
         var prevDays = new Date(y, m, 0).getDate();
@@ -1248,13 +1341,16 @@
             else if (nth > daysInMonth) { cm = m + 1; cd = nth - daysInMonth; other = true; if (cm > 11) { cm = 0; cy++; } }
             var iso = cy + '-' + pad2(cm + 1) + '-' + pad2(cd);
             var list = byDay[iso] || [];
+            var blk = blocks.filter(function (b) { return b.from <= iso && iso <= b.to; });
             // The day is the click target; each entry inside it is its own,
             // so clicking an entry opens that thing and clicking the space
             // around it opens the day.
-            cells += '<div class="jp-day' + (other ? ' other' : '') + (n % 7 >= 5 ? ' wkend' : '') + (iso === P.today ? ' today' : '') + (iso < P.today ? ' past' : '') + (iso === UI.cal.sel ? ' sel' : '') + '"' +
+            cells += '<div class="jp-day' + (other ? ' other' : '') + (n % 7 >= 5 ? ' wkend' : '') + (iso === P.today ? ' today' : '') + (iso < P.today ? ' past' : '') + (iso === UI.cal.sel ? ' sel' : '') + (blk.length ? ' blocked' : '') + '"' +
                 ' data-act="cal-day" data-d="' + iso + '" role="button" tabindex="0"' +
-                ' aria-label="' + esc(fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' })) + ', ' + plural(list.length, 'entry', 'entries') + '">' +
+                ' aria-label="' + esc(fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' })) + ', ' + plural(list.length, 'entry', 'entries') +
+                (blk.length ? ', blocked for ' + esc(blk.map(function (b) { return b.what; }).join(' and ')) : '') + '">' +
                 '<span class="dn num">' + cd + (iso === P.today ? '<span class="tdy">Today</span>' : '') + '</span>' +
+                blk.map(function (b) { return blockBand(b, iso, n % 7 === 0); }).join('') +
                 list.slice(0, 3).map(function (e) {
                     return '<button class="ev st-' + eventStatus(e) + '"' + eventAction(e) + ' data-ev="' + e.i + '" aria-label="' + esc(EVENT_NAME[e.type] + ': ' + e.label + (e.sub ? ' — ' + e.sub : '')) + '">' +
                         '<i class="dot ' + e.type + '"></i>' + (evTime(e) ? '<span class="tm num">' + evTime(e) + '</span>' : '') + '<span class="lb">' + esc(e.label) + '</span></button>';
@@ -1265,31 +1361,43 @@
     }
 
     /* The same month as a list of days, for a narrow screen or a quick read. */
-    function calAgenda(byDay, monthKey) {
+    function calAgenda(byDay, monthKey, blocks) {
         var days = Object.keys(byDay).filter(function (d) { return d.slice(0, 7) === monthKey; }).sort();
-        if (!days.length) return '<div class="jp-empty"><b>Nothing this month</b>' + (UI.cal.hideDone || Object.keys(UI.cal.kinds).some(function (k) { return UI.cal.kinds[k] === false; }) ? 'Some kinds are hidden — check the chips above.' : 'Use Next to look further ahead.') + '</div>';
-        return '<div class="jp-agenda">' + days.map(function (d) {
-            var n = daysUntil(d);
+        // The month's blocked stretches head the list, once each, rather than on every day.
+        var strip = blocks.length ? '<div class="jp-blk-list">' + blocks.map(blockRow).join('') + '</div>' : '';
+        if (!days.length) return strip + '<div class="jp-empty"><b>' + (strip ? 'Nothing else this month' : 'Nothing this month') + '</b>' + (UI.cal.hideDone || Object.keys(UI.cal.kinds).some(function (k) { return UI.cal.kinds[k] === false; }) ? 'Some kinds are hidden — check the chips above.' : 'Use Next to look further ahead.') + '</div>';
+        return strip + '<div class="jp-agenda">' + days.map(function (d) {
+            var n = daysUntil(d), blk = blocksOn(d);
             return '<div class="jp-agenda-day' + (d === P.today ? ' today' : '') + (d < P.today ? ' past' : '') + '">' +
                 '<button class="jp-agenda-h" data-act="cal-day" data-d="' + d + '">' + calBox(d, false) +
                 '<span><b>' + esc(fmt(d, { weekday: 'long', day: 'numeric', month: 'long' })) + '</b><small>' +
-                (n === 0 ? 'Today' : n < 0 ? plural(Math.abs(n), 'day', 'days') + ' ago' : 'In ' + plural(n, 'day', 'days')) + ' · ' + plural(byDay[d].length, 'thing', 'things') + '</small></span></button>' +
+                (n === 0 ? 'Today' : n < 0 ? plural(Math.abs(n), 'day', 'days') + ' ago' : 'In ' + plural(n, 'day', 'days')) + ' · ' + plural(byDay[d].length, 'thing', 'things') +
+                (blk.length && UI.cal.kinds.block !== false ? ' · during ' + esc(blk[0].what) : '') + '</small></span></button>' +
                 '<div class="jp-day-list">' + byDay[d].map(dayRow).join('') + '</div></div>';
         }).join('') + '</div>';
+    }
+
+    /* One blocked stretch as a line: in the agenda, and on a day it covers. */
+    function blockRow(b) {
+        var edit = isC() ? '<button class="jp-btn ghost sm" data-act="edit-block" data-k="' + esc(b.key) + '">Edit</button>' : '';
+        return '<div class="jp-blk-row"><i class="dot block"></i><div><b>' + esc(b.what) + '</b><small>Blocked · ' + esc(blockSpan(b)) + ' · ' + plural(blockDays(b), 'day', 'days') + '</small></div>' +
+            '<span class="pill ' + blockPill(b) + '">' + esc(blockWhen(b)) + '</span>' + (edit ? '<span class="a">' + edit + '</span>' : '') + '</div>';
     }
 
     /** Everything on one day, in a dialog over the month. */
     function openDay(iso) {
         var byDay = {};
         calendarEvents().forEach(function (e) { if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
-        var list = byDay[iso] || [];
+        var list = byDay[iso] || [], blk = blocksOn(iso);
         var days = daysUntil(iso);
         modal('<h3>' + esc(fmt(iso, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</h3>' +
             '<p class="sub">' + (iso === P.today ? 'Today' : days < 0 ? plural(Math.abs(days), 'day', 'days') + ' ago' : 'In ' + plural(days, 'day', 'days')) +
             ' · ' + (list.length ? plural(list.length, 'thing', 'things') + ' on it' : 'nothing on it yet') + '.</p>' +
+            (blk.length ? '<div class="jp-blk-list">' + blk.map(blockRow).join('') + '</div>' : '') +
             (list.length ? '<div class="jp-day-list">' + list.map(dayRow).join('') + '</div>' : '') +
             '<div class="jp-actions">' +
-            (isC() ? '<button class="jp-btn ghost" data-act="add-deadline" data-v="own" data-d="' + iso + '">' + ICO.plus + ' Deadline</button>' +
+            (isC() ? '<button class="jp-btn ghost" data-act="add-block" data-d="' + iso + '">' + ICO.plus + ' Block dates</button>' +
+                '<button class="jp-btn ghost" data-act="add-deadline" data-v="own" data-d="' + iso + '">' + ICO.plus + ' Deadline</button>' +
                 '<button class="jp-btn ghost" data-act="add-meeting" data-d="' + iso + '">' + ICO.plus + ' Meeting</button>' : '') +
             '<button class="jp-btn" data-act="cancel">Close</button></div>', 'wide');
     }
@@ -1387,6 +1495,7 @@
         var parties = [
             [isStudent() ? 'You' : 'Student', function (o) { return o.indexOf('Student') >= 0; }, 'student'],
             ['Counsellor', function (o) { return o.indexOf('Counsellor') >= 0; }, 'counsellor'],
+            ['Program Lead', function (o) { return o === 'Program Lead'; }, 'lead'],
             ['University / bank', function (o) { return o === 'University' || o.indexOf('Bank') === 0; }, 'other']
         ];
         var owners = '<section class="jp-card"><div class="jp-card-h"><div><h2>Open tasks by side</h2><p>A shared task (for example Student &amp; Counsellor) shows for each of them.</p></div></div><div class="jp-owners">' +
@@ -1623,7 +1732,8 @@
             { key: 'unis', title: 'Universities', go: 'universities', intro: 'Each university you apply to has its own checklist.', steps: [
                 'Open **Universities** and choose a university from the cards at the top.',
                 'The top of its block shows what it asks for: tests, documents, entry requirements and the date applications close.',
-                'Work down its checklist with your counsellor: requirements, documents, the application, then the offer and visa.'
+                'Work down its checklist with your counsellor: requirements, documents, the application, then the offer and visa.',
+                'Your counsellor may add a task or event for one university only — a campus visit, an info session. It sits in that university\'s checklist like any other.'
             ] },
             { key: 'docs', title: 'Documents & essays', go: 'documents', intro: 'Everything you upload or write for your applications lives here.', steps: [
                 'Go to **My documents** and choose **Upload a file**. Pick what it is — Passport / ID, a transcript, a test score, and so on.',
@@ -1635,6 +1745,7 @@
             { key: 'dates', title: 'Dates & meetings', go: 'calendar', intro: 'Every date that matters, and every meeting booked with you.', steps: [
                 '**Deadlines** lists the universities\' dates and One Degree\'s own, side by side.',
                 'The **Calendar** shows meetings, deadlines and task dates as a month, or as a list with **Agenda**. Hover over (or tap) an entry for its details.',
+                'Days your counsellor has blocked — your exams, a holiday — are shaded across the month and listed under **Blocked dates**.',
                 'A meeting shows how to join: a link, a phone number or a place.',
                 'You are emailed when a meeting is booked, again the day before, and on the morning of the meeting.'
             ] },
@@ -1655,7 +1766,7 @@
             { key: 'journey', title: 'Core journey', go: 'journey', intro: 'Seven stages done once per student, however many universities they apply to.', steps: [
                 'Open a stage to see its tasks. The box on the left includes a task for this student; untick it and it drops out of every count and the student\'s view.',
                 'Set each task\'s **status**, **owner** and **target date** in its row. Open the row for **notes** (the student reads these) and the completion date.',
-                'An owner can be a role or a person named on the **Team** page, so a task can go to the content writer by name.',
+                'An owner can be a role — Student, Counsellor, Program Lead, University, Bank — or a person named on the **Team** page, so a task can go to the content writer by name.',
                 'Need something the template does not have? **Add a task to this stage**, or **Add a stage** for a whole new one.',
                 'In **Skill Enhancers**, open an activity and choose **Add another** for a second internship or a third competition. Each has its own status and date and sits under the first.',
                 '**Student Declaration Form Sign-off** (stage 2, after the shortlist sign-off) waits for the signed form. When it is uploaded the task moves to **Submitted**; mark it **Completed** once you have checked it.'
@@ -1665,8 +1776,9 @@
                 'Choose **Edit** on the requirements at the top of the block for the tests and documents it asks for, its entry requirements and the closing date. The closing date shows in Deadlines and on the Calendar.',
                 'Work down the checklist: fit and requirements, documents, the application, then the offer and visa.',
                 'Switch on Interview and Portfolio only where the university asks for them.',
+                'Need something this university alone asks for — a campus visit, an info session, an extra form? **Add a task or event** at the foot of its checklist, choose the group it goes under, and give it a date to put it on the calendar.',
                 'Record the offer type when the offer arrives — the Offer received task ticks itself.'
-            ] },
+            ], tips: ['Tasks you add to a university can be edited or removed from the task itself; ODA\'s own can only be switched off.'] },
             { key: 'docs', title: 'Documents & essays', go: 'documents', intro: 'Everything the student uploads or writes, and everything you add for them.', steps: [
                 '**Upload a file** takes PDF, Word or JPG/PNG up to 10 MB. Choose what it is and, if it is for one university, which.',
                 '**Write an essay** starts a draft. The student can write one too and send it for review.',
@@ -1677,7 +1789,9 @@
                 '**Deadlines** keeps the universities\' dates and ODA\'s own apart. Add one of ours with **Add a date**, or with **Deadline** on the Calendar.',
                 'The **Calendar** shows meetings, deadlines and task dates together. Switch between **Month** and **Agenda**, and use the chips to show only some kinds.',
                 'Colour says where each thing stands: late, today, this week, later, done. Finished tasks stay on the calendar in green; **Hide finished** clears them.',
-                'Hover over an entry for its details and click it to open it. Click a day to see everything on it, or to put a meeting or deadline on it.'
+                '**Block dates** marks a whole stretch in one go — exams from 1 to 15 March, a holiday. Give it a name, the first day and the last; every day in between is shaded on the month and the student sees it.',
+                'A meeting booked on a blocked day is flagged in its dialog. Change or remove a block by clicking it on the month, or under **Blocked dates** below the calendar.',
+                'Hover over an entry for its details and click it to open it. Click a day to see everything on it, or to put a meeting, deadline or blocked dates on it.'
             ] },
             { key: 'meetings', title: 'Meetings & emails', go: 'calendar', intro: 'Book calls with the student and their family; the planner sends the emails.', steps: [
                 'Choose **Schedule a meeting** (on the Calendar, or from a day). Give it a title, date, time and length.',
@@ -1741,7 +1855,7 @@
      * which lands them where they need to be anyway.
      */
     function adoptPayload(fresh) {
-        ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'meetings', 'login', 'docTemplate', 'google', 'changes'].forEach(function (k) {
+        ['today', 'student', 'core', 'apps', 'documents', 'team', 'deadlines', 'blocks', 'meetings', 'login', 'docTemplate', 'google', 'changes'].forEach(function (k) {
             if (fresh[k] !== undefined) P[k] = fresh[k];
         });
         if (fresh.pulse) { P.pulse = fresh.pulse; LIVE.seen = fresh.pulse; LIVE.pending = false; }
@@ -1901,6 +2015,11 @@
     function findDeadline(key) { return P.deadlines.find(function (d) { return d.key === key; }); }
     function findMeeting(key) { return P.meetings.find(function (m) { return m.key === key; }); }
     function findMember(key) { return P.team.find(function (m) { return m.key === key; }); }
+    function removeBlock(key) {
+        api('DELETE', keyUrl(P.endpoints.block, key)).then(function (res) {
+            P.blocks = res.blocks; render(); toast('Dates unblocked');
+        }, function (err) { render(); toast(err.message, true); });
+    }
     function keyUrl(template, key) { return template.replace('__KEY__', key); }
     /*
      * The designation dropdown. One control, not two: ODA's list plus the ones
@@ -1930,8 +2049,8 @@
         if (UI.userMenu && !e.target.closest('.jp-usermenu')) closeUserMenu();
         var el = e.target.closest('[data-act]'); if (!el) return;
         var act = el.dataset.act;
-        if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-stage',
-            'new-admin-pw', 'rm-deadline', 'rm-meeting', 'rm-member', 'refresh', 'google-disconnect'].indexOf(act) < 0) { UI.armed = null; }
+        if (UI.armed && ['rm-uni', 'reset-password', 'toggle-login', 'rm-doc', 'essay-back', 'rm-task', 'rm-app-task', 'rm-stage',
+            'new-admin-pw', 'rm-deadline', 'rm-block', 'rm-meeting', 'rm-member', 'refresh', 'google-disconnect'].indexOf(act) < 0) { UI.armed = null; }
         var appId = el.dataset.app ? parseInt(el.dataset.app, 10) : null;
 
         switch (act) {
@@ -2191,6 +2310,91 @@
                 }, function (err) { render(); toast(err.message, true); });
                 return;
             }
+            case 'add-block': case 'edit-block': {
+                var bk = act === 'edit-block' ? findBlock(el.dataset.k) : null;
+                if (act === 'edit-block' && !bk) return;
+                var bFrom = bk ? bk.from : (el.dataset.d || ''), bTo = bk ? bk.to : (el.dataset.d || '');
+                modal('<h3>' + (bk ? 'Change blocked dates' : 'Block dates') + '</h3>' +
+                    '<p class="sub">Marks every day from the first to the last in one go — exams, a holiday. ' + esc(P.student.firstName) + ' sees it on their calendar, and a meeting booked inside it is flagged.</p>' +
+                    '<label for="bk-what">What is it for?</label><input id="bk-what" maxlength="150" value="' + esc(bk ? bk.what : '') + '" placeholder="e.g. Board exams">' +
+                    '<div class="two"><div><label for="bk-from">First day</label><input id="bk-from" type="date" value="' + esc(bFrom) + '"></div>' +
+                    '<div><label for="bk-to">Last day</label><input id="bk-to" type="date" value="' + esc(bTo) + '"' + (bFrom ? ' min="' + esc(bFrom) + '"' : '') + '></div></div>' +
+                    '<p class="jp-hint" id="bk-len">' + esc(blockLenText(bFrom, bTo)) + '</p>' +
+                    '<p class="err" role="alert"></p><div class="jp-actions">' +
+                    (bk ? '<button class="jp-btn danger push" data-act="rm-block-now" data-k="' + esc(bk.key) + '">Remove</button>' : '') +
+                    '<button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
+                    '<button class="jp-btn" data-act="save-block"' + (bk ? ' data-k="' + esc(bk.key) + '"' : '') + '>' + (bk ? 'Save' : 'Block these dates') + '</button></div>');
+                return;
+            }
+            case 'save-block': {
+                if (UI.busy) return;
+                var bWhat = val('bk-what'), bF = val('bk-from'), bT = val('bk-to'), bMax = T.maxBlockDays || 366;
+                if (!bWhat) { modalError('Say what the dates are blocked for.'); return; }
+                if (!bF || !bT) { modalError('Choose the first and the last day.'); return; }
+                if (bT < bF) { modalError('The last day can\'t be before the first.'); return; }
+                if (blockDays({ from: bF, to: bT }) > bMax) { modalError('A blocked period can run for ' + bMax + ' days at most. Check the year on the last day.'); return; }
+                var bKey = el.dataset.k;
+                UI.busy = true; el.disabled = true;
+                api(bKey ? 'PATCH' : 'POST', bKey ? keyUrl(P.endpoints.block, bKey) : P.endpoints.blocks, { what: bWhat, from: bF, to: bT }).then(function (res) {
+                    P.blocks = res.blocks; closeModal();
+                    // Show the month it starts in, with blocked dates switched on, so it can be seen.
+                    if (UI.cal.kinds) UI.cal.kinds.block = true;
+                    if (UI.view === 'calendar') { var bd = new Date(bF + 'T00:00:00'); UI.cal.y = bd.getFullYear(); UI.cal.m = bd.getMonth(); }
+                    render(); toast(bKey ? 'Blocked dates saved' : plural(blockDays({ from: bF, to: bT }), 'day', 'days') + ' blocked');
+                }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
+            case 'rm-block': {
+                var rbk = el.dataset.k;
+                if (UI.armed !== 'rm-block-' + rbk) { UI.armed = 'rm-block-' + rbk; render(); return; }
+                UI.armed = null;
+                removeBlock(rbk);
+                return;
+            }
+            case 'rm-block-now':
+                // In the dialog the button asks for its own second click.
+                if (el.dataset.sure !== '1') { el.dataset.sure = '1'; el.textContent = 'Click again to remove'; el.classList.add('armed'); return; }
+                closeModal(); removeBlock(el.dataset.k);
+                return;
+            case 'add-app-task': case 'edit-app-task': {
+                var tu = P.apps.find(function (x) { return x.id === parseInt(el.dataset.u, 10); });
+                if (!tu) return;
+                var et = act === 'edit-app-task' ? (tu.tasks || []).find(function (t) { return t.key === el.dataset.key; }) : null;
+                if (act === 'edit-app-task' && !et) return;
+                var tGroup = et ? et.group : 'application';
+                modal('<h3>' + (et ? 'Edit task' : 'Add a task or event') + '</h3><p class="sub">' + (et ? esc(tu.university) : 'Adds it to ' + esc(tu.university) + ' only — a campus visit, an info session, an extra form. It counts toward progress, its date goes on the calendar, and the student sees it.') + '</p>' +
+                    '<label for="at-name">Task or event</label><input id="at-name" maxlength="150" value="' + esc(et ? et.name : '') + '" placeholder="e.g. Virtual info session">' +
+                    '<label for="at-group">Goes under</label><select id="at-group">' + T.appGroups.map(function (g) { return '<option value="' + esc(g.key) + '"' + (g.key === tGroup ? ' selected' : '') + '>' + esc(g.name) + '</option>'; }).join('') + '</select>' +
+                    '<label for="at-desc">What to do <span style="font-weight:500">(optional)</span></label><input id="at-desc" maxlength="500" value="' + esc(et ? et.desc : '') + '" placeholder="A line the student will read">' +
+                    '<label for="at-docs">Documents needed <span style="font-weight:500">(optional)</span></label><input id="at-docs" maxlength="190" value="' + esc(et && et.docs !== 'None' ? et.docs : '') + '" placeholder="e.g. Registration confirmation">' +
+                    (et ? '' : '<div class="two"><div><label for="at-owner">Who does it</label><select id="at-owner">' + ownerOptionsHtml('Student') + '</select></div>' +
+                        '<div><label for="at-target">Date <span style="font-weight:500">(optional)</span></label><input id="at-target" type="date"></div></div>') +
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-app-task" data-u="' + tu.id + '"' + (et ? ' data-key="' + esc(et.key) + '"' : '') + '>' + (et ? 'Save' : 'Add it') + '</button></div>', 'wide');
+                return;
+            }
+            case 'save-app-task': {
+                if (UI.busy) return;
+                var atName = val('at-name');
+                if (!atName) { modalError('Give the task a name.'); return; }
+                var atU = parseInt(el.dataset.u, 10), atKey = el.dataset.key;
+                var atBody = { name: atName, group: val('at-group'), desc: val('at-desc'), docs: val('at-docs') };
+                if (!atKey) { atBody.owner = val('at-owner'); atBody.target = val('at-target') || null; }
+                UI.busy = true; el.disabled = true;
+                api(atKey ? 'PATCH' : 'POST', atKey ? keyUrl(P.endpoints.appTask.replace('__ID__', atU), atKey) : P.endpoints.appTasks.replace('__ID__', atU), atBody).then(function (res) {
+                    replaceApp(res.application); UI.appId = atU; closeModal(); render();
+                    toast(atKey ? 'Task updated' : 'Added to ' + res.application.university);
+                }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                return;
+            }
+            case 'rm-app-task': {
+                var rau = parseInt(el.dataset.u, 10), rak = el.dataset.key;
+                if (UI.armed !== 'rm-task-' + rak) { UI.armed = 'rm-task-' + rak; render(); return; }
+                UI.armed = null;
+                api('DELETE', keyUrl(P.endpoints.appTask.replace('__ID__', rau), rak)).then(function (res) {
+                    replaceApp(res.application); render(); toast('Task removed');
+                }, function (err) { render(); toast(err.message, true); });
+                return;
+            }
             case 'add-meeting': case 'edit-meeting': {
                 var mt = act === 'edit-meeting' ? findMeeting(el.dataset.k) : null;
                 var mtMode = mt ? mt.mode : T.meetingModes[0];
@@ -2204,6 +2408,7 @@
                     '<div class="three"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : (el.dataset.d || '')) + '"></div>' +
                     '<div><label for="mt-time">Time</label><input id="mt-time" type="time" value="' + esc(mt ? mt.time : '16:00') + '"></div>' +
                     '<div><label for="mt-mins">Minutes</label><input id="mt-mins" type="number" min="5" max="480" step="5" value="' + (mt ? mt.minutes : 45) + '"></div></div>' +
+                    '<p class="jp-hint jp-warn" id="mt-blocked" role="status"' + (blockedNote(mt ? mt.date : el.dataset.d) ? '' : ' hidden') + '>' + esc(blockedNote(mt ? mt.date : el.dataset.d)) + '</p>' +
                     '<label for="mt-mode">How</label><select id="mt-mode">' + options(T.meetingModes, mtMode) + '</select>' +
 
                     '<div id="mt-link-wrap"' + (wantsLink(mtMode) ? '' : ' hidden') + '>' +
@@ -2586,6 +2791,20 @@
             if (phoneWrap) phoneWrap.hidden = !wantsPhone(el.value);
             if (phoneLbl) phoneLbl.textContent = phoneLabel(el.value);
             if (wantsLink(el.value) && linkBox && !linkBox.value.trim()) makeRoom();
+            return;
+        }
+        // A meeting moved onto a blocked day says so.
+        if (el.id === 'mt-date') {
+            var note = document.getElementById('mt-blocked'), text = blockedNote(el.value);
+            if (note) { note.textContent = text; note.hidden = !text; }
+            return;
+        }
+        // Blocking dates: the last day can't come before the first, and the
+        // line under them says how long that is.
+        if (el.id === 'bk-from' || el.id === 'bk-to') {
+            var bf = document.getElementById('bk-from'), bt = document.getElementById('bk-to');
+            if (el.id === 'bk-from' && bf.value) { bt.min = bf.value; if (!bt.value || bt.value < bf.value) bt.value = bf.value; }
+            var len = document.getElementById('bk-len'); if (len) len.textContent = blockLenText(bf.value, bt.value);
             return;
         }
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }

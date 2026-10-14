@@ -24,7 +24,7 @@ class JourneyPlanner
     public const STATUSES = ['Not Started', 'In Progress', 'Submitted', 'Completed', 'Not Applicable'];
 
     public const OWNERS = [
-        'Student', 'Counsellor', 'University', 'Bank/Financial Institution', 'Student & Counsellor',
+        'Student', 'Counsellor', 'Program Lead', 'University', 'Bank/Financial Institution', 'Student & Counsellor',
     ];
 
     /**
@@ -65,6 +65,12 @@ class JourneyPlanner
 
     /** Deadlines come in two kinds: the university's dates, and ODA's own. */
     public const DEADLINE_KINDS = ['uni' => 'University', 'own' => 'Ours'];
+
+    /**
+     * The longest stretch one blocked period may cover — exams, a holiday, a
+     * term abroad. Anything longer is almost certainly a mistyped year.
+     */
+    public const MAX_BLOCK_DAYS = 366;
 
     /**
      * Stages whose activities can repeat: a second internship, a third
@@ -143,14 +149,16 @@ class JourneyPlanner
     /**
      * The University Applications tab: the same 22 activities for every
      * university or programme. The workbook lists them flat; the groups only
-     * make a long checklist easier to scan.
+     * make a long checklist easier to scan. A task the counsellor adds to one
+     * university names the group it sits in by the group's key, so a key must
+     * never be renamed.
      *
-     * @return list<array{name: string, activities: list<array{key: string, name: string, desc: string, owner: string, docs: string, inc: bool}>}>
+     * @return list<array{key: string, name: string, activities: list<array{key: string, name: string, desc: string, owner: string, docs: string, inc: bool}>}>
      */
     public static function applicationGroups(): array
     {
         $groups = [
-            ['Fit & requirements', [
+            ['requirements', 'Fit & requirements', [
                 ['fit', 'Confirm program fit (Reach / Match / Safe)', 'Classify this specific program as reach, match or safe for the student.', 'Counsellor', 'None', true],
                 ['entry-requirements', 'Verify entry requirements', 'Confirm grades, tests and prerequisites are met for this program.', 'Counsellor', 'Program entry-requirement sheet', true],
                 ['deadline', 'Note deadline & required tests', "Record this program's specific deadline and required test(s).", 'Counsellor', 'Deadline tracker', true],
@@ -158,25 +166,25 @@ class JourneyPlanner
                 ['aptitude-score', 'Confirm aptitude test score meets requirement', "Check SAT/ACT/GRE/GMAT score against this program's minimum, where required.", 'Student & Counsellor', 'Score report', true],
                 ['subject-score', 'Confirm subject/country-specific test requirement', 'Confirm any additional required test is complete and meets the threshold.', 'Student & Counsellor', 'Score report', false],
             ]],
-            ['Documents', [
+            ['documents', 'Documents', [
                 ['sop', 'SOP tailored to this program', "Adapt the master SOP to this program's specific prompt and focus.", 'Student', 'Program-specific SOP', true],
                 ['lors', 'LORs addressed to this program', 'Confirm recommendation letters are addressed/submitted for this program.', 'Student', 'Signed LORs', true],
                 ['cv', 'Resume/CV tailored (if required)', "Adjust CV emphasis if this program's application asks for it.", 'Student', 'Program-specific CV', false],
                 ['transcripts', 'Transcripts sent/uploaded', 'Send or upload attested transcripts to this program.', 'Student', 'Transcripts', true],
                 ['financial-documents', 'Financial documents uploaded', "Upload proof-of-funds documents if this program's application asks for them.", 'Student', 'Bank statements/sponsor letter', true],
             ]],
-            ['Application', [
+            ['application', 'Application', [
                 ['portal-account', 'Application portal account created', "Register on this program's application portal.", 'Student', 'Login credentials record', true],
                 ['application-form', 'Application form completed', 'Complete the form and any supplementary essays.', 'Student', 'Completed application form', true],
                 ['application-fee', 'Application fee paid', 'Pay the application fee, or apply for a waiver.', 'Student', 'Payment receipt', true],
                 ['submitted', 'Application submitted & confirmed', 'Submit and confirm receipt of the complete application.', 'Student', 'Submission confirmation', true],
             ]],
-            ['Interview & portfolio', [
+            ['interview', 'Interview & portfolio', [
                 ['interview-scheduled', 'Interview scheduled', 'Confirm date/time if this program requires an interview.', 'Counsellor', 'Interview confirmation email', false],
                 ['interview-completed', 'Interview completed', 'Attend the admissions interview.', 'Student', 'None', false],
                 ['portfolio', 'Portfolio / audition submitted', 'Submit or perform a required portfolio/audition.', 'Student', 'Portfolio/audition materials', false],
             ]],
-            ['Offer & visa', [
+            ['offer', 'Offer & visa', [
                 ['offer', 'Offer received', 'Log the offer type (unconditional / conditional / waitlist).', 'Counsellor', 'Offer letter', true],
                 ['seat-confirmed', 'Seat confirmed & deposit paid', 'Accept the offer and pay the confirmation deposit, if this is the chosen university.', 'Student', 'Payment receipt', true],
                 ['visa-submitted', 'Visa application submitted', 'Submit the visa application — complete only for the confirmed university.', 'Student', 'Visa application receipt', false],
@@ -185,9 +193,16 @@ class JourneyPlanner
         ];
 
         return array_map(fn (array $g): array => [
-            'name' => $g[0],
-            'activities' => array_map(self::activityDef(...), $g[1]),
+            'key' => $g[0],
+            'name' => $g[1],
+            'activities' => array_map(self::activityDef(...), $g[2]),
         ], $groups);
+    }
+
+    /** @return list<string> */
+    public static function applicationGroupKeys(): array
+    {
+        return array_column(self::applicationGroups(), 'key');
     }
 
     /**
@@ -388,6 +403,7 @@ class JourneyPlanner
                 'teamRoles' => $plan->teamRoles(),
                 'meetingModes' => self::MEETING_MODES,
                 'deadlineKinds' => self::DEADLINE_KINDS,
+                'maxBlockDays' => self::MAX_BLOCK_DAYS,
                 'repeatable' => self::REPEATABLE_PHASES,
             ],
             'core' => $plan->coreState(),
@@ -399,6 +415,7 @@ class JourneyPlanner
                 $plan->teamMembers(),
             ),
             'deadlines' => $plan->deadlineRows(),
+            'blocks' => $plan->blockRows(),
             'meetings' => $plan->meetingRows(),
             // The student's sign-in, for the counsellor's "Student login" card.
             // The password itself is only ever the one just issued, shown once.
@@ -445,7 +462,6 @@ class JourneyPlanner
     {
         $core = $plan->coreState();
         $coreDefs = $plan->coreDefinitions();
-        $appDefs = self::applicationDefinitions();
         $today = now()->toDateString();
 
         $appRows = [];
@@ -454,6 +470,7 @@ class JourneyPlanner
             $open[] = ['a' => $a, 'name' => $coreDefs[$key]['name'] ?? 'Task', 'where' => 'Core journey'];
         }
         foreach ($plan->applications as $app) {
+            $appDefs = $app->definitions();
             foreach ($app->activityState() as $key => $a) {
                 $appRows[] = $a;
                 $open[] = ['a' => $a, 'name' => $appDefs[$key]['name'] ?? 'Task', 'where' => $app->university];
@@ -501,7 +518,8 @@ class JourneyPlanner
      *
      * It covers everything the planner draws: the plan row itself (which
      * carries the core journey, the added tasks and stages, the team, the
-     * deadlines and the meetings), the universities, the documents, and the
+     * deadlines, the blocked dates and the meetings), the universities (with
+     * the tasks added to each), the documents, and the
      * edits recorded against them. Counts go in beside the timestamps so that
      * something being deleted changes the answer too.
      */

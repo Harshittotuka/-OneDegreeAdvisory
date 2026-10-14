@@ -16,14 +16,14 @@ class CrmJourneyPlan extends Model
 {
     protected $fillable = [
         'crm_lead_id', 'level', 'intake', 'focus', 'core', 'custom_tasks', 'custom_stages',
-        'team', 'roles', 'deadlines', 'meetings', 'created_by',
+        'team', 'roles', 'deadlines', 'meetings', 'blocks', 'created_by',
     ];
 
     protected function casts(): array
     {
         return [
             'core' => 'array', 'custom_tasks' => 'array', 'custom_stages' => 'array',
-            'team' => 'array', 'roles' => 'array', 'deadlines' => 'array', 'meetings' => 'array',
+            'team' => 'array', 'roles' => 'array', 'deadlines' => 'array', 'meetings' => 'array', 'blocks' => 'array',
         ];
     }
 
@@ -219,6 +219,32 @@ class CrmJourneyPlan extends Model
             ];
         }
         usort($out, fn (array $a, array $b) => $a['date'] <=> $b['date']);
+
+        return $out;
+    }
+
+    /**
+     * Stretches of days blocked out on the calendar in one go — exams, a
+     * holiday — earliest first. `from` and `to` are both days inside it.
+     *
+     * @return list<array{key: string, what: string, from: string, to: string}>
+     */
+    public function blockRows(): array
+    {
+        $out = [];
+        foreach ($this->blocks ?? [] as $b) {
+            if (! is_array($b) || empty($b['key']) || ! JourneyPlanner::isDate($b['from'] ?? null) || ! JourneyPlanner::isDate($b['to'] ?? null)) {
+                continue;
+            }
+            $out[] = [
+                'key' => (string) $b['key'],
+                'what' => (string) ($b['what'] ?? 'Blocked'),
+                // A row saved back to front still reads as the stretch it meant.
+                'from' => min($b['from'], $b['to']),
+                'to' => max($b['from'], $b['to']),
+            ];
+        }
+        usort($out, fn (array $a, array $b) => [$a['from'], $a['to']] <=> [$b['from'], $b['to']]);
 
         return $out;
     }

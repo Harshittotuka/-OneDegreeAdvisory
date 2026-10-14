@@ -896,6 +896,103 @@ class JourneyPlannerTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('deadline');
     }
 
+    /* ------------------------------------------------------------ tasks added to one university */
+
+    public function test_a_counsellor_adds_a_task_to_one_university_and_the_student_ticks_it_off(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $bocconi = $this->as($counsellor)->postJson(route('crm.journey.applications.store', $lead), ['university' => 'Bocconi'])->json('application.id');
+        $lse = $this->as($counsellor)->postJson(route('crm.journey.applications.store', $lead), ['university' => 'LSE'])->json('application.id');
+        $date = now()->addDays(10)->toDateString();
+
+        $res = $this->as($counsellor)->postJson(route('crm.journey.applications.tasks.store', [$lead, $bocconi]), [
+            'group' => 'application', 'name' => 'Virtual info session', 'desc' => 'Join the MSc open day online.',
+            'owner' => 'Student', 'target' => $date,
+        ])->assertOk()
+            ->assertJsonPath('application.tasks.0.name', 'Virtual info session')
+            ->assertJsonPath('application.tasks.0.group', 'application')
+            ->assertJsonPath('application.tasks.0.custom', true);
+        $key = $res->json('key');
+        $this->assertMatchesRegularExpression('/^c-[a-z0-9]{10}$/', $key);
+        $res->assertJsonPath("application.acts.{$key}.target", $date)->assertJsonPath("application.acts.{$key}.inc", true);
+
+        // It is Bocconi's alone, it counts toward Bocconi's progress, and its date is next on the plan.
+        $this->assertCount(23, CrmJourneyApplication::query()->findOrFail($bocconi)->activityState());
+        $this->assertCount(22, CrmJourneyApplication::query()->findOrFail($lse)->activityState());
+        $this->assertSame(['date' => $date, 'name' => 'Virtual info session', 'where' => 'Bocconi'], JourneyPlanner::summary($lead->journeyPlan()->first())['next']);
+
+        // The student sees it and, as its owner, ticks it off.
+        $this->signedInStudent($lead)->get(route('student.dashboard'))->assertOk()->assertSee('Virtual info session');
+        $this->patchJson(route('student.activity'), ['scope' => 'app', 'application_id' => $bocconi, 'key' => $key, 'status' => 'Completed'])->assertOk();
+        $this->assertTrue(CrmLeadActivity::query()->where('crm_lead_id', $lead->id)->where('body', 'like', '%Virtual info session%Bocconi%Completed%')->exists());
+
+        // Renamed and moved to another group, keeping what was recorded on it.
+        $this->flushSession();
+        $this->as($counsellor)->patchJson(route('crm.journey.applications.tasks.update', [$lead, $bocconi, $key]), ['name' => 'Campus visit', 'group' => 'interview'])
+            ->assertOk()->assertJsonPath('application.tasks.0.name', 'Campus visit')->assertJsonPath('application.tasks.0.group', 'interview')
+            ->assertJsonPath("application.acts.{$key}.status", 'Completed');
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'Campus visit — Bocconi')->where('what', 'Task renamed')->exists());
+
+        // Removed, with everything recorded on it.
+        $this->as($counsellor)->deleteJson(route('crm.journey.applications.tasks.destroy', [$lead, $bocconi, $key]))->assertOk()->assertJsonCount(0, 'application.tasks');
+        $application = CrmJourneyApplication::query()->findOrFail($bocconi);
+        $this->assertArrayNotHasKey($key, $application->activityState());
+        $this->assertArrayNotHasKey($key, $application->activities);
+        $this->as($counsellor)->deleteJson(route('crm.journey.applications.tasks.destroy', [$lead, $bocconi, $key]))->assertNotFound();
+    }
+
+    public function test_university_tasks_are_validated_and_stay_with_their_own_university(): void
+    {
+        $counsellor = $this->user();
+        $partner = $this->user('partner');
+        $mine = $this->student($counsellor, ['partner_id' => $partner->id]);
+        $theirs = $this->student($counsellor);
+        $this->start($counsellor, $mine);
+        $this->start($counsellor, $theirs);
+        $myUni = $this->as($counsellor)->postJson(route('crm.journey.applications.store', $mine), ['university' => 'HEC Paris'])->json('application.id');
+        $theirUni = $this->as($counsellor)->postJson(route('crm.journey.applications.store', $theirs), ['university' => 'LSE'])->json('application.id');
+        $store = fn (CrmLead $lead, int $uni, array $body) => $this->as($counsellor)->postJson(route('crm.journey.applications.tasks.store', [$lead, $uni]), $body + ['group' => 'documents', 'name' => 'Portfolio review', 'owner' => 'Counsellor']);
+
+        $store($mine, $myUni, ['group' => 'nowhere'])->assertUnprocessable()->assertJsonValidationErrors('group');
+        $store($mine, $myUni, ['name' => ''])->assertUnprocessable()->assertJsonValidationErrors('name');
+        $store($mine, $myUni, ['owner' => 'Parent'])->assertUnprocessable()->assertJsonValidationErrors('owner');
+        // A university on another student's plan is not reached through this one.
+        $store($mine, $theirUni, [])->assertNotFound();
+
+        $key = $store($mine, $myUni, [])->assertOk()->json('key');
+        $this->as($counsellor)->patchJson(route('crm.journey.applications.tasks.update', [$theirs, $theirUni, $key]), ['name' => 'Hijacked'])->assertNotFound();
+        $this->as($counsellor)->deleteJson(route('crm.journey.applications.tasks.destroy', [$theirs, $theirUni, $key]))->assertNotFound();
+
+        // A partner reads it but adds nothing; a student has no way in at all.
+        $this->as($partner)->postJson(route('crm.journey.applications.tasks.store', [$mine, $myUni]), ['group' => 'documents', 'name' => 'Nope', 'owner' => 'Student'])->assertForbidden();
+        $this->assertSame('Portfolio review', JourneyPlanner::payload($mine->journeyPlan()->first(), 'partner')['apps'][0]['tasks'][0]['name']);
+        $this->signedInStudent($mine)->postJson(route('crm.journey.applications.tasks.store', [$mine, $myUni]), ['group' => 'documents', 'name' => 'Nope', 'owner' => 'Student'])->assertRedirect(route('crm.login'));
+
+        // The counsellor's own task is not the student's to tick.
+        $this->patchJson(route('student.activity'), ['scope' => 'app', 'application_id' => $myUni, 'key' => $key, 'status' => 'Completed'])->assertForbidden();
+        $this->assertCount(1, CrmJourneyApplication::query()->findOrFail($myUni)->custom_tasks);
+    }
+
+    /* ------------------------------------------------------------ the Program Lead */
+
+    public function test_a_task_can_be_handed_to_the_program_lead(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $this->assertContains('Program Lead', JourneyPlanner::payload($lead->journeyPlan()->first(), 'counsellor')['template']['owners']);
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'budget-conversation', 'owner' => 'Program Lead'])
+            ->assertOk()->assertJsonPath('activity.owner', 'Program Lead');
+        $this->assertSame('Program Lead', $lead->journeyPlan()->first()->coreState()['budget-conversation']['owner']);
+        $this->assertTrue(CrmJourneyChange::query()->where('what', 'Owner: Program Lead')->exists());
+
+        // Once it is the Program Lead's, it is no longer the student's to tick.
+        $this->signedInStudent($lead)->patchJson(route('student.activity'), ['scope' => 'core', 'key' => 'budget-conversation', 'status' => 'Completed'])->assertForbidden();
+    }
+
     /* ------------------------------------------------------------ the team on a file */
 
     public function test_a_counsellor_names_the_team_and_can_add_a_designation_of_their_own(): void
@@ -962,6 +1059,61 @@ class JourneyPlannerTest extends TestCase
 
         // The student reads them; they have no endpoint of their own to change them.
         $this->assertCount(1, JourneyPlanner::payload($lead->journeyPlan()->first(), 'student')['deadlines']);
+    }
+
+    /* ------------------------------------------------------------ blocked dates */
+
+    public function test_a_counsellor_blocks_a_stretch_of_dates_in_one_go(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $blocks = $this->as($counsellor)->postJson(route('crm.journey.blocks.store', $lead), ['what' => 'Board exams', 'from' => '2027-03-01', 'to' => '2027-03-15'])
+            ->assertOk()->json('blocks');
+        $this->assertCount(1, $blocks);
+        $this->assertSame(['what' => 'Board exams', 'from' => '2027-03-01', 'to' => '2027-03-15'], array_diff_key($blocks[0], ['key' => true]));
+        $this->assertMatchesRegularExpression('/^b-[a-z0-9]{10}$/', $blocks[0]['key']);
+        $this->assertTrue(CrmJourneyChange::query()->where('section', 'Calendar')->where('subject', 'Board exams')->where('what', 'Blocked: 1 Mar 2027 to 15 Mar 2027')->exists());
+
+        // A single day is a block too, and the list comes back earliest first.
+        $this->as($counsellor)->postJson(route('crm.journey.blocks.store', $lead), ['what' => 'Family wedding', 'from' => '2027-01-26', 'to' => '2027-01-26'])
+            ->assertOk()->assertJsonPath('blocks.0.what', 'Family wedding')->assertJsonPath('blocks.1.what', 'Board exams');
+
+        // Moved by a week; the student reads both on their own calendar.
+        $key = $blocks[0]['key'];
+        $this->as($counsellor)->patchJson(route('crm.journey.blocks.update', [$lead, $key]), ['what' => 'Board exams', 'from' => '2027-03-08', 'to' => '2027-03-22'])
+            ->assertOk()->assertJsonPath('blocks.1.from', '2027-03-08')->assertJsonPath('blocks.1.to', '2027-03-22');
+        $this->assertSame(['Family wedding', 'Board exams'], array_column(JourneyPlanner::payload($lead->journeyPlan()->first(), 'student')['blocks'], 'what'));
+
+        $this->as($counsellor)->deleteJson(route('crm.journey.blocks.destroy', [$lead, $key]))->assertOk()->assertJsonCount(1, 'blocks');
+        $this->as($counsellor)->deleteJson(route('crm.journey.blocks.destroy', [$lead, $key]))->assertNotFound();
+    }
+
+    public function test_blocked_dates_are_validated_and_the_teams_alone(): void
+    {
+        $counsellor = $this->user();
+        $partner = $this->user('partner');
+        $mine = $this->student($counsellor, ['partner_id' => $partner->id]);
+        $theirs = $this->student($counsellor);
+        $this->start($counsellor, $mine);
+        $this->start($counsellor, $theirs);
+        $block = fn (array $body) => $this->as($counsellor)->postJson(route('crm.journey.blocks.store', $mine), $body + ['what' => 'Exams', 'from' => '2027-03-01', 'to' => '2027-03-15']);
+
+        $block(['to' => '2027-02-28'])->assertUnprocessable()->assertJsonValidationErrors('to');
+        $block(['from' => '01/03/2027'])->assertUnprocessable()->assertJsonValidationErrors('from');
+        $block(['what' => ''])->assertUnprocessable()->assertJsonValidationErrors('what');
+        // A year and a day is a mistyped year, not a block; a full (leap) year is fine.
+        $block(['to' => '2028-03-01'])->assertUnprocessable()->assertJsonValidationErrors('to');
+        $key = $block([])->assertOk()->json('blocks.0.key');
+        $block(['to' => '2028-02-29'])->assertOk();
+
+        // A partner reads them but changes nothing; a key from one plan is nothing on another.
+        $this->as($partner)->postJson(route('crm.journey.blocks.store', $mine), ['what' => 'Nope', 'from' => '2027-03-01', 'to' => '2027-03-02'])->assertForbidden();
+        $this->as($partner)->deleteJson(route('crm.journey.blocks.destroy', [$mine, $key]))->assertForbidden();
+        $this->as($counsellor)->deleteJson(route('crm.journey.blocks.destroy', [$theirs, $key]))->assertNotFound();
+        $this->signedInStudent($mine)->postJson(route('crm.journey.blocks.store', $mine), ['what' => 'Nope', 'from' => '2027-03-01', 'to' => '2027-03-02'])->assertRedirect(route('crm.login'));
+        $this->assertCount(2, $mine->journeyPlan()->first()->blockRows());
     }
 
     /* ------------------------------------------------------------ meetings */

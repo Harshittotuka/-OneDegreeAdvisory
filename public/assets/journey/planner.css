@@ -576,11 +576,12 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
 .jp-dl .o { font-size: 0.8rem; color: var(--muted); }
 
 /* ---------- who's on it ---------- */
-.jp-owners { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.jp-owners { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .jp-own { --own: var(--blue); --own-soft: var(--blue-soft); background: var(--surface); border-radius: var(--radius); padding: 18px 20px; min-width: 0; box-shadow: var(--shadow-sm); border-top: 6px solid var(--own); }
 .jp-own-student { --own: var(--blue); --own-soft: var(--blue-soft); }
 .jp-own-counsellor { --own: var(--orange); --own-soft: var(--orange-soft); }
 .jp-own-other { --own: var(--cyan); --own-soft: var(--cyan-soft); }
+.jp-own-lead { --own: var(--purple); --own-soft: var(--purple-soft); }
 .jp-own h3 { display: flex; justify-content: space-between; align-items: center; font-size: 1.05rem; font-weight: 700; }
 .jp-own h3 > .num { min-width: 46px; height: 46px; padding: 0 10px; border-radius: 14px; display: grid; place-items: center; font-size: 1.35rem; font-weight: 800; background: var(--own-soft); color: var(--own); }
 .jp-own-name { display: inline-flex; align-items: center; gap: 9px; }
@@ -1177,6 +1178,34 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
 /* Space between the month and its colour key. */
 .jp-calendar .jp-legend { margin-top: 14px; margin-bottom: 0; }
 .jp-calendar .jp-legend .lbl { color: var(--muted); }
+
+/* ---------- Blocked dates: a stretch marked out in one go ----------
+   Every day in it is shaded, and a band across the top of each cell meets
+   its neighbours' as one bar, named where it starts and on each new week. */
+.dot.block { background: var(--purple); }
+.jp-day.blocked:not(.other) { background: repeating-linear-gradient(-45deg, var(--surface) 0 7px, var(--purple-soft) 7px 11px); }
+.jp-day.blocked:not(.other):hover { background: var(--purple-soft); }
+.jp-day .blk {
+    display: block; margin: 0 -6px; padding: 1px 6px; background: var(--purple); color: #fff; cursor: pointer;
+    font-size: 0.64rem; font-weight: 800; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.jp-day .blk.first { margin-left: 0; border-radius: 5px 0 0 5px; }
+.jp-day .blk.last { margin-right: 0; border-radius: 0 5px 5px 0; }
+.jp-day .blk.first.last { border-radius: 5px; }
+.jp-legend i.chip.blk { background: var(--purple); }
+.jp-blk-list { display: flex; flex-direction: column; gap: 6px; margin: 0 0 12px; }
+.jp-blk-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto auto; gap: 11px; align-items: center; padding: 9px 12px; border-radius: 12px; background: var(--purple-soft); }
+.jp-blk-row b { display: block; font-size: 0.9rem; color: var(--purple-ink); overflow-wrap: anywhere; }
+.jp-blk-row small { display: block; font-size: 0.78rem; color: var(--muted); }
+.jp-blk-row .a { display: flex; gap: 6px; }
+.jp-dl.past { opacity: 0.6; }
+.jp-hint.jp-warn { color: var(--orange-ink); font-weight: 700; }
+.jp-actions .push { margin-right: auto; }
+@media (max-width: 640px) {
+    .jp-day .blk { font-size: 0.56rem; padding: 0 3px; }
+    .jp-blk-row { grid-template-columns: 14px minmax(0, 1fr) auto; }
+    .jp-blk-row .a { grid-column: 2 / -1; }
+}
 
 /* Short screens (a laptop at 125% scaling is about 700px tall): the panel
    tightens so every page, and the fold button, fit without scrolling. */

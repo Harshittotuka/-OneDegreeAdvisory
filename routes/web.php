@@ -259,6 +259,10 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::post('universities', 'storeApplication')->name('applications.store');
             Route::patch('universities/{application}', 'updateApplication')->name('applications.update');
             Route::delete('universities/{application}', 'destroyApplication')->name('applications.destroy');
+            // Tasks and events the counsellor adds to one university's checklist.
+            Route::post('universities/{application}/tasks', 'storeApplicationTask')->name('applications.tasks.store');
+            Route::patch('universities/{application}/tasks/{task}', 'updateApplicationTask')->where('task', 'c-[a-z0-9]{10}')->name('applications.tasks.update');
+            Route::delete('universities/{application}/tasks/{task}', 'destroyApplicationTask')->where('task', 'c-[a-z0-9]{10}')->name('applications.tasks.destroy');
             Route::post('start', 'start')->name('start');
             Route::post('login/password', 'resetPassword')->name('login.reset');
             Route::patch('login', 'toggleLogin')->name('login.toggle');
@@ -277,6 +281,10 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::post('deadlines', 'storeDeadline')->name('deadlines.store');
             Route::patch('deadlines/{deadline}', 'updateDeadline')->where('deadline', 'd-[a-z0-9]{10}')->name('deadlines.update');
             Route::delete('deadlines/{deadline}', 'destroyDeadline')->where('deadline', 'd-[a-z0-9]{10}')->name('deadlines.destroy');
+            // Stretches of days blocked out on the calendar in one go.
+            Route::post('blocks', 'storeBlock')->name('blocks.store');
+            Route::patch('blocks/{block}', 'updateBlock')->where('block', 'b-[a-z0-9]{10}')->name('blocks.update');
+            Route::delete('blocks/{block}', 'destroyBlock')->where('block', 'b-[a-z0-9]{10}')->name('blocks.destroy');
             // A real Google Meet room for the meeting dialog, made in the
             // counsellor's own Google account; and given back if unused.
             Route::post('meet-room', 'storeMeetRoom')->middleware('throttle:20,1')->name('meet-room.store');

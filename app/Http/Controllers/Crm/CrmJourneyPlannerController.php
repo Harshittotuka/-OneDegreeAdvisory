@@ -21,6 +21,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -64,6 +65,8 @@ class CrmJourneyPlannerController extends Controller
             'activity' => route('crm.journey.activity', $lead),
             'applications' => route('crm.journey.applications.store', $lead),
             'application' => route('crm.journey.applications.update', [$lead, '__ID__']),
+            'appTasks' => route('crm.journey.applications.tasks.store', [$lead, '__ID__']),
+            'appTask' => route('crm.journey.applications.tasks.update', [$lead, '__ID__', '__KEY__']),
             'resetPassword' => route('crm.journey.login.reset', $lead),
             'toggleLogin' => route('crm.journey.login.toggle', $lead),
             'adminPassword' => route('crm.journey.login.admin', $lead),
@@ -78,6 +81,8 @@ class CrmJourneyPlannerController extends Controller
             'member' => route('crm.journey.team.update', [$lead, '__KEY__']),
             'deadlines' => route('crm.journey.deadlines.store', $lead),
             'deadline' => route('crm.journey.deadlines.update', [$lead, '__KEY__']),
+            'blocks' => route('crm.journey.blocks.store', $lead),
+            'block' => route('crm.journey.blocks.update', [$lead, '__KEY__']),
             'meetings' => route('crm.journey.meetings.store', $lead),
             'meeting' => route('crm.journey.meetings.update', [$lead, '__KEY__']),
             'meetingNotify' => route('crm.journey.meetings.notify', [$lead, '__KEY__']),
@@ -219,7 +224,7 @@ class CrmJourneyPlannerController extends Controller
             $state[$data['key']] = JourneyPlanner::apply($before, $changes, $by);
             $application->forceFill(['activities' => $state])->save();
 
-            return [$before, $state[$data['key']], 'Universities', (JourneyPlanner::applicationDefinitions()[$data['key']]['name'] ?? 'Task').' — '.$application->university];
+            return [$before, $state[$data['key']], 'Universities', ($application->definitions()[$data['key']]['name'] ?? 'Task').' — '.$application->university];
         });
 
         abort_if($result === null, 404);
@@ -321,6 +326,138 @@ class CrmJourneyPlannerController extends Controller
         $application->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    /* ------------------------------------------------------------ the counsellor's own university tasks */
+
+    /** Most tasks a counsellor can add to one university's checklist. */
+    private const MAX_APPLICATION_TASKS = 30;
+
+    /**
+     * Add a task or event of the counsellor's own to one university's
+     * checklist — a campus visit, an info session — under one of its groups.
+     * It behaves like the standard ones: it counts toward that university's
+     * progress, its date goes on the calendar, and the student sees it and can
+     * tick it off when the owner names them.
+     */
+    public function storeApplicationTask(Request $request, CrmLead $lead, CrmJourneyApplication $application, CrmAuditLogger $audit): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        abort_unless($application->plan_id === $plan->id, 404);
+        $data = $request->validate($this->applicationTaskRules() + [
+            'owner' => ['required', Rule::in($plan->ownerValues())],
+            'target' => ['nullable', 'date_format:Y-m-d'],
+        ], [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents']);
+        $user = $this->user($request);
+
+        $key = DB::transaction(function () use ($application, $data, $user): string {
+            $locked = CrmJourneyApplication::query()->lockForUpdate()->findOrFail($application->id);
+            $tasks = $locked->custom_tasks ?? [];
+            if (count($tasks) >= self::MAX_APPLICATION_TASKS) {
+                throw ValidationException::withMessages(['name' => 'This university already has '.self::MAX_APPLICATION_TASKS.' added tasks, the most it can hold. Remove one you no longer need first.']);
+            }
+            $key = 'c-'.Str::lower(Str::random(10));
+            $tasks[] = [
+                'key' => $key, 'group' => $data['group'], 'name' => trim($data['name']),
+                'desc' => trim((string) ($data['desc'] ?? '')), 'docs' => trim((string) ($data['docs'] ?? '')),
+                'owner' => $data['owner'], 'created_by' => $user->id, 'created_at' => now()->toIso8601String(),
+            ];
+            $locked->custom_tasks = $tasks;
+            $state = $locked->activityState(); // the new key appears here with its defaults
+            $state[$key] = JourneyPlanner::apply($state[$key], ['owner' => $data['owner'], 'target' => $data['target'] ?? null], 'team:'.$user->id);
+            $locked->activities = $state;
+            $locked->save();
+
+            return $key;
+        });
+
+        $name = trim($data['name']);
+        $this->logChange($request, $plan, 'Universities', $name.' — '.$application->university, 'Task added');
+
+        $audit->record($request, $user, 'journey_task_added', "Added the task “{$name}” to {$application->university} on {$lead->name}'s journey planner", [
+            'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyApplication::class, 'subject_id' => $application->id, 'subject_label' => $name,
+        ]);
+
+        return response()->json(['ok' => true, 'key' => $key, 'application' => $application->fresh()->toPlannerArray()]);
+    }
+
+    /** Rename an added university task, move it to another group, or change its text. Status, owner and dates go through updateActivity. */
+    public function updateApplicationTask(Request $request, CrmLead $lead, CrmJourneyApplication $application, string $task): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        abort_unless($application->plan_id === $plan->id, 404);
+        $data = $request->validate(array_map(fn ($r) => array_merge(['sometimes'], $r), $this->applicationTaskRules()), [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents']);
+
+        $change = DB::transaction(function () use ($application, $task, $data): ?array {
+            $locked = CrmJourneyApplication::query()->lockForUpdate()->findOrFail($application->id);
+            $tasks = $locked->custom_tasks ?? [];
+            $change = null;
+            foreach ($tasks as &$t) {
+                if (($t['key'] ?? null) === $task) {
+                    $change = ['was' => (string) ($t['name'] ?? '')];
+                    foreach (['group', 'name', 'desc', 'docs'] as $f) {
+                        if (array_key_exists($f, $data)) {
+                            $t[$f] = trim((string) $data[$f]);
+                        }
+                    }
+                    $change['name'] = (string) $t['name'];
+                }
+            }
+            unset($t);
+            if ($change !== null) {
+                $locked->forceFill(['custom_tasks' => $tasks])->save();
+            }
+
+            return $change;
+        });
+        abort_if($change === null, 404);
+        $this->logChange($request, $plan, 'Universities', $change['name'].' — '.$application->university, $change['was'] !== $change['name'] ? 'Task renamed' : 'Task details updated');
+
+        return response()->json(['ok' => true, 'application' => $application->fresh()->toPlannerArray()]);
+    }
+
+    /** Remove an added university task and everything recorded on it. ODA's standard ones can only be switched off. */
+    public function destroyApplicationTask(Request $request, CrmLead $lead, CrmJourneyApplication $application, string $task, CrmAuditLogger $audit): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        abort_unless($application->plan_id === $plan->id, 404);
+
+        $name = DB::transaction(function () use ($application, $task): ?string {
+            $locked = CrmJourneyApplication::query()->lockForUpdate()->findOrFail($application->id);
+            $tasks = $locked->custom_tasks ?? [];
+            $gone = collect($tasks)->firstWhere('key', $task);
+            if (! $gone) {
+                return null;
+            }
+            $activities = $locked->activities ?? [];
+            unset($activities[$task]);
+            $locked->forceFill([
+                'custom_tasks' => array_values(array_filter($tasks, fn ($t) => ($t['key'] ?? null) !== $task)),
+                'activities' => $activities,
+            ])->save();
+
+            return $gone['name'] ?? 'Task';
+        });
+        abort_if($name === null, 404);
+
+        $this->logChange($request, $plan, 'Universities', $name.' — '.$application->university, 'Task removed');
+
+        $audit->record($request, $this->user($request), 'journey_task_removed', "Removed the task “{$name}” from {$application->university} on {$lead->name}'s journey planner", [
+            'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyApplication::class, 'subject_id' => $application->id, 'subject_label' => $name,
+        ]);
+
+        return response()->json(['ok' => true, 'application' => $application->fresh()->toPlannerArray()]);
+    }
+
+    /** @return array<string, array<int, mixed>> */
+    private function applicationTaskRules(): array
+    {
+        return [
+            'group' => ['required', Rule::in(JourneyPlanner::applicationGroupKeys())],
+            'name' => ['required', 'string', 'max:150'],
+            'desc' => ['nullable', 'string', 'max:500'],
+            'docs' => ['nullable', 'string', 'max:190'],
+        ];
     }
 
     /** A new temporary password, shown once. The old one stops working at once. */
@@ -623,12 +760,14 @@ class CrmJourneyPlannerController extends Controller
 
     /* ------------------------------------------------------------ team, deadlines and meetings */
 
-    /** Most rows each of the plan's three lists can hold. */
+    /** Most rows each of the plan's lists can hold. */
     private const MAX_TEAM = 24;
 
     private const MAX_ROLES = 20;
 
     private const MAX_DEADLINES = 80;
+
+    private const MAX_BLOCKS = 40;
 
     private const MAX_MEETINGS = 120;
 
@@ -787,6 +926,100 @@ class CrmJourneyPlannerController extends Controller
         $this->logChange($request, $plan, 'Deadlines', (string) ($found['what'] ?? 'Deadline'), 'Deadline removed');
 
         return $this->deadlineResponse($plan);
+    }
+
+    /**
+     * Block out a stretch of days on the calendar in one go — exams from 1 to
+     * 15 March, a family holiday — rather than a date at a time. Every day in
+     * it shows as blocked, and a meeting booked inside it is flagged.
+     */
+    public function storeBlock(Request $request, CrmLead $lead): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $this->validatedBlock($request);
+
+        $this->withList($plan, 'blocks', function (array &$list) use ($data): void {
+            if (count($list) >= self::MAX_BLOCKS) {
+                throw ValidationException::withMessages(['what' => 'This plan already holds '.self::MAX_BLOCKS.' blocked periods, the most it can hold.']);
+            }
+            $list[] = ['key' => 'b-'.Str::lower(Str::random(10))] + $data;
+        });
+        $this->logChange($request, $plan, 'Calendar', $data['what'], 'Blocked: '.$this->span($data));
+
+        return $this->blockResponse($plan);
+    }
+
+    public function updateBlock(Request $request, CrmLead $lead, string $block): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+        $data = $this->validatedBlock($request);
+
+        $found = $this->withList($plan, 'blocks', function (array &$list) use ($data, $block): bool {
+            foreach ($list as &$b) {
+                if (($b['key'] ?? null) === $block) {
+                    $b = array_merge($b, $data);
+
+                    return true;
+                }
+            }
+
+            return false;
+        });
+        abort_unless($found, 404);
+        $this->logChange($request, $plan, 'Calendar', $data['what'], 'Blocked: '.$this->span($data));
+
+        return $this->blockResponse($plan);
+    }
+
+    public function destroyBlock(Request $request, CrmLead $lead, string $block): JsonResponse
+    {
+        $plan = $this->editablePlan($request, $lead);
+
+        $found = $this->withList($plan, 'blocks', function (array &$list) use ($block): ?array {
+            $match = collect($list)->firstWhere('key', $block);
+            $list = array_values(array_filter($list, fn ($b) => ($b['key'] ?? null) !== $block));
+
+            return $match;
+        });
+        abort_if($found === null, 404);
+        $this->logChange($request, $plan, 'Calendar', (string) ($found['what'] ?? 'Blocked dates'), 'Dates unblocked');
+
+        return $this->blockResponse($plan);
+    }
+
+    /**
+     * A blocked period as typed: what it is for, its first day and its last.
+     * A single day is a period too (first and last the same).
+     *
+     * @return array{what: string, from: string, to: string}
+     */
+    private function validatedBlock(Request $request): array
+    {
+        $data = $request->validate([
+            'what' => ['required', 'string', 'max:150'],
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
+        ], ['to.after_or_equal' => 'The last day can\'t be before the first.'], ['what' => 'what it is for', 'from' => 'first day', 'to' => 'last day']);
+
+        $days = (int) round(abs(Carbon::parse($data['from'])->diffInDays(Carbon::parse($data['to'])))) + 1;
+        if ($days > JourneyPlanner::MAX_BLOCK_DAYS) {
+            throw ValidationException::withMessages(['to' => 'A blocked period can run for '.JourneyPlanner::MAX_BLOCK_DAYS.' days at most. Check the year on the last day.']);
+        }
+
+        return ['what' => trim($data['what']), 'from' => $data['from'], 'to' => $data['to']];
+    }
+
+    /** "1 Mar 2027 to 15 Mar 2027", or the one day. @param  array{from: string, to: string}  $block */
+    private function span(array $block): string
+    {
+        return $block['from'] === $block['to']
+            ? JourneyLog::date($block['from'])
+            : JourneyLog::date($block['from']).' to '.JourneyLog::date($block['to']);
+    }
+
+    private function blockResponse(CrmJourneyPlan $plan): JsonResponse
+    {
+        return response()->json(['ok' => true, 'blocks' => $plan->fresh()->blockRows()]);
     }
 
     /**

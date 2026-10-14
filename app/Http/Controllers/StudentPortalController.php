@@ -165,7 +165,7 @@ class StudentPortalController extends Controller
             } else {
                 $record = CrmJourneyApplication::query()->where('plan_id', $plan->id)->lockForUpdate()->find($data['application_id']);
                 $state = $record?->activityState() ?? [];
-                $name = JourneyPlanner::applicationDefinitions()[$data['key']]['name'] ?? null;
+                $name = $record?->definitions()[$data['key']]['name'] ?? null;
                 $where = $record?->university;
             }
 
