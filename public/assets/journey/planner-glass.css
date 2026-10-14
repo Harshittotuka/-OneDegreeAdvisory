@@ -471,19 +471,58 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-add-task { padding: 11px 20px 13px; background: var(--g-surface-2); border-top: 0.5px solid var(--g-separator); }
 .jp-task-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--g-fs-small); }
 .jp-task-tools .muted { flex: 1; min-width: 180px; }
-.jp-act.sub .jp-row { padding-left: 32px; background: var(--g-surface-2); }
-/* A university's subtasks, at any depth: the include box stays in line and
-   the name steps in, one step per level, up to six steps. */
+/* ---------- subtasks as a tree ----------
+   A line down from each level above that carries on past this row, an elbow
+   into it, then the fold button (a task with subtasks) or a node (one
+   without). The row clips the lines, so neighbouring rows' lines meet. Each
+   level is 22px wide with its line 9px in (planner.js). */
+.jp-row { overflow: hidden; }
 .jp-act.nest .jp-row { background: var(--g-surface-2); }
-.jp-act.nest .jp-name { padding-left: calc(min(var(--depth, 1), 6) * 20px); }
+.jp-act { --tree-line: var(--g-separator-strong); }
+.jp-namecell { display: flex; align-items: center; align-self: stretch; min-width: 0; }
+.jp-namecell > .jp-name { flex: 1; }
+.jp-tree { position: relative; flex: none; align-self: stretch; }
+.jp-tree i { position: absolute; top: -200px; bottom: -2000px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--tree-line); }
+.jp-tree i.end { bottom: 50%; }
+.jp-tree i.arm { top: 50%; bottom: auto; width: 16px; height: 2px; margin: -1px 0 0; }
+.jp-tree i.arm.to-node { width: 19px; }
+.jp-fold-slot { position: relative; flex: none; align-self: stretch; width: 18px; margin-right: 8px; display: grid; place-items: center; }
+.jp-tree i.stub { top: calc(50% + 8px); }
+.jp-fold { width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: var(--g-fill); color: var(--g-ink-2); display: grid; place-items: center; cursor: pointer; }
+.jp-fold svg { width: 12px; height: 12px; transition: transform var(--g-dur-fast) var(--g-ease); }
+.jp-fold[aria-expanded="false"] svg { transform: rotate(-90deg); }
+.jp-fold:hover { background: var(--g-accent); color: #fff; }
+.jp-node { width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--tree-line); background: var(--g-surface); }
+/* An open row in a tree: its details sit under its name, the lines carried on
+   past them on the left. --tree-x (where the name column starts) is measured. */
+.jp-detail.treed { position: relative; padding-left: calc(var(--tree-x, 58px) + var(--tree-pad, 0px)); }
+.jp-tree.through { position: absolute; top: 0; bottom: 0; left: var(--tree-x, 58px); }
+.jp-tree.through i { top: 0; bottom: 0; }
+/* On a phone a row wraps its owner, status and date under the name, so the
+   whole row steps in by its depth, like a nested list, and the lines run down
+   the margin that leaves; the elbow leads to the include box. 32px is the box
+   and the gap after it. */
+@media (max-width: 900px) {
+    .jp-act .jp-row { padding-left: calc(14px + var(--tree-w, 0px)); }
+    .jp-tree { width: 0 !important; }
+    .jp-tree i { margin-left: calc(-1px - var(--tree-w, 0px) - 32px); }
+    .jp-tree i.arm, .jp-tree i.arm.to-node { width: 13px; margin: -1px 0 0 calc(0px - var(--tree-w, 0px) - 32px); }
+    /* A parent's own status and date sit where its line down would run, so on a
+       phone its subtasks' lines start at their own rows instead. */
+    .jp-row .jp-tree i.stub { display: none; }
+    .jp-inc ~ .jp-namecell .jp-node { display: none; }
+    .ro .jp-tree i { margin-left: calc(-1px - var(--tree-w, 0px)); }
+    .ro .jp-tree i.arm { margin: -1px 0 0 calc(0px - var(--tree-w, 0px)); }
+    .ro .jp-tree i.arm.to-node { width: 19px; }
+    .jp-detail.treed { padding-left: calc(var(--tree-x, 50px) + 26px); }
+}
+/* A switched-off task fades, but the lines through it stay whole. */
+.jp-act.off .jp-row > .jp-namecell { opacity: 1; }
+.jp-act.off .jp-namecell > .jp-name, .jp-act.off .jp-fold-slot { opacity: 0.42; }
 .jp-group { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .jp-group-add { display: inline-flex; align-items: center; gap: 5px; padding: 2px 4px; border: 0; background: none; color: var(--g-accent-ink); font: inherit; font-size: var(--g-fs-small); font-weight: var(--g-w-semibold); cursor: pointer; }
 .jp-group-add svg { width: 11px; height: 11px; }
 .jp-group-add:hover { text-decoration: underline; text-underline-offset: 3px; }
-@media (max-width: 640px) {
-    .jp-act.nest .jp-name { padding-left: calc(min(var(--depth, 1), 6) * 10px); }
-}
-.jp-sub-mark { margin-right: 6px; color: var(--g-faint); }
 .jp-repeat-chip, .jp-upload-chip { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: var(--g-r-pill); background: var(--g-accent-soft); color: var(--g-accent-ink); font-size: var(--g-fs-caption); font-weight: var(--g-w-semibold); vertical-align: 1px; }
 .jp-upload-chip { background: var(--g-orange-soft); color: var(--g-orange-ink); }
 .jp-upload-chip.ok { background: var(--g-green-soft); color: var(--g-green-ink); }
@@ -1014,11 +1053,11 @@ button.jp-user:active { transform: scale(0.97); }
     .jp-phase-h .jp-progress { grid-column: 2; grid-row: 2; }
     .jp-row-head { display: none !important; }
     .jp-row, .ro .jp-row { display: flex; flex-wrap: wrap; gap: 8px 10px; padding: 11px 14px; }
-    .jp-name { flex: 1 1 calc(100% - 64px); }
-    .ro .jp-name { flex: 1 1 calc(100% - 36px); }
+    .jp-namecell { flex: 1 1 calc(100% - 64px); }
+    .ro .jp-namecell { flex: 1 1 calc(100% - 36px); }
     .jp-chev { order: 2; }
-    .jp-ocell { order: 5; flex: 1 1 100%; padding-left: 32px; }
-    .ro .jp-ocell { padding-left: 0; }
+    .jp-ocell { order: 5; flex: 1 1 100%; padding-left: 58px; }
+    .ro .jp-ocell { padding-left: 26px; }
     .jp-row .jp-st { order: 6; flex: 0 0 150px; width: auto; }
     .jp-row .jp-dcell { order: 7; flex: 0 0 140px; }
     .jp-row .jp-due { order: 8; align-self: center; }

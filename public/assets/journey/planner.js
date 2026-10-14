@@ -25,6 +25,8 @@
         credentials: P.credentials || null,
         docTab: 'all', essayId: null, essayDirty: false, openDoc: null, refreshing: false,
         cal: { y: null, m: null, sel: null },
+        // Tasks whose subtasks are folded away, by row.
+        folded: {},
         // The Google room made for the open meeting dialog, until it is saved.
         room: null, roomBusy: false, dialogSeq: 0,
         // The side panel folded down to its icons (wide screens only).
@@ -236,17 +238,108 @@
         })(key);
         return out;
     }
-    /* One group of a university's checklist in reading order: each task, then
-       its subtasks straight under it, each with how deep it sits. */
+    /* One group of a university's checklist as a tree: each task, then its
+       subtasks under it. */
     function appTree(ap, g) {
-        var out = [];
-        function add(def, depth) {
-            out.push({ def: def, depth: depth });
-            (ap.tasks || []).forEach(function (t) { if (t.parent === def.key) add(t, depth + 1); });
+        var roots = g.activities.concat((ap.tasks || []).filter(function (t) { return !t.parent && t.group === g.key; }));
+        return treeRows(roots,
+            function (d) { return (ap.tasks || []).filter(function (t) { return t.parent === d.key; }); },
+            function (d) { return rowShown(ap.acts[d.key], false); },
+            function (d) { return UI.folded[rowKey('app', ap.id, d.key)]; });
+    }
+
+    /* Whether a task's row is drawn for this reader: switched-off tasks only
+       for the counsellor, and on the journey only those the filters let through. */
+    function rowShown(a, filtered) {
+        if (!a) return false;
+        if (!a.inc && (!isC() || !UI.showExcluded)) return false;
+        if (filtered) {
+            if (!ownerMatches(a.owner)) return false;
+            if (UI.status === 'open' && closed(a.status)) return false;
+            if (UI.status !== 'all' && UI.status !== 'open' && a.status !== UI.status) return false;
         }
-        g.activities.forEach(function (d) { add(d, 0); });
-        (ap.tasks || []).forEach(function (t) { if (!t.parent && t.group === g.key) add(t, 0); });
+        return true;
+    }
+
+    /*
+     * A list of tasks drawn as a tree. Each row comes with what it takes to
+     * draw its lines: how deep it sits, which ancestors' lines carry on past
+     * it (`rails`, one per level above its own), whether it is the last of its
+     * siblings, and how many children show under it unless it is folded.
+     *
+     * A row the reader doesn't see (switched off, or filtered out) gives its
+     * place to its children, so the lines always join rows that are there.
+     */
+    function treeRows(roots, kidsOf, shown, foldedOf) {
+        var out = [];
+        function visible(list) {
+            var v = [];
+            list.forEach(function (d) { v = v.concat(shown(d) ? [d] : visible(kidsOf(d))); });
+            return v;
+        }
+        function walk(list, depth, rails) {
+            var rows = visible(list);
+            rows.forEach(function (d, i) {
+                var last = i === rows.length - 1, kids = visible(kidsOf(d)).length, fold = !!foldedOf(d);
+                out.push({ def: d, depth: depth, rails: rails, last: last, kids: kids, folded: fold });
+                // A root's own line starts at its children; below that, each
+                // level's line carries on while that level has more to come.
+                if (kids && !fold) walk(kidsOf(d), depth + 1, depth ? rails.concat([!last]) : []);
+            });
+        }
+        walk(roots, 0, []);
         return out;
+    }
+
+    /* The tree in front of a task's name: the lines down from the levels above,
+       the elbow into this row, and the fold button or a node mark. */
+    var TREE_STEP = 22, TREE_MID = 9;     // one level's width; where its line runs within it
+    function treeCell(t, data) {
+        var lines = '';
+        t.rails.forEach(function (on, j) { if (on) lines += '<i style="left:' + (j * TREE_STEP + TREE_MID) + 'px"></i>'; });
+        if (t.depth) {
+            var x = (t.depth - 1) * TREE_STEP + TREE_MID;
+            lines += '<i class="' + (t.last ? 'end' : 'mid') + '" style="left:' + x + 'px"></i><i class="arm' + (t.kids ? '' : ' to-node') + '" style="left:' + x + 'px"></i>';
+        }
+        // The line down from this task to its first subtask.
+        if (t.kids && !t.folded) lines += '<i class="stub" style="left:' + (t.depth * TREE_STEP + TREE_MID) + 'px"></i>';
+        var slot = t.kids
+            ? '<button class="jp-fold" data-act="fold"' + data + ' aria-expanded="' + !t.folded + '" title="' + (t.folded ? 'Show' : 'Hide') + ' the ' + plural(t.kids, 'subtask', 'subtasks') + ' under it">' + ICO.chev + '</button>'
+            : t.depth ? '<i class="jp-node" aria-hidden="true"></i>' : '';
+        return '<span class="jp-tree" style="width:' + (t.depth * TREE_STEP) + 'px" aria-hidden="true">' + lines + '</span>' +
+            '<span class="jp-fold-slot">' + slot + '</span>';
+    }
+    /* The same lines carried on down through an open row's details, so the
+       branch reads unbroken past it: the levels above that go on, this row's
+       own line if more siblings follow, and the line down to its children. */
+    function treeThrough(t) {
+        var at = function (x) { return '<i style="left:' + x + 'px"></i>'; }, lines = '';
+        t.rails.forEach(function (on, j) { if (on) lines += at(j * TREE_STEP + TREE_MID); });
+        if (t.depth && !t.last) lines += at((t.depth - 1) * TREE_STEP + TREE_MID);
+        if (t.kids && !t.folded) lines += at(t.depth * TREE_STEP + TREE_MID);
+        return lines ? '<span class="jp-tree through" aria-hidden="true">' + lines + '</span>' : '';
+    }
+    /* Where the name column starts inside a row differs by theme, reader and
+       screen width, so it is measured for the open rows that carry lines. */
+    function placeTreeLines() {
+        document.querySelectorAll('.jp-detail.treed').forEach(function (d) {
+            var act = d.closest('.jp-act'), cell = act && act.querySelector('.jp-namecell');
+            if (cell) act.style.setProperty('--tree-x', Math.round(cell.getBoundingClientRect().left - act.getBoundingClientRect().left) + 'px');
+        });
+    }
+    var treeFrame = 0;
+    window.addEventListener('resize', function () {
+        cancelAnimationFrame(treeFrame);
+        treeFrame = requestAnimationFrame(placeTreeLines);
+    });
+    /* Opening a task from elsewhere (a deadline, the calendar) unfolds the branch it is in. */
+    function unfoldTo(scope, appId, key) {
+        var ap = scope === 'app' ? P.apps.find(function (x) { return x.id === appId; }) : null;
+        var def = ap ? appDef(ap, key) : CORE_DEFS[key];
+        for (var hops = 0; def && def.parent && hops < 200; hops++) {
+            UI.folded[rowKey(scope, appId, def.parent)] = false;
+            def = ap ? appDef(ap, def.parent) : CORE_DEFS[def.parent];
+        }
     }
     /* "3 subtasks · 1 done" on a task with steps under it; `states` are theirs. */
     function subtaskChip(states) {
@@ -485,6 +578,7 @@
             '<div class="jp-body">' + renderBar(v) + '<main class="jp-content" id="jp-content">' + body + '</main>' +
             '<footer class="jp-foot">One Degree Advisory · Overseas Admission Journey Planner' +
             (isStudent() ? ' · Your plan is private to you.' : '') + '</footer></div>' + renderTabbar() + '</div>';
+        placeTreeLines();
         window.scrollTo(0, y);
     }
 
@@ -857,21 +951,18 @@
         })(key);
         return out;
     }
-    /* One stage in reading order: each task, then its own subtasks, then its
-       repeats, each followed by whatever sits under it, with how deep it sits. */
+    /* One stage as a tree: each task, then its own subtasks, then its repeats,
+       each with whatever sits under it in turn. The filters apply row by row. */
     function phaseTree(p) {
-        var keys = {}, kids = {}, roots = [], out = [];
+        var keys = {}, kids = {}, roots = [];
         p.activities.forEach(function (d) { keys[d.key] = true; });
         p.activities.forEach(function (d) {
             if (d.parent && keys[d.parent]) (kids[d.parent] = kids[d.parent] || []).push(d); else roots.push(d);
         });
-        function add(d, depth) {
-            out.push({ def: d, depth: depth });
-            var under = kids[d.key] || [];
-            under.filter(function (c) { return !c.repeat; }).concat(under.filter(function (c) { return c.repeat; })).forEach(function (c) { add(c, depth + 1); });
-        }
-        roots.forEach(function (d) { add(d, 0); });
-        return out;
+        return treeRows(roots,
+            function (d) { var under = kids[d.key] || []; return under.filter(function (c) { return !c.repeat; }).concat(under.filter(function (c) { return c.repeat; })); },
+            function (d) { return rowShown(P.core[d.key], true); },
+            function (d) { return UI.folded[rowKey('core', null, d.key)]; });
     }
     function canRepeat(def) {
         var ph = PHASE_OF[def.key];
@@ -904,13 +995,11 @@
     }
 
     /* ---- one activity row, shared by the journey and every university ---- */
-    function actRow(scope, appId, def, a, timeline, filtered, depth) {
-        if (!a.inc && (!isC() || !UI.showExcluded)) return '';
-        if (filtered) {
-            if (!ownerMatches(a.owner)) return '';
-            if (UI.status === 'open' && closed(a.status)) return '';
-            if (UI.status !== 'all' && UI.status !== 'open' && a.status !== UI.status) return '';
-        }
+    /* `t` is the row's place in its tree (see treeRows). */
+    function actRow(scope, appId, def, a, timeline, filtered, t) {
+        if (!rowShown(a, filtered)) return '';
+        t = t || { depth: 0, rails: [], last: true, kids: 0, folded: false };
+        var depth = t.depth;
         var k = rowKey(scope, appId, def.key), open = !!UI.openRows[k];
         var data = ' data-scope="' + scope + '" data-app="' + (appId || '') + '" data-key="' + esc(def.key) + '"';
         var d = (a.inc && !closed(a.status)) ? due(daysUntil(a.target)) : null;
@@ -952,7 +1041,10 @@
                 : def.parent ? 'A subtask of “' + esc(parentName) + '”' + (ap ? ', on this university only.' : '.')
                 : ap ? 'You added this to this university only.' : 'You added this task for this student.';
             var tools = '<div class="full jp-task-tools"><span class="muted">' + about + '</span>' + addSub + (def.custom ? editBtn + rmBtn : '') + '</div>';
-            detail = '<div class="jp-detail"><div><p class="desc">' + esc(def.desc) + '</p><dl class="jp-kv">' +
+            // In a tree the details sit under the task's own name, the lines running past on their left.
+            var through = treeThrough(t), treed = !!(t.depth || through);
+            detail = '<div class="jp-detail' + (treed ? ' treed' : '') + '"' + (treed ? ' style="--tree-pad:' + (t.depth * TREE_STEP + 26) + 'px"' : '') + '>' + through +
+                '<div><p class="desc">' + esc(def.desc) + '</p><dl class="jp-kv">' +
                 '<dt>Documents</dt><dd>' + esc(def.docs) + '</dd>' +
                 (timeline ? '<dt>Best time</dt><dd>' + esc(timeline) + '</dd>' : '') +
                 (!isC() ? '<dt>Who does it</dt><dd>' + esc(ownerLabel(a.owner)) + '</dd><dt>Completed on</dt><dd>' + (a.done ? fmt(a.done) : '—') + '</dd>' : '') +
@@ -970,10 +1062,12 @@
                     : (a.notes ? '<div><span class="jp-note-lbl">Note from your counsellor</span><div class="jp-note">' + esc(a.notes) + '</div></div>' : '<div></div>') + (def.upload ? '<div class="jp-fields">' + uploadBox(def) + '</div>' : '')) +
                 '</div>';
         }
-        return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + (def.parent && !nested ? ' sub' : '') + (nested ? ' nest' : '') + '"' +
-            (nested ? ' style="--depth:' + depth + '"' : '') + '><div class="jp-row">' +
+        // --tree-w: how far the tree steps this row in (a phone indents the whole row by it).
+        return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + (nested ? ' nest' : '') + '"' +
+            (nested ? ' style="--tree-w:' + (depth * TREE_STEP) + 'px"' : '') + '><div class="jp-row">' +
             (isC() ? '<button class="jp-inc' + (a.inc ? ' on' : '') + '" data-act="toggle-inc"' + data + ' aria-pressed="' + a.inc + '" title="' + (a.inc ? 'Included for this student. Click to exclude.' : 'Excluded. Click to include.') + '">' + (a.inc ? ICO.check : '') + '</button>' : '') +
-            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + (def.parent ? '<span class="jp-sub-mark" aria-hidden="true">↳</span>' : '') + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + (ap ? '' : repeatChip(def, a)) + subtaskChip(subStates) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button>' +
+            '<div class="jp-namecell">' + treeCell(t, data) +
+            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + (ap ? '' : repeatChip(def, a)) + subtaskChip(subStates) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button></div>' +
             '<span class="jp-ocell"><span class="jp-owner-chip' + (ownerIsMine(a.owner) ? ' mine' : '') + (isMemberOwner(a.owner) ? ' person' : '') + '" title="' + esc(isMemberOwner(a.owner) ? ownerName(a.owner) + ' · ' + (PEOPLE[a.owner] ? PEOPLE[a.owner].role : 'off the file') : a.owner) + '">' + esc(ownerLabel(a.owner)) + '</span></span>' +
             status + date + '<span class="jp-due">' + after + '</span>' +
             '<button class="jp-chev" data-act="toggle-row"' + data + ' aria-label="Show details">' + ICO.chev + '</button></div>' + detail + '</div>';
@@ -999,7 +1093,7 @@
             var inc = phaseIncluded(p);
             var body = '';
             if (open) {
-                body = phaseTree(p).map(function (n) { return actRow('core', null, n.def, P.core[n.def.key], p.timeline, true, n.depth); }).join('') ||
+                body = phaseTree(p).map(function (n) { return actRow('core', null, n.def, P.core[n.def.key], p.timeline, true, n); }).join('') ||
                     (p.custom && !p.activities.length ? '<div class="jp-empty"><b>No tasks in this stage yet</b>Add the first one below.</div>' : '<div class="jp-empty">Nothing here matches those filters.</div>');
                 var stageTools = '';
                 if (p.custom && isC()) {
@@ -1061,7 +1155,7 @@
         // Each group lists ODA's activities, then what the counsellor added to
         // it here, every task followed by its subtasks.
         var groups = T.appGroups.map(function (g) {
-            var rows = appTree(a, g).map(function (n) { return a.acts[n.def.key] ? actRow('app', a.id, n.def, a.acts[n.def.key], '', false, n.depth) : ''; }).join('');
+            var rows = appTree(a, g).map(function (n) { return a.acts[n.def.key] ? actRow('app', a.id, n.def, a.acts[n.def.key], '', false, n) : ''; }).join('');
             var add = isC() ? '<button class="jp-group-add" data-act="add-app-task" data-u="' + a.id + '" data-group="' + esc(g.key) + '">' + ICO.plus + ' Add a task</button>' : '';
             return rows ? '<div class="jp-group"><span>' + esc(g.name) + '</span>' + add + '</div>' + rows : '';
         }).join('') || '<div class="jp-empty">Nothing switched on for this university yet.</div>';
@@ -2185,9 +2279,11 @@
                 scrollToEl('ph-' + el.dataset.p);
                 return;
             case 'toggle-row': { var k = rowKey(el.dataset.scope, appId, el.dataset.key); UI.openRows[k] = !UI.openRows[k]; render(); return; }
+            case 'fold': { var fk = rowKey(el.dataset.scope, appId, el.dataset.key); UI.folded[fk] = !UI.folded[fk]; render(); return; }
             case 'jump-item': {
                 closeModal();
                 UI.owner = 'all'; UI.status = 'all';
+                unfoldTo(el.dataset.scope, appId, el.dataset.key);
                 UI.openRows[rowKey(el.dataset.scope, appId, el.dataset.key)] = true;
                 if (el.dataset.scope === 'core') {
                     var p = PHASE_OF[el.dataset.key]; UI.openPhases[p.key] = true;
