@@ -1071,14 +1071,14 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
 .jp-act.nest .jp-st { padding-top: 5px; padding-bottom: 5px; font-size: 0.75rem; }
 .jp-act.nest .jp-date { padding-top: 5px; padding-bottom: 5px; font-size: 0.76rem; }
 .jp-act.nest .jp-owner-chip { background: none; padding-left: 0; color: var(--muted); }
-/* Status fields: a soft pastel for each status, with text (and arrow) in a
+/* Status fields: a rich pastel for each status, with text (and arrow) in a
    deep shade of the same colour: lavender to do, peach under way, periwinkle
    sent in, mint done, stone not applicable. */
-.jp-st { padding-left: 12px; border: 1px solid #dcd8ee; background-color: #eeedf7; color: #4c4772; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236d6890' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); background-position: right 11px center; }
-.jp-st.s-prog { border-color: #fbcdb6; background-color: #ffe8dc; color: #b13a18; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c04a24' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
-.jp-st.s-sub { border-color: #cfcaf6; background-color: #e7e4fc; color: #2d1fa3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%233b2fb0' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
-.jp-st.s-done { border-color: #b9e6c8; background-color: #dcf4e4; color: #0b6b35; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231a7a45' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
-.jp-st.s-na { border: 1px dashed #d3cdc0; background-color: #f4f2ec; color: #625e78; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236d6890' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
+.jp-st { padding-left: 12px; border: 1px solid #bcb7dc; background-color: #d8d5ec; color: #363158; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234a4470' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); background-position: right 11px center; }
+.jp-st.s-prog { border-color: #f6a57f; background-color: #ffc6a8; color: #8a2a0d; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239a3412' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
+.jp-st.s-sub { border-color: #a69df0; background-color: #c8c2f6; color: #22157c; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%232a1d8c' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
+.jp-st.s-done { border-color: #83d2a0; background-color: #afe3c1; color: #065428; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230a5f2f' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
+.jp-st.s-na { border: 1px dashed #c4bcab; background-color: #e5e1d6; color: #524e66; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234a4470' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
 .jp-st.jp-st-ro { background-image: none; }
 .jp-st option { color: var(--ink); background: #fff; }
 .jp-st:focus-visible { outline: 3px solid rgba(255, 94, 50, 0.35); outline-offset: 1px; }
