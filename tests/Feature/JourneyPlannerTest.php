@@ -1290,6 +1290,98 @@ class JourneyPlannerTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('note');
     }
 
+    public function test_a_new_file_can_come_with_a_logged_edit_and_every_earlier_copy_is_kept(): void
+    {
+        Storage::fake('local');
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        // The student uploads a transcript; its first copy sits on the first history entry.
+        $doc = $this->signedInStudent($lead)->post(route('student.documents.store'), [
+            'kind' => 'file', 'category' => 'Transcript / mark sheet', 'title' => 'Class 12 marks',
+            'file' => UploadedFile::fake()->createWithContent('marks.pdf', 'first copy'),
+        ], ['Accept' => 'application/json'])->assertOk()->json('document');
+        $this->assertSame('marks.pdf', $doc['edits'][0]['file']['name']);
+        $this->assertTrue($doc['edits'][0]['file']['current']);
+        $first = CrmJourneyDocument::query()->findOrFail($doc['id'])->path;
+
+        // A new copy logged as an edit becomes the current version, whatever the box said.
+        $logged = $this->post(route('student.documents.edits.store', $doc['id']), [
+            'note' => 'Re-scanned with the stamp visible', 'new_version' => '0',
+            'file' => UploadedFile::fake()->createWithContent('marks-stamped.pdf', 'second copy'),
+        ], ['Accept' => 'application/json'])->assertOk()
+            ->assertJsonPath('document.version', 2)
+            ->assertJsonPath('document.fileName', 'marks-stamped.pdf')
+            ->assertJsonPath('document.edits.0.file.name', 'marks-stamped.pdf')
+            ->assertJsonPath('document.edits.0.file.current', true)
+            ->assertJsonPath('document.edits.1.file.name', 'marks.pdf')
+            ->assertJsonPath('document.edits.1.file.current', false)
+            ->json('document');
+        $row = CrmJourneyDocument::query()->findOrFail($doc['id']);
+        Storage::disk('local')->assertExists([$first, $row->path]);
+        $this->get(route('student.documents.file', $row))->assertOk()->assertDownload('marks-stamped.pdf');
+        $this->get($logged['edits'][1]['file']['url'])->assertOk()->assertDownload('marks.pdf');
+        $this->assertTrue(CrmLeadActivity::query()->where('crm_lead_id', $lead->id)->where('body', 'like', '%new version of “Class 12 marks”%')->exists());
+
+        // The counsellor downloads the earlier copy from the history too.
+        $this->flushSession();
+        $this->as($counsellor)->get(route('crm.journey.documents.edits.file', [$lead, $doc['id'], $logged['edits'][1]['id']]))
+            ->assertOk()->assertDownload('marks.pdf');
+
+        // On an essay the file is attached to the entry, and the version moves only when asked.
+        $essay = $this->as($counsellor)->postJson(route('crm.journey.documents.store', $lead), ['kind' => 'essay', 'category' => 'Statement of Purpose', 'title' => 'SOP'])->json('document');
+        $marked = $this->as($counsellor)->post(route('crm.journey.documents.edits.store', [$lead, $essay['id']]), [
+            'note' => 'Marked-up copy from the call', 'new_version' => '0',
+            'file' => UploadedFile::fake()->create('sop-markup.docx', 40, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+        ], ['Accept' => 'application/json'])->assertOk()
+            ->assertJsonPath('document.version', 1)
+            ->assertJsonPath('document.edits.0.file.name', 'sop-markup.docx')
+            ->assertJsonPath('document.edits.0.file.current', false)
+            ->json('document');
+
+        // A history file is reached only through its own document, and only a file is accepted.
+        $this->as($counsellor)->get(route('crm.journey.documents.edits.file', [$lead, $doc['id'], $marked['edits'][0]['id']]))->assertNotFound();
+        $this->as($counsellor)->post(route('crm.journey.documents.edits.store', [$lead, $doc['id']]), [
+            'note' => 'Wrong kind of file', 'file' => UploadedFile::fake()->create('notes.exe', 10),
+        ], ['Accept' => 'application/json'])->assertStatus(422)->assertJsonValidationErrors('file');
+
+        // A student adds files only to what they added themselves.
+        $this->signedInStudent($lead)->post(route('student.documents.edits.store', $essay['id']), [
+            'note' => 'Mine now', 'file' => UploadedFile::fake()->createWithContent('mine.pdf', 'x'),
+        ], ['Accept' => 'application/json'])->assertForbidden();
+
+        // Removing the document removes every copy it kept.
+        $this->flushSession();
+        $this->as($counsellor)->deleteJson(route('crm.journey.documents.destroy', [$lead, $doc['id']]))->assertOk();
+        Storage::disk('local')->assertMissing([$first, $row->path]);
+    }
+
+    public function test_a_file_uploaded_before_history_held_files_is_kept_when_a_new_copy_arrives(): void
+    {
+        Storage::fake('local');
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $doc = $this->as($counsellor)->post(route('crm.journey.documents.store', $lead), [
+            'kind' => 'file', 'category' => 'Passport / ID', 'title' => 'Passport',
+            'file' => UploadedFile::fake()->createWithContent('passport.pdf', 'old scan'),
+        ], ['Accept' => 'application/json'])->assertOk()->json('document');
+
+        // As it was stored before: the copy only on the document, not on its history.
+        $row = CrmJourneyDocument::query()->findOrFail($doc['id']);
+        $row->edits()->update(['path' => null, 'original_name' => null, 'mime' => null, 'size' => null]);
+        $old = $row->path;
+
+        $logged = $this->as($counsellor)->post(route('crm.journey.documents.edits.store', [$lead, $doc['id']]), [
+            'note' => 'Renewed passport', 'file' => UploadedFile::fake()->createWithContent('passport-2027.pdf', 'new scan'),
+        ], ['Accept' => 'application/json'])->assertOk()->json('document');
+
+        $this->assertSame(['passport-2027.pdf', 'passport.pdf'], array_map(fn ($e) => $e['file']['name'] ?? null, $logged['edits']));
+        $this->assertSame('Uploaded “passport.pdf”', $logged['edits'][1]['note'], 'The old copy goes back on the entry it came with.');
+        Storage::disk('local')->assertExists($old);
+    }
+
     public function test_repeated_saves_in_one_sitting_are_one_edit_and_one_version(): void
     {
         $counsellor = $this->user();

@@ -226,12 +226,9 @@ class StudentPortalController extends Controller
     public function storeDocumentEdit(Request $request, int $document): JsonResponse
     {
         $doc = JourneyDocuments::find($this->plan($request), $document);
-        $data = $request->validate([
-            'note' => ['required', 'string', 'max:290'],
-            'new_version' => ['sometimes', 'boolean'],
-        ], [], ['note' => 'what changed']);
+        $data = JourneyDocuments::editInput($request);
 
-        JourneyDocuments::noteEdit($doc, $data['note'], null, (bool) ($data['new_version'] ?? false));
+        JourneyDocuments::noteEdit($doc, $data['note'], null, (bool) ($data['new_version'] ?? false), $request->file('file'));
 
         return response()->json(['ok' => true, 'document' => $this->documentArray($doc->fresh())]);
     }
@@ -248,11 +245,18 @@ class StudentPortalController extends Controller
         return JourneyDocuments::download(JourneyDocuments::find($this->plan($request), $document));
     }
 
+    /** A file kept in one of my documents' history. */
+    public function downloadDocumentEdit(Request $request, int $document, int $edit)
+    {
+        return JourneyDocuments::downloadEdit(JourneyDocuments::find($this->plan($request), $document), $edit);
+    }
+
     private function documentArray(CrmJourneyDocument $document): array
     {
         $document->load(['application', 'creator', 'reviewer', 'edits.author']);
 
-        return JourneyDocuments::toArray($document, 'student', fn ($d) => route('student.documents.file', $d));
+        return JourneyDocuments::toArray($document, 'student', fn ($d) => route('student.documents.file', $d),
+            fn ($d, $e) => route('student.documents.edits.file', [$d, $e]));
     }
 
     private function plan(Request $request): CrmJourneyPlan

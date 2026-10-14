@@ -1835,7 +1835,9 @@
      */
     function editLog(d) {
         var rows = (d.edits || []).map(function (e) {
-            return '<li><span class="v num">v' + e.version + '</span><div><b>' + esc(e.note) + '</b><small>' + esc(e.byName) + ' · ' + esc(when(e.at)) + '</small></div></li>';
+            var f = e.file ? '<a class="jp-edit-file' + (e.file.current ? ' current' : '') + '" href="' + esc(e.file.url) + '" target="_blank" rel="noopener">' + ICO.doc +
+                '<span>' + esc(e.file.name) + '</span><small>' + esc(kb(e.file.size)) + (e.file.current ? ' · current' : '') + '</small></a>' : '';
+            return '<li><span class="v num">v' + e.version + '</span><div><b>' + esc(e.note) + '</b><small>' + esc(e.byName) + ' · ' + esc(when(e.at)) + '</small>' + f + '</div></li>';
         }).join('');
         return '<div class="jp-doc-history"><div class="jp-doc-history-h"><b>Edits on this document</b>' +
             '<span class="muted">Version ' + (d.version || 1) + ' · ' + plural((d.edits || []).length, 'edit', 'edits') + '</span>' +
@@ -2412,9 +2414,17 @@
                 case 'log-edit': {
                     var ld = findDoc(parseInt(el.dataset.id, 10));
                     if (!ld) return;
+                    // A file can come with the edit: on an uploaded file it becomes the current
+                    // version (the earlier copy stays in the history); on an essay it is attached.
+                    var leFile = ld.kind === 'file';
                     modal('<h3>Log an edit</h3><p class="sub">For a change you made to “' + esc(ld.title) + '” outside the planner. ' +
                         (isStudent() ? 'Your counsellor sees this.' : 'The student sees this.') + '</p>' +
                         '<label for="le-note">What changed?</label><input id="le-note" maxlength="290" placeholder="e.g. Rewrote the opening and tightened paragraph 3">' +
+                        '<label for="le-file">' + (leFile ? 'Upload the new file' : 'Attach a file') + ' <span style="font-weight:500">(optional)</span></label>' +
+                        '<input id="le-file" type="file" accept="' + DT.limits.extensions.map(function (x) { return '.' + x; }).join(',') + '">' +
+                        '<p class="jp-hint">' + (leFile
+                            ? 'It becomes the current version; the file it replaces stays in the history, still downloadable.'
+                            : 'A copy edited elsewhere, a marked-up draft… PDF, Word or JPG/PNG, up to ' + Math.round(DT.limits.maxKb / 1024) + ' MB.') + '</p>' +
                         '<label class="jp-check"><input type="checkbox" id="le-ver" checked> This is a new version (now v' + ((ld.version || 1) + 1) + ')</label>' +
                         '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button>' +
                         '<button class="jp-btn" data-act="save-log-edit" data-id="' + ld.id + '">Log it</button></div>');
@@ -2424,11 +2434,17 @@
                     if (UI.busy) return;
                     var note = val('le-note');
                     if (!note) { modalError('Say what changed.'); return; }
-                    UI.busy = true; el.disabled = true;
-                    api('POST', P.endpoints.documentEdits.replace('__ID__', el.dataset.id), { note: note, new_version: checked('le-ver') })
+                    var lf = (document.getElementById('le-file') || {}).files, lfile = lf && lf[0];
+                    if (lfile && lfile.size > DT.limits.maxKb * 1024) { modalError('That file is larger than ' + Math.round(DT.limits.maxKb / 1024) + ' MB. Upload a smaller copy.'); return; }
+                    var lform = new FormData();
+                    lform.append('note', note); lform.append('new_version', checked('le-ver') ? '1' : '0');
+                    if (lfile) lform.append('file', lfile);
+                    UI.busy = true; el.disabled = true; if (lfile) el.textContent = 'Uploading…';
+                    upload(P.endpoints.documentEdits.replace('__ID__', el.dataset.id), lform)
                         .then(function (res) {
-                            replaceDoc(res.document); UI.openDoc = res.document.id; closeModal(); render(); toast('Edit logged');
-                        }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
+                            replaceDoc(res.document); UI.openDoc = res.document.id; closeModal(); render();
+                            toast(lfile ? (res.document.kind === 'file' ? 'New version uploaded' : 'Edit logged with the file') : 'Edit logged');
+                        }, function (err) { modalError(err.message); el.disabled = false; el.textContent = 'Log it'; }).then(function () { UI.busy = false; });
                     return;
                 }
                 case 'essay-save': saveEssay({}, 'Draft saved'); return;
@@ -3077,6 +3093,12 @@
             var bf = document.getElementById('bk-from'), bt = document.getElementById('bk-to');
             if (el.id === 'bk-from' && bf.value) { bt.min = bf.value; if (!bt.value || bt.value < bf.value) bt.value = bf.value; }
             var len = document.getElementById('bk-len'); if (len) len.textContent = blockLenText(bf.value, bt.value);
+            return;
+        }
+        // A new copy of an uploaded file is always a new version.
+        if (el.id === 'le-file') {
+            var lv = document.getElementById('le-ver'), ldoc = findDoc(parseInt((document.querySelector('[data-act="save-log-edit"]') || {}).dataset.id, 10));
+            if (lv && ldoc && ldoc.kind === 'file') { if (el.files.length) lv.checked = true; lv.disabled = !!el.files.length; }
             return;
         }
         if (el.id === 'f-owner') { UI.owner = el.value; render(); return; }

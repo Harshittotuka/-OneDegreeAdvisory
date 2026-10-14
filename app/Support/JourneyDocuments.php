@@ -29,7 +29,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *  - Every document carries its own edit history: the planner writes an entry
  *    whenever the document moves (a draft saved, sent for review, reviewed),
  *    and either side can add one by hand for a change made outside the
- *    planner. The version number moves only when the content does.
+ *    planner, with a file if they like. The version number moves only when
+ *    the content does.
+ *  - A new file logged against an uploaded file becomes its current version;
+ *    every earlier copy stays on its own history entry, still downloadable.
  *
  * Files sit on the private disk and are only served through the planner's
  * signed-in download routes, never from a public URL.
@@ -94,19 +97,11 @@ class JourneyDocuments
             'created_by' => $user?->id,
         ];
 
+        $stored = [];
         if ($kind === 'file') {
-            $name = Str::limit(trim($file->getClientOriginalName()), 180, '');
-            $path = $file->storeAs(
-                config('journey.documents.directory').'/'.$plan->id,
-                Str::uuid().'.'.strtolower($file->getClientOriginalExtension() ?: $file->extension()),
-                config('journey.documents.disk'),
-            );
-            $attributes += [
-                'title' => trim((string) ($data['title'] ?? '')) ?: pathinfo($name, PATHINFO_FILENAME),
-                'path' => $path,
-                'original_name' => $name,
-                'mime' => $file->getMimeType(),
-                'size' => $file->getSize(),
+            $stored = self::storeFile($plan, $file);
+            $attributes += $stored + [
+                'title' => trim((string) ($data['title'] ?? '')) ?: pathinfo($stored['original_name'], PATHINFO_FILENAME),
             ];
         } else {
             $attributes += [
@@ -117,7 +112,8 @@ class JourneyDocuments
         }
 
         $document = $plan->documents()->create($attributes);
-        self::recordEdit($document, $kind === 'file' ? 'Uploaded “'.$document->original_name.'”' : 'Started the draft', $user);
+        // The first copy of a file sits on the first history entry, like every later one.
+        self::recordEdit($document, $kind === 'file' ? 'Uploaded “'.$document->original_name.'”' : 'Started the draft', $user, file: $stored);
         JourneyLog::record($plan, $user, 'Documents', $document->title, ($kind === 'file' ? 'Uploaded' : 'Draft started').' · '.$document->category);
         if ($kind === 'file') {
             self::advanceUploadTask($plan, $document, $user);
@@ -226,10 +222,11 @@ class JourneyDocuments
         JourneyLog::record($document->plan, $user, 'Documents', $document->title, 'Removed');
 
         DB::transaction(function () use ($document): void {
-            $path = $document->path;
+            // The file and every earlier copy kept in its history go with it.
+            $paths = array_values(array_unique(array_filter(array_merge([$document->path], $document->edits()->pluck('path')->all()))));
             $document->delete();
-            if ($path) {
-                Storage::disk(config('journey.documents.disk'))->delete($path);
+            if ($paths !== []) {
+                Storage::disk(config('journey.documents.disk'))->delete($paths);
             }
         });
     }
@@ -242,6 +239,20 @@ class JourneyDocuments
 
         return $disk->download($document->path, $document->original_name ?: 'document', [
             'Content-Type' => $document->mime ?: 'application/octet-stream',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /** A file kept on one entry of a document's history: an earlier copy, or one attached to a note. */
+    public static function downloadEdit(CrmJourneyDocument $document, int|string $edit): StreamedResponse
+    {
+        $entry = $document->edits()->whereKey($edit)->firstOrFail();
+        abort_unless($entry->hasFile(), 404);
+        $disk = Storage::disk(config('journey.documents.disk'));
+        abort_unless($disk->exists($entry->path), 404);
+
+        return $disk->download($entry->path, $entry->original_name ?: 'document', [
+            'Content-Type' => $entry->mime ?: 'application/octet-stream',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }
@@ -275,9 +286,10 @@ class JourneyDocuments
      *
      * @param  'counsellor'|'partner'|'student'  $mode
      * @param  callable(CrmJourneyDocument): string  $fileUrl
+     * @param  callable(CrmJourneyDocument, CrmJourneyDocumentEdit): string  $editFileUrl
      * @return array<string, mixed>
      */
-    public static function toArray(CrmJourneyDocument $d, string $mode, callable $fileUrl): array
+    public static function toArray(CrmJourneyDocument $d, string $mode, callable $fileUrl, callable $editFileUrl): array
     {
         $student = $mode === 'student';
         $mine = $student ? $d->by_student : $mode === 'counsellor';
@@ -289,7 +301,7 @@ class JourneyDocuments
             'title' => $d->title,
             'category' => $d->category,
             'version' => (int) $d->version,
-            'edits' => self::editsToArray($d, $mode),
+            'edits' => self::editsToArray($d, $mode, $editFileUrl),
             'applicationId' => $d->application_id,
             'university' => $d->application?->university,
             'status' => $d->status,
@@ -322,6 +334,21 @@ class JourneyDocuments
         ]);
     }
 
+    /** Read the validated "log an edit" input off the request: a note, and maybe a new version and a file. */
+    public static function editInput(Request $request): array
+    {
+        $c = config('journey.documents');
+
+        return $request->validate([
+            'note' => ['required', 'string', 'max:290'],
+            'new_version' => ['sometimes', 'boolean'],
+            'file' => ['sometimes', 'nullable', 'file', 'max:'.(int) $c['max_upload_kb'], 'mimes:'.implode(',', $c['extensions'])],
+        ], [
+            'file.max' => 'That file is larger than '.round($c['max_upload_kb'] / 1024).' MB. Upload a smaller copy.',
+            'file.mimes' => 'Upload a PDF, Word document, or JPG/PNG image.',
+        ], ['note' => 'what changed']);
+    }
+
     /** The most entries one document's history keeps; the oldest drop off. */
     private const MAX_EDITS = 80;
 
@@ -330,12 +357,15 @@ class JourneyDocuments
      * half an hour is treated as one sitting: the entry already there is
      * touched instead of another being added, and the version doesn't move
      * again, so saving a draft five times in an afternoon reads as one edit.
+     * An entry that brings a file is always its own.
+     *
+     * @param  array{path?: string, original_name?: string, mime?: ?string, size?: ?int}  $file  a stored file (storeFile)
      */
-    public static function recordEdit(CrmJourneyDocument $document, string $note, ?CrmUser $user, bool $newVersion = false): CrmJourneyDocumentEdit
+    public static function recordEdit(CrmJourneyDocument $document, string $note, ?CrmUser $user, bool $newVersion = false, array $file = []): CrmJourneyDocumentEdit
     {
         $note = Str::limit(trim($note) ?: 'Edited', 290);
         $recent = $document->edits()->first();
-        $sameSitting = $recent && $recent->note === $note && $recent->by_student === ($user === null)
+        $sameSitting = $file === [] && $recent && ! $recent->hasFile() && $recent->note === $note && $recent->by_student === ($user === null)
             && (int) $recent->created_by === (int) $user?->id && $recent->updated_at?->gt(now()->subMinutes(30));
 
         if ($sameSitting) {
@@ -352,32 +382,66 @@ class JourneyDocuments
             'note' => $note,
             'by_student' => $user === null,
             'created_by' => $user?->id,
-        ]);
+        ] + $file);
 
+        // The oldest entries drop off, and with them any file no longer in use.
         $keep = $document->edits()->limit(self::MAX_EDITS)->pluck('id');
-        $document->edits()->whereNotIn('id', $keep)->delete();
+        $gone = $document->edits()->whereNotIn('id', $keep)->get();
+        if ($gone->isNotEmpty()) {
+            $inUse = array_merge([$document->path], $document->edits()->whereIn('id', $keep)->pluck('path')->all());
+            $orphans = array_values(array_diff(array_filter($gone->pluck('path')->all()), array_filter($inUse)));
+            $document->edits()->whereNotIn('id', $keep)->delete();
+            if ($orphans !== []) {
+                Storage::disk(config('journey.documents.disk'))->delete($orphans);
+            }
+        }
 
         return $edit;
     }
 
-    /** Someone recording a change they made to the document outside the planner. */
-    public static function noteEdit(CrmJourneyDocument $document, string $note, ?CrmUser $user, bool $newVersion): CrmJourneyDocumentEdit
+    /**
+     * Someone recording a change they made to the document outside the
+     * planner, with a file if they have one. On an uploaded file the new file
+     * becomes the current version; the copy it replaces stays on the history
+     * entry it came with. On an essay the file sits on the entry, and the
+     * version moves only if they say this is a new version.
+     */
+    public static function noteEdit(CrmJourneyDocument $document, string $note, ?CrmUser $user, bool $newVersion, ?UploadedFile $upload = null): CrmJourneyDocumentEdit
     {
         if ($user === null && ! $document->by_student) {
             abort(403, 'Your counsellor added this one, so only they can record changes to it.');
         }
-        JourneyLog::record($document->plan, $user, 'Documents', $document->title, ($newVersion ? 'New version: ' : 'Edit noted: ').$note);
+        $plan = $document->plan;
+        $stored = $upload ? self::storeFile($plan, $upload) : [];
 
-        return self::recordEdit($document, $note, $user, $newVersion);
+        if ($stored !== [] && ! $document->isEssay()) {
+            self::keepCurrentFile($document);
+            $document->forceFill($stored)->save();
+            $newVersion = true;
+        }
+
+        JourneyLog::record($plan, $user, 'Documents', $document->title, ($newVersion ? 'New version: ' : 'Edit noted: ').$note
+            .($stored !== [] ? ' · file “'.$stored['original_name'].'”' : ''));
+        $edit = self::recordEdit($document, $note, $user, $newVersion, $stored);
+
+        if ($stored !== [] && ! $document->isEssay()) {
+            self::advanceUploadTask($plan, $document, $user);
+            if ($user === null) {
+                self::log($plan, 'The student uploaded a new version of “'.$document->title.'” ('.$stored['original_name'].').');
+            }
+        }
+
+        return $edit;
     }
 
     /**
      * One document's history as the page needs it.
      *
      * @param  'counsellor'|'partner'|'student'  $mode
+     * @param  callable(CrmJourneyDocument, CrmJourneyDocumentEdit): string  $editFileUrl
      * @return list<array<string, mixed>>
      */
-    public static function editsToArray(CrmJourneyDocument $d, string $mode): array
+    public static function editsToArray(CrmJourneyDocument $d, string $mode, callable $editFileUrl): array
     {
         return $d->edits->map(fn (CrmJourneyDocumentEdit $e) => [
             'id' => $e->id,
@@ -385,7 +449,63 @@ class JourneyDocuments
             'version' => $e->version,
             'byName' => $e->by_student ? ($mode === 'student' ? 'You' : 'Student') : ($e->author?->name ?: 'Counsellor'),
             'at' => $e->created_at?->toIso8601String(),
+            'file' => $e->hasFile() ? [
+                'name' => $e->original_name,
+                'size' => $e->size,
+                'url' => $editFileUrl($d, $e),
+                // The copy the document is on now.
+                'current' => ! $d->isEssay() && $e->path === $d->path,
+            ] : null,
         ])->values()->all();
+    }
+
+    /**
+     * Put an uploaded file on the private disk, under its plan, with a name
+     * of our own; what it was called is kept to download it under.
+     *
+     * @return array{path: string, original_name: string, mime: ?string, size: ?int}
+     */
+    private static function storeFile(CrmJourneyPlan $plan, UploadedFile $file): array
+    {
+        $name = Str::limit(trim($file->getClientOriginalName()), 180, '');
+
+        return [
+            'path' => $file->storeAs(
+                config('journey.documents.directory').'/'.$plan->id,
+                Str::uuid().'.'.strtolower($file->getClientOriginalExtension() ?: $file->extension()),
+                config('journey.documents.disk'),
+            ),
+            'original_name' => $name,
+            'mime' => $file->getMimeType(),
+            'size' => $file->getSize(),
+        ];
+    }
+
+    /**
+     * Before a newer copy replaces a document's file, make sure the current
+     * copy sits on a history entry, so it stays downloadable. Documents
+     * uploaded before entries could hold files kept their first copy only on
+     * the document: it goes on the "Uploaded" entry it came with, or, if the
+     * history has since lost that entry, on a note of its own.
+     */
+    private static function keepCurrentFile(CrmJourneyDocument $document): void
+    {
+        if (! $document->path || $document->edits()->where('path', $document->path)->exists()) {
+            return;
+        }
+        $copy = ['path' => $document->path, 'original_name' => $document->original_name, 'mime' => $document->mime, 'size' => $document->size];
+        $first = $document->edits()->whereNull('path')->reorder('id')->first();
+        if ($first && $first->note === 'Uploaded “'.$document->original_name.'”') {
+            $first->forceFill($copy)->save();
+
+            return;
+        }
+        $document->edits()->create($copy + [
+            'version' => (int) $document->version,
+            'note' => 'Copy before the new file',
+            'by_student' => $document->by_student,
+            'created_by' => $document->created_by,
+        ]);
     }
 
     private static function where(CrmJourneyDocument $d): string

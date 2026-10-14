@@ -563,6 +563,13 @@ button.jp-user:active { transform: scale(0.97); }
 /* The ring's arrow follows its fold, not whether the row's details are open. */
 .jp-act.open .jp-fold .chev { transform: none; }
 .jp-act .jp-fold[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+/* A file on a history entry: download it; the one the document is on now is marked. */
+.jp-edit-file { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; margin-top: 6px; padding: 4px 10px; border-radius: var(--g-r-pill); background: var(--g-fill); color: var(--g-ink-2); font-size: var(--g-fs-small); font-weight: var(--g-w-medium); text-decoration: none; }
+.jp-edit-file svg { width: 13px; height: 13px; flex: none; color: var(--g-accent); }
+.jp-edit-file span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jp-edits .jp-edit-file small { display: inline; flex: none; color: var(--g-muted); }
+.jp-edit-file:hover { background: var(--g-fill-hover); }
+.jp-edit-file.current { background: var(--g-green-soft); color: var(--g-green-ink); }
 /* A switched-off task fades, but the lines through it stay whole. */
 .jp-act.off .jp-row > .jp-namecell { opacity: 1; }
 .jp-act.off .jp-namecell > .jp-name, .jp-act.off .jp-fold-slot { opacity: 0.42; }
@@ -765,7 +772,7 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-essay .meta { font-size: var(--g-fs-small); color: var(--g-muted); }
 .jp-essay .fb { padding: 7px 10px; border-radius: 8px; background: var(--g-surface); color: var(--g-ink-2); font-size: var(--g-fs-small); }
 .jp-files { display: flex; flex-direction: column; margin-top: 10px; border-top: 0.5px solid var(--g-separator); }
-.jp-file { display: grid; grid-template-columns: 38px minmax(0, 1fr) 170px 150px 130px 190px; gap: 14px; align-items: center; padding: 10px 20px; border-bottom: 0.5px solid var(--g-separator); }
+.jp-file { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto minmax(0, 130px) minmax(0, 150px) auto; gap: 14px; align-items: center; padding: 10px 20px; border-bottom: 0.5px solid var(--g-separator); }
 .jp-file:last-child { border-bottom: 0; }
 .jp-file:hover { background: var(--g-surface-2); }
 .jp-file-wrap { border-bottom: 0.5px solid var(--g-separator); }
@@ -783,9 +790,10 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-file .t { display: block; font-size: var(--g-fs-body); font-weight: var(--g-w-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jp-file .s { display: block; font-size: var(--g-fs-small); color: var(--g-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jp-file .u { min-width: 0; font-size: var(--g-fs-small); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.jp-file .by b { display: block; font-size: var(--g-fs-small); font-weight: var(--g-w-medium); }
+.jp-file .by { min-width: 0; }
+.jp-file .by b { display: block; font-size: var(--g-fs-small); font-weight: var(--g-w-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jp-file .by small { display: block; font-size: var(--g-fs-caption); color: var(--g-muted); }
-.jp-file .acts { display: flex; justify-content: flex-end; gap: 6px; }
+.jp-file .acts { display: flex; justify-content: flex-end; gap: 6px; white-space: nowrap; }
 .jp-file > .jp-owner-chip { justify-self: start; }
 .jp-doc-history { padding: 2px 20px 16px; }
 .jp-doc-history-h { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -1062,7 +1070,7 @@ button.jp-user:active { transform: scale(0.97); }
     .jp-grid-2 { grid-template-columns: 1fr; }
     .jp-guide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .jp-owners { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .jp-file { grid-template-columns: 38px minmax(0, 1fr) 150px 190px; }
+    .jp-file { grid-template-columns: 38px minmax(0, 1fr) auto auto; }
     .jp-file .u, .jp-file .by { display: none; }
 }
 @media (max-width: 900px) {

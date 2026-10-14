@@ -487,9 +487,10 @@ class JourneyPlanner
             'credentials' => $mode === 'counsellor' ? $credentials : null,
             'account' => $mode === 'student' && $account ? ['email' => $account->email] : null,
             'documents' => $plan->documents()->with(['application', 'creator', 'reviewer', 'edits.author'])->get()
-                ->map(fn ($d) => JourneyDocuments::toArray($d, $mode, fn ($doc) => $mode === 'student'
-                    ? route('student.documents.file', $doc)
-                    : route('crm.journey.documents.file', [$lead, $doc])))->values()->all(),
+                ->map(fn ($d) => JourneyDocuments::toArray($d, $mode,
+                    fn ($doc) => $mode === 'student' ? route('student.documents.file', $doc) : route('crm.journey.documents.file', [$lead, $doc]),
+                    fn ($doc, $e) => $mode === 'student' ? route('student.documents.edits.file', [$doc, $e]) : route('crm.journey.documents.edits.file', [$lead, $doc, $e]),
+                ))->values()->all(),
             'docTemplate' => [
                 'fileCategories' => JourneyDocuments::FILE_CATEGORIES,
                 'essayCategories' => JourneyDocuments::ESSAY_CATEGORIES,

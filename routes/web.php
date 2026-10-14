@@ -184,6 +184,7 @@ Route::prefix('student')->name('student.')->controller(\App\Http\Controllers\Stu
         Route::delete('documents/{document}', 'destroyDocument')->whereNumber('document')->name('documents.destroy');
         Route::post('documents/{document}/edits', 'storeDocumentEdit')->whereNumber('document')->middleware('throttle:60,1')->name('documents.edits.store');
         Route::get('documents/{document}/file', 'downloadDocument')->whereNumber('document')->name('documents.file');
+        Route::get('documents/{document}/edits/{edit}/file', 'downloadDocumentEdit')->whereNumber(['document', 'edit'])->name('documents.edits.file');
     });
 });
 
@@ -298,6 +299,8 @@ Route::prefix('crm')->name('crm.')->group(function (): void {
             Route::delete('documents/{document}', 'destroyDocument')->whereNumber('document')->name('documents.destroy');
             Route::post('documents/{document}/edits', 'storeDocumentEdit')->whereNumber('document')->middleware('throttle:60,1')->name('documents.edits.store');
             Route::get('documents/{document}/file', 'downloadDocument')->whereNumber('document')->name('documents.file');
+            // A file kept in a document's history: an earlier copy, or one attached to a note.
+            Route::get('documents/{document}/edits/{edit}/file', 'downloadDocumentEdit')->whereNumber(['document', 'edit'])->name('documents.edits.file');
         });
         // The team guide: the whole CRM and the journey planner, explained.
         Route::get('guide', [\App\Http\Controllers\Crm\CrmGuideController::class, 'show'])->name('guide');

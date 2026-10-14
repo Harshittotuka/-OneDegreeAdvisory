@@ -1583,12 +1583,9 @@ class CrmJourneyPlannerController extends Controller
     {
         $plan = $this->editablePlan($request, $lead);
         $doc = JourneyDocuments::find($plan, $document);
-        $data = $request->validate([
-            'note' => ['required', 'string', 'max:290'],
-            'new_version' => ['sometimes', 'boolean'],
-        ], [], ['note' => 'what changed']);
+        $data = JourneyDocuments::editInput($request);
 
-        JourneyDocuments::noteEdit($doc, $data['note'], $this->user($request), (bool) ($data['new_version'] ?? false));
+        JourneyDocuments::noteEdit($doc, $data['note'], $this->user($request), (bool) ($data['new_version'] ?? false), $request->file('file'));
 
         return response()->json(['ok' => true, 'document' => $this->documentArray($lead, $doc->fresh())]);
     }
@@ -1610,11 +1607,21 @@ class CrmJourneyPlannerController extends Controller
         return JourneyDocuments::download(JourneyDocuments::find($plan, $document));
     }
 
+    /** A file kept in a document's history: an earlier copy, or one attached to a note. */
+    public function downloadDocumentEdit(Request $request, CrmLead $lead, int $document, int $edit)
+    {
+        $this->guardView($lead, $this->user($request));
+        $plan = $lead->journeyPlan ?? abort(404);
+
+        return JourneyDocuments::downloadEdit(JourneyDocuments::find($plan, $document), $edit);
+    }
+
     private function documentArray(CrmLead $lead, CrmJourneyDocument $document): array
     {
         $document->load(['application', 'creator', 'reviewer', 'edits.author']);
 
-        return JourneyDocuments::toArray($document, 'counsellor', fn ($d) => route('crm.journey.documents.file', [$lead, $d]));
+        return JourneyDocuments::toArray($document, 'counsellor', fn ($d) => route('crm.journey.documents.file', [$lead, $d]),
+            fn ($d, $e) => route('crm.journey.documents.edits.file', [$lead, $d, $e]));
     }
 
     private function markFitConfirmed(CrmJourneyApplication $application, CrmUser $user): void
