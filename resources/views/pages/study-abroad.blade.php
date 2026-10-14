@@ -18,15 +18,6 @@
         'areaServed' => 'Worldwide',
         'audience' => ['@type' => 'EducationalAudience', 'educationalRole' => 'student'],
     ]);
-
-    $breadcrumbJsonLd = Seo::jsonLd([
-        '@context' => 'https://schema.org',
-        '@type' => 'BreadcrumbList',
-        'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Study Abroad', 'item' => $canonical],
-        ],
-    ]);
 @endphp
 
 @extends('layouts.app')
@@ -34,9 +25,6 @@
 @push('head')
   <script type="application/ld+json">
   {!! $serviceJsonLd !!}
-  </script>
-  <script type="application/ld+json">
-  {!! $breadcrumbJsonLd !!}
   </script>
 @endpush
 

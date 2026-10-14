@@ -1053,3 +1053,93 @@ html[data-color-theme] .stripe-flyout .course-menu-card--mbbs:hover {
 .stripe-flyout .course-menu-login:hover > svg {
   transform: translateX(2px);
 }
+
+/* ============================================================================
+   Breadcrumb trail (partials/breadcrumbs.blade.php)
+   ----------------------------------------------------------------------------
+   A slim band in the header's own colour, directly under it, with the same
+   side edges as the nav so "Home" lines up under the logo. It sits in the
+   page flow rather than over the hero: half the heroes are dark or full-bleed
+   and start right at the header, where overlaid text would vanish.
+   Drawn only while config('site.show_breadcrumbs') is on (currently off);
+   the BreadcrumbList for search engines is emitted either way.
+   ========================================================================== */
+.site-crumbs {
+  padding: 9px max(22px, calc((100vw - var(--container)) / 2));
+  background: var(--theme-nav-bg, rgba(255, 255, 255, 0.82));
+  border-bottom: 1px solid var(--theme-border-soft, rgba(19, 37, 47, 0.08));
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.site-crumbs__list {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-crumbs__item {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* Chevron between crumbs, drawn so it takes the text colour. */
+.site-crumbs__item + .site-crumbs__item::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  margin: 0 11px 0 8px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  color: var(--muted);
+  opacity: 0.55;
+  transform: rotate(45deg);
+}
+
+.site-crumbs__item a {
+  color: var(--navy);
+  font-weight: 600;
+  text-decoration: none;
+  text-underline-offset: 3px;
+  transition: color 160ms ease;
+}
+
+.site-crumbs__item a:hover,
+.site-crumbs__item a:focus-visible {
+  color: var(--coral, var(--teal));
+  text-decoration: underline;
+}
+
+/* The page itself: the one crumb allowed to shrink, so a long post title
+   ends in an ellipsis instead of pushing the trail off a phone screen. */
+.site-crumbs__item.is-current {
+  flex: 0 1 auto;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.site-crumbs__item.is-current span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+  .site-crumbs {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-size: 0.78rem;
+  }
+}
+
+@media print {
+  .site-crumbs {
+    display: none;
+  }
+}

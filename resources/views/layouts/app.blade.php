@@ -191,6 +191,13 @@
 
     @include('partials.header-stripe', ['activeNav' => $activeNav ?? null])
 
+    {{-- The trail comes from the route (App\Support\Breadcrumbs::ROUTES) unless
+         the view set $breadcrumbs itself. The CMS live editor renders a real
+         page as its canvas and gets none. --}}
+    @unless($cmsEdit)
+      @include('partials.breadcrumbs', ['trail' => \App\Support\Breadcrumbs::trail($breadcrumbs ?? null, $canonicalUrl)])
+    @endunless
+
     @include('partials.students-hub-overlay')
 
     {{-- Server-rendered fallback for the consult/careers/newsletter forms: when

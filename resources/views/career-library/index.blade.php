@@ -21,13 +21,7 @@
         'url' => url()->current(),
         'description' => 'Career reports covering salary, eligibility, study routes and demand outlook.',
         'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => url('/')],
-        'breadcrumb' => [
-            '@type' => 'BreadcrumbList',
-            'itemListElement' => [
-                ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
-                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Global Career Library', 'item' => url()->current()],
-            ],
-        ],
+        // The BreadcrumbList comes with the visible trail (App\Support\Breadcrumbs).
         'mainEntity' => [
             '@type' => 'ItemList',
             'numberOfItems' => $careerCount,

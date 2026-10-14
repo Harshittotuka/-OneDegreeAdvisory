@@ -19,6 +19,12 @@ return [
        DECODE_URL if it ever moves. */
     'decode_url' => env('DECODE_URL', 'https://decode.onedegreeadvisory.com/'),
 
+    /* Breadcrumbs (App\Support\Breadcrumbs). Every page always emits its
+       BreadcrumbList for search engines. This only decides whether the trail
+       is also drawn on the page, as a strip under the header. Off by choice:
+       the strip pushed every hero down and sat oddly above the dark ones. */
+    'show_breadcrumbs' => false,
+
     /* Password for the /admin blog CMS. Override via CMS_PASSWORD in .env. */
     'cms_password' => env('CMS_PASSWORD', 'onedegree'),
 

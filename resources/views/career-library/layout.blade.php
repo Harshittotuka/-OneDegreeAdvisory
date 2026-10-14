@@ -260,6 +260,11 @@
     {{-- Shared site navbar — identical to the rest of the site. --}}
     @include('partials.header-stripe', ['activeNav' => 'career-library'])
 
+    {{-- Same trail as the rest of the site (see layouts/app); none in the CMS live editor. --}}
+    @if(empty($live))
+      @include('partials.breadcrumbs', ['trail' => \App\Support\Breadcrumbs::trail($breadcrumbs ?? null, url()->current())])
+    @endif
+
     {{-- Coming-soon overlay for the navbar's "Evaluate your personality"
          trigger. The main site drives this via script.js, which we don't load
          here, so a small self-contained handler (below) powers it instead. --}}

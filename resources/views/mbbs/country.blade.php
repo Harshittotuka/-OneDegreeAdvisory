@@ -39,15 +39,10 @@
         'isPartOf' => ['@type' => 'WebSite', 'name' => config('site.name'), 'url' => route('home')],
         'inLanguage' => 'en',
     ]);
-    $breadcrumbJsonLd = Seo::jsonLd([
-        '@context' => 'https://schema.org',
-        '@type' => 'BreadcrumbList',
-        'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'MBBS Abroad', 'item' => route('mbbs.student')],
-            ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => $canonical],
-        ],
-    ]);
+    $breadcrumbs = [
+        ['name' => 'MBBS Abroad', 'url' => route('mbbs.student')],
+        ['name' => $countryName],
+    ];
 
     // ---- helpers ----------------------------------------------------------
     // Split a long body into readable paragraphs (explicit " | " first, else sentence pairs).
@@ -173,9 +168,6 @@
 @push('head')
   <script type="application/ld+json">
   {!! $webPageJsonLd !!}
-  </script>
-  <script type="application/ld+json">
-  {!! $breadcrumbJsonLd !!}
   </script>
 @endpush
 

@@ -129,17 +129,15 @@
     $ogImageAlt = $bannerImageAlt;
     $ogType = 'article';
 
+    // "Destinations" is the nav's name for the country list, which lives on the
+    // home page rather than a page of its own.
+    $breadcrumbs = [
+        ['name' => 'Destinations', 'url' => route('home').'#destinations'],
+        ['name' => $countryName],
+    ];
+
     // JSON-LD built here (raw PHP) so the literal '@context' key is never parsed
     // as Blade's @context directive (which would corrupt the structured data).
-    $breadcrumbJsonLd = json_encode([
-        '@context' => 'https://schema.org',
-        '@type' => 'BreadcrumbList',
-        'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Destinations', 'item' => route('home').'#destinations'],
-            ['@type' => 'ListItem', 'position' => 3, 'name' => $countryName, 'item' => $canonical],
-        ],
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     // Questions this guide answers in its own words (resources/data/country-guides).
     // Rendered below AND emitted as FAQPage: Google only honours the markup when
     // the same text is on the page, and an answer written to be read by a person
@@ -170,9 +168,6 @@
 @extends('layouts.app')
 
 @push('head')
-  <script type="application/ld+json">
-  {!! $breadcrumbJsonLd !!}
-  </script>
   <script type="application/ld+json">
   {!! $webPageJsonLd !!}
   </script>

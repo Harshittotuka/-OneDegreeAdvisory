@@ -44,14 +44,7 @@
         'publisher' => ['@type' => 'Organization', 'name' => config('site.name'), 'url' => route('home')],
         'inLanguage' => 'en',
     ]);
-    $breadcrumbJsonLd = Seo::jsonLd([
-        '@context' => 'https://schema.org',
-        '@type' => 'BreadcrumbList',
-        'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => route('home')],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => $page['title'] ?? 'Page', 'item' => $canonical],
-        ],
-    ]);
+    $breadcrumbs = [['name' => ($page['title'] ?? '') ?: 'Page']];
 @endphp
 
 @extends('layouts.app')
@@ -61,9 +54,6 @@
 @push('head')
   <script type="application/ld+json">
   {!! $webPageJsonLd !!}
-  </script>
-  <script type="application/ld+json">
-  {!! $breadcrumbJsonLd !!}
   </script>
 @endpush
 
