@@ -98,7 +98,7 @@
     function daysUntil(iso) { if (!iso) return null; return Math.round((new Date(iso + 'T00:00:00') - today()) / 86400000); }
     function fmt(iso, opts) { if (!iso) return ''; var d = new Date(iso + 'T00:00:00'); return isNaN(d) ? iso : d.toLocaleDateString('en-GB', opts || { day: 'numeric', month: 'short', year: 'numeric' }); }
     function when(isoTime) { return new Date(isoTime).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }); }
-    function stClass(st) { return { 'Completed': 's-done', 'In Progress': 's-prog', 'Submitted': 's-prog', 'Not Applicable': 's-na' }[st] || ''; }
+    function stClass(st) { return { 'Completed': 's-done', 'In Progress': 's-prog', 'Submitted': 's-prog s-sub', 'Not Applicable': 's-na' }[st] || ''; }
     function stPill(st) { return { 'Completed': 'good', 'In Progress': 'amber', 'Submitted': 'amber', 'Not Applicable': 'na' }[st] || 'wait'; }
     function due(days) {
         if (days == null) return null;
@@ -291,21 +291,34 @@
         return out;
     }
 
-    /* The tree in front of a task's name: the lines down from the levels above,
-       the elbow into this row, and the fold button or a node mark. */
-    var TREE_STEP = 22, TREE_MID = 9;     // one level's width; where its line runs within it
-    function treeCell(t, data) {
+    /*
+     * The tree in front of a task's name, drawn as a route in the stage's own
+     * colour: a line down from each level above that carries on past this row,
+     * a rounded bend into it, and at the end of the bend a stop. A subtask's
+     * stop shows where it stands (empty, under way, done, not applicable); a
+     * task with subtasks has a ring instead, filled as far as they are done,
+     * that folds its branch away.
+     */
+    var TREE_STEP = 26, TREE_MID = 11;    // one level's width; where its line runs within it
+    var STOP_STATE = { 'Completed': 'done', 'In Progress': 'prog', 'Submitted': 'sub', 'Not Applicable': 'na' };
+    function treeCell(t, data, a, prog) {
         var lines = '';
         t.rails.forEach(function (on, j) { if (on) lines += '<i style="left:' + (j * TREE_STEP + TREE_MID) + 'px"></i>'; });
         if (t.depth) {
             var x = (t.depth - 1) * TREE_STEP + TREE_MID;
-            lines += '<i class="' + (t.last ? 'end' : 'mid') + '" style="left:' + x + 'px"></i><i class="arm' + (t.kids ? '' : ' to-node') + '" style="left:' + x + 'px"></i>';
+            lines += '<i class="' + (t.last ? 'end' : 'mid') + '" style="left:' + x + 'px"></i><i class="bend' + (t.kids ? ' to-hub' : '') + '" style="left:' + x + 'px"></i>';
         }
         // The line down from this task to its first subtask.
         if (t.kids && !t.folded) lines += '<i class="stub" style="left:' + (t.depth * TREE_STEP + TREE_MID) + 'px"></i>';
-        var slot = t.kids
-            ? '<button class="jp-fold" data-act="fold"' + data + ' aria-expanded="' + !t.folded + '" title="' + (t.folded ? 'Show' : 'Hide') + ' the ' + plural(t.kids, 'subtask', 'subtasks') + ' under it">' + ICO.chev + '</button>'
-            : t.depth ? '<i class="jp-node" aria-hidden="true"></i>' : '';
+        var slot = '';
+        if (t.kids) {
+            var pct = prog.total ? Math.round(prog.done / prog.total * 100) : 0;
+            slot = '<button class="jp-fold" data-act="fold"' + data + ' style="--p:' + pct + '" aria-expanded="' + !t.folded + '" title="' +
+                prog.done + ' of ' + plural(prog.total, 'subtask', 'subtasks') + ' done. ' + (t.folded ? 'Show them' : 'Hide them') + '.">' + ICO.chev + '</button>';
+        } else if (t.depth) {
+            var st = STOP_STATE[a.status] || 'todo';
+            slot = '<i class="jp-node st-' + st + '" aria-hidden="true">' + (st === 'done' ? ICO.check : '') + '</i>';
+        }
         return '<span class="jp-tree" style="width:' + (t.depth * TREE_STEP) + 'px" aria-hidden="true">' + lines + '</span>' +
             '<span class="jp-fold-slot">' + slot + '</span>';
     }
@@ -341,12 +354,16 @@
             def = ap ? appDef(ap, def.parent) : CORE_DEFS[def.parent];
         }
     }
-    /* "3 subtasks · 1 done" on a task with steps under it; `states` are theirs. */
-    function subtaskChip(states) {
+    /* How far the subtasks under a task have got: the ones that count, and the done ones. */
+    function subtaskProgress(states) {
         var subs = states.filter(function (x) { return x && x.inc; });
-        if (!subs.length) return '';
-        var done = subs.filter(function (x) { return x.status === 'Completed'; }).length;
-        return ' <span class="jp-repeat-chip">' + plural(subs.length, 'subtask', 'subtasks') + ' · ' + done + ' done</span>';
+        return { total: subs.length, done: subs.filter(function (x) { return x.status === 'Completed'; }).length };
+    }
+    /* "1 of 3 done" beside a task with subtasks, in the stage's colour (green once all are). */
+    function subtaskChip(prog) {
+        if (!prog.total) return '';
+        return ' <span class="jp-sub-chip' + (prog.done === prog.total ? ' all' : '') + '" title="' + prog.done + ' of ' + plural(prog.total, 'subtask', 'subtasks') + ' done">' +
+            prog.done + ' of ' + prog.total + ' done</span>';
     }
     /** Index into phases() of the stage being worked on now, or -1 when all are done. */
     function currentPhase() {
@@ -1011,7 +1028,7 @@
         var nested = depth > 0;
         // The steps under this task, wherever it is.
         var subDefs = ap ? appSubtasks(ap, def.key) : coreSubtasks(def.key);
-        var subStates = subDefs.map(function (t) { return ap ? ap.acts[t.key] : P.core[t.key]; });
+        var subProg = subtaskProgress(subDefs.map(function (s) { return ap ? ap.acts[s.key] : P.core[s.key]; }));
         var parentName = def.parent ? (ap ? appDef(ap, def.parent) : CORE_DEFS[def.parent] || {}).name || '' : '';
 
         var status = editable
@@ -1043,7 +1060,7 @@
             var tools = '<div class="full jp-task-tools"><span class="muted">' + about + '</span>' + addSub + (def.custom ? editBtn + rmBtn : '') + '</div>';
             // In a tree the details sit under the task's own name, the lines running past on their left.
             var through = treeThrough(t), treed = !!(t.depth || through);
-            detail = '<div class="jp-detail' + (treed ? ' treed' : '') + '"' + (treed ? ' style="--tree-pad:' + (t.depth * TREE_STEP + 26) + 'px"' : '') + '>' + through +
+            detail = '<div class="jp-detail' + (treed ? ' treed' : '') + '"' + (treed ? ' style="--tree-pad:' + (t.depth * TREE_STEP + 30) + 'px"' : '') + '>' + through +
                 '<div><p class="desc">' + esc(def.desc) + '</p><dl class="jp-kv">' +
                 '<dt>Documents</dt><dd>' + esc(def.docs) + '</dd>' +
                 (timeline ? '<dt>Best time</dt><dd>' + esc(timeline) + '</dd>' : '') +
@@ -1066,8 +1083,8 @@
         return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + (nested ? ' nest' : '') + '"' +
             (nested ? ' style="--tree-w:' + (depth * TREE_STEP) + 'px"' : '') + '><div class="jp-row">' +
             (isC() ? '<button class="jp-inc' + (a.inc ? ' on' : '') + '" data-act="toggle-inc"' + data + ' aria-pressed="' + a.inc + '" title="' + (a.inc ? 'Included for this student. Click to exclude.' : 'Excluded. Click to include.') + '">' + (a.inc ? ICO.check : '') + '</button>' : '') +
-            '<div class="jp-namecell">' + treeCell(t, data) +
-            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + (ap ? '' : repeatChip(def, a)) + subtaskChip(subStates) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button></div>' +
+            '<div class="jp-namecell">' + treeCell(t, data, a, subProg) +
+            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + (ap ? '' : repeatChip(def, a)) + subtaskChip(subProg) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button></div>' +
             '<span class="jp-ocell"><span class="jp-owner-chip' + (ownerIsMine(a.owner) ? ' mine' : '') + (isMemberOwner(a.owner) ? ' person' : '') + '" title="' + esc(isMemberOwner(a.owner) ? ownerName(a.owner) + ' · ' + (PEOPLE[a.owner] ? PEOPLE[a.owner].role : 'off the file') : a.owner) + '">' + esc(ownerLabel(a.owner)) + '</span></span>' +
             status + date + '<span class="jp-due">' + after + '</span>' +
             '<button class="jp-chev" data-act="toggle-row"' + data + ' aria-label="Show details">' + ICO.chev + '</button></div>' + detail + '</div>';
