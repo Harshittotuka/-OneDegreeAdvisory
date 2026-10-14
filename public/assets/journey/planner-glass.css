@@ -993,8 +993,15 @@ button.jp-user:active { transform: scale(0.97); }
 /* ---------- dialogs: a sheet over a dimmed page ---------- */
 .jp-backdrop {
     position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px;
-    background: var(--g-scrim); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    background: var(--g-scrim);
     animation: jp-fade var(--g-dur) var(--g-ease);
+}
+/* The dimmed page's blur sits on a layer beside the sheet, not on the
+   backdrop itself: a backdrop-filter on the backdrop would stop the sheet's
+   own blur reaching the page, and the page would show through the form. */
+.jp-backdrop::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
 }
 @keyframes jp-fade { from { opacity: 0; } }
 .jp-dialog {
@@ -1218,6 +1225,9 @@ button.jp-user:active { transform: scale(0.97); }
     -webkit-backdrop-filter: blur(24px) saturate(120%); backdrop-filter: blur(24px) saturate(120%);
     box-shadow: var(--lg-rim), var(--lg-lift-high);
 }
+/* A sheet holds a form, so in Clear glass it keeps its frost (--lg-sheet)
+   while the panes around it go see-through. */
+.jp-dialog { background: var(--lg-sheen), var(--lg-sheet); }
 @media (max-width: 900px) {
     .jp-side { background: var(--lg-sheen), var(--lg-strong); box-shadow: var(--lg-rim), var(--lg-lift-high); }
 }
