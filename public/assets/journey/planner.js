@@ -25,8 +25,10 @@
         credentials: P.credentials || null,
         docTab: 'all', essayId: null, essayDirty: false, openDoc: null, refreshing: false,
         cal: { y: null, m: null, sel: null },
-        // Tasks whose subtasks are folded away, by row.
-        folded: {},
+        // What the reader has folded away: a task's subtasks (by row) and a
+        // university's groups ("group:<university>:<group>"). Kept in this
+        // browser, so it is still folded when they come back.
+        folded: (function () { try { return JSON.parse(localStorage.getItem('jp-fold:' + location.pathname)) || {}; } catch (e) { return {}; } })(),
         // The Google room made for the open meeting dialog, until it is saved.
         room: null, roomBusy: false, dialogSeq: 0,
         // The side panel folded down to its icons (wide screens only).
@@ -245,7 +247,8 @@
         return treeRows(roots,
             function (d) { return (ap.tasks || []).filter(function (t) { return t.parent === d.key; }); },
             function (d) { return rowShown(ap.acts[d.key], false); },
-            function (d) { return UI.folded[rowKey('app', ap.id, d.key)]; });
+            function (d) { return UI.folded[rowKey('app', ap.id, d.key)]; },
+            function (d) { return toneOf(ap.acts[d.key]); });
     }
 
     /* Whether a task's row is drawn for this reader: switched-off tasks only
@@ -261,16 +264,25 @@
         return true;
     }
 
+    /* Where a task stands, as the tree colours it: done, under way, sent in,
+       still to do, or out of the count (not applicable, or switched off). */
+    function toneOf(a) {
+        if (!a || !a.inc) return 'na';
+        return { 'Completed': 'done', 'In Progress': 'prog', 'Submitted': 'sub', 'Not Applicable': 'na' }[a.status] || 'todo';
+    }
+
     /*
      * A list of tasks drawn as a tree. Each row comes with what it takes to
-     * draw its lines: how deep it sits, which ancestors' lines carry on past
-     * it (`rails`, one per level above its own), whether it is the last of its
-     * siblings, and how many children show under it unless it is folded.
+     * draw its lines: how deep it sits, the lines from the levels above that
+     * carry on past it (`rails`, one per level above its own, each the tone
+     * of the task it leads on to, or null), whether it is the last of its
+     * siblings, how many children show under it unless it is folded, and the
+     * tones of itself, the sibling after it and its first child.
      *
      * A row the reader doesn't see (switched off, or filtered out) gives its
      * place to its children, so the lines always join rows that are there.
      */
-    function treeRows(roots, kidsOf, shown, foldedOf) {
+    function treeRows(roots, kidsOf, shown, foldedOf, toneOf) {
         var out = [];
         function visible(list) {
             var v = [];
@@ -280,11 +292,14 @@
         function walk(list, depth, rails) {
             var rows = visible(list);
             rows.forEach(function (d, i) {
-                var last = i === rows.length - 1, kids = visible(kidsOf(d)).length, fold = !!foldedOf(d);
-                out.push({ def: d, depth: depth, rails: rails, last: last, kids: kids, folded: fold });
+                var next = rows[i + 1] || null, kids = visible(kidsOf(d)), fold = !!foldedOf(d);
+                out.push({
+                    def: d, depth: depth, rails: rails, last: !next, kids: kids.length, folded: fold,
+                    tone: toneOf(d), nextTone: next ? toneOf(next) : null, kidTone: kids.length ? toneOf(kids[0]) : null
+                });
                 // A root's own line starts at its children; below that, each
                 // level's line carries on while that level has more to come.
-                if (kids && !fold) walk(kidsOf(d), depth + 1, depth ? rails.concat([!last]) : []);
+                if (kids.length && !fold) walk(kidsOf(d), depth + 1, depth ? rails.concat([next ? toneOf(next) : null]) : []);
             });
         }
         walk(roots, 0, []);
@@ -292,32 +307,33 @@
     }
 
     /*
-     * The tree in front of a task's name, drawn as a route in the stage's own
-     * colour: a line down from each level above that carries on past this row,
-     * a rounded bend into it, and at the end of the bend a stop. A subtask's
-     * stop shows where it stands (empty, under way, done, not applicable); a
-     * task with subtasks has a ring instead, filled as far as they are done,
-     * that folds its branch away.
+     * The tree in front of a task's name: a line down from each level above
+     * that carries on past this row, an elbow into it, and at the end of the
+     * elbow a stop. The line leading to a task takes that task's colour —
+     * green when it is done, orange under way, indigo sent in, pale when it
+     * is still to do — so a branch shows at a glance how far it has got. A
+     * task with subtasks has a ring instead of a stop, filled as far as they
+     * are done, that folds its branch away.
      */
     var TREE_STEP = 26, TREE_MID = 11;    // one level's width; where its line runs within it
-    var STOP_STATE = { 'Completed': 'done', 'In Progress': 'prog', 'Submitted': 'sub', 'Not Applicable': 'na' };
-    function treeCell(t, data, a, prog) {
+    function treeLine(cls, tone, x) { return '<i class="' + cls + ' t-' + tone + '" style="left:' + x + 'px"></i>'; }
+    function treeCell(t, data, prog) {
         var lines = '';
-        t.rails.forEach(function (on, j) { if (on) lines += '<i style="left:' + (j * TREE_STEP + TREE_MID) + 'px"></i>'; });
+        t.rails.forEach(function (tone, j) { if (tone) lines += treeLine('rail', tone, j * TREE_STEP + TREE_MID); });
         if (t.depth) {
             var x = (t.depth - 1) * TREE_STEP + TREE_MID;
-            lines += '<i class="' + (t.last ? 'end' : 'mid') + '" style="left:' + x + 'px"></i><i class="bend' + (t.kids ? ' to-hub' : '') + '" style="left:' + x + 'px"></i>';
+            lines += treeLine('up', t.tone, x) + treeLine('arm' + (t.kids ? ' to-hub' : ''), t.tone, x);
+            if (!t.last) lines += treeLine('down', t.nextTone, x);
         }
         // The line down from this task to its first subtask.
-        if (t.kids && !t.folded) lines += '<i class="stub" style="left:' + (t.depth * TREE_STEP + TREE_MID) + 'px"></i>';
+        if (t.kids && !t.folded) lines += treeLine('stub', t.kidTone, t.depth * TREE_STEP + TREE_MID);
         var slot = '';
         if (t.kids) {
             var pct = prog.total ? Math.round(prog.done / prog.total * 100) : 0;
             slot = '<button class="jp-fold" data-act="fold"' + data + ' style="--p:' + pct + '" aria-expanded="' + !t.folded + '" title="' +
                 prog.done + ' of ' + plural(prog.total, 'subtask', 'subtasks') + ' done. ' + (t.folded ? 'Show them' : 'Hide them') + '.">' + ICO.chev + '</button>';
         } else if (t.depth) {
-            var st = STOP_STATE[a.status] || 'todo';
-            slot = '<i class="jp-node st-' + st + '" aria-hidden="true">' + (st === 'done' ? ICO.check : '') + '</i>';
+            slot = '<i class="jp-node st-' + t.tone + '" aria-hidden="true">' + (t.tone === 'done' ? ICO.check : '') + '</i>';
         }
         return '<span class="jp-tree" style="width:' + (t.depth * TREE_STEP) + 'px" aria-hidden="true">' + lines + '</span>' +
             '<span class="jp-fold-slot">' + slot + '</span>';
@@ -326,10 +342,10 @@
        branch reads unbroken past it: the levels above that go on, this row's
        own line if more siblings follow, and the line down to its children. */
     function treeThrough(t) {
-        var at = function (x) { return '<i style="left:' + x + 'px"></i>'; }, lines = '';
-        t.rails.forEach(function (on, j) { if (on) lines += at(j * TREE_STEP + TREE_MID); });
-        if (t.depth && !t.last) lines += at((t.depth - 1) * TREE_STEP + TREE_MID);
-        if (t.kids && !t.folded) lines += at(t.depth * TREE_STEP + TREE_MID);
+        var lines = '';
+        t.rails.forEach(function (tone, j) { if (tone) lines += treeLine('rail', tone, j * TREE_STEP + TREE_MID); });
+        if (t.depth && !t.last) lines += treeLine('rail', t.nextTone, (t.depth - 1) * TREE_STEP + TREE_MID);
+        if (t.kids && !t.folded) lines += treeLine('rail', t.kidTone, t.depth * TREE_STEP + TREE_MID);
         return lines ? '<span class="jp-tree through" aria-hidden="true">' + lines + '</span>' : '';
     }
     /* Where the name column starts inside a row differs by theme, reader and
@@ -345,13 +361,38 @@
         cancelAnimationFrame(treeFrame);
         treeFrame = requestAnimationFrame(placeTreeLines);
     });
-    /* Opening a task from elsewhere (a deadline, the calendar) unfolds the branch it is in. */
+    /* Folding: one thing at a time, or every branch at once; kept in this browser. */
+    function setFold(key, on) {
+        if (on) UI.folded[key] = true; else delete UI.folded[key];
+        try { localStorage.setItem('jp-fold:' + location.pathname, JSON.stringify(UI.folded)); } catch (e) { /* private window */ }
+    }
+    function groupFoldKey(appId, group) { return 'group:' + appId + ':' + group; }
+    /* The row keys of every task that has subtasks: on the journey, or on one university. */
+    function branchKeys(scope, ap) {
+        var defs = ap ? (ap.tasks || []) : Object.keys(CORE_DEFS).map(function (k) { return CORE_DEFS[k]; });
+        var out = {};
+        defs.forEach(function (d) { if (d.parent) out[rowKey(scope, ap ? ap.id : null, d.parent)] = true; });
+        return Object.keys(out);
+    }
+    /* The button that folds, or unfolds, every branch in view at once. */
+    function foldAllButton(scope, ap) {
+        var keys = branchKeys(scope, ap);
+        if (!keys.length) return '';
+        var anyOpen = keys.some(function (k) { return !UI.folded[k]; });
+        return '<button class="jp-btn ghost sm jp-fold-all" data-act="fold-all" data-scope="' + scope + '"' + (ap ? ' data-u="' + ap.id + '"' : '') + ' data-v="' + (anyOpen ? 'fold' : 'open') + '">' +
+            '<span class="jp-fold-all-ico' + (anyOpen ? '' : ' shut') + '" aria-hidden="true">' + ICO.chev + '</span>' + (anyOpen ? 'Collapse subtasks' : 'Expand subtasks') + '</button>';
+    }
+    /* Opening a task from elsewhere (a deadline, the calendar) unfolds the branch, and the group, it is in. */
     function unfoldTo(scope, appId, key) {
         var ap = scope === 'app' ? P.apps.find(function (x) { return x.id === appId; }) : null;
         var def = ap ? appDef(ap, key) : CORE_DEFS[key];
         for (var hops = 0; def && def.parent && hops < 200; hops++) {
-            UI.folded[rowKey(scope, appId, def.parent)] = false;
+            setFold(rowKey(scope, appId, def.parent), false);
             def = ap ? appDef(ap, def.parent) : CORE_DEFS[def.parent];
+        }
+        if (ap && def) {
+            var g = def.group || (T.appGroups.find(function (x) { return x.activities.some(function (y) { return y.key === def.key; }); }) || {}).key;
+            if (g) setFold(groupFoldKey(appId, g), false);
         }
     }
     /* How far the subtasks under a task have got: the ones that count, and the done ones. */
@@ -359,11 +400,12 @@
         var subs = states.filter(function (x) { return x && x.inc; });
         return { total: subs.length, done: subs.filter(function (x) { return x.status === 'Completed'; }).length };
     }
-    /* "1 of 3 done" beside a task with subtasks, in the stage's colour (green once all are). */
-    function subtaskChip(prog) {
+    /* "1 of 3 done" beside a task with subtasks, in the stage's colour (green once all
+       are); while they are folded away it says how many are hidden. */
+    function subtaskChip(prog, folded) {
         if (!prog.total) return '';
-        return ' <span class="jp-sub-chip' + (prog.done === prog.total ? ' all' : '') + '" title="' + prog.done + ' of ' + plural(prog.total, 'subtask', 'subtasks') + ' done">' +
-            prog.done + ' of ' + prog.total + ' done</span>';
+        return ' <span class="jp-sub-chip' + (prog.done === prog.total ? ' all' : '') + (folded ? ' shut' : '') + '" title="' + prog.done + ' of ' + plural(prog.total, 'subtask', 'subtasks') + ' done">' +
+            (folded ? plural(prog.total, 'subtask', 'subtasks') + ' hidden · ' + prog.done + ' done' : prog.done + ' of ' + prog.total + ' done') + '</span>';
     }
     /** Index into phases() of the stage being worked on now, or -1 when all are done. */
     function currentPhase() {
@@ -979,7 +1021,8 @@
         return treeRows(roots,
             function (d) { var under = kids[d.key] || []; return under.filter(function (c) { return !c.repeat; }).concat(under.filter(function (c) { return c.repeat; })); },
             function (d) { return rowShown(P.core[d.key], true); },
-            function (d) { return UI.folded[rowKey('core', null, d.key)]; });
+            function (d) { return UI.folded[rowKey('core', null, d.key)]; },
+            function (d) { return toneOf(P.core[d.key]); });
     }
     function canRepeat(def) {
         var ph = PHASE_OF[def.key];
@@ -1015,7 +1058,7 @@
     /* `t` is the row's place in its tree (see treeRows). */
     function actRow(scope, appId, def, a, timeline, filtered, t) {
         if (!rowShown(a, filtered)) return '';
-        t = t || { depth: 0, rails: [], last: true, kids: 0, folded: false };
+        t = t || { depth: 0, rails: [], last: true, kids: 0, folded: false, tone: toneOf(a) };
         var depth = t.depth;
         var k = rowKey(scope, appId, def.key), open = !!UI.openRows[k];
         var data = ' data-scope="' + scope + '" data-app="' + (appId || '') + '" data-key="' + esc(def.key) + '"';
@@ -1083,8 +1126,8 @@
         return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + (nested ? ' nest' : '') + '"' +
             (nested ? ' style="--tree-w:' + (depth * TREE_STEP) + 'px"' : '') + '><div class="jp-row">' +
             (isC() ? '<button class="jp-inc' + (a.inc ? ' on' : '') + '" data-act="toggle-inc"' + data + ' aria-pressed="' + a.inc + '" title="' + (a.inc ? 'Included for this student. Click to exclude.' : 'Excluded. Click to include.') + '">' + (a.inc ? ICO.check : '') + '</button>' : '') +
-            '<div class="jp-namecell">' + treeCell(t, data, a, subProg) +
-            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + (ap ? '' : repeatChip(def, a)) + subtaskChip(subProg) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button></div>' +
+            '<div class="jp-namecell">' + treeCell(t, data, subProg) +
+            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + (ap ? '' : repeatChip(def, a)) + subtaskChip(subProg, t.kids && t.folded) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button></div>' +
             '<span class="jp-ocell"><span class="jp-owner-chip' + (ownerIsMine(a.owner) ? ' mine' : '') + (isMemberOwner(a.owner) ? ' person' : '') + '" title="' + esc(isMemberOwner(a.owner) ? ownerName(a.owner) + ' · ' + (PEOPLE[a.owner] ? PEOPLE[a.owner].role : 'off the file') : a.owner) + '">' + esc(ownerLabel(a.owner)) + '</span></span>' +
             status + date + '<span class="jp-due">' + after + '</span>' +
             '<button class="jp-chev" data-act="toggle-row"' + data + ' aria-label="Show details">' + ICO.chev + '</button></div>' + detail + '</div>';
@@ -1101,7 +1144,7 @@
             '</select>' +
             '<select id="f-status" aria-label="Filter by status"><option value="all">Any status</option><option value="open"' + (UI.status === 'open' ? ' selected' : '') + '>Still to do</option>' + T.statuses.map(function (s) { return '<option' + (UI.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
             (isC() ? '<label><input type="checkbox" id="f-excl"' + (UI.showExcluded ? ' checked' : '') + '> Show excluded</label>' : '') +
-            '<span class="sp"></span>' + (isC() ? '<button class="jp-btn sm" data-act="add-stage">' + ICO.plus + ' Add a stage</button>' : '') + '<button class="jp-btn ghost sm" data-act="expand-all">Open all</button><button class="jp-btn ghost sm" data-act="collapse-all">Close all</button></div>';
+            '<span class="sp"></span>' + (isC() ? '<button class="jp-btn sm" data-act="add-stage">' + ICO.plus + ' Add a stage</button>' : '') + foldAllButton('core', null) + '<button class="jp-btn ghost sm" data-act="expand-all">Open all stages</button><button class="jp-btn ghost sm" data-act="collapse-all">Close all stages</button></div>';
 
         var panels = phases().map(function (p, i) {
             var r = roll(phaseActs(p));
@@ -1171,11 +1214,21 @@
             ? '<div class="jp-banner"><span><b>Seat confirmed.</b> This is the chosen university, so its visa steps now apply.</span><button class="jp-btn sm" data-act="visa-on" data-u="' + a.id + '">Turn on visa steps</button></div>' : '';
         // Each group lists ODA's activities, then what the counsellor added to
         // it here, every task followed by its subtasks.
+        // A group folds from its heading, which says how far it has got.
+        var anyGroupOpen = false;
         var groups = T.appGroups.map(function (g) {
-            var rows = appTree(a, g).map(function (n) { return a.acts[n.def.key] ? actRow('app', a.id, n.def, a.acts[n.def.key], '', false, n) : ''; }).join('');
+            var shut = !!UI.folded[groupFoldKey(a.id, g.key)];
+            if (!shut) anyGroupOpen = true;
+            var rows = shut ? '' : appTree(a, g).map(function (n) { return a.acts[n.def.key] ? actRow('app', a.id, n.def, a.acts[n.def.key], '', false, n) : ''; }).join('');
+            if (!shut && !rows) return '';
+            var gr = roll(g.activities.concat((a.tasks || []).filter(function (t) { return t.group === g.key; })).map(function (d) { return a.acts[d.key]; }).filter(Boolean));
             var add = isC() ? '<button class="jp-group-add" data-act="add-app-task" data-u="' + a.id + '" data-group="' + esc(g.key) + '">' + ICO.plus + ' Add a task</button>' : '';
-            return rows ? '<div class="jp-group"><span>' + esc(g.name) + '</span>' + add + '</div>' + rows : '';
+            return '<div class="jp-group' + (shut ? ' shut' : '') + '"><button class="jp-group-toggle" data-act="fold-group" data-u="' + a.id + '" data-g="' + esc(g.key) + '" aria-expanded="' + !shut + '">' +
+                ICO.chev + '<span>' + esc(g.name) + '</span>' + (gr.den ? '<span class="cnt' + (gr.done === gr.den ? ' all' : '') + '">' + gr.done + ' of ' + gr.den + ' done</span>' : '') + '</button>' + add + '</div>' + rows;
         }).join('') || '<div class="jp-empty">Nothing switched on for this university yet.</div>';
+        var foldTools = '<div class="jp-tree-tools">' + foldAllButton('app', a) +
+            '<button class="jp-btn ghost sm jp-fold-all" data-act="fold-groups" data-u="' + a.id + '" data-v="' + (anyGroupOpen ? 'fold' : 'open') + '">' +
+            '<span class="jp-fold-all-ico' + (anyGroupOpen ? '' : ' shut') + '" aria-hidden="true">' + ICO.chev + '</span>' + (anyGroupOpen ? 'Collapse groups' : 'Expand groups') + '</button></div>';
         var addTask = isC() ? '<div class="jp-add-task"><button class="jp-btn ghost sm" data-act="add-app-task" data-u="' + a.id + '">' + ICO.plus + ' Add a task or event</button></div>' : '';
         var armed = UI.armed === 'rm-' + a.id;
         var meta = isC()
@@ -1188,7 +1241,7 @@
             '<div class="jp-block-meta">' + meta + '</div></div>' +
             '<div class="jp-block-side"><div class="jp-big num">' + r.done + '<small>of ' + r.den + ' done</small></div>' +
             (isC() ? '<button class="jp-btn danger sm' + (armed ? ' armed' : '') + '" data-act="rm-uni" data-u="' + a.id + '">' + (armed ? 'Click again to remove' : 'Remove') + '</button>' : '') + '</div></div>' +
-            banner + requirementsCard(a) + '<div class="jp-acts' + (isC() ? '' : ' ro') + '">' + rowHead() + groups + addTask + '</div></div>';
+            banner + requirementsCard(a) + foldTools + '<div class="jp-acts' + (isC() ? '' : ' ro') + '">' + rowHead() + groups + addTask + '</div></div>';
     }
 
     /*
@@ -1911,7 +1964,7 @@
                 'Choose **In Progress** when you start it and **Completed** when it is done. Your counsellor is told straight away.',
                 'Open a task to read what to do, which documents it needs, and any note your counsellor left.',
                 'Anything past its date turns red. If a date no longer works, tell your counsellor and they will move it.'
-            ], tips: ['Tasks owned by your counsellor or the university show their status, but only they can change it.', 'Doing more than one internship or competition? Each one is listed separately under Skill Enhancers.', 'A task broken into smaller steps shows them indented under it; tick off the steps that are yours.'] },
+            ], tips: ['Tasks owned by your counsellor or the university show their status, but only they can change it.', 'Doing more than one internship or competition? Each one is listed separately under Skill Enhancers.', 'A task broken into smaller steps shows them indented under it; tick off the steps that are yours. Click the ring beside it to hide or show them.'] },
             { key: 'unis', title: 'Universities', go: 'universities', intro: 'Each university you apply to has its own checklist.', steps: [
                 'Open **Universities** and choose a university from the cards at the top.',
                 'The top of its block shows what it asks for: tests, documents, entry requirements and the date applications close.',
@@ -1952,6 +2005,7 @@
                 'An owner can be a role — Student, Counsellor, Program Lead, University, Bank — or a person named on the **Team** page, so a task can go to the content writer by name.',
                 'Need something the template does not have? **Add a task to this stage**, or **Add a stage** for a whole new one.',
                 'Break any task into steps: open it and choose **Add a subtask**. Subtasks can have subtasks of their own, as many levels deep as you need; switching a task off, or removing one you added, takes its subtasks with it.',
+                'Click the ring beside a task to hide or show its subtasks, or **Collapse subtasks** to fold them all at once. What you fold stays folded next time you open the plan.',
                 'In **Skill Enhancers**, open an activity and choose **Add another** for a second internship or a third competition. Each has its own status and date and sits under the first.',
                 '**Student Declaration Form Sign-off** (stage 2, after the shortlist sign-off) waits for the signed form. When it is uploaded the task moves to **Submitted**; mark it **Completed** once you have checked it.'
             ], tips: ['ODA\'s own tasks can only be switched off; tasks and stages you add can be edited or removed.', 'The filters at the top show one owner or one status at a time.'] },
@@ -1962,6 +2016,7 @@
                 'Switch on Interview and Portfolio only where the university asks for them.',
                 'Need something this university alone asks for — a campus visit, an info session, an extra form? **Add a task** beside a group\'s name (or **Add a task or event** at the foot of the checklist), and give it a date to put it on the calendar.',
                 'Break any task into steps: open it and choose **Add a subtask**. That works on ODA\'s tasks and your own, and on a subtask too, as many levels deep as you need.',
+                'Fold a group from its heading, or a task\'s subtasks from the ring beside it; **Collapse groups** and **Collapse subtasks** fold everything at once.',
                 'Record the offer type when the offer arrives — the Offer received task ticks itself.'
             ], tips: ['Tasks you add to a university can be edited or removed from the task itself; removing one removes its subtasks too. ODA\'s own can only be switched off.', 'Switching a task off (or back on) does the same to all its subtasks.'] },
             { key: 'docs', title: 'Documents & essays', go: 'documents', intro: 'Everything the student uploads or writes, and everything you add for them.', steps: [
@@ -2296,7 +2351,14 @@
                 scrollToEl('ph-' + el.dataset.p);
                 return;
             case 'toggle-row': { var k = rowKey(el.dataset.scope, appId, el.dataset.key); UI.openRows[k] = !UI.openRows[k]; render(); return; }
-            case 'fold': { var fk = rowKey(el.dataset.scope, appId, el.dataset.key); UI.folded[fk] = !UI.folded[fk]; render(); return; }
+            case 'fold': { var fk = rowKey(el.dataset.scope, appId, el.dataset.key); setFold(fk, !UI.folded[fk]); render(); return; }
+            case 'fold-all': {
+                var fa = el.dataset.u ? P.apps.find(function (x) { return x.id === parseInt(el.dataset.u, 10); }) : null;
+                branchKeys(el.dataset.scope, fa).forEach(function (bk) { setFold(bk, el.dataset.v === 'fold'); });
+                render(); return;
+            }
+            case 'fold-group': { var gk = groupFoldKey(el.dataset.u, el.dataset.g); setFold(gk, !UI.folded[gk]); render(); return; }
+            case 'fold-groups': T.appGroups.forEach(function (g) { setFold(groupFoldKey(el.dataset.u, g.key), el.dataset.v === 'fold'); }); render(); return;
             case 'jump-item': {
                 closeModal();
                 UI.owner = 'all'; UI.status = 'all';
