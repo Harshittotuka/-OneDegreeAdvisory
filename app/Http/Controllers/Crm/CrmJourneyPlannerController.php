@@ -210,9 +210,19 @@ class CrmJourneyPlannerController extends Controller
                 }
                 $before = $state[$data['key']];
                 $state[$data['key']] = JourneyPlanner::apply($before, $changes, $by);
+                // As on a university: a task's subtasks go in and out with it.
+                $cascaded = 0;
+                if (array_key_exists('inc', $changes)) {
+                    foreach ($locked->subtaskKeys($data['key']) as $sub) {
+                        if (isset($state[$sub]) && $state[$sub]['inc'] !== (bool) $changes['inc']) {
+                            $state[$sub] = JourneyPlanner::apply($state[$sub], ['inc' => $changes['inc']], $by);
+                            $cascaded++;
+                        }
+                    }
+                }
                 $locked->forceFill(['core' => $state])->save();
 
-                return [$before, $state[$data['key']], 'Core journey', $locked->coreDefinitions()[$data['key']]['name'] ?? 'Task'];
+                return [$before, $state[$data['key']], 'Core journey', $locked->coreDefinitions()[$data['key']]['name'] ?? 'Task', $cascaded, null, $cascaded ? $state : null];
             }
 
             $application = CrmJourneyApplication::query()->where('plan_id', $plan->id)->lockForUpdate()->find($data['application_id']);
@@ -222,17 +232,32 @@ class CrmJourneyPlannerController extends Controller
             }
             $before = $state[$data['key']];
             $state[$data['key']] = JourneyPlanner::apply($before, $changes, $by);
+            // Switching a task on or off does the same to its subtasks, so a
+            // branch is never half in the plan and half out of it.
+            $cascaded = 0;
+            if (array_key_exists('inc', $changes)) {
+                foreach ($application->subtaskKeys($data['key']) as $sub) {
+                    if (isset($state[$sub]) && $state[$sub]['inc'] !== (bool) $changes['inc']) {
+                        $state[$sub] = JourneyPlanner::apply($state[$sub], ['inc' => $changes['inc']], $by);
+                        $cascaded++;
+                    }
+                }
+            }
             $application->forceFill(['activities' => $state])->save();
 
-            return [$before, $state[$data['key']], 'Universities', ($application->definitions()[$data['key']]['name'] ?? 'Task').' — '.$application->university];
+            return [$before, $state[$data['key']], 'Universities', ($application->definitions()[$data['key']]['name'] ?? 'Task').' — '.$application->university, $cascaded, $application, null];
         });
 
         abort_if($result === null, 404);
-        [$before, $row, $section, $subject] = $result;
+        [$before, $row, $section, $subject, $cascaded, $application, $core] = $result;
+        $what = JourneyLog::describeActivity($before, $row, fn (string $o) => $this->ownerName($plan, $o));
         // A task the student cannot see stays off their list of changes.
-        $this->logChange($request, $plan, $section, $subject, JourneyLog::describeActivity($before, $row, fn (string $o) => $this->ownerName($plan, $o)), ! $row['inc']);
+        $this->logChange($request, $plan, $section, $subject, $what.($cascaded ? ' · With '.$cascaded.' '.Str::plural('subtask', $cascaded) : ''), ! $row['inc']);
 
-        return response()->json(['ok' => true, 'activity' => $row]);
+        // When subtasks moved with the task, the page is sent everything that moved.
+        return response()->json(['ok' => true, 'activity' => $row]
+            + ($cascaded && $application ? ['application' => $application->fresh()->toPlannerArray()] : [])
+            + ($cascaded && $core ? ['core' => $core] : []));
     }
 
     public function storeApplication(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
@@ -330,49 +355,65 @@ class CrmJourneyPlannerController extends Controller
 
     /* ------------------------------------------------------------ the counsellor's own university tasks */
 
-    /** Most tasks a counsellor can add to one university's checklist. */
-    private const MAX_APPLICATION_TASKS = 30;
+    /**
+     * Most tasks a counsellor can add to one university's checklist, subtasks
+     * included. Subtasks nest as deep as wanted; this only keeps one
+     * university's checklist from growing past what a page can sensibly carry.
+     */
+    private const MAX_APPLICATION_TASKS = 500;
 
     /**
      * Add a task or event of the counsellor's own to one university's
-     * checklist — a campus visit, an info session — under one of its groups.
-     * It behaves like the standard ones: it counts toward that university's
-     * progress, its date goes on the calendar, and the student sees it and can
-     * tick it off when the owner names them.
+     * checklist — a campus visit, an info session — under one of its groups,
+     * or as a subtask under any task already on it (ODA's or an added one,
+     * itself a subtask or not). It behaves like the standard ones: it counts
+     * toward that university's progress, its date goes on the calendar, and
+     * the student sees it and can tick it off when the owner names them.
      */
     public function storeApplicationTask(Request $request, CrmLead $lead, CrmJourneyApplication $application, CrmAuditLogger $audit): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
         abort_unless($application->plan_id === $plan->id, 404);
-        $data = $request->validate($this->applicationTaskRules() + [
+        $data = $request->validate(array_merge($this->applicationTaskRules(), [
+            // A subtask takes the group of the task it sits under.
+            'group' => ['required_without:parent', 'nullable', Rule::in(JourneyPlanner::applicationGroupKeys())],
+            'parent' => ['sometimes', 'nullable', 'string', 'max:60'],
             'owner' => ['required', Rule::in($plan->ownerValues())],
             'target' => ['nullable', 'date_format:Y-m-d'],
-        ], [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents']);
+        ]), [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents']);
         $user = $this->user($request);
 
-        $key = DB::transaction(function () use ($application, $data, $user): string {
+        [$key, $parentName] = DB::transaction(function () use ($application, $data, $user): array {
             $locked = CrmJourneyApplication::query()->lockForUpdate()->findOrFail($application->id);
             $tasks = $locked->custom_tasks ?? [];
             if (count($tasks) >= self::MAX_APPLICATION_TASKS) {
-                throw ValidationException::withMessages(['name' => 'This university already has '.self::MAX_APPLICATION_TASKS.' added tasks, the most it can hold. Remove one you no longer need first.']);
+                throw ValidationException::withMessages(['name' => 'This university already has '.self::MAX_APPLICATION_TASKS.' added tasks, the most it can hold. Remove some you no longer need first.']);
             }
+            $parent = ($data['parent'] ?? null) ?: null;
+            $parentDef = $parent !== null ? ($locked->definitions()[$parent] ?? null) : null;
+            if ($parent !== null && $parentDef === null) {
+                throw ValidationException::withMessages(['parent' => 'That task is no longer on this university\'s checklist.']);
+            }
+            $group = $parent !== null
+                ? (JourneyPlanner::applicationGroupOf()[$parent] ?? $parentDef['group'])
+                : $data['group'];
             $key = 'c-'.Str::lower(Str::random(10));
             $tasks[] = [
-                'key' => $key, 'group' => $data['group'], 'name' => trim($data['name']),
+                'key' => $key, 'group' => $group, 'name' => trim($data['name']),
                 'desc' => trim((string) ($data['desc'] ?? '')), 'docs' => trim((string) ($data['docs'] ?? '')),
                 'owner' => $data['owner'], 'created_by' => $user->id, 'created_at' => now()->toIso8601String(),
-            ];
+            ] + ($parent !== null ? ['parent' => $parent] : []);
             $locked->custom_tasks = $tasks;
             $state = $locked->activityState(); // the new key appears here with its defaults
             $state[$key] = JourneyPlanner::apply($state[$key], ['owner' => $data['owner'], 'target' => $data['target'] ?? null], 'team:'.$user->id);
             $locked->activities = $state;
             $locked->save();
 
-            return $key;
+            return [$key, $parentDef['name'] ?? null];
         });
 
         $name = trim($data['name']);
-        $this->logChange($request, $plan, 'Universities', $name.' — '.$application->university, 'Task added');
+        $this->logChange($request, $plan, 'Universities', $name.' — '.$application->university, $parentName !== null ? 'Subtask added under “'.$parentName.'”' : 'Task added');
 
         $audit->record($request, $user, 'journey_task_added', "Added the task “{$name}” to {$application->university} on {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyApplication::class, 'subject_id' => $application->id, 'subject_label' => $name,
@@ -396,7 +437,8 @@ class CrmJourneyPlannerController extends Controller
                 if (($t['key'] ?? null) === $task) {
                     $change = ['was' => (string) ($t['name'] ?? '')];
                     foreach (['group', 'name', 'desc', 'docs'] as $f) {
-                        if (array_key_exists($f, $data)) {
+                        // A subtask moves with the task it sits under, never on its own.
+                        if (array_key_exists($f, $data) && ! ($f === 'group' && ! empty($t['parent']))) {
                             $t[$f] = trim((string) $data[$f]);
                         }
                     }
@@ -416,31 +458,38 @@ class CrmJourneyPlannerController extends Controller
         return response()->json(['ok' => true, 'application' => $application->fresh()->toPlannerArray()]);
     }
 
-    /** Remove an added university task and everything recorded on it. ODA's standard ones can only be switched off. */
+    /**
+     * Remove an added university task, its subtasks at every depth, and
+     * everything recorded on them. ODA's standard ones can only be switched off.
+     */
     public function destroyApplicationTask(Request $request, CrmLead $lead, CrmJourneyApplication $application, string $task, CrmAuditLogger $audit): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
         abort_unless($application->plan_id === $plan->id, 404);
 
-        $name = DB::transaction(function () use ($application, $task): ?string {
+        $result = DB::transaction(function () use ($application, $task): ?array {
             $locked = CrmJourneyApplication::query()->lockForUpdate()->findOrFail($application->id);
             $tasks = $locked->custom_tasks ?? [];
             $gone = collect($tasks)->firstWhere('key', $task);
             if (! $gone) {
                 return null;
             }
+            $keys = array_merge([$task], $locked->subtaskKeys($task));
             $activities = $locked->activities ?? [];
-            unset($activities[$task]);
+            foreach ($keys as $k) {
+                unset($activities[$k]);
+            }
             $locked->forceFill([
-                'custom_tasks' => array_values(array_filter($tasks, fn ($t) => ($t['key'] ?? null) !== $task)),
+                'custom_tasks' => array_values(array_filter($tasks, fn ($t) => ! in_array($t['key'] ?? null, $keys, true))),
                 'activities' => $activities,
             ])->save();
 
-            return $gone['name'] ?? 'Task';
+            return [$gone['name'] ?? 'Task', count($keys) - 1];
         });
-        abort_if($name === null, 404);
+        abort_if($result === null, 404);
+        [$name, $subtasks] = $result;
 
-        $this->logChange($request, $plan, 'Universities', $name.' — '.$application->university, 'Task removed');
+        $this->logChange($request, $plan, 'Universities', $name.' — '.$application->university, $subtasks ? 'Task removed, with its '.$subtasks.' '.Str::plural('subtask', $subtasks) : 'Task removed');
 
         $audit->record($request, $this->user($request), 'journey_task_removed', "Removed the task “{$name}” from {$application->university} on {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyApplication::class, 'subject_id' => $application->id, 'subject_label' => $name,
@@ -509,13 +558,19 @@ class CrmJourneyPlannerController extends Controller
 
     /* ------------------------------------------------------------ the counsellor's own tasks */
 
-    /** Most tasks a counsellor can add to one student's journey. */
-    private const MAX_CUSTOM_TASKS = 60;
+    /**
+     * Most tasks a counsellor can add to one student's journey, subtasks
+     * included. Subtasks nest as deep as wanted; this only keeps one plan from
+     * growing past what a page can sensibly carry.
+     */
+    private const MAX_CUSTOM_TASKS = 500;
 
     /**
-     * Add a task of the counsellor's own to one stage of the core journey. It
-     * behaves like the standard ones: it counts toward progress, the student
-     * sees it, and the student can tick it off when the owner names them.
+     * Add a task of the counsellor's own to one stage of the core journey —
+     * at the top of the stage, as another of a Skill Enhancer (`parent`), or
+     * as a subtask under any task in the stage (`under`), itself a subtask or
+     * not. It behaves like the standard ones: it counts toward progress, the
+     * student sees it, and the student can tick it off when the owner names them.
      */
     public function storeTask(Request $request, CrmLead $lead, CrmAuditLogger $audit): JsonResponse
     {
@@ -529,22 +584,33 @@ class CrmJourneyPlannerController extends Controller
             'target' => ['nullable', 'date_format:Y-m-d'],
             // Another one of a standard activity: a second internship.
             'parent' => ['sometimes', 'nullable', 'string', 'max:60'],
-        ], [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents']);
+            // A step of any task in the stage.
+            'under' => ['sometimes', 'nullable', 'string', 'max:60', 'prohibits:parent'],
+        ], [], ['name' => 'task name', 'desc' => 'description', 'docs' => 'documents', 'under' => 'task it goes under']);
         $user = $this->user($request);
         $parent = $this->repeatableParent($data['parent'] ?? null, $data['phase']);
+        $under = ($data['under'] ?? null) ?: null;
 
-        $result = DB::transaction(function () use ($plan, $data, $user, $parent): array {
+        $result = DB::transaction(function () use ($plan, $data, $user, $parent, $under): array {
             $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
             $tasks = $locked->custom_tasks ?? [];
             if (count($tasks) >= self::MAX_CUSTOM_TASKS) {
-                throw ValidationException::withMessages(['name' => 'This plan already has '.self::MAX_CUSTOM_TASKS.' added tasks, the most it can hold. Remove one you no longer need first.']);
+                throw ValidationException::withMessages(['name' => 'This plan already has '.self::MAX_CUSTOM_TASKS.' added tasks, the most it can hold. Remove some you no longer need first.']);
+            }
+            $phase = $data['phase'];
+            $underName = null;
+            if ($under !== null) {
+                // A subtask lives in the stage of the task it sits under.
+                $phase = $locked->phaseOfTask($under)
+                    ?? throw ValidationException::withMessages(['under' => 'That task is no longer on this journey.']);
+                $underName = $locked->coreDefinitions()[$under]['name'] ?? 'Task';
             }
             $key = 'c-'.Str::lower(Str::random(10));
             $tasks[] = [
-                'key' => $key, 'phase' => $data['phase'], 'name' => trim($data['name']),
+                'key' => $key, 'phase' => $phase, 'name' => trim($data['name']),
                 'desc' => trim((string) ($data['desc'] ?? '')), 'docs' => trim((string) ($data['docs'] ?? '')),
                 'owner' => $data['owner'], 'created_by' => $user->id, 'created_at' => now()->toIso8601String(),
-            ] + ($parent ? ['parent' => $parent['key']] : []);
+            ] + ($parent ? ['parent' => $parent['key']] : []) + ($under !== null ? ['parent' => $under, 'sub' => true] : []);
             $locked->custom_tasks = $tasks;
             $state = $locked->coreState(); // the new key appears here with its defaults
             $state[$key] = JourneyPlanner::apply($state[$key], ['owner' => $data['owner'], 'target' => $data['target'] ?? null], 'team:'.$user->id);
@@ -555,10 +621,16 @@ class CrmJourneyPlannerController extends Controller
             $locked->core = $state;
             $locked->save();
 
-            return ['task' => $locked->customDefinitions()[$key], 'activity' => $state[$key], 'parentActivity' => $parent ? $state[$parent['key']] : null];
+            return ['task' => $locked->customDefinitions()[$key], 'activity' => $state[$key], 'parentActivity' => $parent ? $state[$parent['key']] : null, 'underName' => $underName];
         });
+        $underName = $result['underName'];
+        unset($result['underName']);
 
-        $this->logChange($request, $plan, 'Core journey', $result['task']['name'], $parent ? 'Added under “'.$parent['name'].'”' : 'Task added');
+        $this->logChange($request, $plan, 'Core journey', $result['task']['name'], match (true) {
+            $parent !== null => 'Added under “'.$parent['name'].'”',
+            $underName !== null => 'Subtask added under “'.$underName.'”',
+            default => 'Task added',
+        });
 
         $audit->record($request, $user, 'journey_task_added', "Added the task “{$result['task']['name']}” to {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $result['task']['name'],
@@ -605,30 +677,37 @@ class CrmJourneyPlannerController extends Controller
         return response()->json(['ok' => true, 'task' => $def]);
     }
 
-    /** Remove an added task and everything recorded on it. ODA's standard tasks can only be switched off, never removed. */
+    /**
+     * Remove an added task, its subtasks at every depth, and everything
+     * recorded on them. ODA's standard tasks can only be switched off, never removed.
+     */
     public function destroyTask(Request $request, CrmLead $lead, string $task, CrmAuditLogger $audit): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
 
-        $name = DB::transaction(function () use ($plan, $task): ?string {
+        $result = DB::transaction(function () use ($plan, $task): ?array {
             $locked = CrmJourneyPlan::query()->lockForUpdate()->find($plan->id);
             $tasks = $locked->custom_tasks ?? [];
             $gone = collect($tasks)->firstWhere('key', $task);
             if (! $gone) {
                 return null;
             }
+            $keys = array_merge([$task], $locked->subtaskKeys($task));
             $core = $locked->core ?? [];
-            unset($core[$task]);
+            foreach ($keys as $k) {
+                unset($core[$k]);
+            }
             $locked->forceFill([
-                'custom_tasks' => array_values(array_filter($tasks, fn ($t) => ($t['key'] ?? null) !== $task)),
+                'custom_tasks' => array_values(array_filter($tasks, fn ($t) => ! in_array($t['key'] ?? null, $keys, true))),
                 'core' => $core,
             ])->save();
 
-            return $gone['name'] ?? 'Task';
+            return [$gone['name'] ?? 'Task', count($keys) - 1];
         });
-        abort_if($name === null, 404);
+        abort_if($result === null, 404);
+        [$name, $subtasks] = $result;
 
-        $this->logChange($request, $plan, 'Core journey', $name, 'Task removed');
+        $this->logChange($request, $plan, 'Core journey', $name, $subtasks ? 'Task removed, with its '.$subtasks.' '.Str::plural('subtask', $subtasks) : 'Task removed');
 
         $audit->record($request, $this->user($request), 'journey_task_removed', "Removed the task “{$name}” from {$lead->name}'s journey planner", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $name,

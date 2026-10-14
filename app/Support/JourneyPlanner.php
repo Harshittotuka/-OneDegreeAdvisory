@@ -205,6 +205,57 @@ class JourneyPlanner
         return array_column(self::applicationGroups(), 'key');
     }
 
+    /** The stage each of ODA's core activities sits in. @return array<string, string> */
+    public static function corePhaseOf(): array
+    {
+        $out = [];
+        foreach (self::phases() as $p) {
+            foreach ($p['activities'] as $a) {
+                $out[$a['key']] = $p['key'];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Added tasks point at the task they sit under. The pages only ever add a
+     * task under one that already exists, so the links form a tree; this
+     * keeps it one if stored rows ever say otherwise, by cutting each loop at
+     * a task inside it (that task then tops its own branch).
+     *
+     * @param  array<string, ?string>  $parentOf  added task => the task it sits under, or null
+     * @return array<string, ?string>
+     */
+    public static function withoutLoops(array $parentOf): array
+    {
+        foreach (array_keys($parentOf) as $key) {
+            $seen = [];
+            for ($up = $parentOf[$key]; $up !== null && array_key_exists($up, $parentOf) && ! isset($seen[$up]); $up = $parentOf[$up]) {
+                if ($up === $key) {
+                    $parentOf[$key] = null;
+                    break;
+                }
+                $seen[$up] = true;
+            }
+        }
+
+        return $parentOf;
+    }
+
+    /** The group each standard university activity sits in. @return array<string, string> */
+    public static function applicationGroupOf(): array
+    {
+        $out = [];
+        foreach (self::applicationGroups() as $g) {
+            foreach ($g['activities'] as $a) {
+                $out[$a['key']] = $g['key'];
+            }
+        }
+
+        return $out;
+    }
+
     /**
      * The seven phases with this plan's own tasks added at the end of the
      * phase each belongs to. Standard tasks carry `custom: false`.
@@ -220,26 +271,32 @@ class JourneyPlanner
         $custom = $plan->customDefinitions();
 
         $phases = array_map(function (array $p) use ($custom): array {
-            $list = array_map(fn (array $a) => $a + ['custom' => false], $p['activities']);
-            // A repeat of an activity sits straight after it (and after the
-            // repeats before it); any other added task goes at the end.
+            // ODA's activities and any added task with nothing above it, in
+            // order; under each, its own subtasks and then its repeats (a
+            // second internship), each in the order added and each followed
+            // by whatever sits under it in turn.
+            $roots = array_map(fn (array $a) => $a + ['custom' => false], $p['activities']);
+            $children = [];
             foreach ($custom as $def) {
                 if ($def['phase'] !== $p['key']) {
                     continue;
                 }
-                $at = null;
-                if (! empty($def['parent'])) {
-                    foreach ($list as $i => $a) {
-                        if ($a['key'] === $def['parent'] || ($a['parent'] ?? null) === $def['parent']) {
-                            $at = $i + 1;
-                        }
-                    }
-                }
-                if ($at === null) {
-                    $list[] = $def;
+                if ($def['parent'] === null) {
+                    $roots[] = $def;
                 } else {
-                    array_splice($list, $at, 0, [$def]);
+                    $children[$def['parent']][] = $def;
                 }
+            }
+            $list = [];
+            $add = function (array $def) use (&$add, &$list, $children): void {
+                $list[] = $def;
+                $under = $children[$def['key']] ?? [];
+                foreach (array_merge(array_filter($under, fn ($c) => ! $c['repeat']), array_filter($under, fn ($c) => $c['repeat'])) as $c) {
+                    $add($c);
+                }
+            };
+            foreach ($roots as $def) {
+                $add($def);
             }
             $p['activities'] = $list;
 

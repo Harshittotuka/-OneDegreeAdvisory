@@ -975,6 +975,78 @@ class JourneyPlannerTest extends TestCase
         $this->assertCount(1, CrmJourneyApplication::query()->findOrFail($myUni)->custom_tasks);
     }
 
+    public function test_any_university_task_takes_subtasks_as_deep_as_wanted(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $uni = $this->as($counsellor)->postJson(route('crm.journey.applications.store', $lead), ['university' => 'Bocconi'])->json('application.id');
+        $lse = $this->as($counsellor)->postJson(route('crm.journey.applications.store', $lead), ['university' => 'LSE'])->json('application.id');
+        $sub = fn (string $parent, string $name, int $on = 0) => $this->as($counsellor)->postJson(route('crm.journey.applications.tasks.store', [$lead, $on ?: $uni]), ['parent' => $parent, 'name' => $name, 'owner' => 'Student']);
+
+        // Under one of ODA's own tasks, then under that, then under that again: no group needed.
+        $outline = $sub('sop', 'Outline')->assertOk()->json('key');
+        $draft = $sub($outline, 'First draft')->assertOk()->json('key');
+        $polish = $sub($draft, 'Polish the opening')->assertOk()->json('key');
+
+        $application = CrmJourneyApplication::query()->findOrFail($uni);
+        $defs = $application->customDefinitions();
+        $this->assertSame(['sop', $outline, $draft], [$defs[$outline]['parent'], $defs[$draft]['parent'], $defs[$polish]['parent']]);
+        $this->assertSame(['documents', 'documents', 'documents'], array_column(array_values($defs), 'group'), 'A subtask sits in the group of the task at the top of its branch.');
+        $this->assertSame([$outline, $draft, $polish], $application->subtaskKeys('sop'));
+        $this->assertCount(25, $application->activityState(), 'Every subtask counts as a task of its own.');
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'Polish the opening — Bocconi')->where('what', 'Subtask added under “First draft”')->exists());
+
+        // Switching a task off takes its whole branch with it, and back on again.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'app', 'application_id' => $uni, 'key' => 'sop', 'inc' => false])
+            ->assertOk()->assertJsonPath("application.acts.{$polish}.inc", false)->assertJsonPath("application.acts.{$outline}.inc", false);
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'SOP tailored to this program — Bocconi')->where('what', 'Excluded · With 3 subtasks')->exists());
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'app', 'application_id' => $uni, 'key' => $draft, 'inc' => true])
+            ->assertOk()->assertJsonPath("application.acts.{$polish}.inc", true)->assertJsonPath("application.acts.{$outline}.inc", false);
+        // A task with nothing under it answers with itself alone.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'app', 'application_id' => $uni, 'key' => $polish, 'status' => 'In Progress'])
+            ->assertOk()->assertJsonMissingPath('application');
+
+        // The student sees the deepest one and ticks it off.
+        $this->signedInStudent($lead)->get(route('student.dashboard'))->assertOk()->assertSee('Polish the opening');
+        $this->patchJson(route('student.activity'), ['scope' => 'app', 'application_id' => $uni, 'key' => $polish, 'status' => 'Completed'])->assertOk();
+
+        // Moving a subtask to another group does nothing: it follows its branch.
+        $this->flushSession();
+        $this->as($counsellor)->patchJson(route('crm.journey.applications.tasks.update', [$lead, $uni, $draft]), ['group' => 'offer', 'name' => 'Full draft'])
+            ->assertOk()->assertJsonPath('application.tasks.1.group', 'documents')->assertJsonPath('application.tasks.1.name', 'Full draft');
+
+        // A parent has to be on this university's checklist; a top-level task needs a group.
+        $lseTask = $sub('sop', 'LSE only', $lse)->assertOk()->json('key');
+        $sub($lseTask, 'Wrong university')->assertUnprocessable()->assertJsonValidationErrors('parent');
+        $sub('no-such-task', 'Nowhere')->assertUnprocessable()->assertJsonValidationErrors('parent');
+        $this->as($counsellor)->postJson(route('crm.journey.applications.tasks.store', [$lead, $uni]), ['name' => 'No group', 'owner' => 'Student'])
+            ->assertUnprocessable()->assertJsonValidationErrors('group');
+
+        // Removing a task removes its branch, and everything recorded on it.
+        $this->as($counsellor)->deleteJson(route('crm.journey.applications.tasks.destroy', [$lead, $uni, $outline]))->assertOk()->assertJsonCount(0, 'application.tasks');
+        $application = CrmJourneyApplication::query()->findOrFail($uni);
+        $this->assertSame([], array_intersect([$outline, $draft, $polish], array_keys($application->activities)));
+        $this->assertCount(22, $application->activityState());
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'Outline — Bocconi')->where('what', 'Task removed, with its 2 subtasks')->exists());
+    }
+
+    public function test_a_university_task_list_with_a_broken_parent_or_a_loop_still_reads(): void
+    {
+        // Rows a page could never write: a parent that is gone, and two tasks under each other.
+        $application = new CrmJourneyApplication(['custom_tasks' => [
+            ['key' => 'c-orphan0001', 'group' => 'offer', 'name' => 'Orphan', 'parent' => 'c-gone000001'],
+            ['key' => 'c-loopa00001', 'group' => 'documents', 'name' => 'Loop A', 'parent' => 'c-loopb00001'],
+            ['key' => 'c-loopb00001', 'group' => 'documents', 'name' => 'Loop B', 'parent' => 'c-loopa00001'],
+        ]]);
+
+        $defs = $application->customDefinitions();
+        $this->assertNull($defs['c-orphan0001']['parent']);
+        $this->assertSame('offer', $defs['c-orphan0001']['group']);
+        $this->assertSame(1, count(array_filter([$defs['c-loopa00001']['parent'], $defs['c-loopb00001']['parent']], 'is_null')), 'The loop is cut once, so one of the two tops the branch.');
+        $this->assertCount(25, $application->activityState());
+    }
+
     /* ------------------------------------------------------------ the Program Lead */
 
     public function test_a_task_can_be_handed_to_the_program_lead(): void
@@ -1691,6 +1763,62 @@ class JourneyPlannerTest extends TestCase
         $this->as($counsellor)->deleteJson(route('crm.journey.tasks.destroy', [$lead, $second]))->assertOk();
         $this->assertArrayHasKey('internship', $this->planOf($lead)->coreState());
         $this->assertArrayNotHasKey($second, $this->planOf($lead)->coreState());
+    }
+
+    public function test_any_core_task_takes_subtasks_as_deep_as_wanted_beside_its_repeats(): void
+    {
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+        $task = fn (array $body) => $this->as($counsellor)->postJson(route('crm.journey.tasks.store', $lead), $body + ['owner' => 'Student']);
+
+        // Three deep under one of ODA's tasks. A subtask lives in its task's stage, whatever the page sent.
+        $book = $task(['phase' => 'tests', 'under' => 'english-test', 'name' => 'Book the IELTS date'])->assertOk()
+            ->assertJsonPath('task.parent', 'english-test')->assertJsonPath('task.repeat', false)->json('task.key');
+        $pay = $task(['phase' => 'discovery', 'under' => $book, 'name' => 'Pay the fee'])->assertOk()->assertJsonPath('task.phase', 'tests')->json('task.key');
+        $receipt = $task(['phase' => 'tests', 'under' => $pay, 'name' => 'Save the receipt'])->assertOk()->json('task.key');
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'Save the receipt')->where('what', 'Subtask added under “Pay the fee”')->exists());
+
+        $plan = $this->planOf($lead);
+        $this->assertSame([$book, $pay, $receipt], $plan->subtaskKeys('english-test'));
+        $keys = array_column(collect(JourneyPlanner::phasesFor($plan))->firstWhere('key', 'tests')['activities'], 'key');
+        $at = array_search('english-test', $keys, true);
+        $this->assertSame([$book, $pay, $receipt], array_slice($keys, $at + 1, 3), 'Subtasks come straight under their task, each under its own.');
+
+        // In Skill Enhancers a task's own steps come before its repeats, and a repeat takes steps too.
+        $again = $task(['phase' => 'profile', 'parent' => 'internship', 'name' => 'Internship 2'])->assertOk()->assertJsonPath('task.repeat', true)->json('task.key');
+        $apply = $task(['phase' => 'profile', 'under' => 'internship', 'name' => 'Apply to three firms'])->assertOk()->json('task.key');
+        $letter = $task(['phase' => 'profile', 'under' => $again, 'name' => 'Get the offer letter'])->assertOk()->json('task.key');
+        $keys = array_column(collect(JourneyPlanner::phasesFor($this->planOf($lead)))->firstWhere('key', 'profile')['activities'], 'key');
+        $at = array_search('internship', $keys, true);
+        $this->assertSame([$apply, $again, $letter], array_slice($keys, $at + 1, 3));
+
+        // Switching a task off takes its steps with it, but not its repeats.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'internship', 'inc' => false])
+            ->assertOk()->assertJsonPath("core.{$apply}.inc", false)->assertJsonPath("core.{$again}.inc", true)->assertJsonPath("core.{$letter}.inc", true);
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'english-test', 'inc' => false])
+            ->assertOk()->assertJsonPath("core.{$receipt}.inc", false);
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'English proficiency test')->where('what', 'Excluded · With 3 subtasks')->exists());
+
+        // Back on, the student sees the deepest step and ticks it off.
+        $this->as($counsellor)->patchJson(route('crm.journey.activity', $lead), ['scope' => 'core', 'key' => 'english-test', 'inc' => true])->assertOk()->assertJsonPath("core.{$receipt}.inc", true);
+        $this->signedInStudent($lead)->get(route('student.dashboard'))->assertOk()->assertSee('Save the receipt');
+        $this->patchJson(route('student.activity'), ['scope' => 'core', 'key' => $receipt, 'status' => 'Completed'])->assertOk();
+
+        // A subtask needs a task to go under, and can't be a repeat at the same time.
+        $this->flushSession();
+        $task(['phase' => 'tests', 'under' => 'no-such-task', 'name' => 'Nowhere'])->assertUnprocessable()->assertJsonValidationErrors('under');
+        $task(['phase' => 'profile', 'under' => 'internship', 'parent' => 'internship', 'name' => 'Both'])->assertUnprocessable();
+
+        // Removing a task removes its steps; removing a repeat removes its own and leaves the first's.
+        $this->as($counsellor)->deleteJson(route('crm.journey.tasks.destroy', [$lead, $book]))->assertOk();
+        $this->as($counsellor)->deleteJson(route('crm.journey.tasks.destroy', [$lead, $again]))->assertOk();
+        $state = $this->planOf($lead)->coreState();
+        foreach ([$book, $pay, $receipt, $again, $letter] as $gone) {
+            $this->assertArrayNotHasKey($gone, $state);
+        }
+        $this->assertArrayHasKey($apply, $state);
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'Book the IELTS date')->where('what', 'Task removed, with its 2 subtasks')->exists());
     }
 
     /* ------------------------------------------------------------ recent changes */

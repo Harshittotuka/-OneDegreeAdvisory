@@ -1020,6 +1020,17 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
 
 /* A repeat of an activity (a second internship), listed under the first. */
 .jp-act.sub .jp-row { padding-left: 28px; background: var(--surface-2); }
+/* A university's subtasks, at any depth: the include box stays in line and
+   the name steps in, one step per level, up to six steps. */
+.jp-act.nest .jp-row { background: var(--surface-2); }
+.jp-act.nest .jp-name { padding-left: calc(min(var(--depth, 1), 6) * 20px); }
+.jp-group { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.jp-group-add { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 2px 4px; font: inherit; font-size: 0.72rem; font-weight: 800; letter-spacing: 0; text-transform: none; color: var(--purple-ink); cursor: pointer; }
+.jp-group-add svg { width: 11px; height: 11px; }
+.jp-group-add:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 640px) {
+    .jp-act.nest .jp-name { padding-left: calc(min(var(--depth, 1), 6) * 10px); }
+}
 .jp-sub-mark { color: var(--muted); margin-right: 6px; font-weight: 700; }
 .jp-repeat-chip, .jp-upload-chip { display: inline-block; vertical-align: 2px; margin-left: 6px; font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: var(--blue-soft); color: var(--blue-ink); }
 .jp-upload-chip { background: var(--gold-soft); color: var(--gold-ink); }

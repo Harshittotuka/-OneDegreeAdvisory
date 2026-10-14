@@ -54,28 +54,87 @@ class CrmJourneyPlan extends Model
 
     /**
      * The tasks a counsellor added to this student's journey, keyed like the
-     * standard ones and shaped the same way, with `phase` and `custom` added.
+     * standard ones and shaped the same way, with `phase`, `parent`, `repeat`
+     * and `custom` added.
+     *
+     * An added task can sit under another in the same stage, two ways:
+     *
+     *   a repeat   another of one of ODA's Skill Enhancers (a second
+     *              internship): `repeat` is true. Stored without a flag, as
+     *              repeats were before subtasks existed.
+     *   a subtask  a step of any task — ODA's, an added one, a repeat or
+     *              another subtask, as deep as wanted. Stored with `sub`.
+     *
+     * A parent that is gone, or sits in another stage, leaves the task at the
+     * top level of its stage.
      *
      * @return array<string, array<string, mixed>>
      */
     public function customDefinitions(): array
     {
         $phases = $this->phaseKeys();
-        $out = [];
+        $standardPhase = JourneyPlanner::corePhaseOf();
+        $rows = [];
         foreach ($this->custom_tasks ?? [] as $t) {
-            if (! is_array($t) || empty($t['key']) || ! in_array($t['phase'] ?? null, $phases, true)) {
-                continue;
+            if (is_array($t) && ! empty($t['key']) && in_array($t['phase'] ?? null, $phases, true)) {
+                $rows[$t['key']] = $t;
             }
-            $out[$t['key']] = [
-                'key' => $t['key'], 'name' => (string) ($t['name'] ?? 'Task'), 'desc' => (string) ($t['desc'] ?? ''),
-                'owner' => in_array($t['owner'] ?? null, $this->ownerValues(), true) ? $t['owner'] : 'Student',
+        }
+
+        $parentOf = [];
+        foreach ($rows as $key => $t) {
+            $p = $t['parent'] ?? null;
+            $parentPhase = is_string($p) ? ($standardPhase[$p] ?? ($rows[$p]['phase'] ?? null)) : null;
+            $parentOf[$key] = $p !== $key && $parentPhase !== null && $parentPhase === $t['phase'] ? $p : null;
+        }
+        $parentOf = JourneyPlanner::withoutLoops($parentOf);
+
+        $owners = $this->ownerValues();
+        $out = [];
+        foreach ($rows as $key => $t) {
+            $out[$key] = [
+                'key' => $key, 'name' => (string) ($t['name'] ?? 'Task'), 'desc' => (string) ($t['desc'] ?? ''),
+                'owner' => in_array($t['owner'] ?? null, $owners, true) ? $t['owner'] : 'Student',
                 'docs' => (string) (($t['docs'] ?? '') ?: 'None'), 'inc' => true, 'phase' => $t['phase'], 'custom' => true,
-                // Set on a repeat of a standard activity (a second internship).
-                'parent' => is_string($t['parent'] ?? null) ? $t['parent'] : null,
+                'parent' => $parentOf[$key],
+                'repeat' => $parentOf[$key] !== null && empty($t['sub']),
             ];
         }
 
         return $out;
+    }
+
+    /**
+     * Every subtask under a core task, at any depth, nearest first. Repeats
+     * are the task's siblings in all but placement, so they are not counted.
+     *
+     * @return list<string>
+     */
+    public function subtaskKeys(string $key): array
+    {
+        $children = [];
+        foreach ($this->customDefinitions() as $def) {
+            if ($def['parent'] !== null && ! $def['repeat']) {
+                $children[$def['parent']][] = $def['key'];
+            }
+        }
+        $out = [];
+        $queue = $children[$key] ?? [];
+        while ($queue !== []) {
+            $next = array_shift($queue);
+            if (! in_array($next, $out, true)) {
+                $out[] = $next;
+                array_push($queue, ...($children[$next] ?? []));
+            }
+        }
+
+        return $out;
+    }
+
+    /** The stage a core task sits in, ODA's or added; null when there is no such task. */
+    public function phaseOfTask(string $key): ?string
+    {
+        return JourneyPlanner::corePhaseOf()[$key] ?? ($this->customDefinitions()[$key]['phase'] ?? null);
     }
 
     /**

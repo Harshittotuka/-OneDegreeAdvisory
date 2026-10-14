@@ -227,6 +227,34 @@
     function appDef(ap, key) {
         return APP_DEFS[key] || (ap.tasks || []).find(function (t) { return t.key === key; }) || { key: key, name: 'Task', desc: '', docs: 'None' };
     }
+    /* Any task on a university can have subtasks, and they theirs, as deep as
+       the counsellor goes. These are every added task under one, at any depth. */
+    function appSubtasks(ap, key) {
+        var out = [];
+        (function walk(k) {
+            (ap.tasks || []).forEach(function (t) { if (t.parent === k) { out.push(t); walk(t.key); } });
+        })(key);
+        return out;
+    }
+    /* One group of a university's checklist in reading order: each task, then
+       its subtasks straight under it, each with how deep it sits. */
+    function appTree(ap, g) {
+        var out = [];
+        function add(def, depth) {
+            out.push({ def: def, depth: depth });
+            (ap.tasks || []).forEach(function (t) { if (t.parent === def.key) add(t, depth + 1); });
+        }
+        g.activities.forEach(function (d) { add(d, 0); });
+        (ap.tasks || []).forEach(function (t) { if (!t.parent && t.group === g.key) add(t, 0); });
+        return out;
+    }
+    /* "3 subtasks · 1 done" on a task with steps under it; `states` are theirs. */
+    function subtaskChip(states) {
+        var subs = states.filter(function (x) { return x && x.inc; });
+        if (!subs.length) return '';
+        var done = subs.filter(function (x) { return x.status === 'Completed'; }).length;
+        return ' <span class="jp-repeat-chip">' + plural(subs.length, 'subtask', 'subtasks') + ' · ' + done + ' done</span>';
+    }
     /** Index into phases() of the stage being worked on now, or -1 when all are done. */
     function currentPhase() {
         var list = phases();
@@ -817,7 +845,32 @@
      */
     function repeatsOf(key) {
         var out = [];
-        T.phases.forEach(function (p) { p.activities.forEach(function (d) { if (d.parent === key) out.push(d); }); });
+        T.phases.forEach(function (p) { p.activities.forEach(function (d) { if (d.parent === key && d.repeat) out.push(d); }); });
+        return out;
+    }
+    /* Every subtask under a core task, at any depth. A repeat (a second
+       internship) sits under the first too, but is its sibling, not its step. */
+    function coreSubtasks(key) {
+        var all = Object.keys(CORE_DEFS).map(function (k) { return CORE_DEFS[k]; }), out = [];
+        (function walk(k) {
+            all.forEach(function (d) { if (d.parent === k && !d.repeat) { out.push(d); walk(d.key); } });
+        })(key);
+        return out;
+    }
+    /* One stage in reading order: each task, then its own subtasks, then its
+       repeats, each followed by whatever sits under it, with how deep it sits. */
+    function phaseTree(p) {
+        var keys = {}, kids = {}, roots = [], out = [];
+        p.activities.forEach(function (d) { keys[d.key] = true; });
+        p.activities.forEach(function (d) {
+            if (d.parent && keys[d.parent]) (kids[d.parent] = kids[d.parent] || []).push(d); else roots.push(d);
+        });
+        function add(d, depth) {
+            out.push({ def: d, depth: depth });
+            var under = kids[d.key] || [];
+            under.filter(function (c) { return !c.repeat; }).concat(under.filter(function (c) { return c.repeat; })).forEach(function (c) { add(c, depth + 1); });
+        }
+        roots.forEach(function (d) { add(d, 0); });
         return out;
     }
     function canRepeat(def) {
@@ -851,7 +904,7 @@
     }
 
     /* ---- one activity row, shared by the journey and every university ---- */
-    function actRow(scope, appId, def, a, timeline, filtered) {
+    function actRow(scope, appId, def, a, timeline, filtered, depth) {
         if (!a.inc && (!isC() || !UI.showExcluded)) return '';
         if (filtered) {
             if (!ownerMatches(a.owner)) return '';
@@ -865,6 +918,12 @@
         var statuses = isC() ? T.statuses : T.studentStatuses;
         // An added task is edited and removed through its stage, or its university.
         var taskAct = scope === 'app' ? 'app-task' : 'task', onUni = scope === 'app' ? ' data-u="' + appId + '"' : '';
+        var ap = scope === 'app' ? P.apps.find(function (x) { return x.id === appId; }) : null;
+        var nested = depth > 0;
+        // The steps under this task, wherever it is.
+        var subDefs = ap ? appSubtasks(ap, def.key) : coreSubtasks(def.key);
+        var subStates = subDefs.map(function (t) { return ap ? ap.acts[t.key] : P.core[t.key]; });
+        var parentName = def.parent ? (ap ? appDef(ap, def.parent) : CORE_DEFS[def.parent] || {}).name || '' : '';
 
         var status = editable
             ? '<select class="jp-st ' + stClass(a.status) + '" data-f="status"' + data + (a.inc ? '' : ' disabled') + ' aria-label="Status">' +
@@ -880,6 +939,19 @@
 
         var detail = '';
         if (open) {
+            var armedRm = UI.armed === 'rm-task-' + def.key;
+            var editBtn = '<button class="jp-btn ghost sm" data-act="edit-' + taskAct + '" data-key="' + esc(def.key) + '"' + onUni + '>Edit task</button>';
+            var rmBtn = '<button class="jp-btn danger sm' + (armedRm ? ' armed' : '') + '" data-act="rm-' + taskAct + '" data-key="' + esc(def.key) + '"' + onUni + '>' +
+                (armedRm ? (subDefs.length ? 'Click again: removes it and its ' + plural(subDefs.length, 'subtask', 'subtasks') : 'Click again to remove') : 'Remove task') + '</button>';
+            // Every task can take subtasks, ODA's own included, on the journey and on a university.
+            var addSub = ap
+                ? '<button class="jp-btn ghost sm" data-act="add-app-task" data-u="' + appId + '" data-parent="' + esc(def.key) + '">' + ICO.plus + ' Add a subtask</button>'
+                : '<button class="jp-btn ghost sm" data-act="add-task" data-under="' + esc(def.key) + '">' + ICO.plus + ' Add a subtask</button>';
+            var about = !def.custom ? 'Need smaller steps? Add them under this task.'
+                : def.repeat ? 'Another “' + esc(parentName) + '” for this student.'
+                : def.parent ? 'A subtask of “' + esc(parentName) + '”' + (ap ? ', on this university only.' : '.')
+                : ap ? 'You added this to this university only.' : 'You added this task for this student.';
+            var tools = '<div class="full jp-task-tools"><span class="muted">' + about + '</span>' + addSub + (def.custom ? editBtn + rmBtn : '') + '</div>';
             detail = '<div class="jp-detail"><div><p class="desc">' + esc(def.desc) + '</p><dl class="jp-kv">' +
                 '<dt>Documents</dt><dd>' + esc(def.docs) + '</dd>' +
                 (timeline ? '<dt>Best time</dt><dd>' + esc(timeline) + '</dd>' : '') +
@@ -893,16 +965,15 @@
                         '<div class="full"><label for="nt-' + esc(k) + '">Notes <span style="font-weight:500">(the student sees these)</span></label><textarea id="nt-' + esc(k) + '" data-f="notes"' + data + ' maxlength="1000" placeholder="Scores, offer conditions, what to chase…">' + esc(a.notes) + '</textarea></div>' +
                         uploadBox(def) +
                         (canRepeat(def) ? '<div class="full jp-task-tools"><span class="muted">Did the student do more than one?</span><button class="jp-btn ghost sm" data-act="add-repeat" data-key="' + esc(def.key) + '">' + ICO.plus + ' Add another ' + esc(def.name.toLowerCase()) + '</button></div>' : '') +
-                        (def.custom ? '<div class="full jp-task-tools"><span class="muted">' + (def.parent ? 'Another “' + esc((CORE_DEFS[def.parent] || {}).name || '') + '” for this student.' : scope === 'app' ? 'You added this to this university only.' : 'You added this task for this student.') + '</span>' +
-                            '<button class="jp-btn ghost sm" data-act="edit-' + taskAct + '" data-key="' + esc(def.key) + '"' + onUni + '>Edit task</button>' +
-                            '<button class="jp-btn danger sm' + (UI.armed === 'rm-task-' + def.key ? ' armed' : '') + '" data-act="rm-' + taskAct + '" data-key="' + esc(def.key) + '"' + onUni + '>' + (UI.armed === 'rm-task-' + def.key ? 'Click again to remove' : 'Remove task') + '</button></div>' : '') +
+                        tools +
                         '</div>'
                     : (a.notes ? '<div><span class="jp-note-lbl">Note from your counsellor</span><div class="jp-note">' + esc(a.notes) + '</div></div>' : '<div></div>') + (def.upload ? '<div class="jp-fields">' + uploadBox(def) + '</div>' : '')) +
                 '</div>';
         }
-        return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + (def.parent ? ' sub' : '') + '"><div class="jp-row">' +
+        return '<div class="jp-act' + (a.inc ? '' : ' off') + (open ? ' open' : '') + (def.parent && !nested ? ' sub' : '') + (nested ? ' nest' : '') + '"' +
+            (nested ? ' style="--depth:' + depth + '"' : '') + '><div class="jp-row">' +
             (isC() ? '<button class="jp-inc' + (a.inc ? ' on' : '') + '" data-act="toggle-inc"' + data + ' aria-pressed="' + a.inc + '" title="' + (a.inc ? 'Included for this student. Click to exclude.' : 'Excluded. Click to include.') + '">' + (a.inc ? ICO.check : '') + '</button>' : '') +
-            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + (def.parent ? '<span class="jp-sub-mark" aria-hidden="true">↳</span>' : '') + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + repeatChip(def, a) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button>' +
+            '<button class="jp-name" data-act="toggle-row"' + data + ' aria-expanded="' + open + '"><span class="n">' + (def.parent ? '<span class="jp-sub-mark" aria-hidden="true">↳</span>' : '') + esc(def.name) + (def.custom && !def.parent && !isStudent() ? ' <span class="jp-added">Added</span>' : '') + (ap ? '' : repeatChip(def, a)) + subtaskChip(subStates) + uploadHint(def) + '</span><span class="d">' + esc(a.notes || def.desc) + '</span></button>' +
             '<span class="jp-ocell"><span class="jp-owner-chip' + (ownerIsMine(a.owner) ? ' mine' : '') + (isMemberOwner(a.owner) ? ' person' : '') + '" title="' + esc(isMemberOwner(a.owner) ? ownerName(a.owner) + ' · ' + (PEOPLE[a.owner] ? PEOPLE[a.owner].role : 'off the file') : a.owner) + '">' + esc(ownerLabel(a.owner)) + '</span></span>' +
             status + date + '<span class="jp-due">' + after + '</span>' +
             '<button class="jp-chev" data-act="toggle-row"' + data + ' aria-label="Show details">' + ICO.chev + '</button></div>' + detail + '</div>';
@@ -928,7 +999,7 @@
             var inc = phaseIncluded(p);
             var body = '';
             if (open) {
-                body = p.activities.map(function (d) { return actRow('core', null, d, P.core[d.key], p.timeline, true); }).join('') ||
+                body = phaseTree(p).map(function (n) { return actRow('core', null, n.def, P.core[n.def.key], p.timeline, true, n.depth); }).join('') ||
                     (p.custom && !p.activities.length ? '<div class="jp-empty"><b>No tasks in this stage yet</b>Add the first one below.</div>' : '<div class="jp-empty">Nothing here matches those filters.</div>');
                 var stageTools = '';
                 if (p.custom && isC()) {
@@ -987,11 +1058,12 @@
         var visaOff = !a.acts['visa-submitted'].inc || !a.acts['visa-approved'].inc;
         var banner = isC() && seat && visaOff
             ? '<div class="jp-banner"><span><b>Seat confirmed.</b> This is the chosen university, so its visa steps now apply.</span><button class="jp-btn sm" data-act="visa-on" data-u="' + a.id + '">Turn on visa steps</button></div>' : '';
-        // Each group lists ODA's activities, then what the counsellor added to it here.
+        // Each group lists ODA's activities, then what the counsellor added to
+        // it here, every task followed by its subtasks.
         var groups = T.appGroups.map(function (g) {
-            var defs = g.activities.concat((a.tasks || []).filter(function (t) { return t.group === g.key; }));
-            var rows = defs.map(function (d) { return a.acts[d.key] ? actRow('app', a.id, d, a.acts[d.key], '', false) : ''; }).join('');
-            return rows ? '<div class="jp-group">' + esc(g.name) + '</div>' + rows : '';
+            var rows = appTree(a, g).map(function (n) { return a.acts[n.def.key] ? actRow('app', a.id, n.def, a.acts[n.def.key], '', false, n.depth) : ''; }).join('');
+            var add = isC() ? '<button class="jp-group-add" data-act="add-app-task" data-u="' + a.id + '" data-group="' + esc(g.key) + '">' + ICO.plus + ' Add a task</button>' : '';
+            return rows ? '<div class="jp-group"><span>' + esc(g.name) + '</span>' + add + '</div>' + rows : '';
         }).join('') || '<div class="jp-empty">Nothing switched on for this university yet.</div>';
         var addTask = isC() ? '<div class="jp-add-task"><button class="jp-btn ghost sm" data-act="add-app-task" data-u="' + a.id + '">' + ICO.plus + ' Add a task or event</button></div>' : '';
         var armed = UI.armed === 'rm-' + a.id;
@@ -1728,12 +1800,12 @@
                 'Choose **In Progress** when you start it and **Completed** when it is done. Your counsellor is told straight away.',
                 'Open a task to read what to do, which documents it needs, and any note your counsellor left.',
                 'Anything past its date turns red. If a date no longer works, tell your counsellor and they will move it.'
-            ], tips: ['Tasks owned by your counsellor or the university show their status, but only they can change it.', 'Doing more than one internship or competition? Each one is listed separately under Skill Enhancers.'] },
+            ], tips: ['Tasks owned by your counsellor or the university show their status, but only they can change it.', 'Doing more than one internship or competition? Each one is listed separately under Skill Enhancers.', 'A task broken into smaller steps shows them indented under it; tick off the steps that are yours.'] },
             { key: 'unis', title: 'Universities', go: 'universities', intro: 'Each university you apply to has its own checklist.', steps: [
                 'Open **Universities** and choose a university from the cards at the top.',
                 'The top of its block shows what it asks for: tests, documents, entry requirements and the date applications close.',
                 'Work down its checklist with your counsellor: requirements, documents, the application, then the offer and visa.',
-                'Your counsellor may add a task or event for one university only — a campus visit, an info session. It sits in that university\'s checklist like any other.'
+                'Your counsellor may add a task or event for one university only — a campus visit, an info session — or break a task into smaller steps. Steps sit indented under their task, and you tick off the ones that are yours.'
             ] },
             { key: 'docs', title: 'Documents & essays', go: 'documents', intro: 'Everything you upload or write for your applications lives here.', steps: [
                 'Go to **My documents** and choose **Upload a file**. Pick what it is — Passport / ID, a transcript, a test score, and so on.',
@@ -1768,6 +1840,7 @@
                 'Set each task\'s **status**, **owner** and **target date** in its row. Open the row for **notes** (the student reads these) and the completion date.',
                 'An owner can be a role — Student, Counsellor, Program Lead, University, Bank — or a person named on the **Team** page, so a task can go to the content writer by name.',
                 'Need something the template does not have? **Add a task to this stage**, or **Add a stage** for a whole new one.',
+                'Break any task into steps: open it and choose **Add a subtask**. Subtasks can have subtasks of their own, as many levels deep as you need; switching a task off, or removing one you added, takes its subtasks with it.',
                 'In **Skill Enhancers**, open an activity and choose **Add another** for a second internship or a third competition. Each has its own status and date and sits under the first.',
                 '**Student Declaration Form Sign-off** (stage 2, after the shortlist sign-off) waits for the signed form. When it is uploaded the task moves to **Submitted**; mark it **Completed** once you have checked it.'
             ], tips: ['ODA\'s own tasks can only be switched off; tasks and stages you add can be edited or removed.', 'The filters at the top show one owner or one status at a time.'] },
@@ -1776,9 +1849,10 @@
                 'Choose **Edit** on the requirements at the top of the block for the tests and documents it asks for, its entry requirements and the closing date. The closing date shows in Deadlines and on the Calendar.',
                 'Work down the checklist: fit and requirements, documents, the application, then the offer and visa.',
                 'Switch on Interview and Portfolio only where the university asks for them.',
-                'Need something this university alone asks for — a campus visit, an info session, an extra form? **Add a task or event** at the foot of its checklist, choose the group it goes under, and give it a date to put it on the calendar.',
+                'Need something this university alone asks for — a campus visit, an info session, an extra form? **Add a task** beside a group\'s name (or **Add a task or event** at the foot of the checklist), and give it a date to put it on the calendar.',
+                'Break any task into steps: open it and choose **Add a subtask**. That works on ODA\'s tasks and your own, and on a subtask too, as many levels deep as you need.',
                 'Record the offer type when the offer arrives — the Offer received task ticks itself.'
-            ], tips: ['Tasks you add to a university can be edited or removed from the task itself; ODA\'s own can only be switched off.'] },
+            ], tips: ['Tasks you add to a university can be edited or removed from the task itself; removing one removes its subtasks too. ODA\'s own can only be switched off.', 'Switching a task off (or back on) does the same to all its subtasks.'] },
             { key: 'docs', title: 'Documents & essays', go: 'documents', intro: 'Everything the student uploads or writes, and everything you add for them.', steps: [
                 '**Upload a file** takes PDF, Word or JPG/PNG up to 10 MB. Choose what it is and, if it is for one university, which.',
                 '**Write an essay** starts a draft. The student can write one too and send it for review.',
@@ -1971,7 +2045,10 @@
         render();
         var body = Object.assign({ scope: scope, key: key }, scope === 'app' ? { application_id: appId } : {}, changes);
         return api('PATCH', P.endpoints.activity, body).then(function (res) {
-            if (res.activity) Object.assign(a, res.activity);
+            // Switching a task on or off moves its subtasks too.
+            if (res.application) replaceApp(res.application);
+            else if (res.core) P.core = res.core;
+            else if (res.activity) Object.assign(a, res.activity);
             render();
             if (okMsg) toast(okMsg);
         }, function (err) {
@@ -2361,28 +2438,35 @@
                 if (!tu) return;
                 var et = act === 'edit-app-task' ? (tu.tasks || []).find(function (t) { return t.key === el.dataset.key; }) : null;
                 if (act === 'edit-app-task' && !et) return;
-                var tGroup = et ? et.group : 'application';
-                modal('<h3>' + (et ? 'Edit task' : 'Add a task or event') + '</h3><p class="sub">' + (et ? esc(tu.university) : 'Adds it to ' + esc(tu.university) + ' only — a campus visit, an info session, an extra form. It counts toward progress, its date goes on the calendar, and the student sees it.') + '</p>' +
-                    '<label for="at-name">Task or event</label><input id="at-name" maxlength="150" value="' + esc(et ? et.name : '') + '" placeholder="e.g. Virtual info session">' +
-                    '<label for="at-group">Goes under</label><select id="at-group">' + T.appGroups.map(function (g) { return '<option value="' + esc(g.key) + '"' + (g.key === tGroup ? ' selected' : '') + '>' + esc(g.name) + '</option>'; }).join('') + '</select>' +
+                // A subtask sits under the task it was added from, and takes that task's group.
+                var under = et ? et.parent : (el.dataset.parent || null), underDef = under ? appDef(tu, under) : null;
+                var tGroup = et ? et.group : (el.dataset.group || 'application');
+                var tSub = et ? (underDef ? 'A subtask of “' + esc(underDef.name) + '” at ' + esc(tu.university) + '.' : esc(tu.university))
+                    : underDef ? 'Under “' + esc(underDef.name) + '” at ' + esc(tu.university) + '. It has its own owner, status and date, and can have subtasks of its own.'
+                    : 'Adds it to ' + esc(tu.university) + ' only — a campus visit, an info session, an extra form. It counts toward progress, its date goes on the calendar, and the student sees it. Add subtasks under it afterwards.';
+                modal('<h3>' + (et ? (underDef ? 'Edit subtask' : 'Edit task') : underDef ? 'Add a subtask' : 'Add a task or event') + '</h3><p class="sub">' + tSub + '</p>' +
+                    '<label for="at-name">' + (underDef ? 'Subtask' : 'Task or event') + '</label><input id="at-name" maxlength="150" value="' + esc(et ? et.name : '') + '" placeholder="' + (underDef ? 'e.g. First draft to the counsellor' : 'e.g. Virtual info session') + '">' +
+                    (underDef ? '' : '<label for="at-group">Goes under</label><select id="at-group">' + T.appGroups.map(function (g) { return '<option value="' + esc(g.key) + '"' + (g.key === tGroup ? ' selected' : '') + '>' + esc(g.name) + '</option>'; }).join('') + '</select>') +
                     '<label for="at-desc">What to do <span style="font-weight:500">(optional)</span></label><input id="at-desc" maxlength="500" value="' + esc(et ? et.desc : '') + '" placeholder="A line the student will read">' +
                     '<label for="at-docs">Documents needed <span style="font-weight:500">(optional)</span></label><input id="at-docs" maxlength="190" value="' + esc(et && et.docs !== 'None' ? et.docs : '') + '" placeholder="e.g. Registration confirmation">' +
-                    (et ? '' : '<div class="two"><div><label for="at-owner">Who does it</label><select id="at-owner">' + ownerOptionsHtml('Student') + '</select></div>' +
+                    (et ? '' : '<div class="two"><div><label for="at-owner">Who does it</label><select id="at-owner">' + ownerOptionsHtml(underDef && tu.acts[under] ? tu.acts[under].owner : 'Student') + '</select></div>' +
                         '<div><label for="at-target">Date <span style="font-weight:500">(optional)</span></label><input id="at-target" type="date"></div></div>') +
-                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-app-task" data-u="' + tu.id + '"' + (et ? ' data-key="' + esc(et.key) + '"' : '') + '>' + (et ? 'Save' : 'Add it') + '</button></div>', 'wide');
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-app-task" data-u="' + tu.id + '"' +
+                    (et ? ' data-key="' + esc(et.key) + '"' : '') + (!et && under ? ' data-parent="' + esc(under) + '"' : '') + '>' + (et ? 'Save' : 'Add it') + '</button></div>', 'wide');
                 return;
             }
             case 'save-app-task': {
                 if (UI.busy) return;
                 var atName = val('at-name');
                 if (!atName) { modalError('Give the task a name.'); return; }
-                var atU = parseInt(el.dataset.u, 10), atKey = el.dataset.key;
-                var atBody = { name: atName, group: val('at-group'), desc: val('at-desc'), docs: val('at-docs') };
-                if (!atKey) { atBody.owner = val('at-owner'); atBody.target = val('at-target') || null; }
+                var atU = parseInt(el.dataset.u, 10), atKey = el.dataset.key, atParent = el.dataset.parent || null;
+                var atBody = { name: atName, desc: val('at-desc'), docs: val('at-docs') };
+                if (document.getElementById('at-group')) atBody.group = val('at-group');
+                if (!atKey) { atBody.owner = val('at-owner'); atBody.target = val('at-target') || null; atBody.parent = atParent; }
                 UI.busy = true; el.disabled = true;
                 api(atKey ? 'PATCH' : 'POST', atKey ? keyUrl(P.endpoints.appTask.replace('__ID__', atU), atKey) : P.endpoints.appTasks.replace('__ID__', atU), atBody).then(function (res) {
                     replaceApp(res.application); UI.appId = atU; closeModal(); render();
-                    toast(atKey ? 'Task updated' : 'Added to ' + res.application.university);
+                    toast(atKey ? 'Task updated' : atParent ? 'Added under “' + appDef(res.application, atParent).name + '”' : 'Added to ' + res.application.university);
                 }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 return;
             }
@@ -2610,16 +2694,23 @@
             }
             case 'add-task': case 'edit-task': {
                 var editing = act === 'edit-task' ? CORE_DEFS[el.dataset.key] : null;
-                var phaseKey = editing ? editing.phase : el.dataset.p;
+                // A subtask goes into the stage of the task it sits under.
+                var tkUnderKey = editing ? (editing.parent && !editing.repeat ? editing.parent : null) : (el.dataset.under || null);
+                var tkUnderDef = tkUnderKey ? CORE_DEFS[tkUnderKey] : null;
+                var phaseKey = editing ? editing.phase : tkUnderKey ? (PHASE_OF[tkUnderKey] || {}).key : el.dataset.p;
                 var ph = T.phases.find(function (x) { return x.key === phaseKey; });
-                var tAct = editing ? P.core[editing.key] : null;
-                modal('<h3>' + (editing ? 'Edit task' : 'Add a task') + '</h3><p class="sub">' + (editing ? 'Stage: ' : 'Adds a task to ') + esc(ph ? ph.name : '') + (editing ? '' : ' for this student only. It counts toward progress and the student sees it.') + '</p>' +
-                    '<label for="tk-name">Task</label><input id="tk-name" maxlength="150" value="' + esc(editing ? editing.name : '') + '" placeholder="e.g. Book a campus visit">' +
+                var tSubLine = editing
+                    ? (tkUnderDef ? 'A subtask of “' + esc(tkUnderDef.name) + '”, in ' : 'Stage: ') + esc(ph ? ph.name : '')
+                    : tkUnderDef ? 'Under “' + esc(tkUnderDef.name) + '”, for this student only. It has its own owner, status and date, and can have subtasks of its own.'
+                    : 'Adds a task to ' + esc(ph ? ph.name : '') + ' for this student only. It counts toward progress and the student sees it.';
+                modal('<h3>' + (editing ? (tkUnderDef ? 'Edit subtask' : 'Edit task') : tkUnderDef ? 'Add a subtask' : 'Add a task') + '</h3><p class="sub">' + tSubLine + '</p>' +
+                    '<label for="tk-name">' + (tkUnderDef ? 'Subtask' : 'Task') + '</label><input id="tk-name" maxlength="150" value="' + esc(editing ? editing.name : '') + '" placeholder="' + (tkUnderDef ? 'e.g. Book the test date' : 'e.g. Book a campus visit') + '">' +
                     '<label for="tk-desc">What to do <span style="font-weight:500">(optional)</span></label><input id="tk-desc" maxlength="500" value="' + esc(editing ? editing.desc : '') + '" placeholder="A line the student will read">' +
                     '<label for="tk-docs">Documents needed <span style="font-weight:500">(optional)</span></label><input id="tk-docs" maxlength="190" value="' + esc(editing && editing.docs !== 'None' ? editing.docs : '') + '" placeholder="e.g. Visit confirmation">' +
-                    (editing ? '' : '<div class="two"><div><label for="tk-owner">Who does it</label><select id="tk-owner">' + ownerOptionsHtml('Student') + '</select></div>' +
+                    (editing ? '' : '<div class="two"><div><label for="tk-owner">Who does it</label><select id="tk-owner">' + ownerOptionsHtml(tkUnderDef && P.core[tkUnderKey] ? P.core[tkUnderKey].owner : 'Student') + '</select></div>' +
                         '<div><label for="tk-target">Target date <span style="font-weight:500">(optional)</span></label><input id="tk-target" type="date"></div></div>') +
-                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-task" data-p="' + esc(phaseKey) + '"' + (editing ? ' data-key="' + esc(editing.key) + '"' : '') + '>' + (editing ? 'Save' : 'Add task') + '</button></div>', 'wide');
+                    '<p class="err" role="alert"></p><div class="jp-actions"><button class="jp-btn ghost" data-act="cancel">Cancel</button><button class="jp-btn" data-act="save-task" data-p="' + esc(phaseKey) + '"' +
+                    (editing ? ' data-key="' + esc(editing.key) + '"' : '') + (!editing && tkUnderKey ? ' data-under="' + esc(tkUnderKey) + '"' : '') + '>' + (editing ? 'Save' : tkUnderDef ? 'Add it' : 'Add task') + '</button></div>', 'wide');
                 return;
             }
             case 'save-task': {
@@ -2636,17 +2727,19 @@
                         CORE_DEFS[key] = res.task; closeModal(); render(); toast('Task updated');
                     }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 } else {
-                    var parentKey = el.dataset.parent || null;
-                    api('POST', P.endpoints.tasks, { phase: pk, name: name, desc: val('tk-desc'), docs: val('tk-docs'), owner: val('tk-owner'), target: val('tk-target') || null, parent: parentKey }).then(function (res) {
-                        var ph3 = T.phases.find(function (x) { return x.key === pk; });
-                        // A repeat goes straight after the last of its kind.
-                        var at = -1;
-                        if (parentKey) ph3.activities.forEach(function (a, i) { if (a.key === parentKey || a.parent === parentKey) at = i; });
-                        if (at >= 0) ph3.activities.splice(at + 1, 0, res.task); else ph3.activities.push(res.task);
+                    var parentKey = el.dataset.parent || null, underTask = el.dataset.under || null;
+                    var tkBody = { phase: pk, name: name, desc: val('tk-desc'), docs: val('tk-docs'), owner: val('tk-owner'), target: val('tk-target') || null };
+                    if (parentKey) tkBody.parent = parentKey;
+                    if (underTask) tkBody.under = underTask;
+                    api('POST', P.endpoints.tasks, tkBody).then(function (res) {
+                        var ph3 = T.phases.find(function (x) { return x.key === res.task.phase; });
+                        // The stage is drawn as a tree, so the new task only has to be in it.
+                        ph3.activities.push(res.task);
                         CORE_DEFS[res.task.key] = res.task; PHASE_OF[res.task.key] = ph3; P.core[res.task.key] = res.activity;
                         if (parentKey && res.parentActivity) P.core[parentKey] = res.parentActivity;
-                        UI.openPhases[pk] = true; UI.openRows[rowKey('core', null, res.task.key)] = false;
-                        closeModal(); render(); toast(parentKey ? 'Added under ' + (CORE_DEFS[parentKey] || {}).name : 'Task added');
+                        UI.openPhases[ph3.key] = true; UI.openRows[rowKey('core', null, res.task.key)] = false;
+                        var over = parentKey || underTask;
+                        closeModal(); render(); toast(over ? 'Added under ' + (CORE_DEFS[over] || {}).name : 'Task added');
                     }, function (err) { modalError(err.message); el.disabled = false; }).then(function () { UI.busy = false; });
                 }
                 return;
@@ -2655,10 +2748,12 @@
                 var rk = el.dataset.key;
                 if (UI.armed !== 'rm-task-' + rk) { UI.armed = 'rm-task-' + rk; render(); return; }
                 UI.armed = null;
+                // Its subtasks, at every depth, go with it.
+                var goneKeys = [rk].concat(coreSubtasks(rk).map(function (d) { return d.key; }));
                 api('DELETE', P.endpoints.task.replace('__KEY__', rk)).then(function () {
-                    T.phases.forEach(function (x) { x.activities = x.activities.filter(function (a) { return a.key !== rk; }); });
-                    delete CORE_DEFS[rk]; delete PHASE_OF[rk]; delete P.core[rk];
-                    render(); toast('Task removed');
+                    T.phases.forEach(function (x) { x.activities = x.activities.filter(function (a) { return goneKeys.indexOf(a.key) < 0; }); });
+                    goneKeys.forEach(function (k) { delete CORE_DEFS[k]; delete PHASE_OF[k]; delete P.core[k]; });
+                    render(); toast(goneKeys.length > 1 ? 'Task removed, with its ' + plural(goneKeys.length - 1, 'subtask', 'subtasks') : 'Task removed');
                 }, function (err) { render(); toast(err.message, true); });
                 return;
             }
@@ -2679,7 +2774,9 @@
                 return;
             case 'toggle-inc': {
                 var ai = actFor(el.dataset.scope, appId, el.dataset.key);
-                if (ai) saveActivity(el.dataset.scope, appId, el.dataset.key, { inc: !ai.inc }, ai.inc ? 'Excluded from the plan' : 'Included in the plan');
+                var aiApp = el.dataset.scope === 'app' ? P.apps.find(function (x) { return x.id === appId; }) : null;
+                var aiSubs = (aiApp ? appSubtasks(aiApp, el.dataset.key) : coreSubtasks(el.dataset.key)).length;
+                if (ai) saveActivity(el.dataset.scope, appId, el.dataset.key, { inc: !ai.inc }, (ai.inc ? 'Excluded from the plan' : 'Included in the plan') + (aiSubs ? ', with its ' + plural(aiSubs, 'subtask', 'subtasks') : ''));
                 return;
             }
             case 'visa-on':

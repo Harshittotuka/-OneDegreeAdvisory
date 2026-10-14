@@ -27,26 +27,78 @@ class CrmJourneyApplication extends Model
     /**
      * The tasks and events a counsellor added to this university's checklist,
      * keyed like the standard ones and shaped the same way, with `group` (the
-     * checklist group it sits in) and `custom` added.
+     * checklist group it sits in), `parent` and `custom` added.
+     *
+     * A task may sit under another — one of ODA's or one of these — as its
+     * subtask, and a subtask may have subtasks of its own, as deep as the
+     * counsellor likes. A subtask always sits in the group of the task at the
+     * top of its branch. A parent that no longer exists, or a loop no page
+     * could have made, leaves the task at the top of its own group.
      *
      * @return array<string, array<string, mixed>>
      */
     public function customDefinitions(): array
     {
         $groups = JourneyPlanner::applicationGroupKeys();
-        $out = [];
+        $standardGroup = JourneyPlanner::applicationGroupOf();
+        $rows = [];
         foreach ($this->custom_tasks ?? [] as $t) {
-            if (! is_array($t) || empty($t['key'])) {
-                continue;
+            if (is_array($t) && ! empty($t['key'])) {
+                $rows[$t['key']] = $t;
             }
+        }
+
+        $parentOf = [];
+        foreach ($rows as $key => $t) {
+            $p = $t['parent'] ?? null;
+            $parentOf[$key] = is_string($p) && $p !== $key && (isset($standardGroup[$p]) || isset($rows[$p])) ? $p : null;
+        }
+        $parentOf = JourneyPlanner::withoutLoops($parentOf);
+
+        $out = [];
+        foreach ($rows as $key => $t) {
+            // The group is the one at the top of the branch.
+            $top = $key;
+            while ($parentOf[$top] !== null && isset($rows[$parentOf[$top]])) {
+                $top = $parentOf[$top];
+            }
+            $group = $parentOf[$top] !== null ? $standardGroup[$parentOf[$top]] : ($rows[$top]['group'] ?? null);
+
             $owner = $t['owner'] ?? null;
-            $out[$t['key']] = [
-                'key' => $t['key'], 'name' => (string) ($t['name'] ?? 'Task'), 'desc' => (string) ($t['desc'] ?? ''),
+            $out[$key] = [
+                'key' => $key, 'name' => (string) ($t['name'] ?? 'Task'), 'desc' => (string) ($t['desc'] ?? ''),
                 'owner' => in_array($owner, JourneyPlanner::OWNERS, true) || JourneyPlanner::isMemberOwner($owner) ? $owner : 'Student',
                 'docs' => (string) (($t['docs'] ?? '') ?: 'None'), 'inc' => true,
-                'group' => in_array($t['group'] ?? null, $groups, true) ? $t['group'] : 'application',
+                'group' => in_array($group, $groups, true) ? $group : 'application',
+                'parent' => $parentOf[$key],
                 'custom' => true,
             ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Every added task under this one, at any depth, nearest first.
+     *
+     * @return list<string>
+     */
+    public function subtaskKeys(string $key): array
+    {
+        $children = [];
+        foreach ($this->customDefinitions() as $def) {
+            if ($def['parent'] !== null) {
+                $children[$def['parent']][] = $def['key'];
+            }
+        }
+        $out = [];
+        $queue = $children[$key] ?? [];
+        while ($queue !== []) {
+            $next = array_shift($queue);
+            if (! in_array($next, $out, true)) {
+                $out[] = $next;
+                array_push($queue, ...($children[$next] ?? []));
+            }
         }
 
         return $out;
