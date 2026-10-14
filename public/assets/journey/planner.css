@@ -1070,18 +1070,17 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
 .jp-act.nest .jp-st { padding-top: 5px; padding-bottom: 5px; font-size: 0.75rem; }
 .jp-act.nest .jp-date { padding-top: 5px; padding-bottom: 5px; font-size: 0.76rem; }
 .jp-act.nest .jp-owner-chip { background: none; padding-left: 0; color: var(--muted); }
-/* Status pills carry a dot in their colour; Submitted is indigo, apart from In Progress. */
-.jp-st {
-    --dot: #b5b0cc; padding-left: 26px;
-    background-image: radial-gradient(circle at 14px 50%, var(--dot) 0 3.5px, transparent 4px), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236d7394' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");
-    background-position: 0 0, right 11px center;
-}
-.jp-st.s-done { --dot: var(--green); }
-.jp-st.s-prog { --dot: var(--orange); }
-.jp-st.s-sub { --dot: var(--blue); background-color: var(--blue-soft); color: var(--blue-ink); }
-.jp-st.s-na { --dot: transparent; }
-.jp-st.jp-st-ro { padding-left: 26px; position: relative; }
-.jp-st.jp-st-ro::before { content: ''; position: absolute; left: 10px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--dot); }
+/* Status fields are filled in their colour, dark enough for white text:
+   slate to do, deep orange under way, indigo sent in, deep green done, grey
+   not applicable. The list that drops down stays dark text on white. */
+.jp-st { padding-left: 12px; border-color: transparent; background-color: #4c4772; color: #fff; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ffffff' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); background-position: right 11px center; }
+.jp-st.s-done { background-color: var(--green-ink); color: #fff; }
+.jp-st.s-prog { background-color: #c23a14; color: #fff; }
+.jp-st.s-sub { background-color: var(--blue); color: #fff; }
+.jp-st.s-na { background-color: #75718e; color: #fff; border: 1px solid transparent; }
+.jp-st.jp-st-ro { background-image: none; }
+.jp-st option { color: var(--ink); background: #fff; }
+.jp-st:focus-visible { outline: 3px solid rgba(255, 94, 50, 0.4); outline-offset: 1px; }
 /* An open row in a tree: its details sit under its name, the lines carried on
    past them on the left. --tree-x (where the name column starts) is measured. */
 .jp-detail.treed { position: relative; padding-left: calc(var(--tree-x, 60px) + var(--tree-pad, 0px)); }
