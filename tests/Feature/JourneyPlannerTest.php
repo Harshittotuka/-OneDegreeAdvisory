@@ -1224,6 +1224,46 @@ class JourneyPlannerTest extends TestCase
         $this->as($counsellor)->deleteJson(route('crm.journey.meetings.destroy', [$lead, $key]))->assertOk()->assertJsonCount(0, 'meetings');
     }
 
+    public function test_a_meeting_can_run_over_several_days(): void
+    {
+        Mail::fake();
+        config(['crm.email.enabled' => true]);
+        $counsellor = $this->user();
+        $lead = $this->student($counsellor);
+        $this->start($counsellor, $lead);
+
+        $meetings = $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), [
+            'title' => 'Mock interviews', 'date' => '2027-03-01', 'until' => '2027-03-05', 'time' => '16:00', 'minutes' => 30,
+            'mode' => 'Phone call', 'phone' => '+91 98290 00000', 'emails' => ['ananya@mailbox.test'],
+        ])->assertOk()->assertJsonPath('meetings.0.until', '2027-03-05')->json('meetings');
+        $key = $meetings[0]['key'];
+        $this->assertTrue(CrmJourneyChange::query()->where('subject', 'Mock interviews')->where('what', 'like', 'Meeting booked for 1 Mar 2027 to 5 Mar 2027, 16:00%')->exists());
+
+        // The email says which days, and that it is each day.
+        Mail::assertSent(JourneyMeetingMail::class, fn (JourneyMeetingMail $m) => str_contains($m->envelope()->subject, 'Mon 1 Mar to Fri 5 Mar 2027, 4:00 pm each day'));
+
+        // The student reads the same days.
+        $this->assertSame('2027-03-05', JourneyPlanner::payload($lead->journeyPlan()->first(), 'student')['meetings'][0]['until']);
+
+        // Shortened to three days; then back to one, where the last day is the first.
+        $this->as($counsellor)->patchJson(route('crm.journey.meetings.update', [$lead, $key]), ['date' => '2027-03-01', 'until' => '2027-03-03'])
+            ->assertOk()->assertJsonPath('meetings.0.until', '2027-03-03');
+        $this->as($counsellor)->patchJson(route('crm.journey.meetings.update', [$lead, $key]), ['date' => '2027-03-01', 'until' => null])
+            ->assertOk()->assertJsonPath('meetings.0.until', '');
+        $this->as($counsellor)->patchJson(route('crm.journey.meetings.update', [$lead, $key]), ['date' => '2027-03-02', 'until' => '2027-03-02'])
+            ->assertOk()->assertJsonPath('meetings.0.until', '');
+        // Marking it done leaves its days alone.
+        $this->as($counsellor)->patchJson(route('crm.journey.meetings.update', [$lead, $key]), ['date' => '2027-03-02', 'until' => '2027-03-04'])->assertOk();
+        $this->as($counsellor)->patchJson(route('crm.journey.meetings.update', [$lead, $key]), ['done' => true])
+            ->assertOk()->assertJsonPath('meetings.0.until', '2027-03-04');
+
+        // The last day can't come before the first, nor a meeting run on past 92 days.
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), ['title' => 'x', 'date' => '2027-03-05', 'until' => '2027-03-01', 'mode' => 'In person'])
+            ->assertStatus(422)->assertJsonValidationErrors('until');
+        $this->as($counsellor)->postJson(route('crm.journey.meetings.store', $lead), ['title' => 'x', 'date' => '2027-03-01', 'until' => '2027-06-01', 'mode' => 'In person'])
+            ->assertStatus(422)->assertJsonValidationErrors('until');
+    }
+
     public function test_the_team_sections_are_the_teams_alone_and_stay_with_their_own_plan(): void
     {
         $counsellor = $this->user();

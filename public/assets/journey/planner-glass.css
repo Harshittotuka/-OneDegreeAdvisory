@@ -1353,3 +1353,45 @@ button.jp-user:active { transform: scale(0.97); }
     .jp-refreshed .long { display: none; }
     .jp-refreshed .short { display: inline; }
 }
+
+/* ---------- calendar: colour says the kind ----------
+   Each kind keeps a family of system colours and each thing the next shade of
+   it; text mixes the shade with the ink, so it reads in light and dark. A red
+   edge marks what is late; a line through, what is done. */
+.k-meeting.sh-0 { --hue: #007aff; }
+.k-meeting.sh-1 { --hue: #5856d6; }
+.k-meeting.sh-2 { --hue: #32ade6; }
+.k-meeting.sh-3 { --hue: #3a6fd8; }
+.k-meeting.sh-4 { --hue: #7d6ff0; }
+.k-uni.sh-0 { --hue: #ff2d55; }
+.k-uni.sh-1 { --hue: #e0457b; }
+.k-uni.sh-2 { --hue: #ff5a3d; }
+.k-uni.sh-3 { --hue: #c2185b; }
+.k-uni.sh-4 { --hue: #ff6482; }
+.k-own.sh-0 { --hue: #ff9f0a; }
+.k-own.sh-1 { --hue: #e8a200; }
+.k-own.sh-2 { --hue: #f08a00; }
+.k-own.sh-3 { --hue: #d4a017; }
+.k-own.sh-4 { --hue: #ffb340; }
+.k-task.sh-0 { --hue: #34c759; }
+.k-task.sh-1 { --hue: #30b0a0; }
+.k-task.sh-2 { --hue: #6bb53b; }
+.k-task.sh-3 { --hue: #28a0b4; }
+.k-task.sh-4 { --hue: #2fa86f; }
+.k-block.sh-0, .jp-day .blk.sh-0 { --hue: #af52de; }
+.k-block.sh-1, .jp-day .blk.sh-1 { --hue: #8e5cf0; }
+.k-block.sh-2, .jp-day .blk.sh-2 { --hue: #9b45c9; }
+.k-block.sh-3, .jp-day .blk.sh-3 { --hue: #7b5ce0; }
+.k-block.sh-4, .jp-day .blk.sh-4 { --hue: #b86fe0; }
+.jp-day .ev[class*="sh-"] { background: color-mix(in srgb, var(--hue) 22%, transparent); color: color-mix(in srgb, var(--hue) 58%, var(--g-ink)); }
+.dot[class*="sh-"] { background: var(--hue); }
+.jp-day .blk[class*="sh-"] { background: var(--hue); }
+.jp-day .ev.st-late { box-shadow: inset 3px 0 0 var(--g-red); font-weight: var(--g-w-semibold); }
+.jp-day .ev.st-done { text-decoration: line-through; opacity: 0.55; }
+.jp-day .ev.run:not(.run-first) { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -6px; width: calc(100% + 6px); }
+.jp-day .ev.run:not(.run-last) { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: -6px; width: calc(100% + 6px); }
+.jp-day .ev.run:not(.run-first):not(.run-last) { width: calc(100% + 12px); }
+.jp-legend i.chip.fam { display: inline-flex; width: auto; overflow: hidden; background: none; }
+.jp-legend i.chip.fam b { width: 7px; height: 9px; background: var(--hue); }
+.jp-legend i.chip.mark-late { background: var(--g-fill); box-shadow: inset 3px 0 0 var(--g-red); }
+.jp-legend i.chip.mark-done { background: linear-gradient(transparent 44%, var(--g-muted) 44% 58%, transparent 58%), var(--g-fill); }

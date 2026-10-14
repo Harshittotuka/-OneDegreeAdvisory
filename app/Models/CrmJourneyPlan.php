@@ -315,7 +315,7 @@ class CrmJourneyPlan extends Model
      * for a call. `sentAt` is when the link last went out, so the page can say
      * so rather than making the counsellor guess.
      *
-     * @return list<array{key: string, title: string, date: string, time: string, minutes: int, mode: string, who: string, emails: list<string>, phone: string, link: string, notes: string, done: bool, sentAt: ?string}>
+     * @return list<array{key: string, title: string, date: string, until: string, time: string, minutes: int, mode: string, who: string, emails: list<string>, phone: string, link: string, notes: string, done: bool, sentAt: ?string}>
      */
     public function meetingRows(): array
     {
@@ -328,6 +328,8 @@ class CrmJourneyPlan extends Model
                 'key' => (string) $m['key'],
                 'title' => (string) ($m['title'] ?? 'Meeting'),
                 'date' => (string) $m['date'],
+                // The last day of a meeting over several days; '' for a single day.
+                'until' => JourneyPlanner::isDate($m['until'] ?? null) && $m['until'] > $m['date'] ? (string) $m['until'] : '',
                 'time' => preg_match('/^\d{2}:\d{2}$/', (string) ($m['time'] ?? '')) ? $m['time'] : '',
                 'minutes' => max(5, min(480, (int) ($m['minutes'] ?? 45))),
                 'mode' => in_array($m['mode'] ?? null, JourneyPlanner::MEETING_MODES, true) ? $m['mode'] : JourneyPlanner::MEETING_MODES[0],

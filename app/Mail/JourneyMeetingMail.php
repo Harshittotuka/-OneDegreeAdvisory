@@ -59,14 +59,20 @@ class JourneyMeetingMail extends Mailable
         ]);
     }
 
-    /** "Fri 3 Oct 2026, 4:00 pm" — or just the date when no time was set. */
+    /**
+     * "Fri 3 Oct 2026, 4:00 pm" — or just the date when no time was set. A
+     * meeting over several days reads "Mon 1 Mar to Fri 5 Mar 2027, 4:00 pm
+     * each day".
+     */
     private function whenLine(): string
     {
         $date = Carbon::parse($this->meeting['date']);
+        $until = ($this->meeting['until'] ?? '') !== '' ? Carbon::parse($this->meeting['until']) : null;
+        $days = $until ? $date->format($date->year === $until->year ? 'D j M' : 'D j M Y').' to '.$until->format('D j M Y') : $date->format('D j M Y');
         if ($this->meeting['time'] === '') {
-            return $date->format('D j M Y');
+            return $days;
         }
 
-        return $date->format('D j M Y').', '.Carbon::parse($this->meeting['date'].' '.$this->meeting['time'])->format('g:i a');
+        return $days.', '.Carbon::parse($this->meeting['date'].' '.$this->meeting['time'])->format('g:i a').($until ? ' each day' : '');
     }
 }

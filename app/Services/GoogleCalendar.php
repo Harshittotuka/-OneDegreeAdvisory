@@ -430,7 +430,24 @@ class GoogleCalendar
             'start' => ['dateTime' => $start->format('Y-m-d\TH:i:s'), 'timeZone' => $tz],
             'end' => ['dateTime' => $end->format('Y-m-d\TH:i:s'), 'timeZone' => $tz],
             'guestsCanInviteOthers' => false,
-        ];
+        ] + $this->dailyUntil($meeting, $date);
+    }
+
+    /**
+     * A meeting over several days repeats daily in Google Calendar until its
+     * last day, so the same room is there each day.
+     *
+     * @return array<string, list<string>>
+     */
+    private function dailyUntil(array $meeting, string $date): array
+    {
+        $until = (string) ($meeting['until'] ?? '');
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $until) || $until <= $date) {
+            return [];
+        }
+        $days = (int) round(abs(CarbonImmutable::parse($date)->diffInDays(CarbonImmutable::parse($until)))) + 1;
+
+        return ['recurrence' => ['RRULE:FREQ=DAILY;COUNT='.$days]];
     }
 
     private function meetLink(array $event): ?string

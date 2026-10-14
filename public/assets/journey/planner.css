@@ -1359,3 +1359,48 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
     .jp-refreshed .long { display: none; }
     .jp-refreshed .short { display: inline; }
 }
+
+/* ---------- Calendar: colour says the kind ----------
+   Each kind of thing keeps its own family of colours (meetings blue, the
+   universities' dates rose, ODA's own amber, task dates green, blocked dates
+   purple), and each thing takes the next shade of its family, so two meetings
+   side by side are told apart and both still read as meetings. A meeting over
+   several days keeps its shade, and its corners join, across its days. A red
+   edge marks what is late; a line through, what is done. */
+.k-meeting.sh-0 { --ev-bg: #dfe1fb; --ev-fg: #2b2c9e; }
+.k-meeting.sh-1 { --ev-bg: #d6e8fc; --ev-fg: #19579f; }
+.k-meeting.sh-2 { --ev-bg: #e7dcfb; --ev-fg: #5a2bb2; }
+.k-meeting.sh-3 { --ev-bg: #d3edf6; --ev-fg: #0d5d7c; }
+.k-meeting.sh-4 { --ev-bg: #e0e6f7; --ev-fg: #2f4a8f; }
+.k-uni.sh-0 { --ev-bg: #fde0e6; --ev-fg: #a51f3a; }
+.k-uni.sh-1 { --ev-bg: #fbdcec; --ev-fg: #96205a; }
+.k-uni.sh-2 { --ev-bg: #fde2d8; --ev-fg: #a3391f; }
+.k-uni.sh-3 { --ev-bg: #f6dbe1; --ev-fg: #82203c; }
+.k-uni.sh-4 { --ev-bg: #fde6ea; --ev-fg: #b3264a; }
+.k-own.sh-0 { --ev-bg: #fbeec4; --ev-fg: #765000; }
+.k-own.sh-1 { --ev-bg: #fde3c3; --ev-fg: #864700; }
+.k-own.sh-2 { --ev-bg: #f3ebcd; --ev-fg: #5f5012; }
+.k-own.sh-3 { --ev-bg: #ffe8cc; --ev-fg: #8a5606; }
+.k-own.sh-4 { --ev-bg: #f8e7b9; --ev-fg: #6b4a00; }
+.k-task.sh-0 { --ev-bg: #d4efdc; --ev-fg: #0a5f2f; }
+.k-task.sh-1 { --ev-bg: #ceece4; --ev-fg: #095f52; }
+.k-task.sh-2 { --ev-bg: #dfeecd; --ev-fg: #3a600f; }
+.k-task.sh-3 { --ev-bg: #d1e9ee; --ev-fg: #0c5664; }
+.k-task.sh-4 { --ev-bg: #d9f0e8; --ev-fg: #136343; }
+.k-block.sh-0, .jp-day .blk.sh-0 { --ev-fg: #6a3fd1; }
+.k-block.sh-1, .jp-day .blk.sh-1 { --ev-fg: #8a3fb0; }
+.k-block.sh-2, .jp-day .blk.sh-2 { --ev-fg: #5236b8; }
+.k-block.sh-3, .jp-day .blk.sh-3 { --ev-fg: #9a4fc4; }
+.k-block.sh-4, .jp-day .blk.sh-4 { --ev-fg: #7449c9; }
+.jp-day .ev[class*="sh-"] { background: var(--ev-bg); color: var(--ev-fg); }
+.dot[class*="sh-"] { background: var(--ev-fg); }
+.jp-day .blk[class*="sh-"] { background: var(--ev-fg); }
+.jp-day .ev.st-late { box-shadow: inset 3px 0 0 var(--pink); font-weight: 800; }
+.jp-day .ev.st-done { text-decoration: line-through; opacity: 0.55; }
+.jp-day .ev.run:not(.run-first) { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -6px; width: calc(100% + 6px); }
+.jp-day .ev.run:not(.run-last) { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: -6px; width: calc(100% + 6px); }
+.jp-day .ev.run:not(.run-first):not(.run-last) { width: calc(100% + 12px); }
+.jp-legend i.chip.fam { display: inline-flex; width: auto; overflow: hidden; background: none; }
+.jp-legend i.chip.fam b { width: 7px; height: 10px; background: var(--ev-fg); }
+.jp-legend i.chip.mark-late { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--pink), inset 0 0 0 1px var(--line-2); }
+.jp-legend i.chip.mark-done { background: linear-gradient(transparent 44%, var(--muted) 44% 58%, transparent 58%), var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-2); }

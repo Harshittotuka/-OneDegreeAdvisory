@@ -507,13 +507,38 @@
         return plural(blockDays(b), 'day', 'days') + ': ' + blockSpan(b) + '.' +
             (booked ? ' ' + plural(booked, 'meeting is', 'meetings are') + ' already booked inside it.' : '');
     }
-    /* A meeting may still go on a blocked day, but the dialog says so. */
-    function blockedNote(iso) {
-        var hit = iso ? blocksOn(iso) : [];
-        return hit.length ? fmt(iso, { day: 'numeric', month: 'short' }) + ' falls in “' + hit[0].what + '” (' + blockSpan(hit[0]) + '). Book it anyway, or pick another day.' : '';
+    /* A meeting may still go on a blocked day, but the dialog says so. A meeting
+       over several days is checked across all of them. */
+    function blockedNote(iso, until) {
+        if (!iso) return '';
+        var to = until && until > iso ? until : iso;
+        var hit = P.blocks.filter(function (b) { return b.from <= to && b.to >= iso; });
+        if (!hit.length) return '';
+        return (to === iso ? fmt(iso, { day: 'numeric', month: 'short' }) + ' falls in' : 'These days run into') +
+            ' “' + hit[0].what + '” (' + blockSpan(hit[0]) + '). Book it anyway, or pick other days.';
+    }
+    /* A meeting can run over several days (daily sessions, a campus visit):
+       `until` is its last day, '' for a single day. */
+    function meetingLast(m) { return m.until && m.until > m.date ? m.until : m.date; }
+    function meetingDays(m) { return blockDays({ from: m.date, to: meetingLast(m) }); }
+    function meetingSpan(m, opts) {
+        return m.until && m.until > m.date ? blockSpan({ from: m.date, to: m.until }) : fmt(m.date, opts);
+    }
+    /* "Today" for every day it is on, "In 3 days" before, "2 days ago" once its last day has passed. */
+    function meetingWhen(m) {
+        if (m.done) return 'Done';
+        var start = daysUntil(m.date), end = daysUntil(meetingLast(m));
+        if (end < 0) return plural(Math.abs(end), 'day', 'days') + ' ago';
+        if (start <= 0) return m.until ? 'On now' : 'Today';
+        return 'In ' + plural(start, 'day', 'days');
+    }
+    function meetingRangeText(from, to) {
+        if (!from || !to) return 'It shows on the calendar on every day from the first to the last, at the same time.';
+        if (to < from) return 'The last day is before the first.';
+        return plural(blockDays({ from: from, to: to }), 'day', 'days') + ': ' + blockSpan({ from: from, to: to }) + ', on the calendar every day at the same time.';
     }
     function soonMeetings() {
-        return P.meetings.filter(function (m) { var d = daysUntil(m.date); return !m.done && d != null && d >= 0 && d <= 7; });
+        return P.meetings.filter(function (m) { var s0 = daysUntil(m.date), e0 = daysUntil(meetingLast(m)); return !m.done && e0 != null && e0 >= 0 && s0 <= 7; });
     }
     function pad2(n) { return String(n).padStart(2, '0'); }
     /*
@@ -1325,28 +1350,45 @@
     /** Everything on the plan that has a date, as calendar entries. */
     function calendarEvents() {
         var out = [];
+        // A meeting over several days is on the month on each of them.
         P.meetings.forEach(function (m) {
-            out.push({
-                date: m.date, type: 'meeting', label: m.title, done: m.done, key: m.key, link: m.link,
-                sub: [m.time, m.mode, m.who].filter(Boolean).join(' · '), m: m,
-            });
+            var total = meetingDays(m), day = new Date(m.date + 'T00:00:00');
+            for (var n = 1; n <= total; n++, day.setDate(day.getDate() + 1)) {
+                out.push({
+                    date: fmtIso(day), type: 'meeting', label: m.title, done: m.done, key: m.key, uid: m.key, link: m.link,
+                    sub: [m.time, m.mode, m.who].filter(Boolean).join(' · '), m: m, day: n, days: total,
+                });
+            }
         });
         uniDeadlines().forEach(function (d) {
-            out.push({ date: d.date, type: 'uni', label: d.what, sub: d.who, key: d.key, appId: d.appId, d: d });
+            out.push({ date: d.date, type: 'uni', label: d.what, sub: d.who, key: d.key, uid: d.key, appId: d.appId, d: d });
         });
         ourDeadlines().forEach(function (d) {
-            out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree', key: d.key, d: d });
+            out.push({ date: d.date, type: 'own', label: d.what, sub: d.who || 'One Degree', key: d.key, uid: d.key, d: d });
         });
-        // Finished tasks stay on the month, in green; only Not Applicable leaves.
+        // Finished tasks stay on the month, struck through; only Not Applicable leaves.
         datedItems().forEach(function (i) {
             out.push({
                 date: i.a.target, type: 'task', label: i.name, done: closed(i.a.status),
-                sub: i.where + (isStudent() ? '' : ' · ' + i.a.owner),
+                sub: i.where + (isStudent() ? '' : ' · ' + i.a.owner), uid: i.scope + ':' + (i.appId || '') + ':' + i.key,
                 scope: i.scope, appId: i.appId, itemKey: i.key, a: i.a, where: i.where,
             });
         });
+        // Each kind keeps its own family of colours, and each thing in it takes
+        // the next shade along, in date order, so two meetings side by side are
+        // told apart while both still read as meetings. A meeting keeps its
+        // shade on every day it is on.
+        var seen = {}, count = {};
+        out.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }).forEach(function (e) {
+            var id = e.type + ':' + e.uid;
+            if (!(id in seen)) { seen[id] = (count[e.type] = (count[e.type] || 0) + 1) - 1; }
+        });
+        out.forEach(function (e) { e.shade = seen[e.type + ':' + e.uid] % SHADES; });
         return out;
     }
+    var SHADES = 5;
+    /* The classes that colour an entry, or its dot: its kind and its shade. */
+    function shadeCls(e) { return 'k-' + e.type + ' sh-' + (e.shade || 0); }
 
     /*
      * What colour a tile entry takes. Not the kind of thing it is — that is
@@ -1355,6 +1397,10 @@
      */
     function eventStatus(e) {
         if (e.done) return 'done';
+        if (e.type === 'meeting' && e.m && e.m.until) {
+            var s0 = daysUntil(e.m.date), e0 = daysUntil(meetingLast(e.m));
+            return e0 < 0 ? 'late' : s0 <= 0 ? 'today' : s0 <= 7 ? 'soon' : 'later';
+        }
         var d = daysUntil(e.date);
         if (d == null) return 'later';
         if (d < 0) return 'late';
@@ -1385,7 +1431,7 @@
         return d === 0 ? 'Today' : d < 0 ? Math.abs(d) + (d === -1 ? ' day late' : ' days late') : 'In ' + plural(d, 'day', 'days');
     }
     function tipHtml(e) {
-        var head = '<div class="jp-tip-h"><i class="dot ' + e.type + '"></i><span>' + esc(EVENT_NAME[e.type]) + '</span>' +
+        var head = '<div class="jp-tip-h"><i class="dot ' + e.type + ' ' + shadeCls(e) + '"></i><span>' + esc(EVENT_NAME[e.type]) + (e.days > 1 ? ' · day ' + e.day + ' of ' + e.days : '') + '</span>' +
             '<span class="pill ' + ({ late: 'danger', done: 'good', later: 'wait' }[eventStatus(e)] || 'amber') + '">' + esc(STATUS_NAME[eventStatus(e)]) + '</span></div>' +
             '<b class="jp-tip-t">' + esc(e.label) + '</b>';
         var rows = '';
@@ -1399,7 +1445,7 @@
                 tipRow('Notes', a.notes ? esc(a.notes.length > 180 ? a.notes.slice(0, 180) + '…' : a.notes) : '');
         } else if (e.type === 'meeting') {
             var m = e.m || {};
-            rows = tipRow('When', esc(fmt(m.date, { weekday: 'short', day: 'numeric', month: 'short' })) + (m.time ? ', ' + esc(m.time) : '') + (m.minutes ? ' · ' + m.minutes + ' min' : '')) +
+            rows = tipRow('When', esc(meetingSpan(m, { weekday: 'short', day: 'numeric', month: 'short' })) + (m.time ? ', ' + esc(m.time) + (m.until ? ' each day' : '') : '') + (m.minutes ? ' · ' + m.minutes + ' min' : '')) +
                 tipRow('How', esc(m.mode)) +
                 tipRow('Who', esc(m.who)) +
                 tipRow(m.mode === 'In person' ? 'Contact' : 'Phone', esc(m.phone)) +
@@ -1420,7 +1466,7 @@
     function moreHtml(ids) {
         return '<div class="jp-tip-h"><span>Also on this day</span></div><ul class="jp-tip-list">' + ids.map(function (i) {
             var e = CAL_EVENTS[i];
-            return e ? '<li><i class="dot ' + e.type + '"></i><span class="t">' + esc(e.label) + '</span><span class="pill ' + ({ late: 'danger', done: 'good', later: 'wait' }[eventStatus(e)] || 'amber') + '">' + esc(STATUS_NAME[eventStatus(e)]) + '</span></li>' : '';
+            return e ? '<li><i class="dot ' + e.type + ' ' + shadeCls(e) + '"></i><span class="t">' + esc(e.label) + '</span><span class="pill ' + ({ late: 'danger', done: 'good', later: 'wait' }[eventStatus(e)] || 'amber') + '">' + esc(STATUS_NAME[eventStatus(e)]) + '</span></li>' : '';
         }).join('') + '</ul><span class="jp-tip-f">Click the day to see them all</span>';
     }
     function showTip(target) {
@@ -1495,7 +1541,9 @@
         CAL_EVENTS.filter(calShows).forEach(function (e) { if (e.date) (byDay[e.date] = byDay[e.date] || []).push(e); });
         Object.keys(byDay).forEach(function (d) { byDay[d].sort(byWhen); });
 
-        var late = inMonth.filter(function (e) { return eventStatus(e) === 'late'; }).length;
+        // Counted once each: a meeting over several days is one meeting.
+        var once = function (list) { var ids = {}; list.forEach(function (e) { ids[e.type + ':' + e.uid] = true; }); return Object.keys(ids).length; };
+        var late = once(inMonth.filter(function (e) { return eventStatus(e) === 'late'; }));
         var bar = '<div class="jp-cal-bar">' +
             '<div class="jp-cal-title"><button class="jp-cal-arrow" data-act="cal-step" data-v="-1" aria-label="Previous month">‹</button>' +
             '<h2>' + MONTHS[m] + ' <span>' + y + '</span></h2>' +
@@ -1511,7 +1559,7 @@
 
         var chips = '<div class="jp-cal-filters"><span class="lbl">Show</span>' + ['meeting', 'uni', 'own', 'task', 'block'].map(function (k) {
             var on = UI.cal.kinds[k] !== false;
-            var n = k === 'block' ? monthBlocks.length : inMonth.filter(function (e) { return e.type === k; }).length;
+            var n = k === 'block' ? monthBlocks.length : once(inMonth.filter(function (e) { return e.type === k; }));
             return '<button class="jp-cal-chip' + (on ? ' on' : '') + '" data-act="cal-kind" data-v="' + k + '" aria-pressed="' + on + '"><i class="dot ' + k + '"></i>' + EVENT_NAMES[k] + ' <b class="num">' + n + '</b></button>';
         }).join('') +
             '<label class="jp-cal-done"><input type="checkbox" id="cal-hide-done"' + (UI.cal.hideDone ? ' checked' : '') + '> Hide finished</label>' +
@@ -1521,10 +1569,13 @@
             ? calAgenda(byDay, monthKey, monthBlocks.filter(function (b) { return shownBlocks.indexOf(b) >= 0; }))
             : calMonth(byDay, y, m, shownBlocks);
 
+        // Colour says what kind of thing it is (each a family of shades); a red
+        // edge marks what is late and a line through what is done.
         var legend = '<div class="jp-legend"><span class="lbl">Colour</span>' +
-            ['late', 'today', 'soon', 'later', 'done'].map(function (k) {
-                return '<span><i class="chip st-' + k + '"></i>' + STATUS_NAME[k] + '</span>';
-            }).join('') + (monthBlocks.length && UI.cal.kinds.block !== false ? '<span><i class="chip blk"></i>Blocked</span>' : '') + '</div>';
+            ['meeting', 'uni', 'own', 'task', 'block'].map(function (k) {
+                return '<span><i class="chip fam">' + [0, 1, 2].map(function (n) { return '<b class="k-' + k + ' sh-' + n + '"></b>'; }).join('') + '</i>' + EVENT_NAMES[k] + '</span>';
+            }).join('') +
+            '<span><i class="chip mark-late"></i>Late</span><span><i class="chip mark-done"></i>Done</span></div>';
         var hint = '<p class="jp-day-hint muted">' + (UI.cal.view === 'month'
             ? 'Hover over an entry for its details, and click it to open it. Click a day to see everything on it' + (isC() ? ', or to put a meeting, a deadline or blocked dates on it' : '') + '.'
             : 'Everything this month, day by day. Switch to Month for the grid.') + '</p>';
@@ -1539,8 +1590,8 @@
      * start of each week row it runs into.
      */
     function blockBand(b, iso, rowStart) {
-        var first = iso === b.from, last = iso === b.to;
-        return '<span class="blk' + (first ? ' first' : '') + (last ? ' last' : '') + '" data-blk="' + esc(b.key) + '" aria-hidden="true"' +
+        var first = iso === b.from, last = iso === b.to, shade = P.blocks.indexOf(b) % SHADES;
+        return '<span class="blk sh-' + shade + (first ? ' first' : '') + (last ? ' last' : '') + '" data-blk="' + esc(b.key) + '" aria-hidden="true"' +
             (isC() ? ' data-act="edit-block" data-k="' + esc(b.key) + '"' : '') + '>' + (first || rowStart ? esc(b.what) : '&nbsp;') + '</span>';
     }
 
@@ -1588,8 +1639,9 @@
                 '<span class="dn num">' + cd + (iso === P.today ? '<span class="tdy">Today</span>' : '') + '</span>' +
                 blk.map(function (b) { return blockBand(b, iso, n % 7 === 0); }).join('') +
                 list.slice(0, 3).map(function (e) {
-                    return '<button class="ev st-' + eventStatus(e) + '"' + eventAction(e) + ' data-ev="' + e.i + '" aria-label="' + esc(EVENT_NAME[e.type] + ': ' + e.label + (e.sub ? ' — ' + e.sub : '')) + '">' +
-                        '<i class="dot ' + e.type + '"></i>' + (evTime(e) ? '<span class="tm num">' + evTime(e) + '</span>' : '') + '<span class="lb">' + esc(e.label) + '</span></button>';
+                    return '<button class="ev ' + shadeCls(e) + ' st-' + eventStatus(e) + (e.days > 1 ? ' run' + (e.day === 1 ? ' run-first' : '') + (e.day === e.days ? ' run-last' : '') : '') + '"' + eventAction(e) + ' data-ev="' + e.i + '"' +
+                        ' aria-label="' + esc(EVENT_NAME[e.type] + ': ' + e.label + (e.days > 1 ? ', day ' + e.day + ' of ' + e.days : '') + (e.sub ? ' — ' + e.sub : '')) + '">' +
+                        '<i class="dot ' + e.type + ' ' + shadeCls(e) + '"></i>' + (evTime(e) ? '<span class="tm num">' + evTime(e) + '</span>' : '') + '<span class="lb">' + esc(e.label) + '</span></button>';
                 }).join('') +
                 (list.length > 3 ? '<span class="more num" data-more="' + list.slice(3).map(function (e) { return e.i; }).join(',') + '">+' + (list.length - 3) + ' more</span>' : '') + '</div>';
         }
@@ -1641,11 +1693,10 @@
     /* A meeting, as a student or partner reads it: when, how, with whom, the
        way in, and the notes. The counsellor edits it instead. */
     function openMeeting(m) {
-        var days = daysUntil(m.date);
-        var when = m.done ? 'Done' : days === 0 ? 'Today' : days < 0 ? plural(Math.abs(days), 'day', 'days') + ' ago' : 'In ' + plural(days, 'day', 'days');
+        var when = meetingWhen(m);
         var row = function (k, v) { return v ? '<dt>' + k + '</dt><dd>' + v + '</dd>' : ''; };
         modal('<h3>' + esc(m.title) + '</h3>' +
-            '<p class="sub">' + esc(fmt(m.date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + ' · ' + when + '</p>' +
+            '<p class="sub">' + esc(meetingSpan(m, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + (m.until ? ' · every day' : '') + ' · ' + when + '</p>' +
             '<dl class="jp-kv">' +
             row('Time', esc([m.time, m.minutes + ' min'].filter(Boolean).join(' · '))) +
             row('How', esc(m.mode)) +
@@ -1674,7 +1725,7 @@
             var open = eventAction(e);
             if (open) acts += '<button class="jp-btn ghost sm"' + open + '>Open</button>';
         }
-        return '<div class="jp-day-row st-' + eventStatus(e) + '"><i class="dot ' + e.type + '"></i>' +
+        return '<div class="jp-day-row st-' + eventStatus(e) + '"><i class="dot ' + e.type + ' ' + shadeCls(e) + '"></i>' +
             '<div><b>' + esc(e.label) + '</b><small>' + esc(EVENT_NAME[e.type] + (e.sub ? ' · ' + e.sub : '')) + '</small></div>' +
             '<span class="pill ' + (eventStatus(e) === 'late' ? 'danger' : eventStatus(e) === 'done' ? 'good' : eventStatus(e) === 'later' ? 'wait' : 'amber') + '">' + STATUS_NAME[eventStatus(e)] + '</span>' +
             (acts ? '<span class="a">' + acts + '</span>' : '<span class="a"></span>') + '</div>';
@@ -1700,8 +1751,8 @@
     }
     function meetingRow(m) {
         var days = daysUntil(m.date), armed = UI.armed === 'rm-meeting-' + m.key;
-        var late = !m.done && days != null && days < 0;
-        var when = m.done ? 'Done' : (days === 0 ? 'Today' : late ? Math.abs(days) + (Math.abs(days) === 1 ? ' day ago' : ' days ago') : 'In ' + plural(days, 'day', 'days'));
+        var late = !m.done && daysUntil(meetingLast(m)) < 0;
+        var when = meetingWhen(m);
         var how = '';
         if (m.phone) how += '<a class="jp-meet-join" href="tel:' + esc(m.phone.replace(/[^0-9+]/g, '')) + '">' + esc(m.phone) + '</a>';
         if (m.link) how += '<a class="jp-meet-join" href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link.replace(/^https:\/\//, '')) + '</a>';
@@ -1712,7 +1763,7 @@
         if (isC() && !m.done) invited += reminderNote(m);
 
         return '<div class="jp-meet' + (m.done ? ' done' : '') + '">' + calBox(m.date, late) +
-            '<div class="w"><span class="t">' + esc(m.title) + '</span><span class="s">' + esc([m.time, m.minutes + ' min', m.mode, m.who].filter(Boolean).join(' · ')) + '</span>' +
+            '<div class="w"><span class="t">' + esc(m.title) + '</span><span class="s">' + esc([m.until ? meetingSpan(m) + ' · ' + plural(meetingDays(m), 'day', 'days') : '', m.time ? m.time + (m.until ? ' each day' : '') : '', m.minutes + ' min', m.mode, m.who].filter(Boolean).join(' · ')) + '</span>' +
             (how || invited ? '<span class="meta">' + how + invited + '</span>' : '') +
             (m.notes ? '<span class="notes">' + esc(m.notes) + '</span>' : '') + '</div>' +
             '<span class="pill ' + (m.done ? 'good' : late ? 'danger' : days <= 3 ? 'amber' : 'wait') + '">' + when + '</span>' +
@@ -2030,13 +2081,14 @@
             { key: 'calendar', title: 'Deadlines & calendar', go: 'calendar', intro: 'Every date on the plan in one place.', steps: [
                 '**Deadlines** keeps the universities\' dates and ODA\'s own apart. Add one of ours with **Add a date**, or with **Deadline** on the Calendar.',
                 'The **Calendar** shows meetings, deadlines and task dates together. Switch between **Month** and **Agenda**, and use the chips to show only some kinds.',
-                'Colour says where each thing stands: late, today, this week, later, done. Finished tasks stay on the calendar in green; **Hide finished** clears them.',
+                'Colour says what kind of thing it is: meetings blue, the universities\' dates rose, ours amber, task dates green, blocked dates purple, each in its own shade. A red edge marks what is late and a line through what is done; **Hide finished** clears those.',
                 '**Block dates** marks a whole stretch in one go — exams from 1 to 15 March, a holiday. Give it a name, the first day and the last; every day in between is shaded on the month and the student sees it.',
                 'A meeting booked on a blocked day is flagged in its dialog. Change or remove a block by clicking it on the month, or under **Blocked dates** below the calendar.',
                 'Hover over an entry for its details and click it to open it. Click a day to see everything on it, or to put a meeting, deadline or blocked dates on it.'
             ] },
             { key: 'meetings', title: 'Meetings & emails', go: 'calendar', intro: 'Book calls with the student and their family; the planner sends the emails.', steps: [
                 'Choose **Schedule a meeting** (on the Calendar, or from a day). Give it a title, date, time and length.',
+                'Daily sessions over a stretch? Tick **Runs over several days** and choose the last day. The meeting shows on the calendar on every one of them, in the same colour.',
                 meetHow,
                 'Say who is coming and list the email addresses to send it to — start with the student\'s.',
                 'Save. Everyone listed is emailed the joining details straight away.',
@@ -2680,10 +2732,15 @@
                 modal('<h3>' + (mt ? 'Edit meeting' : 'Schedule a meeting') + '</h3>' +
                     '<p class="sub">Everyone you list is emailed the joining details when you save, then reminded the day before and on the day.</p>' +
                     '<label for="mt-title">What is it about?</label><input id="mt-title" maxlength="150" value="' + esc(mt ? mt.title : '') + '" placeholder="e.g. Shortlist review with parents">' +
-                    '<div class="three"><div><label for="mt-date">Date</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : (el.dataset.d || '')) + '"></div>' +
+                    '<div class="three"><div><label for="mt-date" id="mt-date-label">' + (mt && mt.until ? 'First day' : 'Date') + '</label><input id="mt-date" type="date" value="' + esc(mt ? mt.date : (el.dataset.d || '')) + '"></div>' +
                     '<div><label for="mt-time">Time</label><input id="mt-time" type="time" value="' + esc(mt ? mt.time : '16:00') + '"></div>' +
                     '<div><label for="mt-mins">Minutes</label><input id="mt-mins" type="number" min="5" max="480" step="5" value="' + (mt ? mt.minutes : 45) + '"></div></div>' +
-                    '<p class="jp-hint jp-warn" id="mt-blocked" role="status"' + (blockedNote(mt ? mt.date : el.dataset.d) ? '' : ' hidden') + '>' + esc(blockedNote(mt ? mt.date : el.dataset.d)) + '</p>' +
+                    // Over several days: every day from the first to the last, at the same time.
+                    '<label class="jp-check"><input type="checkbox" id="mt-multi"' + (mt && mt.until ? ' checked' : '') + '> Runs over several days</label>' +
+                    '<div id="mt-until-wrap"' + (mt && mt.until ? '' : ' hidden') + '><label for="mt-until">Last day</label>' +
+                    '<input id="mt-until" type="date" value="' + esc(mt && mt.until ? mt.until : '') + '"' + (mt || el.dataset.d ? ' min="' + esc(mt ? mt.date : el.dataset.d) + '"' : '') + '>' +
+                    '<p class="jp-hint" id="mt-until-hint">' + esc(mt && mt.until ? meetingRangeText(mt.date, mt.until) : 'It shows on the calendar on every day from the first to the last, at the same time.') + '</p></div>' +
+                    '<p class="jp-hint jp-warn" id="mt-blocked" role="status"' + (blockedNote(mt ? mt.date : el.dataset.d, mt ? mt.until : '') ? '' : ' hidden') + '>' + esc(blockedNote(mt ? mt.date : el.dataset.d, mt ? mt.until : '')) + '</p>' +
                     '<label for="mt-mode">How</label><select id="mt-mode">' + options(T.meetingModes, mtMode) + '</select>' +
 
                     '<div id="mt-link-wrap"' + (wantsLink(mtMode) ? '' : ' hidden') + '>' +
@@ -2723,8 +2780,12 @@
             case 'save-meeting': {
                 if (UI.busy) return;
                 var mTitle = val('mt-title'), mDate = val('mt-date'), mLink = val('mt-link');
+                var mUntil = checked('mt-multi') ? val('mt-until') : '';
                 if (!mTitle) { modalError('Say what the meeting is about.'); return; }
-                if (!mDate) { modalError('Choose a date.'); return; }
+                if (!mDate) { modalError(checked('mt-multi') ? 'Choose the first day.' : 'Choose a date.'); return; }
+                if (checked('mt-multi') && !mUntil) { modalError('Choose the last day, or untick “Runs over several days”.'); return; }
+                if (mUntil && mUntil < mDate) { modalError('The last day can\'t be before the first.'); return; }
+                if (mUntil && blockDays({ from: mDate, to: mUntil }) > 92) { modalError('A meeting can run over 92 days at most. Check the last day.'); return; }
                 if (UI.roomBusy) { modalError('Still making the Google Meet room — a moment.'); return; }
                 if (mLink && mLink.indexOf('https://') !== 0) { modalError('A join link has to start with https://.'); return; }
                 var mKey = el.dataset.k;
@@ -2733,7 +2794,7 @@
                 if (mBad.length) { modalError('This does not look like an email address: ' + mBad[0]); return; }
                 var mMode = val('mt-mode');
                 var mBody = {
-                    title: mTitle, date: mDate, time: val('mt-time') || null, minutes: parseInt(val('mt-mins'), 10) || 45,
+                    title: mTitle, date: mDate, until: mUntil && mUntil > mDate ? mUntil : null, time: val('mt-time') || null, minutes: parseInt(val('mt-mins'), 10) || 45,
                     mode: mMode, who: val('mt-who'), emails: mMails,
                     phone: wantsPhone(mMode) ? val('mt-phone') : '',
                     link: wantsLink(mMode) ? (mLink || null) : null,
@@ -3081,9 +3142,17 @@
             if (wantsLink(el.value) && linkBox && !linkBox.value.trim()) makeRoom();
             return;
         }
-        // A meeting moved onto a blocked day says so.
-        if (el.id === 'mt-date') {
-            var note = document.getElementById('mt-blocked'), text = blockedNote(el.value);
+        // The days a meeting is on: a first day, and a last when it runs on. Moved
+        // onto a blocked day, it says so.
+        if (el.id === 'mt-date' || el.id === 'mt-until' || el.id === 'mt-multi') {
+            var multi = checked('mt-multi'), first = val('mt-date'), lastBox = document.getElementById('mt-until');
+            var wrapU = document.getElementById('mt-until-wrap'), lbl = document.getElementById('mt-date-label');
+            if (wrapU) wrapU.hidden = !multi;
+            if (lbl) lbl.textContent = multi ? 'First day' : 'Date';
+            if (lastBox && first) { lastBox.min = first; if (multi && el.id !== 'mt-until' && (!lastBox.value || lastBox.value < first)) lastBox.value = first; }
+            var hintU = document.getElementById('mt-until-hint');
+            if (hintU && multi) hintU.textContent = meetingRangeText(first, lastBox ? lastBox.value : '');
+            var note = document.getElementById('mt-blocked'), text = blockedNote(first, multi && lastBox ? lastBox.value : '');
             if (note) { note.textContent = text; note.hidden = !text; }
             return;
         }

@@ -1159,7 +1159,8 @@ class CrmJourneyPlannerController extends Controller
     public function storeMeeting(Request $request, CrmLead $lead, CrmAuditLogger $audit, GoogleCalendar $google): JsonResponse
     {
         $plan = $this->editablePlan($request, $lead);
-        $data = $request->validate($this->meetingRules(), [], ['title' => 'meeting', 'who' => 'attendees']);
+        $data = $request->validate($this->meetingRules(), [], ['title' => 'meeting', 'who' => 'attendees', 'until' => 'last day']);
+        $this->checkMeetingSpan($data['date'], $data['until'] ?? null);
         [$room, $warning] = $this->settleRoom($request, $lead, $google, $data, null);
 
         $meeting = $this->withList($plan, 'meetings', function (array &$list) use ($data, $room): array {
@@ -1170,6 +1171,7 @@ class CrmJourneyPlannerController extends Controller
                 'key' => 'm-'.Str::lower(Str::random(10)),
                 'title' => trim($data['title']),
                 'date' => $data['date'],
+                'until' => ($data['until'] ?? '') > $data['date'] ? $data['until'] : '',
                 'time' => (string) ($data['time'] ?? ''),
                 'minutes' => (int) ($data['minutes'] ?? 45),
                 'mode' => $data['mode'],
@@ -1191,7 +1193,7 @@ class CrmJourneyPlannerController extends Controller
 
         $sent = ($data['notify'] ?? true) ? $this->sendMeeting($plan, $lead, $meeting['key'], false) : 0;
 
-        $this->logChange($request, $plan, 'Meetings', $meeting['title'], 'Meeting booked for '.JourneyLog::date($meeting['date']).($meeting['time'] ? ', '.$meeting['time'] : '').($sent ? ' · details emailed to '.$sent : ''));
+        $this->logChange($request, $plan, 'Meetings', $meeting['title'], 'Meeting booked for '.JourneyLog::date($meeting['date']).($meeting['until'] ? ' to '.JourneyLog::date($meeting['until']) : '').($meeting['time'] ? ', '.$meeting['time'] : '').($sent ? ' · details emailed to '.$sent : ''));
 
         $audit->record($request, $this->user($request), 'journey_meeting_added', "Booked “{$meeting['title']}” with {$lead->name} for {$meeting['date']}", [
             'crm_lead_id' => $lead->id, 'subject_type' => CrmJourneyPlan::class, 'subject_id' => $plan->id, 'subject_label' => $meeting['title'],
@@ -1207,8 +1209,11 @@ class CrmJourneyPlannerController extends Controller
         $plan = $this->editablePlan($request, $lead);
         $data = $request->validate(array_merge($this->meetingRules(partial: true), [
             'done' => ['sometimes', 'boolean'],
-        ]), [], ['title' => 'meeting', 'who' => 'attendees']);
+        ]), [], ['title' => 'meeting', 'who' => 'attendees', 'until' => 'last day']);
         $current = collect($plan->meetings ?? [])->first(fn ($m) => is_array($m) && ($m['key'] ?? null) === $meeting) ?? abort(404);
+        if (array_key_exists('until', $data)) {
+            $this->checkMeetingSpan((string) ($data['date'] ?? $current['date'] ?? ''), $data['until']);
+        }
         [$room, $warning] = $this->settleRoom($request, $lead, $google, $data, $current);
 
         $found = $this->withList($plan, 'meetings', function (array &$list) use ($data, $meeting, $room): bool {
@@ -1227,6 +1232,10 @@ class CrmJourneyPlannerController extends Controller
                 }
                 if (array_key_exists('minutes', $data)) {
                     $m['minutes'] = (int) $data['minutes'];
+                }
+                if (array_key_exists('until', $data) || array_key_exists('date', $data)) {
+                    $until = array_key_exists('until', $data) ? (string) $data['until'] : (string) ($m['until'] ?? '');
+                    $m['until'] = $until > (string) $m['date'] ? $until : '';
                 }
                 if (array_key_exists('done', $data)) {
                     $m['done'] = (bool) $data['done'];
@@ -1320,6 +1329,20 @@ class CrmJourneyPlannerController extends Controller
         ];
     }
 
+    /** The longest a meeting can run over, in days: a term of daily sessions. */
+    private const MAX_MEETING_DAYS = 92;
+
+    private function checkMeetingSpan(string $date, ?string $until): void
+    {
+        if (! $until || ! JourneyPlanner::isDate($date)) {
+            return;
+        }
+        $days = (int) round(abs(Carbon::parse($date)->diffInDays(Carbon::parse($until)))) + 1;
+        if ($days > self::MAX_MEETING_DAYS) {
+            throw ValidationException::withMessages(['until' => 'A meeting can run over '.self::MAX_MEETING_DAYS.' days at most. Check the last day.']);
+        }
+    }
+
     /** @return array<string, array<int, mixed>> */
     private function meetingRules(bool $partial = false): array
     {
@@ -1328,6 +1351,9 @@ class CrmJourneyPlannerController extends Controller
         return [
             'title' => [$required, 'string', 'max:150'],
             'date' => [$required, 'date_format:Y-m-d'],
+            // The last day of a meeting that runs over several days (daily sessions,
+            // a campus visit): it shows on the calendar on every day in between.
+            'until' => ['sometimes', 'nullable', 'date_format:Y-m-d', 'after_or_equal:date'],
             'time' => ['sometimes', 'nullable', 'date_format:H:i'],
             'minutes' => ['sometimes', 'nullable', 'integer', 'min:5', 'max:480'],
             'mode' => [$required, Rule::in(JourneyPlanner::MEETING_MODES)],
@@ -1362,7 +1388,7 @@ class CrmJourneyPlannerController extends Controller
         $mode = (string) ($data['mode'] ?? $current['mode'] ?? '');
         $link = array_key_exists('link', $data) ? trim((string) $data['link']) : (string) ($current['link'] ?? '');
         $isMeet = $mode === 'Google Meet';
-        $changed = array_intersect_key($data, array_flip(['title', 'date', 'time', 'minutes', 'notes']));
+        $changed = array_intersect_key($data, array_flip(['title', 'date', 'until', 'time', 'minutes', 'notes']));
         $details = array_merge((array) $current, $changed);
         $asksForLink = $current === null || array_key_exists('link', $data);
         $offered = (string) ($data['room'] ?? '');
