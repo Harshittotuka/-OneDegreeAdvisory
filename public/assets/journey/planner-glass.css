@@ -517,14 +517,13 @@ button.jp-user:active { transform: scale(0.97); }
 .jp-act.nest .jp-name .n { font-size: var(--g-fs-body); font-weight: var(--g-w-medium); }
 .jp-act.nest .jp-st { min-height: 26px; }
 .jp-act.nest .jp-owner-chip { background: none; padding-left: 0; color: var(--g-muted); }
-/* Status fields are filled in their colour, dark enough for white text in
-   light and dark alike: graphite to do, deep orange under way, indigo sent in,
-   deep green done, grey not applicable. */
-.jp-st { padding-left: 12px; background-color: #48484f; color: #fff; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23ffffff' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position: right 11px center; }
-.jp-st.s-done { background-color: #19773a; color: #fff; }
-.jp-st.s-prog { background-color: #b04c00; color: #fff; }
-.jp-st.s-sub { background-color: #3d3bb8; color: #fff; }
-.jp-st.s-na { background-color: #6d6d73; color: #fff; box-shadow: none; }
+/* Status fields: a soft pastel for each status, with text in a deep shade of
+   the same colour (the system tints, which follow light and dark). */
+.jp-st { padding-left: 12px; background-color: var(--g-fill); color: var(--g-ink-2); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='13' viewBox='0 0 9 13'%3E%3Cpath d='M1.5 5L4.5 2l3 3M1.5 8l3 3 3-3' stroke='%23888' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position: right 11px center; }
+.jp-st.s-prog { background-color: var(--g-orange-soft); color: var(--g-orange-ink); }
+.jp-st.s-sub { background-color: var(--g-indigo-soft); color: var(--g-indigo-ink); }
+.jp-st.s-done { background-color: var(--g-green-soft); color: var(--g-green-ink); }
+.jp-st.s-na { background-color: transparent; color: var(--g-muted); box-shadow: inset 0 0 0 1px var(--g-separator-strong); }
 .jp-st.jp-st-ro { background-image: none; }
 /* An open row in a tree: its details sit under its name, the lines carried on
    past them on the left. --tree-x (where the name column starts) is measured. */

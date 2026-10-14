@@ -1071,17 +1071,17 @@ button.jp-user:hover, .jp-usermenu.open button.jp-user { border-color: rgba(26, 
 .jp-act.nest .jp-st { padding-top: 5px; padding-bottom: 5px; font-size: 0.75rem; }
 .jp-act.nest .jp-date { padding-top: 5px; padding-bottom: 5px; font-size: 0.76rem; }
 .jp-act.nest .jp-owner-chip { background: none; padding-left: 0; color: var(--muted); }
-/* Status fields are filled in their colour, dark enough for white text:
-   slate to do, deep orange under way, indigo sent in, deep green done, grey
-   not applicable. The list that drops down stays dark text on white. */
-.jp-st { padding-left: 12px; border-color: transparent; background-color: #4c4772; color: #fff; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ffffff' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); background-position: right 11px center; }
-.jp-st.s-done { background-color: var(--green-ink); color: #fff; }
-.jp-st.s-prog { background-color: #c23a14; color: #fff; }
-.jp-st.s-sub { background-color: var(--blue); color: #fff; }
-.jp-st.s-na { background-color: #75718e; color: #fff; border: 1px solid transparent; }
+/* Status fields: a soft pastel for each status, with text (and arrow) in a
+   deep shade of the same colour: lavender to do, peach under way, periwinkle
+   sent in, mint done, stone not applicable. */
+.jp-st { padding-left: 12px; border: 1px solid #dcd8ee; background-color: #eeedf7; color: #4c4772; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236d6890' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); background-position: right 11px center; }
+.jp-st.s-prog { border-color: #fbcdb6; background-color: #ffe8dc; color: #b13a18; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c04a24' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
+.jp-st.s-sub { border-color: #cfcaf6; background-color: #e7e4fc; color: #2d1fa3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%233b2fb0' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
+.jp-st.s-done { border-color: #b9e6c8; background-color: #dcf4e4; color: #0b6b35; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231a7a45' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
+.jp-st.s-na { border: 1px dashed #d3cdc0; background-color: #f4f2ec; color: #625e78; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236d6890' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); }
 .jp-st.jp-st-ro { background-image: none; }
 .jp-st option { color: var(--ink); background: #fff; }
-.jp-st:focus-visible { outline: 3px solid rgba(255, 94, 50, 0.4); outline-offset: 1px; }
+.jp-st:focus-visible { outline: 3px solid rgba(255, 94, 50, 0.35); outline-offset: 1px; }
 /* An open row in a tree: its details sit under its name, the lines carried on
    past them on the left. --tree-x (where the name column starts) is measured. */
 .jp-detail.treed { position: relative; padding-left: calc(var(--tree-x, 60px) + var(--tree-pad, 0px)); }
